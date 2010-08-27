@@ -1,0 +1,123 @@
+Just to whip up interest. This library contains: 
+
+- Убрать, т.к. безполезно
+
+- port of Allegros/Tim Bradshaw's hierarchical 
+packages to (at least) CCL, CLISP and SBCL. 
+Code should be completely portable to any 
+standard-compliant CL. 
+
+Убрать, т.к. не сходится с редакторами. Вместо этого -
+назначалку никнеймов
+
+- ability to set up package nicknames per *package*,
+ported to implemetations listed above
+
+УбратЬ, т.к. теперь у нас symbol-readmacros. 
+добавить /with-readtable , /with-package
+
+- package qualifier can be applied to any expression,
+including readmacros, not to symbols only. In the 
+scope of that expression, readtable can be
+switched to some other readtable associated with
+the package qualified.
+E.g.: 
+
+'keyword::(a b c) 
+would read as (:a :b :c)
+
+sql:[ - как символ. 
+
+sql:[select 1 from dual]
+would invoke #\[ readmacro from readtable
+bound to sql package
+sh:[ls]
+would invoke #\[ readmacro from readtable
+bound to sh package
+
+Это остаётся.
+
+- custom token parsers. Normally, reader 
+attempts to intern any symbol it reads
+to some package. In this library, you 
+can intercept this call and run arbitrary
+code which is associated to a *package*
+or a package qualifier of the symbol. 
+
+And some utilities:
+- asdf::undefsystem. Sometimes asdf gets
+mad, and undefsystem make it forget
+about your system. This is sometimes
+an alternative to reloading everything.
+
+- asdf looking for system.asd.lnk shortcut
+under win32 which can be then parsed 
+with GNU readlink to produce real 
+system.asd location. Works under
+allegro and lispworks. 
+
+- asdf can dump md5 sums of all file
+components, useful for comparing
+systems on different computers
+without being able to mix up
+directories. 
+
+- asdf::look-tabooed-systems
+On SBCL, oos ... :force t sometimes
+tries to rebuild part of SBCL
+and then SBCL gets destroyed. 
+I suggest a way to prevent some
+systems from being rebuild. 
+
+- proga = get rid of some 
+parens and nestings. Instead
+of
+ 
+(let ((a b)(c d))
+ (flet ((f (x) y))
+  (with-open-file (f "v" ...)
+   (f a))
+
+write just
+
+(proga
+ (let a b c d)
+ (flet f (x) y)
+ (with-open-file f "v" ...)
+ (f a))
+
+which is easier to read and
+write. 
+
+Заменено на defpackage-autoimport
+
+- merge-packages-and-reexport
+automate symbol clash resolution when
+using several packages. There are two 
+policy, one is safer (import neither
+of clashing symbols), other is "denser"
+(import first of them). This small
+macro simplifies a task of managing
+multiple small packages and thus 
+helps improve modularity
+
+- iterate-keywords (need to be 
+downloaded from http://sourceforge.net/projects/iteratekeywords/
+)
+now you need to import just only
+one symbol to use iterate in 
+your package. Use keywords as clause heads. 
+(iter (:for ...)) 
+
+- trivial-deftest - переименовать в deftest5
+extremely simple test utility. 
+Why? I found it convinient to put
+some tests just next to function 
+definition, not in a separate
+files. This way test management
+simplifies, and tests serve as 
+an examples. Tests are normally 
+executed at read-time and warn on 
+failure. To avoid running 
+tests at load time, just
+set *run-tests* to nil. 

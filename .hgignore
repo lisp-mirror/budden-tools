@@ -1,0 +1,7 @@
+syntax: glob
+
+*~
+*.wx32fsl
+*.fsl
+*.fasl
+*.bak

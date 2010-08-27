@@ -1,0 +1,1 @@
+(setf *readtable* (copy-readtable nil))

@@ -1,0 +1,75 @@
+Just to whip up interest. This library contains: 
+
+- port of Allegros/Tim Bradshaw's hierarchical 
+packages to (at least) CCL, CLISP and SBCL. 
+Code should be completely portable to any 
+standard-compliant CL. 
+
+Как быть? SLIME должно быть легче перепрограммировать. Сами реализации? 
+Принтер? ХЗ. Наверное, принтер без патча всё равно не получится поменять. 
+Для данной фичи это не нужно. Для see-packages - нужно. 
+
+- ability to set up package nicknames per *package*,
+ported to implemetations listed above
+для лиспворкс можно через декораторы. Для других - патчить, чтобы 
+был крюк в find-package. 
+
+- package qualifier can be applied to any expression,
+including readmacros, not to symbols only. In the 
+scope of that expression, readtable can be
+switched to some other readtable associated with
+the package qualified.
+E.g.: 
+
+'keyword::(a b c) 
+would read as (:a :b :c)
+
+меняем на symbol-readmacros:
+(/with-package/ :keyword (a b c))
+замену таблицы чтения делаем так:
+(/with-readtable/ nil (a b c))
+
+
+sql:[select 1 from dual]
+would invoke #\[ readmacro from readtable
+bound to sql package
+sh:[ls]
+would invoke #\[ readmacro from readtable
+bound to sh package
+
+(/sql/ select 1 from dual)
+(/sh/ ls) 
+(/readmacro-let/ ("$" "#x" :another-readtable)
+	($er3423 $vvvv $rewqwrqwe))
+
+
+- custom token parsers. Normally, reader 
+attempts to intern any symbol it reads
+to some package. In this library, you 
+can intercept this call and run arbitrary
+code which is associated to a *package*
+or a package qualifier of the symbol. 
+
+Крюк на find-symbol и intern сделает это. 
+
+- merge-packages-and-reexport
+automate symbol clash resolution when
+using several packages. There are two 
+policy, one is safer (import neither
+of clashing symbols), other is "denser"
+(import first of them). This small
+macro simplifies a task of managing
+multiple small packages and thus 
+helps improve modularity
+
+see-packages. 
+lispworks - можно сделать через крюки. 
+
+перевернуть регистр в системных пакетах:
+создать и заюзать другой пакет, а дальше сделать на уровне декоратора:
+если символ - из этого пакета, то вместо него возвращается соответствующий
+символ из системного пакета. Сам этот символ хранится в свойстве. Дыра будет, 
+если мы добавили новый символ. 
+
+запрет на определенные имена. через крюки. 
+
