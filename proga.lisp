@@ -123,6 +123,7 @@ body - уже обработанные формы после clause.
         '(with-open-file))
 
 (setf (get 'with-conc-name 'proga-transformer) 'open-up)
+(setf (get 'let-with-conc-type 'proga-transformer) 'open-up)
 
 
 (defun proga-expander (body)
@@ -265,5 +266,11 @@ body - уже обработанные формы после clause.
          '(case 4 (1 (let ((a 6))))
             (t (let ((b 7)) b))))
 
-
+(deftest proga.19.let-with-conc-type
+         (proga 
+           (let-with-conc-type x package (find-package :lisp))
+           x.name
+           )
+         "COMMON-LISP"
+         :test 'string=)
 
