@@ -17,6 +17,12 @@
    ((cdr x) x)
    (t (car x))))
 
+(defun mapcarcar (list)
+  (mapcar 'car list))
+
+(defun mapcarcadr (list)
+  (mapcar 'cadr list))
+
 (defun symbol+ (&rest syms) "Concatenates symbols and intern concatenated symbol to current package"
   (let ((name (apply #'concatenate 'string (mapcar (lambda (x) (if x (string x) "")) syms))))
     (assert (not (equal name "")))

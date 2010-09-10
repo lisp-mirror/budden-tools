@@ -9,4 +9,4 @@
          (:file "buddens-readtable")
 ;	 (:file "buddens-sharpdot")
 ))	
-; эгегей!!!!
+; asdf

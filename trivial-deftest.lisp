@@ -24,3 +24,7 @@
 (defmacro deftest (&rest args) 
   "Deprecated. Use ::! instead"
   `(! ,@args))
+
+
+;; todo - может быть, надо, всё же сделать имя, начинающееся с def и проимипротировать его, чтобы 
+;; можно было искать определения. Например deftrivtest

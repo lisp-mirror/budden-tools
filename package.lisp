@@ -33,6 +33,8 @@
    #:maptree
 
 ;; lists. Some function are likely not new... 
+   #:mapcarcar 
+   #:mapcarcadr
    #:direct-sum 
    #:assert-unique-symbols
    #:1-to-list 
@@ -62,7 +64,6 @@
 
 ;; structures
    #:struct-to-alist ; lispworks only for now
-   #:with-conc-name 
 
 ;; strings and symbols
    #:str+
@@ -103,6 +104,10 @@
    #:eval-with-file ; write code to file, compile it and load
    #:not-null ; type (not null)
    #:the* ; errs if type ain't match. Otherwise, returns a thing
+
+;; typed binding
+   #:with-conc-name 
+   #:let-with-conc-type 
 
 ;; i/o utilities
    #:show-hash
