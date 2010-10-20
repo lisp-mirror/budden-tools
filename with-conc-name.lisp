@@ -137,6 +137,7 @@
 ; TODO вспомнить про null object pattern
 (defmacro let-with-conc-type (var type value &body body)
   "type must be an atom"
+  (assert (typep type 'symbol) () "let-with-conc-type: ожидали имя типа, получили ~S" type)
   `(let ((,var ,value))
      (declare (type ,type ,var))
      (with-conc-name ,var ,(symbol+ type '-)
