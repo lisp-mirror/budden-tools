@@ -86,6 +86,7 @@
    #:string-designator-p 
    #:cyrillic-char-p
    #:translit-reversibly
+   #:textual-equal-cyr
 
 ;; evaluation and general shortcuts
 ;  #:let1 is interned to CL as it is very necessary :) 
