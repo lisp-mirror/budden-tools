@@ -438,7 +438,7 @@ iii) if symbol is found more than once then first-symbol-found,list of packages,
     (typecase token
       (symbol 
        (proga 
-         (let* name (symbol-name token)
+         (let* name (symbol-name token) 
            qualified-package (car *package-stack*)
            qualified-colon-no (car *colon-no-stack*)
            package (or qualified-package default-package)
@@ -461,6 +461,11 @@ iii) if symbol is found more than once then first-symbol-found,list of packages,
                               package
                             (cons package (package-seen-packages-list package))))
             ;(print p)(print (:first-time-p))
+               ; FIX1 - здесь проверить: если в символе все буквы - в одинаковом регистре, то искать символ и в нижнем, и в верхнем регистре. 
+               ; ≈сли символ найден - вз€ть его им€, а не то им€, которое прочитано 
+               ; ¬ противном случае, искать только дословно такой символ (и это будет новый смысл readtable-case = upcase
+               ; FIXME найди FIX1 и сделай
+               ; FIXME определить around method дл€ readtable-case и сделать ещЄ одну case-sensitivity-mode только дл€ "наших" таблиц чтени€ - :maybe-upcase-if-uniform-case 
                (:for (values p-sym storage-type) = (find-symbol name p))
                (when (and p-sym  ; символ 
                           (or (eq storage-type :external) ; должен быть внешним 

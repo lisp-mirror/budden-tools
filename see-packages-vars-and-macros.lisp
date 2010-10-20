@@ -110,7 +110,7 @@ pack не поддерживает наших расширений
 
 (defmacro with-xlam-package (&body body)
   `(let ((*real-package* *package*)
-         (*package* *xlam-package*))
+         (*package* *xlam-package*)) ; FIX1 поставить pllet (readtable-case *readtable*) :preserve
      (setf *last-used-real-package* *real-package*)
      ,@body))
 
