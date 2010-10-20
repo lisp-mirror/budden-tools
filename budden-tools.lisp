@@ -159,7 +159,9 @@ supplied-p и т.п."
 
 (defun path-to-a-file (filename) "d:/foo/file.ext --> d:/foo/" 
   (let1 p (pathname filename)
-    (make-pathname :host (pathname-host p) :directory (pathname-directory p))))
+    (make-pathname 
+     :host (pathname-host p) 
+     :directory (pathname-directory p))))
 
 (defun quit-lisp ()
   (let ((quit-symbol (or (find-symbol "QUIT" "CL-USER")
@@ -438,6 +440,16 @@ As a short-hand, #\s means *STANDARD-OUTPUT*, #\t - *TRACE-OUTPUT*"
            (s2 (string s2)))
       (or (string-equal s1 s2)
           (every 'char-equal-cyr s1 s2))))
+
+(defun textual-equal-cyr (s1 s2)
+  "ћы не можем определить equal-cyr, т.к. не умеем ходить по всем типам данных. Ќо хоть так."
+  (flet ((stringify (x)
+           (typecase x
+             (string x)
+             (symbol (string x))
+             (t (prin1-to-string x)))))
+    (string-equal-cyr (stringify s1) (stringify s2))))
+
 (defun cyrillic-char-p (x) 
   (and (characterp x) 
        #+(and lispworks win32) 
