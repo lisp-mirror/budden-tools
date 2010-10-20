@@ -8,17 +8,20 @@
 
 (defvar *keyword-package* (find-package :keyword))
 
-(defvar *package-seen-packages* (make-hash-table :test 'eq)
+(defvar *package-seen-packages* (make-weak-key-hash-table :test 'eq)
   "Additional packages to see from that package")
 
-(defvar *my-readtable-to-good-readtable* (make-hash-table :test 'eq)
+(defvar *my-readtable-to-good-readtable* (make-weak-key-hash-table :test 'eq)
   "Maps altered readtable with reader extensions to their unaltered counterparts"
   )
 
-(defvar *my-readtable-to-colon-readtable* (make-hash-table :test 'eq)
+(defvar *my-readtable-to-colon-readtable* (make-weak-key-hash-table :test 'eq)
   "Maps altered readtable to their colon-readtable"
   )
 
+(defvar *readtable-case-is-ignore-case-if-uniform* (make-weak-key-hash-table :test 'eq)
+  "Если readtable - в этой таблице, то для него действуют особые правила поиска имён. При этом readtable-case нужно поставить в preserve"
+  )
 
 (defvar *record-paren-locations* nil
   "When t, records locations of all objects starting from opening paren"
@@ -110,7 +113,7 @@ pack не поддерживает наших расширений
 
 (defmacro with-xlam-package (&body body)
   `(let ((*real-package* *package*)
-         (*package* *xlam-package*)) ; FIX1 поставить pllet (readtable-case *readtable*) :preserve
+         (*package* *xlam-package*)) 
      (setf *last-used-real-package* *real-package*)
      ,@body))
 
@@ -146,6 +149,10 @@ pack не поддерживает наших расширений
      )
   )
 
+(defmacro in-readtable-ignore-case-if-uniform (rt-designator)
+  `(progn
+     (in-readtable ,rt-designator)
+     (setf (readtable-case-advanced *readtable*) :ignore-case-if-uniform)))
 
 (defvar *number-of-colons*) ; число колонок в последнем квалификаторе, к-рый мы считали
 (defvar *in-careful-token-reader* nil)

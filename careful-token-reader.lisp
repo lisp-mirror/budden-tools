@@ -432,7 +432,87 @@ iii) if symbol is found more than once then first-symbol-found,list of packages,
      (return (values syms-found found-in-package-itself)))))
   
 
-(defun reintern-1 (stream token default-package)  
+(defun all-chars-in-same-case-p (s)
+  (let ((all-downs t)
+        (all-ups t)
+        (up #\a)
+        (down #\a))
+    (declare (symbol all-ups all-downs))
+    (declare (character up down))
+    (iter 
+      (:while (or all-ups all-downs))
+      (:for c :in-string s)
+      (declare (character c))
+      (when all-ups
+        (setf up (#+russian char-upcase-cyr #-russian char-upcase c))
+        (unless (char= up c)
+          (setf all-ups nil)))
+      (when all-downs 
+        (setf down (#+russian char-downcase-cyr #-russian char-downcase c))
+        (unless (char= down c)
+          (setf all-downs nil)))
+      )
+    (or all-ups all-downs)))
+
+
+#+russian 
+(trivial-deftest::! all-chars-in-same-case-p 
+                    (list (bu::all-chars-in-same-case-p "аУреки")
+                          (bu::all-chars-in-same-case-p "АУРЕКИ")
+                          (bu::all-chars-in-same-case-p "ауреки"))
+                    (list nil t t))
+    
+(defun readtable-case-advanced (rt)
+  (let1 rt (ensure-readtable rt)
+    (cond
+     ((gethash rt *readtable-case-is-ignore-case-if-uniform*)
+      (assert (eq (readtable-case rt) :preserve))
+      :ignore-case-if-uniform)
+     (t 
+      (readtable-case rt)))))
+
+(defun set-readtable-case-advanced (rt rtcase)
+  (proga
+    (let rt (ensure-readtable rt))
+    (let good-rt (packages-seen-p rt))
+    (case rtcase
+      (:ignore-case-if-uniform
+       (assert good-rt () "Readtable ~S must be mangled by see-packages to be set to ignore-case-if-uniform" rt)
+       (setf (readtable-case rt) :preserve
+             (readtable-case good-rt) :preserve
+             (gethash rt *readtable-case-is-ignore-case-if-uniform*) t))
+      (t
+       (setf (readtable-case rt) rtcase)
+       (when good-rt
+         (setf (readtable-case good-rt) :preserve))))))
+
+(defsetf readtable-case-advanced set-readtable-case-advanced)
+
+(defun xlam-package-readtable-case (rt)
+  (proga 
+    (let rtcase (readtable-case-advanced rt))
+    (case rtcase
+      (:ignore-case-if-uniform :preserve)
+      (t rtcase))))
+
+(defun find-symbol-with-advanced-readtable-case (name p rt)
+  (proga
+    (let p-sym nil storage-type nil)
+    (case (readtable-case-advanced rt)
+      (:ignore-case-if-uniform
+       (let same-case-p (all-chars-in-same-case-p name))
+       (cond (same-case-p
+              (setf (values p-sym storage-type) (find-symbol (#+russian string-upcase-cyr #-russian string-upcase name) p))
+              (unless storage-type (setf (values p-sym storage-type) (find-symbol (#+russian string-downcase-cyr #-russian string-downcase name) p)))
+              )
+             (t                
+              (setf (values p-sym storage-type) (find-symbol name p))))
+       (values p-sym storage-type))
+      (t (setf (values p-sym storage-type) (find-symbol name p))))))
+
+(defvar +some-uninterned-symbol+ '#:some-uninterned-symbol)
+
+(defun reintern-1 (stream token default-package rt)  
   "Прочитали что-то. Заинтёрним его в контект, определяемый default-package (по смыслу это - *package*), *package-stack*, *colon-no-stack*"
   (proga function
     (typecase token
@@ -455,19 +535,20 @@ iii) if symbol is found more than once then first-symbol-found,list of packages,
            (cond
             ((null qualified-package)
              (iter
-               (:with sym-found = nil)
+               (:with sym-found = +some-uninterned-symbol+)
                (:for real-first-time-p :initially t :then nil)
                (:for p in (if (eq package (find-package :keyword)) 
                               package
                             (cons package (package-seen-packages-list package))))
             ;(print p)(print (:first-time-p))
+               ; BUG - если символ задан как |asdf|, то мы всё равно будем искать символ ASDF и с этим ничего сделать нельзя (разве только отлавливать ещё и #\|) 
                ; FIX1 - здесь проверить: если в символе все буквы - в одинаковом регистре, то искать символ и в нижнем, и в верхнем регистре. 
-               ; Если символ найден - взять его имя, а не то имя, которое прочитано 
+               ; Если символ найден - взять его имя, а не то имя, которое прочитано  
                ; В противном случае, искать только дословно такой символ (и это будет новый смысл readtable-case = upcase
                ; FIXME найди FIX1 и сделай
-               ; FIXME определить around method для readtable-case и сделать ещё одну case-sensitivity-mode только для "наших" таблиц чтения - :maybe-upcase-if-uniform-case 
-               (:for (values p-sym storage-type) = (find-symbol name p))
-               (when (and p-sym  ; символ 
+               ; FIXME определить around method для readtable-case и сделать ещё одну case-sensitivity-mode только для "наших" таблиц чтения - :ignore-case-if-uniform
+               (:for (values p-sym storage-type) = (find-symbol-with-advanced-readtable-case name p rt))
+               (when (and storage-type  ; есть такой символ
                           (or (eq storage-type :external) ; должен быть внешним 
                               real-first-time-p  ; или мы смотрим в *package* и тогда он может быть внутренним тоже
                               ))
@@ -487,8 +568,8 @@ iii) if symbol is found more than once then first-symbol-found,list of packages,
              ; )
             (t
              (multiple-value-bind (sym status)
-                 (find-symbol name qualified-package)
-               (unless sym
+                 (find-symbol-with-advanced-readtable-case name qualified-package rt)
+               (unless status
                  (or *intern-to-qualified-package-silently*
                      (cerror "Create symbol and use it" "Symbol ~A~A~A does not exist" 
                              (package-name qualified-package) 
@@ -546,6 +627,10 @@ iii) if symbol is found more than once then first-symbol-found,list of packages,
 ;      (d *readtable*)
       )))
 
+(defun hp-find-package-with-advanced-readtable-case (string)
+  (hp-find-package (string-upcase string) ; FIXME
+                   ))
+
 (defun read-token-with-colons-1 (stream char)
   "читает кусок до двоеточий. Прочитав, пихает в стек пакетов и вызывает read"
   (proga function
@@ -563,6 +648,7 @@ iii) if symbol is found more than once then first-symbol-found,list of packages,
        (let tok 
          (proga
            (let *readtable* (make-colon-readtable rt-to-restore)) ; *colon-readtable*
+           (pllet1 (readtable-case *readtable*) (xlam-package-readtable-case rt-to-restore)) ; FIX1 поставить pllet (readtable-case *readtable*) :preserve - сделано
            (let res (with-xlam-package (read-preserving-whitespace stream nil nil)))
          ; (done-reading-up-to-colons char rt-to-restore)
            res))
@@ -573,7 +659,7 @@ iii) if symbol is found more than once then first-symbol-found,list of packages,
          (:for cnt :from 0)
          (:for c :next (read-char stream nil nil))
          (unless c 
-           (return-from function (reintern-1 stream tok the-package)))
+           (return-from function (reintern-1 stream tok the-package rt-to-restore)))
          (:with have-colon = nil)
          (case c
            (#\:
@@ -594,7 +680,7 @@ iii) if symbol is found more than once then first-symbol-found,list of packages,
                        (setf cnt 2) ; даже если было одно двоеточие, ищем всё же любые символы, включая внутренние
                        )
                       (t
-                       (setf pack (hp-find-package (string tok)))
+                       (setf pack (hp-find-package-with-advanced-readtable-case (string tok)))
                        (unless pack 
                          (loop 
                           (cerror "Retry" "No ~A package found" tok)))))
@@ -633,7 +719,7 @@ iii) if symbol is found more than once then first-symbol-found,list of packages,
                   (show-package-system-vars "read-token-with-colons: restored" id)
                   )))
              (t ; не двоеточие и не было двоеточий
-              (return-from function (reintern-1 stream tok the-package))
+              (return-from function (reintern-1 stream tok the-package rt-to-restore))
               )
              )))
          ))))

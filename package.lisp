@@ -10,7 +10,7 @@
 
 
 (defpackage :budden-tools
-  (:nicknames :bu)
+  (:nicknames :|budden-tools| :bu)
   (:use :cl :named-readtables :buddens-readtable :defstruct-meta :org.tfeb.hax.hierarchical-packages
    :merge-packages-and-reexport)
   (:import-from :iterate-keywords #:iter #:keywordize #:dsetq)
