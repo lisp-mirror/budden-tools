@@ -274,3 +274,9 @@ body - уже обработанные формы после clause.
          "COMMON-LISP"
          :test 'string=)
 
+
+(trivial-deftest::! #:let-with-conc-type.1
+                    (proga (let-with-conc-type x string "asdf") 
+                      `(,(x.equal "asdf") ,(x.upcase) ,(x.equal x.upcase))
+                      )
+                    '(T "ASDF" T))
