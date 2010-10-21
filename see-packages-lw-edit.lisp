@@ -65,15 +65,15 @@
   (alexandria.0.dev:starts-with-subseq 
    partial-name 
    (symbol-name symbol)
-   :test (if all-chars-in-same-case #'char-equal #'char=)))
+   :test (if all-chars-in-same-case-p #'char-equal #'char=)))
   
 
-BUDDEN 100 > editor::pathetic-parse-symbol "budden::cons" *package*
+#|BUDDEN 100 > editor::pathetic-parse-symbol "budden::cons" *package*
 #<PACKAGE BUDDEN>
 "CONS"
 NIL
 8
-
+|#
 
 (defun my-complete-symbol (partial-name &key predicate symbols default-package return-common-string)
   "Нужно это написать, т.к. lw не понимает регистра и ищет только символы в верхнем регистре"
@@ -88,8 +88,8 @@ NIL
     (multiple-value-bind (pckg sym-str gok prefix-length)
         (editor::pathetic-parse-symbol partial-name default-package))
     (declare (ignore gok))
-    (when prefix-length 
-      (setf partial-name sym-str))
+    (let partial-name-length (length partial-name))
+    (when prefix-length (setf partial-name sym-str))
     (let all-chars-in-same-case-p (all-chars-in-same-case-p partial-name))
     ; тогда ищём всё, что подходит. Но только в default-package
     (let list
@@ -99,7 +99,7 @@ NIL
           (:collect sym))))
     (cond
      (list 
-      (values list (length partial-name) (string (first list)) (symbol-package (first list))))
+      (values list partial-name-length (string (first list)) (symbol-package (first list))))
      (t 
       (values nil 0 nil nil)))
     ))
@@ -260,7 +260,7 @@ NIL
          str
          (eq complete :complete)
          (eq (readtable-case-advanced *readtable*) :ignore-case-if-uniform)
-         (all-chars-in-same-case-p string))
+         (all-chars-in-same-case-p str))
       (setf str (string-downcase str))
       )
     (values str len complete)
