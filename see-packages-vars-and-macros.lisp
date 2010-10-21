@@ -60,7 +60,7 @@
 (defparameter *xlam-package* (find-package :xlam-package))
 (defparameter *xlam-package-for-output* (find-package :xlam-package-for-output))
 
-(defvar *in-with-xlam-package* nil)
+(defvar *in-with-xlam-package* nil "FIXME - не используется, вычистить и удалить")
 (defvar *real-package* nil "Во время with-xlam-package сюда сохраняется *package* с помощью let")
 (defvar *last-used-real-package* nil "Во время with-xlam-package сюда присваивается последнее значение
 *package* с помощью setf. Переменная, наверное, глючная")
@@ -111,11 +111,21 @@ pack не поддерживает наших расширений
        (let *in-with-xlam-package* t)
        ,@body)))
 
-(defmacro with-xlam-package (&body body)
+(defmacro with-xlam-package (&body body) "Заменить на with-xlam-package-2"
   `(let ((*real-package* *package*)
          (*package* *xlam-package*)) 
      (setf *last-used-real-package* *real-package*)
      ,@body))
+
+(defmacro with-xlam-package-2 (temp-rt &body pbody)
+  `(proga
+     (let real-rt *readtable* *real-package* *package*)
+     (let *readtable* ,temp-rt)
+     (let *package* *xlam-package*)
+     (setf *last-used-real-package* *real-package*)
+     (pllet1 (readtable-case *readtable*)
+         (xlam-package-readtable-case real-rt))
+     ,@pbody))
 
 (defmacro with-xlam-package-for-output (&body body)
   `(let ((*real-package* *package*)

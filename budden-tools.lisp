@@ -156,6 +156,15 @@ supplied-p и т.п."
   `(append ,@(iter (:for keyarg :in keyargs) 
                (:collecting `(dispatch-keyarg-simple ,keyarg)))))
 
+(defmacro dispatch-keyarg-full (keyarg) ; FIXME - нужно всё это как-то рихтовать под регистр
+  #+russian "С учётом supplied-p. предполагаем, что supplied-p имеет вид keyarg-supplied-p"
+  (let1 supplied-p-symbol (symbol+ keyarg '-supplied-p)
+    `(when ,supplied-p-symbol `(,(keywordize ',keyarg) ,,keyarg))))
+
+(defmacro dispatch-keyargs-full (&rest keyargs)
+  `(append ,@(iter (:for keyarg :in keyargs) 
+               (:collecting `(dispatch-keyarg-full ,keyarg)))))  
+
 
 (defun path-to-a-file (filename) "d:/foo/file.ext --> d:/foo/" 
   (let1 p (pathname filename)

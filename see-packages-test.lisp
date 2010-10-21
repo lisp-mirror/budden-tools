@@ -9,8 +9,12 @@
 (in-package :see-packages-test)
 
 (ignore-errors (budden-tools::unregister-readtable :see-packages-test-readtable))
+(ignore-errors (budden-tools::unregister-readtable :see-packages-test-readtable-a))
 (defreadtable :see-packages-test-readtable (:merge))
 (see-packages-on :see-packages-test-readtable)
+(defreadtable :see-packages-test-readtable-a (:merge))
+(see-packages-on :see-packages-test-readtable-a)
+(setf (budden-tools::readtable-case-advanced (find-readtable :see-packages-test-readtable-a)) :ignore-case-if-uniform)
 
 (defmacro with-good-readtable (&body body)
   `(let1 *readtable* (budden-tools::packages-seen-p :see-packages-test-readtable)
@@ -18,6 +22,10 @@
 
 (defmacro with-my-readtable (&body body)
   `(let1 *readtable* (find-readtable :see-packages-test-readtable)
+     ,@body))
+
+(defmacro with-my-readtable-a (&body body)
+  `(let1 *readtable* (find-readtable :see-packages-test-readtable-a)
      ,@body))
 
 
@@ -141,6 +149,12 @@
                          (let1 *package* (find-package :tst2) 
                            (with-my-readtable (read-from-string "(foo bar)")))
                          '(:|We-got-FOO| :|we-got-not-a-FOO|))
+
+(deftest case.1
+         (with-my-readtable-a (symbol-name (read-from-string ":preserve")))
+         "PRESERVE"
+         :test 'string=)
+
 
 (defun open-bracket-macro-char (stream macro-char)
   (declare (ignore macro-char))

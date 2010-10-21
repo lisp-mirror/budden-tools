@@ -36,7 +36,12 @@
 
 (defmacro symbol-readmacro (symbol) `(get ,symbol 'symbol-readmacro))
 
-#|
+#| FIXME!!!!! Пока что мы не можем запустить всё это, остались ещё случаи с невыясненным поведением по отношению к регистру:
+
+- keywords (можно всё апкейсить)
+- uninterned символы (нужно всё оставлять как есть или можно тоже апкейсить, хз)
+
+
 (defun reintern (stream symbol package-sym num-of-colons)
   "Интёрнит символ с таким же именем согласно *package* и *my-packages*
 Если это не символ, то возвращает его как есть. Если конфликт, то ругается.
@@ -124,12 +129,40 @@ package-sym показывает префикс пакета, с которым мы считали имя. num-of-colons
 
 
 
-(defun starting-colon-reader (stream char)
+#+nil (defun starting-colon-reader (stream char) ; FIXME deprecate
 ;  (format t "ungething COLON and reading as usual")
   (setf stream (unread-char* char stream))
-  (with-good-readtable-2 ()
+  (with-good-readtable-2 () 
     (read stream t nil t)))
 
+
+(defmacro with-good-readtable-2 ((&key (ensure-this-is-a-bad-one t)) &body body)
+  "переданная readtable должна быть получена с помощью see-packages-on"
+  (with-gensyms (good)
+    `(proga
+       (let ,good (gethash *readtable* *my-readtable-to-good-readtable*))
+;       (print '(:good-readtable-is ,good))
+       ,@(when ensure-this-is-a-bad-one
+           `((assert ,good nil "with-good-readtable: ~A is not a hp-readtable" *readtable*)))
+       (let *readtable* (or ,good *readtable*))
+       ,@body
+       )))
+
+(defun starting-colon-reader (stream char)
+  (declare (ignore char))
+  (proga 
+    (let my-rt *readtable*)
+    ; (setf stream (unread-char* char stream))
+    (let token 
+      (with-xlam-package-2 
+          (with-good-readtable-2 () *readtable*) 
+           ; таблицу чтения берём "хорошую", но readtable-case делаем правильный
+        (read stream t nil t)))
+    (reintern-1 stream token *keyword-package* my-rt)
+     ; 111
+    ))  
+
+  
 
 ;;;; open-paren for symbol-readmacro
 
@@ -525,7 +558,7 @@ iii) if symbol is found more than once then first-symbol-found,list of packages,
            package-kwd (keywordize-package-designator package)
            custom-token-parsers (get-custom-token-parsers-for-package package-kwd)
            )
-         (assert (eq (symbol-package token) *xlam-package*))
+         (assert (or (null token) (eq (symbol-package token) *xlam-package*)))
          (unintern token *xlam-package*)
          (dolist (parser custom-token-parsers)
            (multiple-value-bind (result parsed) (funcall parser stream name package)
@@ -537,8 +570,8 @@ iii) if symbol is found more than once then first-symbol-found,list of packages,
              (iter
                (:with sym-found = +some-uninterned-symbol+)
                (:for real-first-time-p :initially t :then nil)
-               (:for p in (if (eq package (find-package :keyword)) 
-                              package
+               (:for p in (if (eq package *keyword-package*) 
+                              (list package)
                             (cons package (package-seen-packages-list package))))
             ;(print p)(print (:first-time-p))
                ; BUG - если символ задан как |asdf|, то мы всё равно будем искать символ ASDF и с этим ничего сделать нельзя (разве только отлавливать ещё и #\|) 
@@ -631,6 +664,9 @@ iii) if symbol is found more than once then first-symbol-found,list of packages,
   (hp-find-package (string-upcase string) ; FIXME
                    ))
 
+  
+  
+
 (defun read-token-with-colons-1 (stream char)
   "читает кусок до двоеточий. Прочитав, пихает в стек пакетов и вызывает read"
   (proga function
@@ -645,14 +681,8 @@ iii) if symbol is found more than once then first-symbol-found,list of packages,
     (setf 
      result 
      (proga 
-       (let tok 
-         (proga
-           (let *readtable* (make-colon-readtable rt-to-restore)) ; *colon-readtable*
-           (pllet1 (readtable-case *readtable*) (xlam-package-readtable-case rt-to-restore)) ; FIX1 поставить pllet (readtable-case *readtable*) :preserve - сделано
-           (let res (with-xlam-package (read-preserving-whitespace stream nil nil)))
-         ; (done-reading-up-to-colons char rt-to-restore)
-           res))
-       ;(show-expr tok)
+       (let tok (with-xlam-package-2 (make-colon-readtable rt-to-restore)
+                  (read-preserving-whitespace stream nil nil)))
        (iter ; считали какую то фигню. По построению это должен быть "символ", который
              ; может быть либо символом, либо package designator
              ; Что за ней? Двоеточие, или ещё что-то? 
