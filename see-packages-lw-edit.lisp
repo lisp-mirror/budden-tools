@@ -107,11 +107,9 @@ NIL
   
 
 
-(defun decorated-complete-symbol ; FIXME - делать lowercase для 
+(defun decorated-complete-symbol 
        (fn partial-name &key predicate symbols default-package return-common-string)
   (declare (ignorable predicate symbols return-common-string))
-  (print partial-name)
-  (print *readtable*)
   (setf fn 'my-complete-symbol)
   (proga function
     (let *use-decorated-package-system-fns* t)
@@ -159,10 +157,8 @@ NIL
        (return-from function (values (sort rlist 'editor::symbol-string-<)
                                      rlength rstring rpackage))))))
 
-(progn
-  (undecorate-function 'editor::complete-symbol)
-  (decorate-function 'editor::complete-symbol
-                   #'decorated-complete-symbol))
+(decorate-function 'editor::complete-symbol
+                   #'decorated-complete-symbol)
 
 
 
@@ -174,15 +170,6 @@ NIL
 
 (decorate-function 'editor::buffer-package-to-use #'decorated-buffer-package-to-use)
 
-#+nil (defun decorated-pathetic-parse-symbol (fn symbol default-package &optional errorp)
-  (let1 id (new-show-package-system-vars-id)
-    (show-package-system-vars "decorated-pathetic-parse-symbol:before" id)
-    (trace-into-text-file (str++ "decorated-pathetic-parse-symbol:default-package " id " "
-                                 (package-name default-package)))
-    (let1 *package* default-package ; (or *last-used-real-package* default-package)
-      (funcall fn symbol default-package errorp))))
-
-
 (defun decorated-pathetic-parse-symbol (fn symbol default-package &optional errorp)
 ;  (print "decorated-pathetic-parse-symbol IN")
   (let1 id (new-show-package-system-vars-id)
@@ -190,6 +177,7 @@ NIL
     (trace-into-text-file (str++ "decorated-pathetic-parse-symbol:default-package " id " "
                                  (package-name default-package)))
 ;    (let1 defaul*package* default-package ; (or *last-used-real-package* default-package)
+    (print `("decorated-p-p-s" ,symbol))
     (let1 *use-decorated-package-system-fns* t
       (multiple-value-prog1 
           (funcall fn 
@@ -258,11 +246,17 @@ NIL
     (when
         (and 
          str
-         (eq complete :complete)
+         (member complete '(:complete :complete-but-not-unique))
          (eq (readtable-case-advanced *readtable*) :ignore-case-if-uniform)
-         (all-chars-in-same-case-p str))
+         (multiple-value-bind (pckg name-only-str xlam1 xlam2)
+             (editor::pathetic-parse-symbol str package)
+           (declare (ignore pckg xlam1 xlam2))
+           (print `("returned from p-p-s to d-c-s-1" ,name-only-str))
+           (all-chars-in-same-case-p (sequence-last str (length name-only-str)))))
+      (print "ura!")
       (setf str (string-downcase str))
       )
+    (print `(,str ,len ,complete))
     (values str len complete)
     )  ; FIXME - отключить кириллицу в нашем мухляже с RT - кириллицы нет в CL и пусть для неё будет всё preserve
   )
