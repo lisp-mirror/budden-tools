@@ -246,7 +246,7 @@ NIL
     (when
         (and 
          str
-         (member complete '(:complete :complete-but-not-unique))
+         (member complete '(:complete :complete-but-not-unique :not-unique))
          (eq (readtable-case-advanced *readtable*) :ignore-case-if-uniform)
          (multiple-value-bind (pckg name-only-str xlam1 xlam2)
              (editor::pathetic-parse-symbol str package)
@@ -270,6 +270,22 @@ NIL
 ; editor::complete-symbol-1
 ; editor::get-symbol-from-point
 ; editor::complete-symbol
+
+
+(defun decorated-intern-symbol-from-string (fn string &optional default-package)
+  (declare (ignore fn))
+  (proga function 
+    (let res 
+      (let ((*package* (or default-package *package*)))
+        (read-from-string string)))
+    (assert (symbolp res))
+    (find-symbol (symbol-name res) (symbol-package res))
+    ))
+
+
+(decorate-function 'editor::intern-symbol-from-string #'decorated-intern-symbol-from-string)
+
+
 
 (editor:defcommand "RT Restore" 
      (p) ""
