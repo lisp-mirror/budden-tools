@@ -3,6 +3,8 @@
 
 (in-package :budden-tools)
 
+(defvar *keyword-package* (find-package :keyword))
+
 (defun 1-to-list (x) 
   "Makes a list from atom, nil from nil and keeps list intact"
   (cond 
@@ -146,20 +148,53 @@
     )
   "")
 
+
+(defun careful-keywordize (symbol-or-string) 
+  "Keywordize, пригодный для advanced-readtable-case"
+  (let1 symbol-name 
+      (etypecase symbol-or-string
+        (symbol (symbol-name symbol-or-string))
+        (string symbol-or-string))
+    (or (find-symbol symbol-name *keyword-package*) 
+        (find-symbol-with-advanced-readtable-case symbol-name *keyword-package* *readtable* nil)
+        (intern symbol-name *keyword-package*))))
+
 (defmacro dispatch-keyarg-simple (keyarg)
   #+russian "Для передачи похожих аргументов в apply. На самом деле, тут нужно учитывать default,
 supplied-p и т.п."
-  `(when ,keyarg `(,(keywordize ',keyarg) ,,keyarg)))
+  `(when ,keyarg `(,(careful-keywordize ',keyarg) ,,keyarg)))
 
 (defmacro dispatch-keyargs-simple (&rest keyargs)
   #+russian "То же, что и dispatch-keyarg-simple, но для нескольких аргументов сразу"
   `(append ,@(iter (:for keyarg :in keyargs) 
                (:collecting `(dispatch-keyarg-simple ,keyarg)))))
 
-(defmacro dispatch-keyarg-full (keyarg) ; FIXME - нужно всё это как-то рихтовать под регистр
+
+
+(defun careful-add-suffix-to-a-symbol (symbol &rest suffixes)
+  "пробует добавить к символу суффиксы в том или ином (одинаковом) регистре. Если такой символ находится 
+в пакете символа symbol, то возвращает. Если нет - ругается. Если символ бездомный - просто добавляет"
+  (let* ((ssuffixes (apply 'str+ suffixes))
+         (package (symbol-package symbol))
+         (sname (symbol-name symbol)))
+    (cond
+     ((null package)
+      (make-symbol (str+ sname ssuffixes)))
+     (t 
+      (or
+       (find-symbol (str+ sname (string-upcase ssuffixes)) package)
+       (find-symbol (str+ sname (string-downcase ssuffixes)) package)
+       (error "Unable to find symbol ~S with suffix ~S in package ~S in either case" sname ssuffixes package)
+       )))))
+
+
+(defmacro dispatch-keyarg-full (keyarg) 
   #+russian "С учётом supplied-p. предполагаем, что supplied-p имеет вид keyarg-supplied-p"
-  (let1 supplied-p-symbol (symbol+ keyarg '-supplied-p)
-    `(when ,supplied-p-symbol `(,(keywordize ',keyarg) ,,keyarg))))
+  (let1 package (symbol-package keyarg)
+    (assert (not (eq package *keyword-package*)))
+    (let1 supplied-p-symbol (careful-add-suffix-to-a-symbol keyarg '-supplied-p)
+      `(when ,supplied-p-symbol `(,(careful-keywordize ',keyarg) ,,keyarg)))))
+; FIXME похоже, понадобится careful-keywordize
 
 (defmacro dispatch-keyargs-full (&rest keyargs)
   `(append ,@(iter (:for keyarg :in keyargs) 
@@ -368,7 +403,8 @@ As a short-hand, #\s means *STANDARD-OUTPUT*, #\t - *TRACE-OUTPUT*"
 
 (cl-user::portably-without-package-locks
   (defun keywordize (symbol-or-string) ; altering keywordize from iterate
-    (etypecase symbol-or-string
+    (careful-keywordize symbol-or-string)
+    #+nil (etypecase symbol-or-string
       (symbol (intern (symbol-name symbol-or-string) :keyword))
       (string (intern symbol-or-string :keyword)))))
 

@@ -1,4 +1,7 @@
 (in-package :cl-user) 
+#.(progn 
+   (setf *readtable* (copy-readtable nil))
+   nil)
 
 ; deprecate it? вряд ли, потому что struct-to-alist
 (defpackage :defstruct-meta (:use :cl)
@@ -9,8 +12,8 @@
   )
 
 
-(defpackage :budden-tools
-  (:nicknames :|budden-tools| :bu)
+(defpackage "BUDDEN-TOOLS"
+  (:nicknames "budden-tools" "bu" "BU")
   (:use :cl :named-readtables :buddens-readtable :defstruct-meta :org.tfeb.hax.hierarchical-packages
    :merge-packages-and-reexport)
   (:import-from :iterate-keywords #:iter #:keywordize #:dsetq)
@@ -54,6 +57,7 @@
    #:getf* ; setfable
    #:dispatch-keyarg-simple ; helps to build dispatched arglists with &key arguments
    #:dispatch-keyargs-simple 
+   #:dispatch-keyargs-full 
    #:_f
    #:symbol-macroletf   
 
@@ -119,6 +123,7 @@
 ;; system environment
    #:map-dir 
    #:path-to-a-file
+   #:maybe-add-slash ; got a directory name. Make sure it ends with slash
    #:up-dir
    #:pathname-to-filename ; from swank-backend
    #:filename-to-pathname ; from swank-backend
@@ -128,6 +133,7 @@
    #:*read-eval-stream*
 
 ;; see-packages and friends
+   #:*keyword-package*
    #:see-packages-on ; enable see-packages extensions on a (named) readtable. TODO: rename it
    #:see-packages
    #:see-packages-find-symbol ; returns (values ((symbol-found . package-where-found) ...) 

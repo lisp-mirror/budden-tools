@@ -36,7 +36,8 @@
 
 (defmethod perform :after 
   ((op compile-op) (c (eql (find-system :see-packages))))
-  (setf *features* (delete :building-see-packages *features*)) 
+  (setf *features* (delete :building-see-packages *features*))
+  (pushnew :see-packages *features*)
   (provide :see-packages))
 
 

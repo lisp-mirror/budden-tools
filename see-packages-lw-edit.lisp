@@ -4,7 +4,6 @@
 (defvar *editors-real-package* nil) 
 
 (defvar *use-decorated-package-system-fns* nil)
-(defparameter *keyword-package* (apply-undecorated 'find-package '(:keyword)))
 
 ;;; ВНИМАНИЕ! Это изменение необходимо для нормальной работы иерархических пакетов, 
 ;;; т.к. мы не можем назначить наш ридмакрос на #\. 
@@ -278,9 +277,9 @@ NIL
     (let res 
       (let ((*package* (or default-package *package*)))
         (read-from-string string)))
-    (assert (symbolp res))
-    (find-symbol (symbol-name res) (symbol-package res))
-    ))
+    (when (symbolp res)
+      (find-symbol (symbol-name res) (symbol-package res))
+      )))
 
 
 (decorate-function 'editor::intern-symbol-from-string #'decorated-intern-symbol-from-string)

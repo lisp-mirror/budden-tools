@@ -151,6 +151,7 @@ package-sym показывает префикс пакета, с которым мы считали имя. num-of-colons
 (defun starting-colon-reader (stream char)
   (declare (ignore char))
   (proga 
+    (let *token-starts-with-vertical-line* nil)
     (let my-rt *readtable*)
     ; (setf stream (unread-char* char stream))
     (let token 
@@ -158,7 +159,7 @@ package-sym показывает префикс пакета, с которым мы считали имя. num-of-colons
           (with-good-readtable-2 () *readtable*) 
            ; таблицу чтения берём "хорошую", но readtable-case делаем правильный
         (read stream t nil t)))
-    (reintern-1 stream token *keyword-package* my-rt)
+    (reintern-1 stream token *keyword-package* my-rt *token-starts-with-vertical-line*)
      ; 111
     ))  
 
@@ -477,23 +478,35 @@ iii) if symbol is found more than once then first-symbol-found,list of packages,
       (:for c :in-string s)
       (declare (character c))
       (when all-ups
-        (setf up (#+russian char-upcase-cyr #-russian char-upcase c))
+        (setf up ; (#+russian char-upcase-cyr #-russian char-upcase c)
+              (char-upcase c))
         (unless (char= up c)
           (setf all-ups nil)))
       (when all-downs 
-        (setf down (#+russian char-downcase-cyr #-russian char-downcase c))
+        (setf down ; (#+russian char-downcase-cyr #-russian char-downcase c)
+              (char-downcase c))
         (unless (char= down c)
           (setf all-downs nil)))
       )
-    (or all-ups all-downs)))
+    (cond
+     ((and all-ups all-downs) :ignore-case)
+     (all-ups :uppercase)
+     (all-downs :lowercase)
+     (t nil))))
+
 
 
 #+russian 
 (trivial-deftest::! all-chars-in-same-case-p 
                     (list (bu::all-chars-in-same-case-p "аУреки")
                           (bu::all-chars-in-same-case-p "АУРЕКИ")
-                          (bu::all-chars-in-same-case-p "ауреки"))
-                    (list nil t t))
+                          (bu::all-chars-in-same-case-p "ауреки")
+                          (bu::all-chars-in-same-case-p "aureki")
+                          (bu::all-chars-in-same-case-p "AUReki")
+                          (bu::all-chars-in-same-case-p "AUREKI")
+                          )
+                    (list :ignore-case :ignore-case :ignore-case
+                          :lowercase nil :uppercase))
     
 (defun readtable-case-advanced (rt)
   (let1 rt (ensure-readtable rt)
@@ -528,12 +541,12 @@ iii) if symbol is found more than once then first-symbol-found,list of packages,
       (:ignore-case-if-uniform :preserve)
       (t rtcase))))
 
-(defun find-symbol-with-advanced-readtable-case (name p rt)
+(defun find-symbol-with-advanced-readtable-case (name p rt starts-with-vertical-line)
   (proga
     (let p-sym nil storage-type nil)
     (case (readtable-case-advanced rt)
       (:ignore-case-if-uniform
-       (let same-case-p (all-chars-in-same-case-p name))
+       (let same-case-p (and (not starts-with-vertical-line) (all-chars-in-same-case-p name)))
        (cond (same-case-p
               (setf (values p-sym storage-type) (find-symbol (#+russian string-upcase-cyr #-russian string-upcase name) p))
               (unless storage-type (setf (values p-sym storage-type) (find-symbol (#+russian string-downcase-cyr #-russian string-downcase name) p)))
@@ -545,7 +558,7 @@ iii) if symbol is found more than once then first-symbol-found,list of packages,
 
 (defvar +some-uninterned-symbol+ '#:some-uninterned-symbol)
 
-(defun reintern-1 (stream token default-package rt)  
+(defun reintern-1 (stream token default-package rt starts-with-vertical-line)  
   "Прочитали что-то. Заинтёрним его в контект, определяемый default-package (по смыслу это - *package*), *package-stack*, *colon-no-stack*"
   (proga function
     (typecase token
@@ -560,10 +573,11 @@ iii) if symbol is found more than once then first-symbol-found,list of packages,
            )
          (assert (or (null token) (eq (symbol-package token) *xlam-package*)))
          (unintern token *xlam-package*)
-         (dolist (parser custom-token-parsers)
-           (multiple-value-bind (result parsed) (funcall parser stream name package)
-             (when parsed
-               (return-from function (values result t)))))
+         (when stream ; stream может быть nil при вызове из decorated-get-symbol-from-point
+           (dolist (parser custom-token-parsers)
+             (multiple-value-bind (result parsed) (funcall parser stream name package)
+               (when parsed
+                 (return-from function (values result t))))))
          (let res 
            (cond
             ((null qualified-package)
@@ -580,7 +594,7 @@ iii) if symbol is found more than once then first-symbol-found,list of packages,
                ; В противном случае, искать только дословно такой символ (и это будет новый смысл readtable-case = upcase
                ; FIXME найди FIX1 и сделай
                ; FIXME определить around method для readtable-case и сделать ещё одну case-sensitivity-mode только для "наших" таблиц чтения - :ignore-case-if-uniform
-               (:for (values p-sym storage-type) = (find-symbol-with-advanced-readtable-case name p rt))
+               (:for (values p-sym storage-type) = (find-symbol-with-advanced-readtable-case name p rt *token-starts-with-vertical-line*))
                (when (and storage-type  ; есть такой символ
                           (or (eq storage-type :external) ; должен быть внешним 
                               real-first-time-p  ; или мы смотрим в *package* и тогда он может быть внутренним тоже
@@ -601,7 +615,7 @@ iii) if symbol is found more than once then first-symbol-found,list of packages,
              ; )
             (t
              (multiple-value-bind (sym status)
-                 (find-symbol-with-advanced-readtable-case name qualified-package rt)
+                 (find-symbol-with-advanced-readtable-case name qualified-package rt starts-with-vertical-line)
                (unless status
                  (or *intern-to-qualified-package-silently*
                      (cerror "Create symbol and use it" "Symbol ~A~A~A does not exist" 
@@ -614,7 +628,7 @@ iii) if symbol is found more than once then first-symbol-found,list of packages,
                    (cerror "Use symbol anyway" "Symbol ~S is not external in ~A" 
                            sym qualified-package)))
                sym))))
-         (when (symbolp res)
+         (when (and (symbolp res) stream)
            (let1 readmacro (symbol-readmacro res)
              (when readmacro 
                (return-from function (funcall readmacro stream res)))))
@@ -624,8 +638,9 @@ iii) if symbol is found more than once then first-symbol-found,list of packages,
 
 
 (defun careful-token-reader (stream char) 
-  (values (read-token-with-colons-1 stream char))
-  )
+  (let1 *token-starts-with-vertical-line* nil
+    (values (read-token-with-colons-1 stream char))
+    ))
 
 (defvar *show-package-system-vars-id* 0)
 
@@ -637,11 +652,13 @@ iii) if symbol is found more than once then first-symbol-found,list of packages,
   (incf *show-package-system-vars-id*))
 
 (defun trace-into-text-file (s)
+  (declare (ignorable s))
   #+nil (with-open-file (oo "c:/lisp.trace.txt" :direction :output :if-does-not-exist :create :if-exists :append)
     (write-string (str+ (the* string s) "
 ") oo)))
 
 (defun show-package-system-vars (prefix id)
+  (declare (ignorable prefix id))
   #+nil (with-open-file (oo "c:/lisp.trace.txt" :direction :output :if-does-not-exist :create :if-exists :append)
     (proga
       (macrolet d (var)
@@ -660,16 +677,19 @@ iii) if symbol is found more than once then first-symbol-found,list of packages,
 ;      (d *readtable*)
       )))
 
-(defun hp-find-package-with-advanced-readtable-case (string)
-  (hp-find-package (string-upcase string) ; FIXME
+(defun hp-find-package-with-advanced-readtable-case (string starts-with-vertical-line)
+  (hp-find-package (if starts-with-vertical-line string (string-upcase string)) ; FIXME? 
                    ))
 
   
-  
+(defvar *package-designator-starts-from-vertical-line* nil)  
+(defvar *symbol-name-starts-from-vertical-line* nil)  
+(defvar *token-starts-with-vertical-line* nil)
 
 (defun read-token-with-colons-1 (stream char)
   "читает кусок до двоеточий. Прочитав, пихает в стек пакетов и вызывает read"
   (proga function
+    (setf *token-starts-with-vertical-line* (eql char #\|))
     (let the-package *package*)
     (let rt-to-restore *readtable*)
     (let *reading-up-to-colons* *reading-up-to-colons*) ; для thread-safety
@@ -688,8 +708,8 @@ iii) if symbol is found more than once then first-symbol-found,list of packages,
              ; Что за ней? Двоеточие, или ещё что-то? 
          (:for cnt :from 0)
          (:for c :next (read-char stream nil nil))
-         (unless c 
-           (return-from function (reintern-1 stream tok the-package rt-to-restore)))
+         (unless c ; ничего нет. 
+           (return-from function (reintern-1 stream tok the-package rt-to-restore *token-starts-with-vertical-line*)))
          (:with have-colon = nil)
          (case c
            (#\:
@@ -702,7 +722,7 @@ iii) if symbol is found more than once then first-symbol-found,list of packages,
            (t ; не двоеточие
             (setf stream (unread-char* c stream))
             (cond 
-             (have-colon ; но были двоеточия
+             (have-colon ; но закончили читать на двоеточии
               (proga
                 (let pack nil)
                 (cond ((and (string= (string tok) "_") *package-stack*)
@@ -710,7 +730,7 @@ iii) if symbol is found more than once then first-symbol-found,list of packages,
                        (setf cnt 2) ; даже если было одно двоеточие, ищем всё же любые символы, включая внутренние
                        )
                       (t
-                       (setf pack (hp-find-package-with-advanced-readtable-case (string tok)))
+                       (setf pack (hp-find-package-with-advanced-readtable-case (string tok) *token-starts-with-vertical-line*))
                        (unless pack 
                          (loop 
                           (cerror "Retry" "No ~A package found" tok)))))
@@ -737,19 +757,9 @@ iii) if symbol is found more than once then first-symbol-found,list of packages,
 
 
                 (return-from function (read stream t nil t))
-                #+nil (unwind-protect 
-                    ; если другая readtable не понимает наших расширений, мы вынуждены
-                    ; связать *package* со считанным квалификатором. В этом случае, 
-                    ; если *real-package* не присвоен, 
-                    ; мы связываем его и делаем setf *last-used-real-package* 
-                    (maybe-bind-package 
-                     (unless (packages-seen-p *readtable*) pack)
-                     (show-package-system-vars "read-token-with-colons: inside" id)         
-                     (return-from function (read stream t nil t)))
-                  (show-package-system-vars "read-token-with-colons: restored" id)
-                  )))
+                ))
              (t ; не двоеточие и не было двоеточий
-              (return-from function (reintern-1 stream tok the-package rt-to-restore))
+              (return-from function (reintern-1 stream tok the-package rt-to-restore *token-starts-with-vertical-line*))
               )
              )))
          ))))

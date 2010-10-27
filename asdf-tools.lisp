@@ -383,7 +383,7 @@ is meant in terms of load operation"
     (call-next-method)
     ))  
 
-(defun keywordize (symbol) "From iterate"
+(defun keywordize (symbol) "From iterate" ; see also careful-keywordize
   (intern (symbol-name symbol) :keyword))
 
 (defun lock-system (name) 

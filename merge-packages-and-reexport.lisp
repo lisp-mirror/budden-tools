@@ -460,6 +460,32 @@ and explain if we can't"
     (if show-symbols result
       (mapcar 'cdr result))))
 
+(defun all-chars-in-same-case-p (s)
+  (let ((all-downs t)
+        (all-ups t)
+        (up #\a)
+        (down #\a))
+    (declare (symbol all-ups all-downs))
+    (declare (character up down))
+    (iter 
+      (:while (or all-ups all-downs))
+      (:for c :in-string s)
+      (declare (character c))
+      (when all-ups
+        (setf up (char-upcase c))
+        (unless (char= up c)
+          (setf all-ups nil)))
+      (when all-downs 
+        (setf down (char-downcase c))
+        (unless (char= down c)
+          (setf all-downs nil)))
+      )
+    (cond
+     ((and all-ups all-downs) :ignore-case)
+     (all-ups :uppercase)
+     (all-downs :lowercase)
+     (t nil))))
+
 
 (defmacro package-doctor (package-with-trash &key packages)
   "Returns a form which would likely clear trash symbols"
@@ -523,6 +549,33 @@ and explain if we can't"
                      )))))
            'string<
            :key 'car))
-        ))
+      "Identical UPPERCASE and lowercase names. Suggest to delete either unbound of them, just list the rest"
+      ,@(sort 
+         (iter 
+           (:for sym :in-package package-with-trash)
+           (:for sname = (symbol-name sym))
+           (:for case = (all-chars-in-same-case-p sname))
+           (:for other-sym = 
+            (case case
+              (:uppercase (find-symbol (string-downcase sname) package-with-trash))
+              (:lowercase (find-symbol (string-upcase sname) package-with-trash))
+              (t nil)))
+           (:for other-sname = (symbol-name other-sym))
+           (when other-sym
+             (:for boundp = (boundp sym))
+             (:for fboundp = (fboundp sym))
+             (:for boundpo = (boundp other-sym))
+             (:for fboundpo = (fboundp other-sym))
+             (cond ((and (or boundp fboundp)
+                         (not (or boundpo fboundpo)))
+                    (:collect `(delete-symbols-from-package ,package-with-trash ,other-sname)))
+                   ((and (eq (find-package package-with-trash) :keyword)
+                         (eq case :uppercase)) ; remove lowercase keyword if there is a conflict
+                    (:collect `(delete-symbols-from-package ,package-with-trash ,other-sname)))
+                   (t (:collect `(,sname ,other-sym :both-are-bound))))
+             ))
+         'string<
+         :key 'car))
+  )
 
 

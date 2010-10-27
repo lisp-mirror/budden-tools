@@ -70,6 +70,7 @@
   )
 
 (defmacro with-conc-name (var conc-name &body body)
+  "Теперь оно пытается игнорировать регистр символов "
   (let* ((svar (string var))
          (len (length svar))
          (string-concname (string conc-name)))
@@ -84,14 +85,17 @@
                     )
                (and 
                 (> snamelen len)
-                (eql (mismatch sname svar) len)
+                (eql (mismatch sname svar :test 'char-equal) len)
                 (eql (elt sname len) #\.)
                 (let ((accessor-name
-                       (find-symbol
-                        (concatenate 'string 
-                                     string-concname
-                                     (subseq sname (1+ len)))
+                       (find-symbol-with-advanced-readtable-case
+                        (string-upcase
+                         (concatenate 'string 
+                                      string-concname
+                                      (subseq sname (1+ len))))
                         *package*
+                        *readtable*
+                        nil ; хм? FIXME разобраться, что значит этот nil. 
                         )))
                   (when accessor-name                                                       
                     (values accessor-name var))
@@ -144,9 +148,11 @@
        ,@body)))
 
 
+#+see-packages
 (trivial-deftest::! #:let-with-conc-type.1
                     (let-with-conc-type x string "asdf"
                       `(,(x.equal "asdf") ,(x.upcase) ,(x.equal x.upcase))
                       )
                     '(T "ASDF" T))
 
+; FIXME - тест требует see-packages, но они ещё не загружены
