@@ -572,7 +572,7 @@ and explain if we can't"
                    ((and (eq (find-package package-with-trash) :keyword)
                          (eq case :uppercase)) ; remove lowercase keyword if there is a conflict
                     (:collect `(delete-symbols-from-package ,package-with-trash ,other-sname)))
-                   (t (:collect `(,sname ,other-sym :both-are-bound))))
+                   (t (:collect `(,sname ,other-sname :both-are-bound))))
              ))
          'string<
          :key 'car))
