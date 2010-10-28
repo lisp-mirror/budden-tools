@@ -184,7 +184,9 @@ supplied-p è ò.ï."
       (or
        (find-symbol (str+ sname (string-upcase ssuffixes)) package)
        (find-symbol (str+ sname (string-downcase ssuffixes)) package)
-       (error "Unable to find symbol ~S with suffix ~S in package ~S in either case" sname ssuffixes package)
+       (find-symbol (str+ sname (string-upcase ssuffixes)) *package*)
+       (find-symbol (str+ sname (string-downcase ssuffixes)) *package*)
+       (error "Unable to find symbol ~S with suffix ~S in packages ~S and ~S in either case" sname ssuffixes package *package*)
        )))))
 
 
@@ -400,13 +402,6 @@ As a short-hand, #\s means *STANDARD-OUTPUT*, #\t - *TRACE-OUTPUT*"
         (t name)))
 
 (defun dotted-p (l) (values (last l 0) (butlast l 0)))
-
-(cl-user::portably-without-package-locks
-  (defun keywordize (symbol-or-string) ; altering keywordize from iterate
-    (careful-keywordize symbol-or-string)
-    #+nil (etypecase symbol-or-string
-      (symbol (intern (symbol-name symbol-or-string) :keyword))
-      (string (intern symbol-or-string :keyword)))))
 
 
 (defun string-designator-p (x) (typep x 'string-designator))

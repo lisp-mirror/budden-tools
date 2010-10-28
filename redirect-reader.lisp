@@ -234,6 +234,13 @@ is already an altered readtable, simply returns it TODO: rename me"
 ;;;;;;;;;;;;;;;;;;;;;;; Change a printer end ;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 
+(cl-user::portably-without-package-locks
+  (defun keywordize (symbol-or-string) ; altering keywordize from iterate
+    (careful-keywordize symbol-or-string)
+    #+nil (etypecase symbol-or-string
+      (symbol (intern (symbol-name symbol-or-string) :keyword))
+      (string (intern symbol-or-string :keyword)))))
+
 (defpackage :tst (:use))
   ;(print "-----------------4---------------------")
 (let ((*readtable* *my-readtable*)
