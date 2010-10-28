@@ -158,9 +158,11 @@ package-sym показывает префикс пакета, с которым мы считали имя. num-of-colons
       (with-xlam-package-2 
           (with-good-readtable-2 () *readtable*) 
            ; таблицу чтения берём "хорошую", но readtable-case делаем правильный
+        ; FIXME - при попытке чтения символа ::a будет ошибка. Нужно писать символ как :|:a| или :\:a
+        ; FIXME - также не работает :|a| vs :|A|, символ читается без учёта регистра
+        ; наверное, надо что-то менять
         (read stream t nil t)))
     (reintern-1 stream token *keyword-package* my-rt *token-starts-with-vertical-line*)
-     ; 111
     ))  
 
   
