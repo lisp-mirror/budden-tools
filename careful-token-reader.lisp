@@ -148,7 +148,7 @@ package-sym показывает префикс пакета, с которым мы считали имя. num-of-colons
        ,@body
        )))
 
-(defun starting-colon-reader (stream char)
+#+nil (defun starting-colon-reader (stream char)
   (declare (ignore char))
   (proga 
     (let *token-starts-with-vertical-line* nil)
@@ -164,6 +164,16 @@ package-sym показывает префикс пакета, с которым мы считали имя. num-of-colons
         (read stream t nil t)))
     (reintern-1 stream token *keyword-package* my-rt *token-starts-with-vertical-line*)
     ))  
+
+(defun starting-colon-reader (stream char)
+  (proga  
+    ;(break)
+    (let *token-starts-with-vertical-line* nil)
+    (setf char (read-char stream))
+    (let *package* *keyword-package*)
+    (values (read-token-with-colons-1 stream char))
+    ))
+
 
   
 
@@ -571,7 +581,7 @@ iii) if symbol is found more than once then first-symbol-found,list of packages,
            qualified-colon-no (car *colon-no-stack*)
            package (or qualified-package default-package)
            package-kwd (keywordize-package-designator package)
-           custom-token-parsers (get-custom-token-parsers-for-package package-kwd)
+           custom-token-parsers (unless starts-with-vertical-line (get-custom-token-parsers-for-package package-kwd))
            )
          (assert (or (null token) (eq (symbol-package token) *xlam-package*)))
          (unintern token *xlam-package*)
@@ -590,7 +600,6 @@ iii) if symbol is found more than once then first-symbol-found,list of packages,
                               (list package)
                             (cons package (package-seen-packages-list package))))
             ;(print p)(print (:first-time-p))
-               ; BUG - если символ задан как |asdf|, то мы всё равно будем искать символ ASDF и с этим ничего сделать нельзя (разве только отлавливать ещё и #\|) 
                ; FIX1 - здесь проверить: если в символе все буквы - в одинаковом регистре, то искать символ и в нижнем, и в верхнем регистре. 
                ; Если символ найден - взять его имя, а не то имя, которое прочитано  
                ; В противном случае, искать только дословно такой символ (и это будет новый смысл readtable-case = upcase
