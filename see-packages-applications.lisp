@@ -23,6 +23,23 @@
        (assert (eq (symbol-package symbol-or-string) +package-for-read-symbol-name+))
        (unintern symbol-or-string +package-for-read-symbol-name+)
        (symbol-name symbol-or-string)))))
+
+
+(defun convert-dot-to---> (stream symbol-name package)
+  "превращает точку в -->"
+  (declare (ignore stream))
+  (let* ((p (position #\. symbol-name)))
+    (cond 
+     ((null p) (values nil nil))
+     (t (let ((beg (subseq symbol-name 0 p))
+              (end (subseq symbol-name (+ p 1))))
+          (print `(,beg ,end))
+          (values (let ((*package* package))
+                    `(|-->| ,(read-from-string beg) ,(read-from-string end)))
+                  t))))))
+
+(pushnew #'convert-dot-to---> (get-custom-token-parsers-for-package :budden))
+
   
 
 (defun -->-reader (stream symbol)
@@ -32,7 +49,7 @@
            (field-name (read-symbol-name stream))
            (args (read-delimited-list #\) stream t)))
     (unread-char #\) stream) ; очень сомнительно.
-    `(-->-expander ,object ,field-name ,@args)))
+    `(|-->| ,object ,field-name ,@args)))
 
 (setf (budden-tools:symbol-readmacro (intern "-->" :budden-tools)) '-->-reader)
 
