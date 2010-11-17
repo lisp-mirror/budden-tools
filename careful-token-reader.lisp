@@ -639,7 +639,7 @@ iii) if symbol is found more than once then first-symbol-found,list of packages,
                    (cerror "Use symbol anyway" "Symbol ~S is not external in ~A" 
                            sym qualified-package)))
                sym))))
-         (when (and (symbolp res) stream)
+         (when (and (symbolp res) stream (not starts-with-vertical-line))
            (let1 readmacro (symbol-readmacro res)
              (when readmacro 
                (return-from function (funcall readmacro stream res)))))
