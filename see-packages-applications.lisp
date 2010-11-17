@@ -8,6 +8,36 @@
         (let1 *package* (find-package (read stream))
           (read stream))))
 
+
+(defpackage :package-for-read-symbol-name (:use))
+(defparameter +package-for-read-symbol-name+ 
+  (find-package :package-for-read-symbol-name))
+
+(defun read-symbol-name (stream)
+  "Читает символ, но возвращает только его имя. Если символ в потоке не имеет квалификатора, то такой символ вообще не будет создан"
+  (let1 symbol-or-string (let1 *package* +package-for-read-symbol-name+
+                 (read stream t))
+    (etypecase symbol-or-string
+      (string symbol-or-string)
+      (symbol
+       (assert (eq (symbol-package symbol-or-string) +package-for-read-symbol-name+))
+       (unintern symbol-or-string +package-for-read-symbol-name+)
+       (symbol-name symbol-or-string)))))
+  
+
+(defun -->-reader (stream symbol)
+  (declare (ignore symbol))
+  (it-is-a-car-symbol-readmacro)
+  (let* ((object (read stream t))
+           (field-name (read-symbol-name stream))
+           (args (read-delimited-list #\) stream t)))
+    (unread-char #\) stream) ; очень сомнительно.
+    `(-->-expander ,object ,field-name ,@args)))
+
+(setf (budden-tools:symbol-readmacro (intern "-->" :budden-tools)) '-->-reader)
+
+
+
 ;; (/with-readtable-case/ :preserve '(foo bar))
 ;; Note that readtable case is evaluated at read-time 
 (setf (budden-tools:symbol-readmacro (intern "/WITH-READTABLE-CASE/" :budden-tools))
