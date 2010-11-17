@@ -8,7 +8,7 @@
 ;;; ВНИМАНИЕ! Это изменение необходимо для нормальной работы иерархических пакетов, 
 ;;; т.к. мы не можем назначить наш ридмакрос на #\. 
 (defun decorated-find-package (fn name)
-  (bu::hp-find-package name 
+  (bu::hp-find-package (if (stringp name) (string-upcase name) name)
                        (if *use-decorated-package-system-fns*
                            (minimal-fix-xlam-package *package* :stack :find-package)
                          *package*) fn))
@@ -60,11 +60,31 @@
     )
   )
 
-(defun may-symbol-complete-symbol (partial-name symbol all-chars-in-same-case-p)
-  (alexandria.0.dev:starts-with-subseq 
-   partial-name 
-   (symbol-name symbol)
-   :test (if all-chars-in-same-case-p #'char-equal #'char=)))
+(defun symbol-is-in-package (symbol package external-only)
+  "Возвращает t, если данный символ доступен в данном пакете. Если external-only, то возвращает t, только если он внешний в данном пакете"
+  (proga
+    (multiple-value-bind (other-symbol status) (find-symbol (symbol-name symbol) package))
+    (cond
+     ((null symbol)
+      (cond ((null other-symbol) t)
+            (t nil)))
+     ((null other-symbol) nil)
+     ((not (eq symbol other-symbol)) nil)
+     ((eq status :EXTERNAL) t)
+     ((not external-only) t)
+     (t nil))))
+
+(defun may-symbol-complete-symbol (symbol default-package partial-name external-only all-chars-in-same-case-p)
+  (proga
+    (cond
+     ((not (symbol-is-in-package symbol default-package external-only))
+           nil)
+     (t 
+      (alexandria.0.dev:starts-with-subseq 
+       partial-name 
+       (symbol-name symbol)
+       :test (if all-chars-in-same-case-p #'char-equal #'char=)))
+     )))
   
 
 #|BUDDEN 100 > editor::pathetic-parse-symbol "budden::cons" *package*
@@ -84,9 +104,8 @@ NIL
     (unless return-common-string
       ;(break "not return-common-string")
       )
-    (multiple-value-bind (pckg sym-str gok prefix-length)
+    (multiple-value-bind (pckg sym-str external-only prefix-length)
         (editor::pathetic-parse-symbol partial-name default-package))
-    (declare (ignore gok))
     (let partial-name-length (length partial-name))
     (when prefix-length (setf partial-name sym-str))
     (let all-chars-in-same-case-p (all-chars-in-same-case-p partial-name))
@@ -94,7 +113,7 @@ NIL
     (let list
       (iter:iter
         (:for sym :in-package pckg)
-        (when (may-symbol-complete-symbol partial-name sym all-chars-in-same-case-p)
+        (when (may-symbol-complete-symbol sym pckg partial-name external-only all-chars-in-same-case-p)
           (:collect sym))))
     (cond
      (list 
@@ -153,6 +172,7 @@ NIL
         (setf rlist list rlength length rstring string rpackage package))
        )
       (:finally 
+       ;(break)
        (return-from function (values (sort rlist 'editor::symbol-string-<)
                                      rlength rstring rpackage))))))
 
@@ -176,7 +196,7 @@ NIL
     (trace-into-text-file (str++ "decorated-pathetic-parse-symbol:default-package " id " "
                                  (package-name default-package)))
 ;    (let1 defaul*package* default-package ; (or *last-used-real-package* default-package)
-    (print `("decorated-p-p-s" ,symbol))
+    ;(print `("decorated-p-p-s" ,symbol))
     (let1 *use-decorated-package-system-fns* t
       (multiple-value-prog1 
           (funcall fn 
@@ -250,12 +270,12 @@ NIL
          (multiple-value-bind (pckg name-only-str xlam1 xlam2)
              (editor::pathetic-parse-symbol str package)
            (declare (ignore pckg xlam1 xlam2))
-           (print `("returned from p-p-s to d-c-s-1" ,name-only-str))
+           ; (print `("returned from p-p-s to d-c-s-1" ,name-only-str))
            (all-chars-in-same-case-p (sequence-last str (length name-only-str)))))
-      (print "ura!")
+      ; (print "ura!")
       (setf str (string-downcase str))
       )
-    (print `(,str ,len ,complete))
+    ; (print `(,str ,len ,complete))
     (values str len complete)
     )  ; FIXME - отключить кириллицу в нашем мухляже с RT - кириллицы нет в CL и пусть для неё будет всё preserve
   )
