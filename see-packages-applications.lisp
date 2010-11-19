@@ -25,34 +25,55 @@
        (symbol-name symbol-or-string)))))
 
 
-(defun convert-dot-to---> (stream symbol-name package)
-  "превращает точку в -->"
-  (declare (ignore stream))
-  (let* ((p (position #\. symbol-name)))
-    (cond 
-     ((null p) (values nil nil))
-     (t (let ((beg (subseq symbol-name 0 p))
-              (end (subseq symbol-name (+ p 1))))
-          (print `(,beg ,end))
-          (values (let ((*package* package))
-                    `(|-->| ,(read-from-string beg) ,(read-from-string end)))
-                  t))))))
 
-(pushnew #'convert-dot-to---> (get-custom-token-parsers-for-package :budden))
-
-  
-
-(defun -->-reader (stream symbol)
-  (declare (ignore symbol))
-  (it-is-a-car-symbol-readmacro)
-  (let* ((object (read stream t))
-           (field-name (read-symbol-name stream))
-           (args (read-delimited-list #\) stream t)))
+#+nil (defun -->-reader-internal (stream read-object object)
+  "Если read-object=nil, то мы уже считали объект и читаем только то, что идёт после него"
+  (let* ((object (if read-object (read stream t) object))
+         (field-name (read-symbol-name stream))
+         (args (read-delimited-list #\) stream t))) ; дерьмо вот здесь, и никак не решить. 
     (unread-char #\) stream) ; очень сомнительно.
     `(|-->| ,object ,field-name ,@args)))
 
-(setf (budden-tools:symbol-readmacro (intern "-->" :budden-tools)) '-->-reader)
 
+(defun -->-reader-internal-2 (stream read-object object read-field-name field-name)
+  "Если read-object=nil, то мы уже считали объект и читаем только то, что идёт после него"
+  (let* ((object (if read-object (read stream t) object))
+         (field-name (if read-field-name (read-symbol-name stream) field-name))
+         (symbol (make-symbol (str+ "(--> " (if (string-designator-p object)
+                                                (string object) "#<...>")
+                                    " " field-name ")")))
+         (args (make-symbol "args")))
+    (eval `(defmacro ,symbol (&rest ,args) 
+             `(|-->| ,',object ,',field-name ,@,args)))
+    (eval `(define-symbol-macro ,symbol (|-->| ,object ,field-name)))
+    symbol))
+          
+  
+(defun -->-reader (stream symbol)
+  (declare (ignore symbol))
+  ; (it-is-a-car-symbol-readmacro)
+  (-->-reader-internal-2 stream t nil t nil))
+
+(setf (budden-tools:symbol-readmacro '|-->|) '-->-reader)
+
+(defun convert-dot-to---> (stream symbol-name package)
+  "превращает точку в -->"
+  (let* ((p (position #\. symbol-name :from-end t)))
+    (cond 
+     ((null p) (values nil nil))
+     ((= (+ p 1) (length symbol-name)) (values nil nil))
+     (t ; (break "~A" symbol-name)
+        (let ((beg (subseq symbol-name 0 p))
+              (end (subseq symbol-name (+ p 1))))
+          (values (let ((*package* package))
+                    (funcall '-->-reader-internal-2 
+                             (make-concatenated-stream (make-string-input-stream (str+ beg " ")) stream)
+                             t nil 
+                             nil end))
+                  t))))))
+
+; (setf (get-custom-token-parsers-for-package :budden) nil)
+(pushnew 'convert-dot-to---> (get-custom-token-parsers-for-package :budden))
 
 
 ;; (/with-readtable-case/ :preserve '(foo bar))
