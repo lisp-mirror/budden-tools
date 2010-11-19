@@ -466,13 +466,21 @@ As a short-hand, #\s means *STANDARD-OUTPUT*, #\t - *TRACE-OUTPUT*"
     (setf (gethash hichar down) lochar))
 (defun char-upcase-cyr (char) #+russian "поднимает регистр по Русски"
     (or (gethash char up) (char-upcase char)))
-(defun char-downcase-cyr (char) #+russian "опускает регистр по-русски"
+(defun char-downcase-cyr (char) #+russian "опускает регистр по-Русски"
     (or (gethash char down) (char-downcase char)))
+(defun char-upcase-ascii (char) #+russian "поднимает регистр только для латиницы"
+  (#+:|LISPWORKS4.4| char-upcase #-:|LISPWORKS4.4| error char))
+(defun char-downcase-ascii (char) 
+  (#+:|LISPWORKS4.4| char-downcase #-:|LISPWORKS4.4| error char))
 (defun char-equal-cyr (c1 c2) #+russian "сравнивает символы с учётом кириллицы"
     (or (char-equal c1 c2)
         (char-equal (char-upcase-cyr c1) (char-upcase-cyr c2))))
 (defun string-upcase-cyr (s)
     (map 'string 'char-upcase-cyr s))
+(defun string-upcase-ascii (s)
+  (#+:|LISPWORKS4.4| string-upcase #-:|LISPWORKS4.4| error s))
+(defun string-downcase-ascii (s)
+  (#+:|LISPWORKS4.4| string-downcase #-:|LISPWORKS4.4| error s))
 (defun string-downcase-cyr (s)
     (map 'string 'char-downcase-cyr s))
 (defun string-equal-cyr (s1 s2)
