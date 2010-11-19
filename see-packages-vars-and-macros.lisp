@@ -177,7 +177,7 @@ pack не поддерживает наших расширений
   custom-reader ; custom reader is a function with the same args as read. It is called 
                 ; when reader is read in a context of package:: syntax. 
   custom-token-parsers ; Custom token parsers is a list of custom token parsers. 
-                       ; Custom token parser is a function of 
+                       ; Custom token parser is a function designator of 
                        ; (stream potential-symbol-name package) which 
                        ; returns two values. First value is t if token is 
                        ; parsed and nil otherwise. Second value is parsed token itself.
