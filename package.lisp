@@ -92,6 +92,11 @@
    #:translit-reversibly
    #:textual-equal-cyr
 
+   #:char-upcase-ascii
+   #:char-downcase-ascii
+   #:string-upcase-ascii
+   #:string-downcase-ascii
+
 ;; evaluation and general shortcuts
 ;  #:let1 is interned to CL as it is very necessary :) 
    #:let1 ; but we would better reexport it 
