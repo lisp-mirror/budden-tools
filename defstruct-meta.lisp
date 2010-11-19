@@ -246,11 +246,12 @@ but handles conc-name. See also defstruct*m-slot-names-and-accessors"
     (error "Bad defstruct slot spec ~S." (car slots))))
 
 
-(defun defstruct*m-slot-names-and-accessors (struct-name)
+(defun defstruct*m-slot-names-and-accessors (struct-name &key NO-ERROR)
   "Returns list of (slot-name accessor-name) pairs for defstruct defined with metainfo (e.g. defstruct*m)"
   (or 
    (gethash struct-name %defstructs%)
-   (error "~S is either not a defstruct or was not defined with meta-extensions" struct-name)))
+   (unless NO-ERROR
+     (error "~S is either not a defstruct or was not defined with meta-extensions" struct-name))))
 
 
 (defmacro defstruct*mc (&rest args)
