@@ -230,7 +230,7 @@ symbol-car-readmacro,вызывается в ходе чтения (списка) и должен
   )
 
 ;;; end of open-paren for symbol-readmacro
- 
+
 
 (defun simple-reader-error (stream format-string &rest args )
   (error "~A in stream ~A" (apply 'format nil format-string args) stream))
@@ -300,7 +300,7 @@ resolved in the scope of *package*"
     (and pm (package-metadata-custom-reader pm))))
 
 (defun get-custom-token-parsers-for-package (package-designator)
-  "custom-token-parsers, если назначены (с помощью setf) - это список функций, которые вызываются слева направо над каждым токеном. Они получают на вход: поток, строку и пакет. Возвращают два значения. Первое значение - считанный объект. Второе - t, если объект считан, иначе - nil"
+  "custom-token-parsers, если назначены (с помощью setf) - это список function designators (для funcall), которые вызываются слева направо над каждым токеном. Они получают на вход: поток, строку и пакет. Возвращают два значения. Первое значение - считанный объект. Второе - t, если объект считан, иначе - nil"
   (let1 pm (gethash (keywordize-package-designator package-designator) 
                     *per-package-metadata*)
     (and pm (package-metadata-custom-token-parsers pm))))
@@ -309,7 +309,7 @@ resolved in the scope of *package*"
 (defsetf get-custom-reader-for-package (package-designator) (new-value)
   (with-gensyms (md)
     `(proga
-       (check-type ,new-value (or null function))
+       (check-type ,new-value (or null symbol function))
        (let ,md (ensure-package-metadata ,package-designator))
        (setf (package-metadata-custom-reader ,md) ,new-value))))
 
@@ -318,7 +318,7 @@ resolved in the scope of *package*"
     (once-only (new-value)
       `(proga
          (check-type ,new-value (or null cons))
-         (loop :for x :in ,new-value :do (check-type x function))
+         (loop :for x :in ,new-value :do (check-type x (or symbol function)))
          (let ,md (ensure-package-metadata ,package-designator))
          (setf (package-metadata-custom-token-parsers ,md) ,new-value)))))
 
@@ -476,7 +476,6 @@ iii) if symbol is found more than once then first-symbol-found,list of packages,
       )
     (:finally
      (return (values syms-found found-in-package-itself)))))
-  
 
 (defun all-chars-in-same-case-p (s)
   (let ((all-downs t)
@@ -505,6 +504,50 @@ iii) if symbol is found more than once then first-symbol-found,list of packages,
      (all-ups :uppercase)
      (all-downs :lowercase)
      (t nil))))
+
+  
+#|(defun all-chars-in-same-case-p (s)
+  "Все ли символы латиницы в одинаково регистре?
+Возможные возвраты: 
+:ingore-case - нет разницы между верхним и нижним регистром
+:uppercase - все в верхнем регистре
+:lowercase - все в нижнем
+:capitalized - первый в верхнем, остальные - либо в нижнем, либо для остальных нет разницы"
+  (let ((all-downs t)
+        (all-ups t)
+        (capitalized t)
+        (up #\a)
+        (down #\a))
+    (declare (symbol all-ups all-downs capitalized))
+    (declare (character up down))
+    (iter 
+      (:while (or all-ups all-downs))
+      (:for c :in-string s)
+      (declare (character c))
+      (when all-ups
+        (setf up ; (#+russian char-upcase-cyr #-russian char-upcase c)
+              (char-upcase-ascii c))
+        (unless (char= up c)
+          (setf all-ups nil)
+          (when (iter:first-time-p)
+            (setf capitalized nil))
+          ))
+      (when all-downs 
+        (setf down ; (#+russian char-downcase-cyr #-russian char-downcase c)
+              (char-downcase-ascii c))
+        (unless (char= down c)
+          (setf all-downs nil)))
+      (when (and capitalized (not (iter:first-time-p)))
+        (setf down (char-downcase-ascii c))
+        (unless (char= down c)
+          (setf capitalized nil)))
+      )
+    (cond
+     ((and all-ups all-downs) :ignore-case)
+     (all-downs :lowercase)
+     (all-ups :uppercase)
+     (capitalized :capitalised)
+     (t nil))))|#
 
 
 
@@ -553,7 +596,7 @@ iii) if symbol is found more than once then first-symbol-found,list of packages,
       (:ignore-case-if-uniform :preserve)
       (t rtcase))))
 
-(defun find-symbol-with-advanced-readtable-case (name p rt starts-with-vertical-line)
+#+nil (defun find-symbol-with-advanced-readtable-case (name p rt starts-with-vertical-line)
   (proga
     (let p-sym nil storage-type nil)
     (case (readtable-case-advanced rt)
@@ -567,6 +610,39 @@ iii) if symbol is found more than once then first-symbol-found,list of packages,
               (setf (values p-sym storage-type) (find-symbol name p))))
        (values p-sym storage-type))
       (t (setf (values p-sym storage-type) (find-symbol name p))))))
+
+; новшества: 1. символы со всеми ascii в нижнем регистре ищутся в обоих регистрах. 
+; Все остальные - только "как есть"
+; 2. все keywords преобразуются к верхнему регистру в момент чтения
+(defun find-symbol-with-advanced-readtable-case (name p rt starts-with-vertical-line)
+  (proga
+    (let p-sym nil storage-type nil)
+    (case (readtable-case-advanced rt)
+      (:ignore-case-if-uniform
+       (let same-case-p (and (not starts-with-vertical-line) (all-chars-in-same-case-p name)))
+       (ecase same-case-p
+         (:lowercase
+          (setf (values p-sym storage-type) (find-symbol (string-upcase-ascii name) p))
+          (when (and (not storage-type) 
+                     (not (eq p *keyword-package*)) ; константы - только в верхнем регистре
+                     )
+            (setf (values p-sym storage-type) (find-symbol name p))))
+         ((:uppercase :ignore-case nil)
+          (setf (values p-sym storage-type) (find-symbol name p)))
+         (values p-sym storage-type)))
+      (t (setf (values p-sym storage-type) (find-symbol name p))))
+    (values p-sym storage-type)))
+
+(proclaim '(ftype (function (string package readtable symbol) symbol)
+                  fix-symbol-name-for-advanced-readtable-case))
+(defun fix-symbol-name-for-advanced-readtable-case (name package rt starts-with-vertical-line)
+  "Хотим заинтёрнить имя name в пакет package. Преобразуем его к верхнему регистру, если он - в пакет keyword"
+  (cond
+   ((and (eq package *keyword-package*) 
+         (not starts-with-vertical-line)
+         (eq (readtable-case-advanced rt) :ignore-case-if-uniform))
+         (setf name (string-upcase-ascii name)))
+   (t name)))
 
 (defvar +some-uninterned-symbol+ '#:some-uninterned-symbol)
 
@@ -619,7 +695,10 @@ iii) if symbol is found more than once then first-symbol-found,list of packages,
                (:finally
                 (return
                  (case cnt
-                   (0 (intern name package))
+                   (0 (intern 
+                       (fix-symbol-name-for-advanced-readtable-case 
+                        name package rt starts-with-vertical-line)
+                       package))
                    (1 sym-found)
                    (t (simple-reader-error stream "symbol name ~A is ambigious between ~S" 
                                            name packs-found)))))))
