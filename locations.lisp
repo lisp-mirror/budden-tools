@@ -210,6 +210,7 @@ srcpl - symbol-readmacro. Прочитать объект и запрограммировать запоминание его м
   "Дан файл, найти точку"
   (let1 res
       (l/find-sources-in-map (gethash (namestring filename) *nplf) offset :strict strict)
+    (_f remove-duplicates res :test 'equalp)
     (if (and res (> (length res) 1))
         (list 
          (nth (progn 
