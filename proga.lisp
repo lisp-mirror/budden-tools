@@ -37,7 +37,7 @@
                                                 ; становится вторым аргументом. 
                                                 ; Всё, что за формой - вносится внутрь скобок
                                                 ; Например, (symbol-macrolet x y) a b => 
-                                                ; (symbol-macrolet ? a b)
+                                                ; (symbol-macrolet ((x y)) a b)
                    `((,head ,processed-clause-body ,@(proga-body-expander forms-after-clause))))
                  )
             (case head
