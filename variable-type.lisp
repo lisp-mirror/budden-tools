@@ -117,10 +117,10 @@
 (define-compiler-macro |-->| (object field-name &rest args &environment env)
   (let1 variable-type-or-class (variable-type-or-class object env)
     (case variable-type-or-class
-      ((t nil) (print `(runtime--> ,object ',field-name ,@args)))
+      ((t nil) `(runtime--> ,object ',field-name ,@args))
       (t 
-       (print `(funcall ',(function-symbol-for---> variable-type-or-class field-name) ,object ,@args))
-       ))))
+       `(funcall ',(function-symbol-for---> variable-type-or-class field-name) ,object ,@args))
+      )))
       
       
 (defmacro with-the1 (var type object &body body)

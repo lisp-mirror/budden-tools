@@ -473,12 +473,12 @@ srcpl - symbol-readmacro. Прочитать объект и запрограммировать запоминание его м
 
 (defun srcpl-reader (stream symbol)
   (declare (ignore symbol))
-  (it-is-a-car-symbol-readmacro)
   (let* ((before (extract-file-position stream))
          after
          (object (read stream)))
     (setf after (extract-file-position stream))
-    `(l/rorl ,object ,(extract-source-filename-from-stream stream) ,before ,after)))
+    (it-is-a-car-symbol-readmacro 
+     `(l/rorl ,object ,(extract-source-filename-from-stream stream) ,before ,after))))
 
 
 (setf (symbol-readmacro (intern "SRCPL" :budden-tools)) #'srcpl-reader)

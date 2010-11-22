@@ -1,12 +1,15 @@
 (in-package :budden-tools)
 (in-readtable nil) 
 
+; почему-то не работает, видимо из-за начинки нашего readtable
 (setf (budden-tools:symbol-readmacro (intern "/WITH-PACKAGE/" :budden-tools))
       (lambda (stream symbol)
         (declare (ignore symbol))
-        (it-is-a-car-symbol-readmacro)
-        (let1 *package* (find-package (read stream))
-          (read stream))))
+        (let* ((*package* (find-package (read stream)))
+               (res (read stream)))
+          (print res)
+          (it-is-a-car-symbol-readmacro res))))
+
 
 
 (defpackage :package-for-read-symbol-name (:use))
@@ -47,18 +50,46 @@
              `(|-->| ,',object ,',field-name ,@,args)))
     (eval `(define-symbol-macro ,symbol (|-->| ,object ,field-name)))
     symbol))
-          
+
+
+(defun -->-reader-internal-3 (stream read-object object read-field-name field-name)
+  "Если read-object=nil, то мы уже считали объект и читаем только то, что идёт после него"
+  (let* ((object (if read-object (read stream t) object))
+         (field-name (if read-field-name (read-symbol-name stream) field-name))
+         
+         )
+    (list '|-->| object field-name)))
+
+
+(defun closing-paren-splice-cdr-into-car (readmacro-returned)
+  "Для symbol-readmacro, допускающего дополнительные данные после себя до закрытия скобки. 
+symbol-readmacro должен вернуть список. cdr считанного списка вставляется в хвост того
+списка, который вернул symbol-readmacro."
+  (assert (null *function-to-call-when-paren-is-closing*)
+      () "Wrong call to closing-paren-splice-cdr-into-car")
+  (setf *function-to-call-when-paren-is-closing* 
+        (lambda (list stream)
+          (declare (ignore stream))
+          (let1 car (car list)
+            (assert (eq car readmacro-returned) () "Symbol-readmacro is not in the first position in a list ~S" list)
+            (append car (cdr list))
+            )))
+  readmacro-returned)
   
+
+;; FIXME при печати-чтении --> выполняется повторно. Переименовать --> во что-то, если это опасно 
+;; (а опасно это может быть, если читать '(a b c --> d e f), хотя опасность не столь велика - ошибка чтения
 (defun -->-reader (stream symbol)
   (declare (ignore symbol))
-  ; (it-is-a-car-symbol-readmacro)
-  (-->-reader-internal-2 stream t nil t nil))
+;  (it-is-a-car-symbol-readmacro (-->-reader-internal-2 stream t nil t nil))
+  (closing-paren-splice-cdr-into-car (-->-reader-internal-3 stream t nil t nil))
+  )
 
 (setf (budden-tools:symbol-readmacro '|-->|) '-->-reader)
 
-(defun convert-dot-to---> (stream symbol-name package)
-  "превращает точку в -->"
-  (let* ((p (position #\. symbol-name :from-end t)))
+(defun convert-carat-to---> (stream symbol-name package)
+  "превращает ^ в -->"
+  (let* ((p (position #\^ symbol-name :from-end t)))
     (cond 
      ((null p) (values nil nil))
      ((= (+ p 1) (length symbol-name)) (values nil nil))
@@ -73,7 +104,7 @@
                   t))))))
 
 ; (setf (get-custom-token-parsers-for-package :budden) nil)
-(pushnew 'convert-dot-to---> (get-custom-token-parsers-for-package :budden))
+(pushnew 'convert-carat-to---> (get-custom-token-parsers-for-package :budden))
 
 
 ;; (/with-readtable-case/ :preserve '(foo bar))
@@ -81,14 +112,13 @@
 (setf (budden-tools:symbol-readmacro (intern "/WITH-READTABLE-CASE/" :budden-tools))
       (lambda (stream symbol)
         (declare (ignore symbol))
-        (it-is-a-car-symbol-readmacro)
         (let1 new-case (read stream)
           (print new-case)
           (pllet1 (readtable-case (packages-seen-p *readtable*)) new-case
             (pllet1 (readtable-case *readtable*) new-case
               (let1 colon-readtable (or (gethash *readtable* *my-readtable-to-colon-readtable*) *readtable*)
                 (pllet1 (readtable-case colon-readtable) new-case
-                  (read stream))))))))
+                  (it-is-a-car-symbol-readmacro (read stream)))))))))
 
                                      
 

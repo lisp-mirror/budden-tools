@@ -178,45 +178,34 @@ package-sym показывает префикс пакета, с которым мы считали им€. num-of-colons
   
 
 ;;;; open-paren for symbol-readmacro
-
-(defvar *symbol-readmacro-is-in-list* 
-  nil "Is bound to :list when we are reading a list. Is set to t when we read a symbol with some special properties")
+(defvar *function-to-call-when-paren-is-closing* nil
+       "«десь может быть функци€ от аргументов (считанный-список поток), к-рую мы вызовем на закрытии скобки")
 
 (let ((default-open-paren-reader (get-macro-character #\( (copy-readtable nil))))
-  (defun paren-reader-with-symbol-readmacro (stream char)
-    "
-„его хотим? 
-fse 1 from dual; - чтобы осталось
- (fse 1 from dual;
-      ) - дл€ простоты. ћожно, наверное, другой символ,а не fse? 
- (fse 1 from dual) - в светлом будущем. 
-
-«десь демонстрируетс€ возможность при чтении списка пон€ть, что
-внутри него вызван symbol-readmacro, это происходит через переменную
-*symbol-readmacro-is-in-list*, 
-котора€ биндитс€ в начале чтени€ списка и читаетс€ в конце.
-
-„то нужно дл€ полноты? 
-¬идимо,сделать symbol-readmacro, вызываетс€ в произвольном месте.
-symbol-car-readmacro,вызываетс€ в ходе чтени€ (списка) и должен
-остановитьс€ перед закрывающей скобкой (т.е.,вернуть еЄ в поток)
-
-Ќезадача состоит в том, что мы не можем отличить первый элемент 
-списка от последующих. ѕоэтому, мы накладываем ограничение. 
-≈сли read прочитал список из более чем одного элемента, то значит, что-то
-пошло не так и мы ругаемс€.  
-"
-    (let* ((*symbol-readmacro-is-in-list* :no)
+  (defun paren-reader-with-closing-paren-notification (stream char)
+    "≈сли внутри readera кто-то установил ф-ю в *function-to-call-when-paren-is-closing*,
+то эта ф-€ будет вызвана над результатом чтени€ (...) и потоком" 
+    (let* ((*function-to-call-when-paren-is-closing* nil)
            (result (funcall default-open-paren-reader stream char)))
       (cond 
-       ((eq *symbol-readmacro-is-in-list* :yes)
-        (assert (consp result))
-        (assert (null (cdr result)) ()
-          "In ~S, symbol-readmacro should be at the first position in a list" result)
-        (car result))
-       (t result)))))
+       (*function-to-call-when-paren-is-closing*
+        (funcall *function-to-call-when-paren-is-closing* result stream))
+       (t result)))))       
 
-(defun it-is-a-car-symbol-readmacro ()
+
+(defun check-correct-use-of-a-car-symbol-readmacro (object)
+  (setf *function-to-call-when-paren-is-closing*
+        (lambda (result stream)
+          (assert (consp result) () 
+            "Something wrong with symbol readmacro: list reader on ~S returned atom ~S" stream result)
+          (assert (eq object (car result)) ()
+            "In ~S, symbol-readmacro should be at the first position in a list" result)
+          (assert (null (cdr result)) ()
+            "car-symbol-readmacro should have read entire list in ~S" result)
+          (car result)))
+  object)   
+
+(defun it-is-a-car-symbol-readmacro (object-read)
   "≈сли определение symbol-readmacro-reader, то имеет место следующее:
 ≈сли readmacro находитс€ внутри круглых скобок, то функци€ должна прочитать всЄ до 
 закрывающей круглой скобки (не включа€ еЄ) и вернуть одно значение. 
@@ -225,9 +214,11 @@ symbol-car-readmacro,вызываетс€ в ходе чтени€ (списка) и должен
 а значение, возвращЄнное symbol-readmacro-reader.
 ≈сли readmacro находитс€ вне круглых скобок, то ничего особенного не происходит. 
 "
-  (when (eq *symbol-readmacro-is-in-list* :no)
-    (setf *symbol-readmacro-is-in-list* :yes))
-  )
+  (check-correct-use-of-a-car-symbol-readmacro object-read))
+
+; (defun it-is-a-half-car-symbol-readmacro (object-read)
+;  "“о же самое, но без требовани€ прочи
+
 
 ;;; end of open-paren for symbol-readmacro
 
@@ -615,21 +606,20 @@ iii) if symbol is found more than once then first-symbol-found,list of packages,
 ; ¬се остальные - только "как есть"
 ; 2. все keywords преобразуютс€ к верхнему регистру в момент чтени€
 (defun find-symbol-with-advanced-readtable-case (name p rt starts-with-vertical-line)
-  (proga
-    (let p-sym nil storage-type nil)
+  (let ((p-sym nil) (storage-type nil))
     (case (readtable-case-advanced rt)
       (:ignore-case-if-uniform
-       (let same-case-p (and (not starts-with-vertical-line) (all-chars-in-same-case-p name)))
-       (ecase same-case-p
-         (:lowercase
-          (setf (values p-sym storage-type) (find-symbol (string-upcase-ascii name) p))
-          (when (and (not storage-type) 
-                     (not (eq p *keyword-package*)) ; константы - только в верхнем регистре
-                     )
-            (setf (values p-sym storage-type) (find-symbol name p))))
-         ((:uppercase :ignore-case nil)
-          (setf (values p-sym storage-type) (find-symbol name p)))
-         (values p-sym storage-type)))
+       (let ((same-case-p (and (not starts-with-vertical-line) (all-chars-in-same-case-p name))))
+         (ecase same-case-p
+           (:lowercase
+            (setf (values p-sym storage-type) (find-symbol (string-upcase-ascii name) p))
+            (when (and (not storage-type) 
+                       (not (eq p *keyword-package*)) ; константы - только в верхнем регистре
+                       )
+              (setf (values p-sym storage-type) (find-symbol name p))))
+           ((:uppercase :ignore-case nil)
+            (setf (values p-sym storage-type) (find-symbol name p)))
+           (values p-sym storage-type))))
       (t (setf (values p-sym storage-type) (find-symbol name p))))
     (values p-sym storage-type)))
 

@@ -75,7 +75,7 @@ is already an altered readtable, simply returns it TODO: rename me"
     (smlet entry (gethash rt *my-readtable-to-good-readtable*))
     (when entry (return rt))
     ;; note this!!!
-    (set-macro-character #\( #'paren-reader-with-symbol-readmacro nil rt)
+    (set-macro-character #\( #'paren-reader-with-closing-paren-notification nil rt)
 
     (let good-readtable (copy-readtable rt)) 
 
