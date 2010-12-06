@@ -42,8 +42,8 @@
 
 (defmacro def-rd-test (name rd &key (test ''equalp))
   `(deftest ,name 
-            (with-good-readtable (print (read-from-string ,rd)))
-            (with-my-readtable (print (read-from-string ,rd)))
+            (with-good-readtable (read-from-string ,rd))
+            (with-my-readtable (read-from-string ,rd))
             :test ,test
             ))
 
