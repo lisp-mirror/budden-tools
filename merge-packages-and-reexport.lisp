@@ -17,6 +17,7 @@ set of symbols from interesting packages and import them symbol-by-symbol.
   (:import-from :iter #:iter #:keywordize)
   (:export 
    #:defpackage-autoimport ; see package docstring. Note this symbol is exported to CL
+   #:defpackage-autoimport-2 ; particular case of defpackage-autoimport. Uses all listed packages, shadowing-imports first of clashes. Exported to CL
    #:extract-clause ; extract one clause of def... form (e.g. defpackage) by its head
    ;#:!       ; take several packages and export all what we can without clashes. 
    ;          ; There are two ways to manage clashes: either don't export them
@@ -39,7 +40,6 @@ set of symbols from interesting packages and import them symbol-by-symbol.
 
 
 (defvar *forbidden-symbols-package* (find-package :merge-packages-and-reexport.forbidden-symbols))
-
 
 (defun collect-duplicates-into-sublists (list &rest key-args &key key test test-not)
   "Select duplicates from the list and collect them into sublists. Returns list of such sublists. E.g.,
@@ -370,9 +370,8 @@ to package.
       package-definition
       )))
   
-
 (cl-user::portably-without-package-locks
-
+; non-toplevel
 (defmacro defpackage-autoimport (&rest body)
     "It is like defpackage. It also allows for additional clauses. Currently every additional clause can only occur once. 
 \(:auto-import-from . package-designator-list) - import all non-clashing external symbols + first of every set of clashing symbols. 
@@ -388,10 +387,41 @@ to package.
                                                                      (find-package :name), it is a error. NOT IMPLEMENTED
 "
     `(!3 ,@body))
+  #+lispworks 
+; non-toplevel
+(dspec:define-dspec-alias defpackage-autoimport (name &rest args)
+  `(defpackage ,name))
+; non-toplevel
+(import '(defpackage-autoimport defpackage-autoimport-2) :cl)
+; non-toplevel
+(export '(defpackage-autoimport defpackage-autoimport-2) :cl)
 
-  (import '(defpackage-autoimport) :cl)
-  (export '(defpackage-autoimport) :cl))
+; non-toplevel
+(defmacro defpackage-autoimport-2 (name &rest clauses) 
+  "particular case of defpackage-autoimport. Uses all listed packages, shadowing-imports first of clashes. Exported to CL"
+  (let (use auto-import-shadowing auto-import-first-clashing auto-import-from (clauses clauses))
+    (multiple-value-setq (use clauses) (extract-clause clauses :use))
+    (multiple-value-setq (auto-import-shadowing clauses) (extract-clause clauses :auto-import-shadowing))
+    (assert (null auto-import-shadowing) () 
+      ":auto-import-shadowing is always t at defpackage-autoimport-2, you can't pass it")
+    (multiple-value-setq (auto-import-first-clashing clauses) (extract-clause clauses :auto-import-first-clashing))
+    (assert (null auto-import-first-clashing) () 
+      ":auto-import-first-clashing is always t at defpackage-autoimport-2, you can't pass it")
+    (multiple-value-setq (auto-import-from clauses) (extract-clause clauses :auto-import-from))
+    (assert (null auto-import-from) () 
+      ":auto-import-shadowing is assigned from :use at defpackage-autoimport-2, you can't pass it")
+    `(defpackage-autoimport ,name
+                            (:use ,@use)
+                            (:auto-import-from ,@use)
+                            (:auto-import-shadowing t) 
+                            (:auto-import-first-clashing t)
+                            ,@clauses)))
 
+; non-toplevel
+#+lispworks 
+(dspec:define-dspec-alias defpackage-autoimport-2 (name &rest args)
+  `(defpackage ,name))
+)
 
 (defun delete-symbols-from-package (pack &rest symbols)
   "Each element of symbols may be a string-designator, or a list. 
