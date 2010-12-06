@@ -296,7 +296,7 @@ NIL
   (proga function 
     (let res 
       (let ((*package* (or default-package *package*)))
-        (read-from-string string)))
+        (read-from-string string nil "")))
     (when (symbolp res)
       (find-symbol (symbol-name res) (symbol-package res))
       )))
