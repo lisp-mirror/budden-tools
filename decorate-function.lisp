@@ -1,6 +1,13 @@
 (in-package :budden-tools)
 
+;;; «десь нормально (с проверкой переопределени€) сделаны макросы. ‘-ии надо переделать. 
+
 (defvar *undecorated-functions* (make-hash-table :test 'eq))
+
+; maps symbol to (symbol . original-macro-function)
+; symbol is an uninterned symbol to which original macro definition is copied while
+; macro is being decorated
+(defvar *undecorated-macros* (make-hash-table :test 'eq))
 
 (defun decorate-function (symbol decorator-fn)
   "See example"
@@ -10,6 +17,52 @@
     (let old-fn (or old (setf old (symbol-function symbol))))
     (setf (symbol-function symbol) 
           (lambda (&rest args) (apply decorator-fn old-fn args)))))
+
+
+(defun |decorateMacro-getUndecoratedInvoker| (symbol)
+  (car (gethash symbol *undecorated-macros*)))
+
+(defun |decorateMacro-checkRedefinition| (symbol)
+  "Checks if macro was redefined and errs if it was. Returns decoration entry"
+  (proga 
+    (let decoration-entry (gethash symbol *undecorated-macros*))
+    (cond
+     ((null decoration-entry) decoration-entry)
+     ((not (string= symbol (car decoration-entry)))
+      (error "name mismatch between '~A with saved macro symbol '~A" symbol (car decoration-entry)))
+     ((not (eq (macro-function symbol) (cdr decoration-entry)))
+      (cerror "make macro undecorated. Current definition will be kept"
+              "macro '~A was decorated and then redefined" symbol)
+      (remhash symbol *undecorated-macros*)
+      nil)
+     (t decoration-entry)
+     ))
+  )
+
+(defun |decorateMacro| (symbol decorator-macro)
+  "See example"
+  (proga
+    #+lispworks (let lispworks:*handle-warn-on-redefinition* nil)
+    (let entry (|decorateMacro-checkRedefinition| symbol))
+    (macrolet mf (s) `(macro-function ,s))
+    (cond
+     (entry 
+      (setf (mf symbol) (mf decorator-macro)
+            (cdr entry) (mf decorator-macro)))
+     (t 
+      (let old-def-symbol (make-symbol (symbol-name symbol)))
+      (setf (mf old-def-symbol) (mf symbol))
+      (setf (gethash symbol *undecorated-macros*)
+            (cons old-def-symbol (mf decorator-macro)))
+      (setf (mf symbol) (mf decorator-macro)))
+     )))
+
+(defun |undecorateMacro| (symbol)
+  (proga
+    (let decoration-entry (|decorateMacro-checkRedefinition| symbol))
+    (when decoration-entry
+      (setf (macro-function symbol) (macro-function (car decoration-entry)))
+      (remhash symbol *undecorated-macros*))))
 
 (defun undecorate-function (symbol)
   (let1 old-function
@@ -38,3 +91,11 @@
   (assert (= (foo 1) 2))
   )
   
+#+example
+(progn ; evaluate it, not compile
+  (defmacro original (symbol) `',symbol)
+  (defmacro decorate-original (symbol) `(list :decorated (,(|decorateMacro-getUndecoratedInvoker| 'original) ,symbol)))
+  (|decorateMacro| 'original 'decorate-original)
+  (print (original 'asdf))
+  (|undecorateMacro| 'original)
+  )
