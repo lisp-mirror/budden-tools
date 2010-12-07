@@ -1,4 +1,5 @@
-
+;; Written by Denis Budyak. 
+;; #.+BSD-license+
 
 (in-package :trivial-deftest)
 
