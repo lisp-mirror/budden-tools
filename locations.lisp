@@ -86,6 +86,8 @@ srcpl - symbol-readmacro. Прочитать объект и запрограммировать запоминание его м
 
 (in-package :budden-tools)
 
+; (proclaim '(optimize (speed 3) (debug 0) (safety 0)))
+
 
 
 (defvar *nplm 
@@ -103,6 +105,7 @@ srcpl - symbol-readmacro. Прочитать объект и запрограммировать запоминание его м
 
 (defstruct olm ; карта исходников для объкта 
   ses-list ; упорядоченный список структур ses
+  simplified ; t, если уже упрощена
   )
 
 ; в конструкциях типа (with-output-to-string) не с чем ассоциировать информацию о расположении. 
@@ -122,6 +125,7 @@ srcpl - symbol-readmacro. Прочитать объект и запрограммировать запоминание его м
   beg ; в результирующем объекте
   end
   sources ; список элементов slo, задающий исходники данного отрезка (пока что один)
+  simplified ; t, если уже упрощена
   )
 
 (defstruct slo ; откуда взялся данный объект
@@ -144,6 +148,7 @@ srcpl - symbol-readmacro. Прочитать объект и запрограммировать запоминание его м
 
 (defun l/pass-from-delegate-to-object (object delegate)
   "delegate может быть nil. Возвращает объект"
+;  (declare (optimize speed))
   (unless (eq delegate object)
     (setf (gethash object *nplm) (simplify-location-map (gethash delegate *nplm)))
     (remhash delegate *nplm)
@@ -152,6 +157,7 @@ srcpl - symbol-readmacro. Прочитать объект и запрограммировать запоминание его м
 
 (defun l/pass-from-stream-to-file (stream)
   "данные были связаны с потоком. Ассоциируем их с файлом"
+;  (declare (optimize speed))
   (let1 delegate (get-stream-location-map-delegate stream)
     (setf (gethash (namestring (extract-source-filename-from-stream stream))
                    *nplf)
@@ -160,6 +166,7 @@ srcpl - symbol-readmacro. Прочитать объект и запрограммировать запоминание его м
   nil)      
 
 (defun l/add-to-location-map (delegate dst-beg dst-end object)
+;  (declare (optimize speed))
   (let* ((oli (gethash object *nplm))
          (dli (gethash delegate *nplm))
          (result nil)
@@ -177,8 +184,9 @@ srcpl - symbol-readmacro. Прочитать объект и запрограммировать запоминание его м
 
 (defun l/subseq (string start &optional end (simplify t))
   "Только во временном хранении"
- (proga
-   (let map (if simplify
+;  (declare (optimize speed))
+  (proga
+    (let map (if simplify
                  (simplify-object-location-map string)
                (get-non-persistent-object-locations string)))
     (let result (subseq string start end))
@@ -188,10 +196,10 @@ srcpl - symbol-readmacro. Прочитать объект и запрограммировать запоминание его м
       (_f copy-olm map) ; копируем карту, ведь для подпоследовательности она будет другой      
       (let len (length string))
       (setf end (if end (min end len) len))
-      (with-conc-name map olm-
+      (let-with-conc-type map olm map
         (iter
           (:for sub in map.ses-list)
-          (with-conc-name sub ses-
+          (let-with-conc-type sub ses sub
             (cond
              ((or (> start sub.end) (< end sub.beg) ; no intersection
                   ))
@@ -208,6 +216,7 @@ srcpl - symbol-readmacro. Прочитать объект и запрограммировать запоминание его м
 
 (defun l/find-sources-in-file (filename offset &key (strict nil))
   "Дан файл, найти точку"
+;  (declare (optimize speed))
   (let1 res
       (l/find-sources-in-map (gethash (namestring filename) *nplf) offset :strict strict)
     (_f remove-duplicates res :test 'equalp)
@@ -222,6 +231,7 @@ srcpl - symbol-readmacro. Прочитать объект и запрограммировать запоминание его м
 (defun l/find-sources-in-map (map offset &key (strict nil))
   "Дана карта, найти точку, откуда растёт исходник. Возвращает список троек (файл начало конец). Если strict=nil, 
 может возвращать и пустое имя файла (для отладки)"
+;  (declare (optimize speed))
   (etypecase map
     (null nil)
     (slo
@@ -249,20 +259,25 @@ srcpl - symbol-readmacro. Прочитать объект и запрограммировать запоминание его м
 
 (defun move-olm-by-offset (olm offset)
   "Destructively modifies self, copies subs"
-  (with-conc-name olm olm- 
+  (let-with-conc-type olm olm olm
     (setf olm.ses-list (copy-list olm.ses-list))
     (iter (:for ses on olm.ses-list)
       (when (car ses)
-        (_f copy-ses (car ses))
-        (:for carses = (car ses))
-        (incf (ses-beg carses) offset)
-        (incf (ses-end carses) offset)))))
+        (let-with-conc-type carses ses (car ses)
+          (setf (car ses) 
+                (make-ses :beg (+ carses.beg offset)
+                          :end (+ carses.end offset)
+                          :sources carses.sources
+                          :simplified carses.simplified)
+                ))))))
 
 (defun simplify-olm (olm &key sort)
   "Может копировать"
+;  (declare (optimize speed))
   (proga
     (unless olm (return-from simplify-olm olm))
-    (with-conc-name olm olm-)
+    (let-with-conc-type olm olm olm)
+    (when olm.simplified (return-from simplify-olm olm))
     (let already-copied nil)
     (iter 
       (:for sub1 in olm.ses-list)
@@ -294,37 +309,28 @@ srcpl - symbol-readmacro. Прочитать объект и запрограммировать запоминание его м
     (assert (every 'ses-p olm.ses-list))
     (when sort 
       (setf olm.ses-list (sort olm.ses-list #'< :key 'ses-beg)))
+    (setf olm.simplified t)
     olm))
 
 
 (defun simplify-ses (ses)
-  (with-conc-name ses ses-
-    (_f copy-ses ses)
-    (iter 
-      (flet ((outer-append (x) (:appending x :into new-sources)))
+;  (declare (optimize speed))
+  (if (ses-simplified ses) 
+      ses
+    (let-with-conc-type ses ses (copy-ses ses)
+      (iter 
+      ;(flet ((outer-append (x) (:appending x :into new-sources)))
         (:for sub = (simplify-location-map (pop ses.sources)))
         (:while sub)
         (:collect sub into new-sources)
-        #+nil (cond ((olm-p sub)
-               (with-conc-name sub olm-
-                 (cond
-                  ((and (= (length sub.ses-list) 1)
-                        (typep (car sub.ses-list) 'ses))
-                   (let1 subses (car sub.ses-list)
-                     (move-olm-by-offset sub ses.beg)
-                     (:appending 
-                      (mapcar 'simplify-location-map (ses-sources subses))
-                      :into new-sources)))
-                  (t 
-                   (:collect sub into new-sources)))))
-              (t
-               (:collect sub into new-sources)))
         (:finally (setf ses.sources new-sources))
+       ; )
         )
-      )
-    ses))
+      (setf ses.simplified t)
+      ses)))
 
 (defun simplify-location-map (map)
+;  (declare (optimize speed))
   (etypecase map
     ((null) nil)
     (ses (simplify-ses map))
@@ -332,6 +338,7 @@ srcpl - symbol-readmacro. Прочитать объект и запрограммировать запоминание его м
     (olm (simplify-olm map))))
 
 (defun simplify-object-location-map (object) 
+;  (declare (optimize speed))
   (proga
     (let map (get-non-persistent-object-locations object))
     (let new-map (simplify-location-map map))
@@ -351,11 +358,14 @@ srcpl - symbol-readmacro. Прочитать объект и запрограммировать запоминание его м
 
 
 (defun l/princ (object &optional (stream *standard-output*))
+;  (declare (optimize speed))
   (let*
       ((dst-beg (extract-file-position stream))
        (delegate (get-stream-location-map-delegate stream)))
     (prog1
-        (princ object stream)
+        (typecase object
+          (string (write-string object stream))
+          (t (princ object stream)))
       (let* ((dst-end (extract-file-position stream)))
         (when delegate 
           (l/add-to-location-map delegate dst-beg dst-end object)))
@@ -363,6 +373,7 @@ srcpl - symbol-readmacro. Прочитать объект и запрограммировать запоминание его м
 
 (defun l/str+ (&rest objects)
   "Могут быть какие-то отличия, т.к. (string x) в обычном str+ может отличаться от (princ-to-string x) здесь. Тогда нужно подправить."
+;  (declare (optimize speed))
   (let1 res
       (l/with-output-to-string (ss) 
         (mapcar (lambda (x) (l/princ x ss)) objects)
@@ -371,6 +382,7 @@ srcpl - symbol-readmacro. Прочитать объект и запрограммировать запоминание его м
     res))
  
 (defun get-stream-location-map-delegate (stream &key if-not-exists)
+;  (declare (optimize speed))
   (etypecase stream
     (editor::editor-region-stream stream)
     (stream::file-stream stream)
@@ -383,6 +395,7 @@ srcpl - symbol-readmacro. Прочитать объект и запрограммировать запоминание его м
 
 (defun extract-source-filename-from-stream (stream)
   "Посмотреть в SLIME. ДУБЛИРОВАНО ГДЕ_ТО ЕЩЁ, дубль убрать"
+;  (declare (optimize speed))
   #-lispworks (error "Not implemented")
   #+lispworks
   (typecase stream
@@ -455,6 +468,7 @@ srcpl - symbol-readmacro. Прочитать объект и запрограммировать запоминание его м
 (defun l/substitute-subseq (seq sub rep &key (start 0) end
                           (test #'eql) (key #'identity))
   "Like cllib:substitute-subseq, but takes locations into account. seq and result are strings" 
+;  (declare (optimize speed))
   (declare (sequence seq sub rep))
   (loop :with olen = (length sub)
         :and last = start
@@ -468,6 +482,7 @@ srcpl - symbol-readmacro. Прочитать объект и запрограммировать запоминание его м
 
 (defun l/rorlf (object source beg end)
   "форма, которая запишет заданное положение объекта и вернёт его"
+;  (declare (optimize speed))
   `(l/rorl ,object ,source ,beg ,end))
  
 
