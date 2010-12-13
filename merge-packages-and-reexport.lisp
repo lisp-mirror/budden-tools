@@ -11,6 +11,8 @@
   (:documentation "defpackage-autoimport makes new package. It automatically 
 resolves symbol clashes in packages it uses. It selects some non-clashing
 set of symbols from interesting packages and import them symbol-by-symbol.
+
+defpackage-autoimport-2 prefers to use packages and shadowing-import clashes.
 "   
    )
   (:use :cl :org.tfeb.hax.hierarchical-packages)
@@ -283,6 +285,19 @@ to package.
                                 )))))))))
   ) |#
 
+(defun process-local-nicknames (new-package-name list &key to-alist) 
+  (do ((a (pop list) (pop list)) 
+       (b (pop list) (pop list))
+       res) 
+      (nil) 
+    (check-type a (or symbol string))
+    (check-type b (or symbol string))
+    (assert (not (string= b new-package-name)))
+    (push (if to-alist (cons a b) (list a b)) res)
+    (when (null list) (return-from process-local-nicknames (reverse res)))
+    )
+  )
+
 
 
 (defmacro !3 (name &rest clauses) ; todo: err on non-existing packages
@@ -293,6 +308,7 @@ to package.
                          ; non-symbols non-hosted-symbols 
                          auto-import-shadowing
                          auto-reexport-from
+                         local-nicknames
                          (clauses clauses))
     (multiple-value-setq (auto-import-from clauses) (extract-clause clauses :auto-import-from))
     (multiple-value-setq (auto-import-dont-warn-clashes clauses) (extract-clause clauses :auto-import-dont-warn-clashes))
@@ -301,6 +317,7 @@ to package.
     (multiple-value-setq (print-defpackage-form clauses) (extract-clause clauses :print-defpackage-form))
     (multiple-value-setq (auto-import-shadowing clauses) (extract-clause clauses :auto-import-shadowing))
     (multiple-value-setq (auto-reexport-from clauses) (extract-clause clauses :auto-reexport-from))
+    (multiple-value-setq (local-nicknames clauses) (extract-clause clauses :local-nicknames))
     (assert (subsetp auto-reexport-from auto-import-from :test 'string-equal)
         () "In an defpackage-autoimport, auto-reexport-from should be a subset of auto-import-from")
   
@@ -367,8 +384,16 @@ to package.
                ,@clauses))
       (when print-defpackage-form
         (let (*print-length* *print-level*) (print package-definition)))
-      package-definition
-      )))
+      `(prog1
+         ,package-definition
+         (eval-when (:load-toplevel :execute)
+           ,(if local-nicknames
+                `(setf (gethash (find-package ,name) *per-package-alias-table*) 
+                       ',(process-local-nicknames name local-nicknames :to-alist t))
+              `(remhash (find-package ,name) *per-package-alias-table*))
+           )
+         ))
+    ))
   
 (cl-user::portably-without-package-locks
 ; non-toplevel
@@ -380,8 +405,9 @@ to package.
    clashing symbols and import it too. Only one such clause is allowed.
 \(:auto-reexport-from . package-designator-list) - reexport all symbols which were imported from package listed in auto-import-from clause. 
    Packages listed must be a subset of auto-import packages. Only one such clause is allowed.
-\(:auto-import-shadowing [t | nil]) - if t, use shadowing-import instead of import
+\(:auto-import-shadowing [t | nil]) - if t, use shadowing-import instead of import for clash resolution
 \(:print-defpackage-form [t | nil) - if t, print defpackage form
+\(:local-nicknames :nick1 :package1 :nick2 :package2 ...) - Refer to package1 as nick1, package2 as nick2 from package being defined. 
 \(:non-symbols . symbol-designator-list) - if the symbols with that name is interned to the package, it is a error. NOT IMPLEMENTED
 \(:non-hosted-symbols . symbol-designator-list) - if symbols with that name are interned and have their home package = 
                                                                      (find-package :name), it is a error. NOT IMPLEMENTED
@@ -390,6 +416,7 @@ to package.
   #+lispworks 
 ; non-toplevel
 (dspec:define-dspec-alias defpackage-autoimport (name &rest args)
+  (setf args args)
   `(defpackage ,name))
 ; non-toplevel
 (import '(defpackage-autoimport defpackage-autoimport-2) :cl)
@@ -420,8 +447,25 @@ to package.
 ; non-toplevel
 #+lispworks 
 (dspec:define-dspec-alias defpackage-autoimport-2 (name &rest args)
+  (setf args args)
   `(defpackage ,name))
 )
+
+#|
+tests:
+(defpackage-autoimport-2 :p4 (:use :cl) (:local-nicknames :mpar :merge-packages-and-reexport))
+
+(let ((*package* (find-package :p4))) (assert (eq 'defpackage-autoimport (read-from-string "mpar:defpackage-autoimport-2"))))
+
+(assert 
+    (nth-value 1 
+               (ignore-errors (eval '(defpackage-autoimport-2 :p4 (:use :cl) (:local-nicknames :p :p4))))))
+
+
+
+|#
+
+
 
 (defun delete-symbols-from-package (pack &rest symbols)
   "Each element of symbols may be a string-designator, or a list. 
