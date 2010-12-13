@@ -266,7 +266,7 @@ NIL
         (and 
          str
          (member complete '(:complete :complete-but-not-unique :not-unique))
-         (eq (readtable-case-advanced *readtable*) :ignore-case-if-uniform)
+         (eq (readtable-case-advanced *readtable*) :upcase-if-uniform)
          (multiple-value-bind (pckg name-only-str xlam1 xlam2)
              (editor::pathetic-parse-symbol str package)
            (declare (ignore pckg xlam1 xlam2))

@@ -14,7 +14,7 @@
 (see-packages-on :see-packages-test-readtable)
 (defreadtable :see-packages-test-readtable-a (:merge))
 (see-packages-on :see-packages-test-readtable-a)
-(setf (budden-tools::readtable-case-advanced (find-readtable :see-packages-test-readtable-a)) :ignore-case-if-uniform)
+(setf (budden-tools::readtable-case-advanced (find-readtable :see-packages-test-readtable-a)) :upcase-if-uniform)
 
 (defmacro with-good-readtable (&body body)
   `(let1 *readtable* (budden-tools::packages-seen-p :see-packages-test-readtable)

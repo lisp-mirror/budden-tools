@@ -557,9 +557,9 @@ iii) if symbol is found more than once then first-symbol-found,list of packages,
 (defun readtable-case-advanced (rt)
   (let1 rt (ensure-readtable rt)
     (cond
-     ((gethash rt *readtable-case-is-ignore-case-if-uniform*)
+     ((gethash rt *readtable-case-is-upcase-if-uniform*)
       (assert (eq (readtable-case rt) :preserve))
-      :ignore-case-if-uniform)
+      :upcase-if-uniform)
      (t 
       (readtable-case rt)))))
 
@@ -568,11 +568,11 @@ iii) if symbol is found more than once then first-symbol-found,list of packages,
     (let rt (ensure-readtable rt))
     (let good-rt (packages-seen-p rt))
     (case rtcase
-      (:ignore-case-if-uniform
-       (assert good-rt () "Readtable ~S must be mangled by see-packages to be set to ignore-case-if-uniform" rt)
+      (:upcase-if-uniform
+       (assert good-rt () "Readtable ~S must be mangled by see-packages to be set to upcase-if-uniform" rt)
        (setf (readtable-case rt) :preserve
              (readtable-case good-rt) :preserve
-             (gethash rt *readtable-case-is-ignore-case-if-uniform*) t))
+             (gethash rt *readtable-case-is-upcase-if-uniform*) t))
       (t
        (setf (readtable-case rt) rtcase)
        (when good-rt
@@ -584,54 +584,44 @@ iii) if symbol is found more than once then first-symbol-found,list of packages,
   (proga 
     (let rtcase (readtable-case-advanced rt))
     (case rtcase
-      (:ignore-case-if-uniform :preserve)
+      (:upcase-if-uniform :preserve)
       (t rtcase))))
 
-#+nil (defun find-symbol-with-advanced-readtable-case (name p rt starts-with-vertical-line)
-  (proga
-    (let p-sym nil storage-type nil)
-    (case (readtable-case-advanced rt)
-      (:ignore-case-if-uniform
-       (let same-case-p (and (not starts-with-vertical-line) (all-chars-in-same-case-p name)))
-       (cond (same-case-p
-              (setf (values p-sym storage-type) (find-symbol (#+russian string-upcase-cyr #-russian string-upcase name) p))
-              (unless storage-type (setf (values p-sym storage-type) (find-symbol (#+russian string-downcase-cyr #-russian string-downcase name) p)))
-              )
-             (t                
-              (setf (values p-sym storage-type) (find-symbol name p))))
-       (values p-sym storage-type))
-      (t (setf (values p-sym storage-type) (find-symbol name p))))))
-
-; новшества: 1. символы со всеми ascii в нижнем регистре ищутс€ в обоих регистрах. 
+; новшества: 1. символы со всеми ascii в нижнем регистре ищутс€ только в верхнем регистре
 ; ¬се остальные - только "как есть"
 ; 2. все keywords преобразуютс€ к верхнему регистру в момент чтени€
 (defun find-symbol-with-advanced-readtable-case (name p rt starts-with-vertical-line)
   (let ((p-sym nil) (storage-type nil))
     (case (readtable-case-advanced rt)
-      (:ignore-case-if-uniform
+      (:upcase-if-uniform
        (let ((same-case-p (and (not starts-with-vertical-line) (all-chars-in-same-case-p name))))
          (ecase same-case-p
            (:lowercase
             (setf (values p-sym storage-type) (find-symbol (string-upcase-ascii name) p))
-            (when (and (not storage-type) 
-                       (not (eq p *keyword-package*)) ; константы - только в верхнем регистре
-                       )
-              (setf (values p-sym storage-type) (find-symbol name p))))
+            ; убираем неоднозначность. “еперь всЄ, что введено в одинаковом регистре, апкейситс€. 
+            ; (when (and (not storage-type) 
+            ;           (not (eq p *keyword-package*)) ; константы - только в верхнем регистре
+            ;           )
+            ;  (setf (values p-sym storage-type) (find-symbol name p)))
+            )
            ((:uppercase :ignore-case nil)
-            (setf (values p-sym storage-type) (find-symbol name p)))
-           (values p-sym storage-type))))
-      (t (setf (values p-sym storage-type) (find-symbol name p))))
-    (values p-sym storage-type)))
+            (setf (values p-sym storage-type) (find-symbol name p))))
+         (values p-sym storage-type same-case-p)))
+      (t (setf (values p-sym storage-type) (find-symbol name p))
+         (values p-sym storage-type nil)))
+    ))
 
 (proclaim '(ftype (function (string package readtable symbol) symbol)
                   fix-symbol-name-for-advanced-readtable-case))
-(defun fix-symbol-name-for-advanced-readtable-case (name package rt starts-with-vertical-line)
-  "’отим заинтЄрнить им€ name в пакет package. ѕреобразуем его к верхнему регистру, если он - в пакет keyword"
+(defun fix-symbol-name-for-advanced-readtable-case (name package rt starts-with-vertical-line same-case-p)
+  ;"’отим заинтЄрнить им€ name в пакет package. ѕреобразуем его к верхнему регистру, если он - в пакет keyword"
+  "’отим заинтЄрнить им€ name в пакет package. ѕреобразуем его к верхнему регистру, если он набран в нижнем регистре без ||"
   (cond
-   ((and (eq package *keyword-package*) 
+   ((and ;(eq package *keyword-package*) 
+         (eq same-case-p :lowercase)
          (not starts-with-vertical-line)
-         (eq (readtable-case-advanced rt) :ignore-case-if-uniform))
-         (setf name (string-upcase-ascii name)))
+         (eq (readtable-case-advanced rt) :upcase-if-uniform))
+    (setf name (string-upcase-ascii name)))
    (t name)))
 
 (defvar +some-uninterned-symbol+ '#:some-uninterned-symbol)
@@ -666,12 +656,7 @@ iii) if symbol is found more than once then first-symbol-found,list of packages,
                               (list package)
                             (cons package (package-seen-packages-list package))))
             ;(print p)(print (:first-time-p))
-               ; FIX1 - здесь проверить: если в символе все буквы - в одинаковом регистре, то искать символ и в нижнем, и в верхнем регистре. 
-               ; ≈сли символ найден - вз€ть его им€, а не то им€, которое прочитано  
-               ; ¬ противном случае, искать только дословно такой символ (и это будет новый смысл readtable-case = upcase
-               ; FIXME найди FIX1 и сделай
-               ; FIXME определить around method дл€ readtable-case и сделать ещЄ одну case-sensitivity-mode только дл€ "наших" таблиц чтени€ - :ignore-case-if-uniform
-               (:for (values p-sym storage-type) = (find-symbol-with-advanced-readtable-case name p rt *token-starts-with-vertical-line*))
+               (:for (values p-sym storage-type same-case-p) = (find-symbol-with-advanced-readtable-case name p rt *token-starts-with-vertical-line*))
                (when (and storage-type  ; есть такой символ
                           (or (eq storage-type :external) ; должен быть внешним 
                               real-first-time-p  ; или мы смотрим в *package* и тогда он может быть внутренним тоже
@@ -687,21 +672,23 @@ iii) if symbol is found more than once then first-symbol-found,list of packages,
                  (case cnt
                    (0 (intern 
                        (fix-symbol-name-for-advanced-readtable-case 
-                        name package rt starts-with-vertical-line)
+                        name package rt starts-with-vertical-line same-case-p)
                        package))
                    (1 sym-found)
                    (t (simple-reader-error stream "symbol name ~A is ambigious between ~S" 
                                            name packs-found)))))))
              ; )
             (t
-             (multiple-value-bind (sym status)
+             (multiple-value-bind (sym status same-case-p)
                  (find-symbol-with-advanced-readtable-case name qualified-package rt starts-with-vertical-line)
+               (setf name (fix-symbol-name-for-advanced-readtable-case name qualified-package rt starts-with-vertical-line same-case-p))
                (unless status
                  (or *intern-to-qualified-package-silently*
-                     (cerror "Create symbol and use it" "Symbol ~A~A~A does not exist" 
-                             (package-name qualified-package) 
-                             (make-string qualified-colon-no :initial-element #\:)
-                             name))
+                     (let ((*readtable* (copy-readtable nil))) 
+                       (cerror "Create symbol and use it" "Symbol ~A~A~A does not exist" 
+                               (package-name qualified-package) 
+                               (make-string qualified-colon-no :initial-element #\:)
+                               name)))
                  (return-from function (intern name qualified-package)))
                (when (= qualified-colon-no 1)
                  (unless (eq status :external)

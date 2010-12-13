@@ -19,7 +19,7 @@
   "Maps altered readtable to their colon-readtable"
   )
 
-(defvar *readtable-case-is-ignore-case-if-uniform* (make-weak-key-hash-table :test 'eq)
+(defvar *readtable-case-is-upcase-if-uniform* (make-weak-key-hash-table :test 'eq)
   "Если readtable - в этой таблице, то для него действуют особые правила поиска имён. При этом readtable-case нужно поставить в preserve"
   )
 
@@ -67,7 +67,7 @@
 
 (defvar *package-stack* nil "Стек пакетов. При foo:: кладём <#package foo> на вершину стека")
 (defvar *colon-no-stack* nil "Стек, параллельный стеку пакетов, в к-рый кладётся число колонок")
-(defvar *intern-to-qualified-package-silently* t "foo::bar может ссылаться на новые символы")
+(defvar *intern-to-qualified-package-silently* nil "foo::bar может ссылаться на новые символы")
 
 (defvar *print-normalize-seen-symbols* t "Print seen symbols with package
 prefix even if they can be read without the prefix")
@@ -159,10 +159,10 @@ pack не поддерживает наших расширений
      )
   )
 
-(defmacro in-readtable-ignore-case-if-uniform (rt-designator)
+(defmacro in-readtable-upcase-if-uniform (rt-designator)
   `(progn
      (in-readtable ,rt-designator)
-     (setf (readtable-case-advanced *readtable*) :ignore-case-if-uniform)))
+     (setf (readtable-case-advanced *readtable*) :upcase-if-uniform)))
 
 (defvar *number-of-colons*) ; число колонок в последнем квалификаторе, к-рый мы считали
 (defvar *in-careful-token-reader* nil)
