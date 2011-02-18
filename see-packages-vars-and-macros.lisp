@@ -171,26 +171,7 @@ pack не поддерживает наших расширений
 
 
 
-(defstruct*mc package-metadata
-;  write-lock ; if t, attempt to create a symbol creates continuable error
-;  read-lock ; if t, attempt to read a symbol creates a error
-  custom-reader ; custom reader is a function with the same args as read. It is called 
-                ; when reader is read in a context of package:: syntax. 
-  custom-token-parsers ; Custom token parsers is a list of custom token parsers. 
-                       ; Custom token parser is a function designator of 
-                       ; (stream potential-symbol-name package) which 
-                       ; returns two values. First value is t if token is 
-                       ; parsed and nil otherwise. Second value is parsed token itself.
-                       ; If custom token parsers are defined, package 
-                       ; protection is not accomplished. 
-                       ; Stream is at the end of the token at the time of the call.
-                       ; Parsers are called from left to right until some parser returns t as its
-                       ; secondary value. If no parser returns t, 
-  )
 
-(defparameter *per-package-metadata* (make-hash-table :test 'eq)
-  "Mapping of keywordized package names to their metadata"
-  )
 
 (defmacro get-non-persistent-object-locations (object)
   `(gethash ,object *nplm))
