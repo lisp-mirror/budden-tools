@@ -232,13 +232,6 @@ package-sym показывает префикс пакета, с которым мы считали им€. num-of-colons
 
 (defun char-type (c) (elt *char-table* (char-code c)))
 
-(defun keywordize-package-designator (package-designator)
-  (etypecase package-designator
-    (keyword package-designator)
-    (package (intern (package-name package-designator) :keyword))
-    (symbol (keywordize package-designator))
-    ))
-
 (defun hp-alias-map (p &key (resolve-hp-alias t))
   "Finds alias map for a package. p is a package designator. 
 When resolve-hp-alias is true, p may also be a package alias which is
@@ -271,11 +264,7 @@ resolved in the scope of *package*"
            *per-package-alias-table*))
 
 
-(defun ensure-package-metadata (package-designator)
-  "Gets package metadata. Creates one if there is no metadata"
-  (let1 d (keywordize-package-designator package-designator)
-    (or (gethash d *per-package-metadata*)
-        (setf (gethash d *per-package-metadata*) (make-package-metadata)))))
+
 #|
 ¬ принципе, есть два варианта - либо парсер токенов, который вернул нам лисп. Ёто хорошо
 дл€ парсеров, принимающих строку, но плохо дл€ парсеров, принимающих поток. ѕример
@@ -626,6 +615,15 @@ iii) if symbol is found more than once then first-symbol-found,list of packages,
 
 (defvar +some-uninterned-symbol+ '#:some-uninterned-symbol)
 
+(defun intern-check-forbidden (name package)
+  (proga
+    (let m (gethash (keywordize-package-designator package) 
+                    *per-package-metadata*))
+    (when m
+      (let fs (package-metadata-forbidden-symbol-names m))
+      (assert (null (find name fs :test 'string=)) () "Symbol name ~S is forbidden in ~A" name package))
+    (intern name package)))
+
 (defun reintern-1 (stream token default-package rt starts-with-vertical-line)  
   "ѕрочитали что-то. «аинтЄрним его в контект, определ€емый default-package (по смыслу это - *package*), *package-stack*, *colon-no-stack*"
   (proga function
@@ -670,14 +668,12 @@ iii) if symbol is found more than once then first-symbol-found,list of packages,
                (:finally
                 (return
                  (case cnt
-                   (0 (intern 
-                       (fix-symbol-name-for-advanced-readtable-case 
-                        name package rt starts-with-vertical-line same-case-p)
-                       package))
+                   (0 (intern-check-forbidden (fix-symbol-name-for-advanced-readtable-case 
+                                               name package rt starts-with-vertical-line same-case-p)
+                                              package))
                    (1 sym-found)
                    (t (simple-reader-error stream "symbol name ~A is ambigious between ~S" 
                                            name packs-found)))))))
-             ; )
             (t
              (multiple-value-bind (sym status same-case-p)
                  (find-symbol-with-advanced-readtable-case name qualified-package rt starts-with-vertical-line)
@@ -689,7 +685,7 @@ iii) if symbol is found more than once then first-symbol-found,list of packages,
                                (package-name qualified-package) 
                                (make-string qualified-colon-no :initial-element #\:)
                                name)))
-                 (return-from function (intern name qualified-package)))
+                 (return-from function (intern-check-forbidden name qualified-package)))
                (when (= qualified-colon-no 1)
                  (unless (eq status :external)
                    (cerror "Use symbol anyway" "Symbol ~S is not external in ~A" 
