@@ -310,6 +310,46 @@ returns (VALUES string-output error-output exit-status)"
   (dolist (f (input-files o c))
     (account-for-file o c f)))
 
+
+(defmethod operation-done-p ((o compile-op) (c component))
+  "Copy of original operation-done-p to account load-op as compile-op"
+  (flet ((fwd-or-return-t (file)
+           ;; if FILE-WRITE-DATE returns NIL, it's possible that the
+           ;; user or some other agent has deleted an input file.  If
+           ;; that's the case, well, that's not good, but as long as
+           ;; the operation is otherwise considered to be done we
+           ;; could continue and survive.
+           (let ((date (file-write-date file)))
+             (cond
+               (date)
+               (t
+                (warn "~@<Missing FILE-WRITE-DATE for ~S: treating ~
+                       operation ~S on component ~S as done.~@:>"
+                      file o c)
+                (return-from operation-done-p t))))))
+    (let ((out-files (output-files o c))
+          (in-files (input-files o c)))
+      (cond ((and (not in-files) (not out-files))
+             ;; arbitrary decision: an operation that uses nothing to
+             ;; produce nothing probably isn't doing much
+             t)
+            ((not out-files)
+             (let ((op-done
+                    (or 
+                     (gethash 'load-op (component-operation-times c))
+                     (gethash (type-of o) (component-operation-times c)))))
+               (and op-done
+                    (>= op-done
+                        (apply #'max
+                               (mapcar #'fwd-or-return-t in-files))))))
+            ((not in-files) nil)
+            (t
+             (and
+              (every #'probe-file out-files)
+              (> (apply #'min (mapcar #'file-write-date out-files))
+                 (apply #'max (mapcar #'fwd-or-return-t in-files)))))))))
+
+
 (defmethod perform ((o stat-op) (c source-file))
   (dolist (f (input-files o c))
     (account-for-file o c f)))
