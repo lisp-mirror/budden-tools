@@ -332,6 +332,14 @@ not found (unless :key is specified, which is a error) and returns value"
       (:collect x))))
 
 
+;; FIXME добавить proga-expander
+(defmacro mlvl-bind (vars values-form &body body) `(multiple-value-bind ,vars ,values-form ,@body))
+(defmacro mlvl-call (function &rest forms) `(multiple-value-call ,function ,@forms))
+(defmacro mlvl-list (form) `(multiple-value-list ,form))
+(defmacro mlvl-prog1 (form &rest forms) `(multiple-value-prog1 ,form ,@forms))
+(defmacro mlvl-setq (variables form) `(multiple-value-setq ,variables ,form))
+(defconstant mlvls-limit multiple-values-limit)
+
 
 (defmacro dynamic-let1 (place-form value &body body)
   "Deprecated. See pllet1"  
@@ -427,6 +435,7 @@ As a short-hand, #\s means *STANDARD-OUTPUT*, #\t - *TRACE-OUTPUT*"
   (setf (gethash (elt from 0) *reversible-cyrillic-translit-table*) to))
 
 
+;;; FIXME сделать обратное преобразование
 (defun translit-reversibly (string-designator)
   "ЅерЄт string-designator и возвращает транслитерированную строку"
   (declare (optimize speed))

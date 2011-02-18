@@ -16,7 +16,7 @@
    :iterate-keywords :swank)
   :components ( 
    (:file "hierarchical-packages")
-   (:file "merge-packages-and-reexport")
+   (:file "merge-packages-simple")
    #+budden (:file "let1")
    
    (:package-file "package") ; might need 
