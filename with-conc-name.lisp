@@ -148,11 +148,11 @@
        ,@body)))
 
 
-#+see-packages
-(trivial-deftest::! #:let-with-conc-type.1
-                    (let-with-conc-type x string "asdf"
-                      `(,(x.equal "asdf") ,(x.upcase) ,(x.equal x.upcase))
-                      )
-                    '(T "ASDF" T))
+; #+see-packages
+;(trivial-deftest::! #:let-with-conc-type.1
+;                    (let-with-conc-type x string "asdf"
+;                      `(,(x.equal "asdf") ,(x.upcase) ,(x.equal x.upcase))
+;                      )
+;                    '(T "ASDF" T))
 
 ; FIXME - тест требует see-packages, но они ещё не загружены
