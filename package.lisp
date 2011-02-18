@@ -15,7 +15,7 @@
 (defpackage "BUDDEN-TOOLS"
   (:nicknames "budden-tools" "bu" "BU")
   (:use :cl :named-readtables :buddens-readtable :defstruct-meta :org.tfeb.hax.hierarchical-packages
-   :merge-packages-and-reexport)
+   :merge-packages-simple)
   (:import-from :iterate-keywords #:iter #:keywordize #:dsetq)
   (:import-from :alexandria #:with-gensyms #:once-only #:string-designator)
   (:import-from :split-sequence #:split-sequence)
@@ -114,6 +114,13 @@
    #:eval-with-file ; write code to file, compile it and load
    #:not-null ; type (not null)
    #:the* ; errs if type ain't match. Otherwise, returns a thing
+
+   #:mlvl-bind ; multiple-value-bind
+   #:mlvl-call ; multiple-value-call
+   #:mlvl-list ; multiple-value-list
+   #:mlvl-prog1 ; multiple-value-prog1
+   #:mlvl-setq ; multiple-value-setq
+   #:mlvls-limit ; multiple-values-limit
 
 ;; typed binding
    #:with-conc-name 
