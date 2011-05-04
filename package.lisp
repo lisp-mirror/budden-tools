@@ -125,7 +125,7 @@
 ;; typed binding
    #:with-conc-name 
    #:let-with-conc-type 
-   #:--> 
+   #:^ 
 
 ;; i/o utilities
    #:show-hash
