@@ -25,7 +25,7 @@
 ;      (let *print-circle* t *print-pretty* t)
       (let *print-pretty* t)
       (print `(in-package ,(keywordize (package-name *package*))) out)
-      (print `(in-readtable :buddens-readtable) out)
+      (print `(in-readtable :buddens-readtable-a) out)
       (print `(defun ,name ,@more) out))
     (assert (compile-file (str+ filename ".lisp")))
     `(values (load ,filename) ,filename)))
