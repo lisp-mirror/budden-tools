@@ -89,37 +89,37 @@
                       ("CHAR-" "common-lisp"))
                     :test 'equalp)
 
-(defun function-symbol-for---> (type-or-class field-name)
-  "возвращает функцию для выполнения -->"
+(defun function-symbol-for-^ (type-or-class field-name)
+  "возвращает функцию для выполнения ^"
   (multiple-value-bind (prefix package) (conc-prefix-by-type-or-class type-or-class)
     (let* ((target-symbol-name (str+ prefix field-name))
            (target-symbol (find-symbol target-symbol-name package)))
-      (assert target-symbol () "(runtime--> ~S ~S): symbol name ~S not found in ~S" 
+      (assert target-symbol () "(runtime^ ~S ~S): symbol name ~S not found in ~S" 
         type-or-class field-name target-symbol-name package)
-      (assert (fboundp target-symbol) () "(runtime--> ~S ~S): ~S must be a function" 
+      (assert (fboundp target-symbol) () "(runtime^ ~S ~S): ~S must be a function" 
         type-or-class field-name target-symbol)
         ; а если это макрос? (assert (null (macro-function target-symbol)))?
       target-symbol
       )))
                             
-(defun runtime--> (object field-name &rest args)
-  (assert object () "(runtime--> nil ~S): Sorry, object can't be null!" field-name)
+(defun runtime^ (object field-name &rest args)
+  (assert object () "(runtime^ nil ~S): Sorry, object can't be null!" field-name)
   (let* ((class (class-of object))
-         (target-function-symbol (function-symbol-for---> class field-name)))
+         (target-function-symbol (function-symbol-for-^ class field-name)))
     (apply target-function-symbol object args)
     ))
 
-; we need this as we attach symbol-readmacro on --> so that it can't be 
+; we need this as we attach symbol-readmacro on ^ so that it can't be 
 
-(defmacro |-->| (object field-name &rest args)
-  `(runtime--> ,object ',field-name ,@args))
+(defmacro |^| (object field-name &rest args)
+  `(runtime^ ,object ',field-name ,@args))
 
-(define-compiler-macro |-->| (object field-name &rest args &environment env)
+(define-compiler-macro |^| (object field-name &rest args &environment env)
   (let1 variable-type-or-class (variable-type-or-class object env)
     (case variable-type-or-class
-      ((t nil) `(runtime--> ,object ',field-name ,@args))
+      ((t nil) `(runtime^ ,object ',field-name ,@args))
       (t 
-       `(funcall ',(function-symbol-for---> variable-type-or-class field-name) ,object ,@args))
+       `(funcall ',(function-symbol-for-^ variable-type-or-class field-name) ,object ,@args))
       )))
       
       
