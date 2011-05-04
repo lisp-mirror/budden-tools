@@ -29,36 +29,36 @@
 
 
 
-#+nil (defun -->-reader-internal (stream read-object object)
+#+nil (defun ^-reader-internal (stream read-object object)
   "Если read-object=nil, то мы уже считали объект и читаем только то, что идёт после него"
   (let* ((object (if read-object (read stream t) object))
          (field-name (read-symbol-name stream))
          (args (read-delimited-list #\) stream t))) ; дерьмо вот здесь, и никак не решить. 
     (unread-char #\) stream) ; очень сомнительно.
-    `(|-->| ,object ,field-name ,@args)))
+    `(|^| ,object ,field-name ,@args)))
 
 
-(defun -->-reader-internal-2 (stream read-object object read-field-name field-name)
+(defun ^-reader-internal-2 (stream read-object object read-field-name field-name)
   "Если read-object=nil, то мы уже считали объект и читаем только то, что идёт после него"
   (let* ((object (if read-object (read stream t) object))
          (field-name (if read-field-name (read-symbol-name stream) field-name))
-         (symbol (make-symbol (str+ "(--> " (if (string-designator-p object)
+         (symbol (make-symbol (str+ "(^ " (if (string-designator-p object)
                                                 (string object) "#<...>")
                                     " " field-name ")")))
          (args (make-symbol "args")))
     (eval `(defmacro ,symbol (&rest ,args) 
-             `(|-->| ,',object ,',field-name ,@,args)))
-    (eval `(define-symbol-macro ,symbol (|-->| ,object ,field-name)))
+             `(|^| ,',object ,',field-name ,@,args)))
+    (eval `(define-symbol-macro ,symbol (|^| ,object ,field-name)))
     symbol))
 
 
-(defun -->-reader-internal-3 (stream read-object object read-field-name field-name)
+(defun ^-reader-internal-3 (stream read-object object read-field-name field-name)
   "Если read-object=nil, то мы уже считали объект и читаем только то, что идёт после него"
   (let* ((object (if read-object (read stream t) object))
          (field-name (if read-field-name (read-symbol-name stream) field-name))
          
          )
-    (list '|-->| object field-name)))
+    (list '|^| object field-name)))
 
 
 (defun closing-paren-splice-cdr-into-car (readmacro-returned)
@@ -77,18 +77,18 @@ symbol-readmacro должен вернуть список. cdr считанного списка вставляется в хвос
   readmacro-returned)
   
 
-;; FIXME при печати-чтении --> выполняется повторно. Переименовать --> во что-то, если это опасно 
+;; FIXME при печати-чтении ^ выполняется повторно. Переименовать ^ во что-то, если это опасно 
 ;; (а опасно это может быть, если читать '(a b c --> d e f), хотя опасность не столь велика - ошибка чтения
-(defun -->-reader (stream symbol)
+(defun ^-reader (stream symbol)
   (declare (ignore symbol))
-;  (it-is-a-car-symbol-readmacro (-->-reader-internal-2 stream t nil t nil))
-  (closing-paren-splice-cdr-into-car (-->-reader-internal-3 stream t nil t nil))
+;  (it-is-a-car-symbol-readmacro (^-reader-internal-2 stream t nil t nil))
+  (closing-paren-splice-cdr-into-car (^-reader-internal-3 stream t nil t nil))
   )
 
-(setf (budden-tools:symbol-readmacro '|-->|) '-->-reader)
+(setf (budden-tools:symbol-readmacro '|^|) '^-reader)
 
-(defun convert-carat-to---> (stream symbol-name package)
-  "превращает ^ в -->"
+(defun convert-carat-to-^ (stream symbol-name package)
+  "превращает инфиксный ^ в ^"
   (let* ((p (position #\^ symbol-name :from-end t)))
     (cond 
      ((null p) (values nil nil))
@@ -97,14 +97,14 @@ symbol-readmacro должен вернуть список. cdr считанного списка вставляется в хвос
         (let ((beg (subseq symbol-name 0 p))
               (end (subseq symbol-name (+ p 1))))
           (values (let ((*package* package))
-                    (funcall '-->-reader-internal-2 
+                    (funcall '^-reader-internal-2 
                              (make-concatenated-stream (make-string-input-stream (str+ beg " ")) stream)
                              t nil 
                              nil end))
                   t))))))
 
 ; (setf (get-custom-token-parsers-for-package :budden) nil)
-(pushnew 'convert-carat-to---> (get-custom-token-parsers-for-package :budden))
+(pushnew 'convert-carat-to-^ (get-custom-token-parsers-for-package :budden))
 
 
 ;; (/with-readtable-case/ :preserve '(foo bar))
