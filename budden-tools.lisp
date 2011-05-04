@@ -254,12 +254,11 @@ supplied-p и т.п."
 (defun splice-list (list &key to-alist) 
   "converts (a b c d ...) into ((a b) (c d) ...), or, 
 if to-alist is true, to ((a . b) (c . d) ...)"
-  (do ((a (pop list) (pop list)) 
-       (b (pop list) (pop list))
-       res) 
-      (nil) 
-    (push (if to-alist (cons a b) (list a b)) res)
-    (when (null list) (return-from splice-list (reverse res)))
+  (iter
+    (:while list)
+    (:for a = (pop list))
+    (:for b = (pop list))
+    (:collect (if to-alist (cons a b) (list a b)))
     ))
 
 (defun alist-to-list (x) "Превращает alist в список ((a . b) (c . d)) -> (a b c d)"
@@ -473,31 +472,52 @@ As a short-hand, #\s means *STANDARD-OUTPUT*, #\t - *TRACE-OUTPUT*"
     (:for hichar = (elt *cyrillic-symbols* j))
     (setf (gethash lochar up) hichar)
     (setf (gethash hichar down) lochar))
+
+; non-toplevel
 (defun char-upcase-cyr (char) #+russian "поднимает регистр по Русски"
     (or (gethash char up) (char-upcase char)))
+
+; non-toplevel
 (defun char-downcase-cyr (char) #+russian "опускает регистр по-Русски"
     (or (gethash char down) (char-downcase char)))
+
+; non-toplevel
 (defun char-upcase-ascii (char) #+russian "поднимает регистр только для латиницы"
   (#+:|LISPWORKS4.4| char-upcase #-:|LISPWORKS4.4| error char))
+
+; non-toplevel
 (defun char-downcase-ascii (char) 
   (#+:|LISPWORKS4.4| char-downcase #-:|LISPWORKS4.4| error char))
+
+; non-toplevel
 (defun char-equal-cyr (c1 c2) #+russian "сравнивает символы с учётом кириллицы"
     (or (char-equal c1 c2)
         (char-equal (char-upcase-cyr c1) (char-upcase-cyr c2))))
+
+; non-toplevel
 (defun string-upcase-cyr (s)
     (map 'string 'char-upcase-cyr s))
+
+; non-toplevel
 (defun string-upcase-ascii (s)
   (#+:|LISPWORKS4.4| string-upcase #-:|LISPWORKS4.4| error s))
+
+; non-toplevel
 (defun string-downcase-ascii (s)
   (#+:|LISPWORKS4.4| string-downcase #-:|LISPWORKS4.4| error s))
+
+; non-toplevel
 (defun string-downcase-cyr (s)
     (map 'string 'char-downcase-cyr s))
+
+; non-toplevel
 (defun string-equal-cyr (s1 s2)
     (let* ((s1 (string s1))
            (s2 (string s2)))
       (or (string-equal s1 s2)
           (every 'char-equal-cyr s1 s2))))
 
+; non-toplevel
 (defun textual-equal-cyr (s1 s2)
   "Мы не можем определить equal-cyr, т.к. не умеем ходить по всем типам данных. Но хоть так."
   (flet ((stringify (x)
@@ -507,16 +527,22 @@ As a short-hand, #\s means *STANDARD-OUTPUT*, #\t - *TRACE-OUTPUT*"
              (t (prin1-to-string x)))))
     (string-equal-cyr (stringify s1) (stringify s2))))
 
+; non-toplevel
 (defun cyrillic-char-p (x) 
   (and (characterp x) 
-       #+(and lispworks win32) 
+       #+(and nil lispworks win32) 
+       ; вряд ли имеет смысл из-за Ё
        (let1 c (char-code x)
-         (<= #.(char-code #\А) c #.(char-code #\я)))
-       #-(and lispworks win32)
+         (or 
+          (<= #.(char-code #\А) c #.(char-code #\я))
+          (eq x #\ё)
+          (eq x #\Ё)))
+       #-(and nil lispworks win32)
        (or (gethash x up) (gethash x down))
-       t))
-)
+       t
+       ))
 
+)
 
 
 ;; преобразование русских символов для чтения-записи в open-pipe
