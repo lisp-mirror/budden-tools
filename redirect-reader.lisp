@@ -100,6 +100,12 @@ is already an altered readtable, simply returns it TODO: rename me"
           )
         )
        ))
+
+    #+russian 
+    (iter:iter
+      (:for c in *cyrillic-symbols*)
+      (set-macro-character c #'careful-token-reader t rt))
+
     (set-dispatch-macro-character 
      #\# #\\ 
      (make-safer-sharp-backslash-reader rt) rt)
