@@ -1,7 +1,7 @@
 (in-package :buddens-readtable)
 
 (cl-user::portably-without-package-locks
-(defun :buddens-readtable () "это не функция, а readtable" (error "this is not a function"))
+(defun :buddens-readtable-a () "это не функция, а readtable" (error "this is not a function"))
 )
 
 (defreadtable :buddens-readtable 
