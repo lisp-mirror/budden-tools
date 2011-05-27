@@ -181,11 +181,30 @@ NIL
 
 
 
-
-
 (defun decorated-buffer-package-to-use (fn &rest args)
-  (let* ((res (apply fn args)))
-    (minimal-fix-xlam-package res)))
+  (let1 res (minimal-fix-xlam-package (apply fn args))
+    (cond ; здесь задаём по умолчанию пакет budden вместо cl-user для Help и Background Output
+     ((not (eq res #.(find-package :common-lisp-user))) res)
+     (t
+      (let* 
+          ((first-arg (first budden-tools::args))
+           (buffer-name
+            (typecase first-arg
+              (editor::i-point 
+               (slot-value (slot-value first-arg 'editor::buffer) 'editor::%name))
+              (editor::buffer
+               (slot-value first-arg 'editor::%name))
+              (t ""))))
+        (cond 
+         ((or (alexandria.0.dev::STARTS-WITH-SUBSEQ "Background Output" buffer-name)
+              (alexandria.0.dev::STARTS-WITH-SUBSEQ "Help" buffer-name)
+              (break))
+          (or (find-package :budden) res))
+         (t res)))
+      )
+     )
+    ))
+
 
 (decorate-function 'editor::buffer-package-to-use #'decorated-buffer-package-to-use)
 
