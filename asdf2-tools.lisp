@@ -21,6 +21,7 @@
          ; asdf systems, modules and components form a tree. Next two functions work with the "paths" to components in the tree
         'dump-component-asdf-path ; return path of compoment, e.g. ("bordeaux-threads" "src" "bordeaux-threads")
         'find-asdf-component-by-path ; return component by its path.
+        'load-package-file ; load only "package" file as a source
         )
 
 (eval-when (:compile-toplevel)
@@ -28,6 +29,13 @@
 
 (defun ! (&rest args) "One more shortcut for (asdf:oos 'asdf:load-op ,@args)"
        (apply 'oos 'load-op args))
+
+(defun load-package-file (system &key (component-name "package")) 
+  "Loads only one component of a system as a source. Intention is a load ahead package.lisp 
+to resolve circular references between systems"
+  ;(operate 'load-source-op (find-component (find-system system) component-name))
+  (perform (make-instance 'load-source-op) (find-component (find-system system) component-name))
+  )
 
 
 ;;; the following are non-functions. In fact
