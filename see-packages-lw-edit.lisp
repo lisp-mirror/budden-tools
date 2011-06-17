@@ -198,7 +198,7 @@ NIL
         (cond 
          ((or (alexandria.0.dev::STARTS-WITH-SUBSEQ "Background Output" buffer-name)
               (alexandria.0.dev::STARTS-WITH-SUBSEQ "Help" buffer-name)
-              (break))
+              (warn "Странный пакет в decorated-buffer-package-to-use"))
           (or (find-package :budden) res))
          (t res)))
       )
