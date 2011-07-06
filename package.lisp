@@ -26,6 +26,7 @@
 
 ;; sequences
    #:sequence-last
+   #:subseq* 
    #:rmsubseq
    #:search-and-replace-seq
    #:replace-subseq

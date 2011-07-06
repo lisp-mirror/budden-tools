@@ -49,6 +49,10 @@
   (declare (ignore from-end start end count))
   (apply #'remove nil seq :test (constantly t) args))
 
+(defun subseq1 (seq start &optional end)
+  (let1 l (length seq)
+    (subseq seq (min l start) (when end (min l end)))))
+
 (defun direct-sum (items errmsg &key (test #'eql))
   #+russian "Проверяет, что списки являются непересекающимися. Возвращает их сумму либо выдает сообщение об ошибке, 
    которое принимает два параметра"
