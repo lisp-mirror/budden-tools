@@ -305,6 +305,72 @@ returns (VALUES string-output error-output exit-status)"
    *stat-op-files*))
 
 
+
+; edit-file, operate was located at asdf.lisp itself to be awailable as early as possible. We duplicate it here
+; so that it won't be lost when upgrading asdf.lisp
+
+(defun edit-file (filename)
+  #+lispworks (editor:find-file-command nil filename)
+  #-lispworks (format *debug-io* "Still don't know how to open file for editing in this CL implementation")
+  )
+(defgeneric edit-component-source (c))
+(defmethod edit-component-source ((c source-file)) (edit-file (slot-value c 'absolute-pathname)))
+(defmethod edit-component-source ((c module)) (edit-component-source (component-parent c)))
+(defmethod edit-component-source ((c system)) (edit-file (system-source-file c)))
+
+(defmethod edit-component-source ((c t))
+  (format *debug-io* "Still don't know how to edit ~S source" c))
+(define-symbol-macro e (edit-component-source *current-component*))
+(define-symbol-macro ep (edit-component-source (component-parent *current-component*)))
+
+(defmethod operate (operation-class system &rest args
+                    &key ((:verbose *asdf-verbose*) *asdf-verbose*) version force
+                    &allow-other-keys)
+  (declare (ignore force))
+  (let* ((*package* *package*)
+         (*readtable* *readtable*)
+         (op (apply #'make-instance operation-class
+                    :original-initargs args
+                    args))
+         (*verbose-out* (if *asdf-verbose* *standard-output* (make-broadcast-stream)))
+         (system (if (typep system 'component) system (find-system system))))
+    (unless (version-satisfies system version)
+      (error 'missing-component-of-version :requires system :version version))
+    (let ((*current-system* system)
+          (steps (traverse op system)))
+      (print `(operate ,*current-system*))
+      (with-compilation-unit ()
+        (loop :for (op . component) :in steps :do
+          (loop
+           (let ((*current-component* component))
+             (restart-case
+                 (progn
+                   (perform-with-restarts op component)
+                   (return))
+               (edit-component ()
+                               :report
+                               (lambda (s)
+                                 (let ((parent (component-parent component)))
+                                   (if parent
+                                       (format s "~@<To edit ~A, type in asdf::e, to edit ~A, type in asdf::ep~@:>" (component-name component) (component-name parent))
+                                     (format s "~@<To edit ~A, type in asdf::e~@:>" (component-name component))
+                                     ))))
+               (retry ()
+                      :report
+                      (lambda (s)
+                        (format s "~@<Retry ~A.~@:>" (operation-description op component))))
+               (accept ()
+                       :report
+                       (lambda (s)
+                         (format s "~@<Continue, treating ~A as having been successful.~@:>"
+                                 (operation-description op component)))
+                       (setf (gethash (type-of op)
+                                      (component-operation-times component))
+                             (get-universal-time))
+                       (return)))))))
+        (values op steps))))
+
+
 #+maybe-not-needed
 (defmethod operation-done-p ((o compile-op) (c component))
   "Copy of original operation-done-p to account load-op as compile-op"
