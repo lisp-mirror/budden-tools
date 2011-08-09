@@ -28,6 +28,7 @@
    #:sequence-last
    #:subseq* 
    #:rmsubseq
+   #:subseq1 ; does not err when run out of sequence, returns emptyness instead
    #:search-and-replace-seq
    #:replace-subseq
    #:split-sequence ; reexported from split-sequence
