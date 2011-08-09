@@ -103,6 +103,8 @@ srcpl - symbol-readmacro. Прочитать объект и запрограммировать запоминание его м
   (SWANK-BACKEND:MAKE-WEAK-KEY-HASH-TABLE :test 'eq)
   "Делегаты потоков")
 
+(defvar *record-locations* t)
+
 (defstruct olm ; карта исходников для объкта 
   ses-list ; упорядоченный список структур ses
   simplified ; t, если уже упрощена
@@ -143,7 +145,7 @@ srcpl - symbol-readmacro. Прочитать объект и запрограммировать запоминание его м
       (with-output-to-string (,var ,@some-more)
         (setf ,location-delegate (get-stream-location-map-delegate ,var :if-not-exists :create))
         ,@body
-        #+nil (print (gethash ,location-delegate *nplm)))
+        )
       ,location-delegate))))
 
 (defun l/pass-from-delegate-to-object (object delegate)
@@ -445,6 +447,7 @@ srcpl - symbol-readmacro. Прочитать объект и запрограммировать запоминание его м
 
 (defun l/rorl (obj position)
 ;   (print (list obj source beg end))
+  "l/return-object-recording-location"
   (let (source beg end)
     (when position
       (dsetq (source beg end) position))
