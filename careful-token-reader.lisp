@@ -186,7 +186,9 @@ package-sym показывает префикс пакета, с которым мы считали имя. num-of-colons
     "Если внутри readera кто-то установил ф-ю в *function-to-call-when-paren-is-closing*,
 то эта ф-я будет вызвана над результатом чтения (...) и потоком" 
     (let* ((*function-to-call-when-paren-is-closing* nil)
+           (position (extract-file-position stream))
            (result (funcall default-open-paren-reader stream char)))
+      (ignored position)
       (cond 
        (*function-to-call-when-paren-is-closing*
         (funcall *function-to-call-when-paren-is-closing* result stream))
