@@ -226,11 +226,19 @@ supplied-p è ò.ï."
     (make-pathname :host (pathname-host p) :directory (butlast (pathname-directory p)))))
 
 
-(defun read-file-into-string (filename)
+#| (defun read-file-into-string-old (filename)
   (with-open-file (in filename :direction :input)
     (loop :with res = ""
           :for x = (read-line in nil nil) :unless x :do (return res)
-          :do (setf res (concatenate 'string res (format nil "~%") x)))))
+          :do (setf res (concatenate 'string res (format nil "~%") x))))) |#
+
+
+(defun read-file-into-string (filename)
+  (with-open-file (in filename :direction :input)
+    (with-output-to-string (result)
+      (iter (:for line :in-file in :using #'read-line)
+        (princ line result)))))
+
 
 (defun save-string-to-file (string filename)
   (with-open-file (out filename :direction :output :if-does-not-exist :create :if-exists :supersede)

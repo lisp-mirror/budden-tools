@@ -23,6 +23,7 @@ set of symbols from interesting packages and import them symbol-by-symbol.
 defpackage-autoimport-2 prefers to use packages and shadowing-import clashes.
 "   
    )
+  (:nicknames :def-merge-packages)
   (:use :cl :org.tfeb.hax.hierarchical-packages)
   (:import-from :iter #:iter #:keywordize)
   (:export 
@@ -541,6 +542,10 @@ while buddens readtable extensions are disabled"
         package-definition
         ))))
 
+
+(dspec:define-dspec-alias !4 (name &rest args)
+  (setf args args)
+  `(defpackage ,name))
 
 
 (defun delete-symbols-from-package (pack &rest symbols)
