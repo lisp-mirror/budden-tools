@@ -96,8 +96,8 @@
            (target-symbol (find-symbol target-symbol-name package)))
       (assert target-symbol () "(runtime^ ~S ~S): symbol name ~S not found in ~S" 
         type-or-class field-name target-symbol-name package)
-      (assert (fboundp target-symbol) () "(runtime^ ~S ~S): ~S must be a function" 
-        type-or-class field-name target-symbol)
+      (unless (fboundp target-symbol) (warn "(runtime^ ~S ~S): ~S should be a function" 
+                                            type-or-class field-name target-symbol))
         ; а если это макрос? (assert (null (macro-function target-symbol)))?
       target-symbol
       )))
