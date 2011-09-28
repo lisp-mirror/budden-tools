@@ -106,27 +106,12 @@
          )))
     (nreverse result))) 
 
-(defun search-and-replace-seq (type seq subseq newseq &key all (test #'equalp))
-  (let1 num-matches 0
-    (loop 
-     (let1 found (search subseq seq :test test)
-       (when found 
-         (setf seq (concatenate type 
-                                (subseq seq 0 found)
-                                newseq
-                                (subseq seq (+ found (length subseq)) (length seq))))
-         (incf num-matches))
-       (when (or (not found) (not all))
-         (return))))
-    (values seq num-matches)))
-
 (defun replace-subseq (seq new-subseq &key (start 0) end (type 'list))
   #+russian "Заменяет подпоследовательность, определяемую start и end, другой
 подпоследовательностью. Длины могут не совпадать, при этом получается результат другой длины, чем sequence.
 Работает очень медленно (concatenate). Нужно переделать"
   #-russian "Replaces subsequence by other subsequence (maybe of another length. Uses concatenate and hence is slow"
   (concatenate type (subseq seq 0 start) new-subseq (when end (subseq seq end))))
-
 
 
 (defun struct-to-alist (s) "сохраняет данные из структуры в alist"

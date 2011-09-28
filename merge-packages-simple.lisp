@@ -50,6 +50,7 @@ defpackage-autoimport-2 prefers to use packages and shadowing-import clashes.
                   ; Given a list of items, groups similar (in sence of key-args) items into sublists
    #:collect-duplicates-into-sublists ; '(#\a c #\A #\B #\b) :test 'equalp -> ((#\A #\a) (#\b #\B))
    #:find-symbol-in-packages ; like apropos, but searches only exact symbol name and returns a list
+   #:search-and-replace-seq
    #:package-doctor ; try to diagnose trash symbols, duplicate symbols, etc
    ;  #:find-symbol-extended ; like find-symbol, but also returns if symbol is (f)bound and home package
    ))
@@ -60,6 +61,39 @@ defpackage-autoimport-2 prefers to use packages and shadowing-import clashes.
   (cl:make-package :merge-packages-simple.forbidden-symbols :use nil)
   )
 
+
+(defun search-and-replace-seq (type seq subseq newseq &key all (test #'equalp))
+  (let ((num-matches 0))
+    (loop 
+     (let ((found (search subseq seq :test test)))  
+       (when found 
+         (setf seq (concatenate type 
+                                (subseq seq 0 found)
+                                newseq
+                                (subseq seq (+ found (length subseq)) (length seq))))
+         (incf num-matches))
+       (when (or (not found) (not all))
+         (return))))
+    (values seq num-matches)))
+
+(defun merge-packages-simple::export-clause (nickname string)
+  "Generates :export clause from string containing qualified symbol names and comments. 
+   nickname: is replaced with #:. So, you can safely navigate to it via 
+   your 'find-definition' command. E.g.
+  (defpackage pack
+   #.(export-clause \"
+      pack:sym1 ; this is the first symbol of package
+      pack:sym2 ; this is the second one
+      other-pack:reexported ; this won't be replaced
+      \"))
+  " 
+  (let ((nickname (string nickname)))
+    `(:export
+      ,@(read-from-string (concatenate 'string
+                                       "(" 
+                                       (search-and-replace-seq 
+                                        'string string 
+                                        (concatenate 'string nickname ":") "#:" :all t :test 'equalp) ")")))))
 
 (defun set-package-lock-portably (package lock)
   "When t, package designator is locked. Designators are compared with string="
@@ -443,6 +477,7 @@ while buddens readtable extensions are disabled"
                            local-nicknames
                            always
                            shadowing-import-from-s
+                           export-s
                            (clauses clauses))
       
       (get-clause use)
@@ -451,6 +486,7 @@ while buddens readtable extensions are disabled"
       (get-clause local-nicknames)
       (get-clause always)
       (multiple-value-setq (shadowing-import-from-s clauses) (extract-several-clauses clauses :shadowing-import-from))
+      (multiple-value-setq (export-s clauses) (extract-several-clauses clauses :export))
 ;    (multiple-value-setq (non-symbols clauses) (extract-clause clauses :non-symbols))
 ;    (multiple-value-setq (non-hosted-symbols clauses) (extract-clause clauses :non-hosted-symbols))    
       (length-is-1 print-defpackage-form)
@@ -468,6 +504,7 @@ while buddens readtable extensions are disabled"
              generated-import-clauses
              forbid-symbols-forms
              process-local-nicknames-form
+             processed-export-s
              )
         (dolist (p sources-for-clashes)
           (do-external-symbols (s p)
@@ -508,6 +545,15 @@ while buddens readtable extensions are disabled"
                                    ,@(sort maybe-import 'string<)) 
                         ))
                      ))
+        (setf processed-export-s
+              (iter
+                (:for clause in export-s)
+                (cond
+                 ((and (= (length clause) 1)
+                       (stringp (car clause)))
+                  (:collect (export-clause name (car clause))))
+                 (t 
+                  (:collect `(:export ,@clause))))))
         (setf package-definition 
               `(defpackage ,name
                  ,@(when forbidden-symbol-names 
@@ -515,6 +561,7 @@ while buddens readtable extensions are disabled"
                  ,@(when use `((:use ,@use)))
                  ,@generated-import-clauses
                  ,@(iter (:for cl in shadowing-import-from-s) (:collect `(:shadowing-import-from ,@cl)))
+                 ,@processed-export-s
                  ,@clauses))
         (setf process-local-nicknames-form 
               (if local-nicknames

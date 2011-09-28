@@ -65,7 +65,8 @@
 (defvar *last-used-real-package* nil "Во время with-xlam-package сюда присваивается последнее значение
 *package* с помощью setf. Переменная, наверное, глючная")
 
-(defvar *package-stack* nil "Стек пакетов. При foo:: кладём <#package foo> на вершину стека")
+(defvar *have-colon* nil "Если последняя считанная буква - это двоеточие, входящее в квалификатор пакета, то t")
+(defvar *package-stack* nil "Стек пакетов. При foo:: кладём текущий пакет, а затем <#package foo> на вершину стека")
 (defvar *colon-no-stack* nil "Стек, параллельный стеку пакетов, в к-рый кладётся число колонок")
 (defvar *intern-to-qualified-package-silently* nil "foo::bar может ссылаться на новые символы")
 

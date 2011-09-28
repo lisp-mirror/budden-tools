@@ -8,7 +8,7 @@
 ;;; ВНИМАНИЕ! Это изменение необходимо для нормальной работы иерархических пакетов, 
 ;;; т.к. мы не можем назначить наш ридмакрос на #\. 
 (defun decorated-find-package (fn name)
-  (bu::hp-find-package (if (stringp name) (string-upcase name) name)
+  (budden-tools::hp-find-package (if (stringp name) (string-upcase name) name)
                        (if *use-decorated-package-system-fns*
                            (minimal-fix-xlam-package *package* :stack :find-package)
                          *package*) fn))
@@ -140,7 +140,7 @@ NIL
                               (eql (elt partial-name (1+ pos)) #\:))
                          (+ 2 pos)
                        (+ 1 pos)))
-               (new-default-package (bu::hp-find-package (subseq partial-name 0 pos) default-package)))
+               (new-default-package (budden-tools::hp-find-package (subseq partial-name 0 pos) default-package)))
             (return-from function
               (multiple-value-bind (symbols length some-symbol some-package)
                   (apply 'decorated-complete-symbol               
@@ -225,7 +225,7 @@ NIL
        ; (print "decorated-pathetic-parse-symbol OUT")
         ))))
 
-; bu::see-packages-find-unqualified-symbol "S1" :tst
+; budden-tools::see-packages-find-unqualified-symbol "S1" :tst
 
 (decorate-function 'editor::pathetic-parse-symbol
                    #'decorated-pathetic-parse-symbol)
@@ -340,7 +340,7 @@ NIL
 
 #| 
 
-bu:se
+budden-tools:se
 
 Что тестировать?
 1. Completion символа без квалификатора пакета

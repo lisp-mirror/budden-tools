@@ -2,8 +2,8 @@
 
 (defpackage see-packages-test 
   (:use :cl :budden-tools)
-  (:shadowing-import-from :iterate #:iter)
-  (:shadowing-import-from :trivial-deftest #:deftest)
+  (:shadowing-import-from :iterate #:ITER)
+  (:shadowing-import-from :trivial-deftest #:DEFTEST)
   #+nil (:shadowing-import-from :budden-tools))
 
 (in-package :see-packages-test)
@@ -69,10 +69,10 @@
 (def-rd-test symbol.3 "\\t")
 
 (deftest symbol.3.5
-                         (let1 *package* bu::*keyword-package* 
+                         (let1 *package* budden-tools::*keyword-package* 
                            (with-good-readtable
                              (read-from-string "\\`")))
-                         (let1 *package* bu::*keyword-package* 
+                         (let1 *package* budden-tools::*keyword-package* 
                            (with-my-readtable
                              (read-from-string "\\`"))))
 

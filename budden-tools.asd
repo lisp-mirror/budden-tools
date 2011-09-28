@@ -20,6 +20,7 @@
    #+budden (:file "let1")
    
    (:package-file "package") ; might need 
+   (:package-file "package-proga-implementation")
  #-budden (:file "let1")
    (#.russian-file "trivial-deftest")
    (#.russian-file "budden-tools")

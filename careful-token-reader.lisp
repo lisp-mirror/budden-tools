@@ -126,16 +126,6 @@ package-sym показывает префикс пакета, с которым мы считали имя. num-of-colons
       (t (simple-reader-error stream "Strange compound token ~S" token)))))) |#
 
 
-
-
-
-#+nil (defun starting-colon-reader (stream char) ; FIXME deprecate
-;  (format t "ungething COLON and reading as usual")
-  (setf stream (unread-char* char stream))
-  (with-good-readtable-2 () 
-    (read stream t nil t)))
-
-
 (defmacro with-good-readtable-2 ((&key (ensure-this-is-a-bad-one t)) &body body)
   "переданная readtable должна быть получена с помощью see-packages-on"
   (with-gensyms (good)
@@ -148,23 +138,6 @@ package-sym показывает префикс пакета, с которым мы считали имя. num-of-colons
        ,@body
        )))
 
-#+nil (defun starting-colon-reader (stream char)
-  (declare (ignore char))
-  (proga 
-    (let *token-starts-with-vertical-line* nil)
-    (let my-rt *readtable*)
-    ; (setf stream (unread-char* char stream))
-    (let token 
-      (with-xlam-package-2 
-          (with-good-readtable-2 () *readtable*) 
-           ; таблицу чтения берём "хорошую", но readtable-case делаем правильный
-        ; FIXME - при попытке чтения символа ::a будет ошибка. Нужно писать символ как :|:a| или :\:a
-        ; FIXME - также не работает :|a| vs :|A|, символ читается без учёта регистра
-        ; наверное, надо что-то менять
-        (read stream t nil t)))
-    (reintern-1 stream token *keyword-package* my-rt *token-starts-with-vertical-line*)
-    ))  
-
 (defun starting-colon-reader (stream char)
   (proga  
     ;(break)
@@ -173,9 +146,7 @@ package-sym показывает префикс пакета, с которым мы считали имя. num-of-colons
     (let *package* *keyword-package*)
     (values (read-token-with-colons-1 stream char))
     ))
-
-
-  
+ 
 
 ;;;; open-paren for symbol-readmacro
 (defvar *function-to-call-when-paren-is-closing* nil
@@ -218,7 +189,7 @@ package-sym показывает префикс пакета, с которым мы считали имя. num-of-colons
 "
   (check-correct-use-of-a-car-symbol-readmacro object-read))
 
-; (defun it-is-a-half-car-symbol-readmacro (object-read)
+; (defun it-is-a-half-car-symbol-readmacro (object-read))
 ;  "То же самое, но без требования прочи
 
 
@@ -535,12 +506,12 @@ iii) if symbol is found more than once then first-symbol-found,list of packages,
 
 #+russian 
 (trivial-deftest::! all-chars-in-same-case-p 
-                    (list (bu::all-chars-in-same-case-p "аУреки")
-                          (bu::all-chars-in-same-case-p "АУРЕКИ")
-                          (bu::all-chars-in-same-case-p "ауреки")
-                          (bu::all-chars-in-same-case-p "aureki")
-                          (bu::all-chars-in-same-case-p "AUReki")
-                          (bu::all-chars-in-same-case-p "AUREKI")
+                    (list (budden-tools::all-chars-in-same-case-p "аУреки")
+                          (budden-tools::all-chars-in-same-case-p "АУРЕКИ")
+                          (budden-tools::all-chars-in-same-case-p "ауреки")
+                          (budden-tools::all-chars-in-same-case-p "aureki")
+                          (budden-tools::all-chars-in-same-case-p "AUReki")
+                          (budden-tools::all-chars-in-same-case-p "AUREKI")
                           )
                     (list :ignore-case :ignore-case :ignore-case
                           :lowercase nil :uppercase))
@@ -627,18 +598,20 @@ iii) if symbol is found more than once then first-symbol-found,list of packages,
     (intern name package)))
 
 (defun reintern-1 (stream token default-package rt starts-with-vertical-line)  
-  "Прочитали что-то. Заинтёрним его в контект, определяемый default-package (по смыслу это - *package*), *package-stack*, *colon-no-stack*"
+  "Прочитали что-то. Заинтёрним его в контект, определяемый default-package (по смыслу это - *package*), *package-stack*, *colon-no-stack*. Можно вызывать только один раз для 
+каждого символа, т.к. вызывается readmacro"
   (proga function
     (typecase token
       (symbol 
        (proga 
          (let* name (symbol-name token) 
-           qualified-package (car *package-stack*)
-           qualified-colon-no (car *colon-no-stack*)
+           qualified-package (when *have-colon* (car *package-stack*))
+           qualified-colon-no (when *have-colon* (car *colon-no-stack*))
            package (or qualified-package default-package)
            package-kwd (keywordize-package-designator package)
            custom-token-parsers (unless starts-with-vertical-line (get-custom-token-parsers-for-package package-kwd))
            )
+         (setf *have-colon* nil)
          (assert (or (null token) (eq (symbol-package token) *xlam-package*)))
          (unintern token *xlam-package*)
          (when stream ; stream может быть nil при вызове из decorated-get-symbol-from-point
@@ -655,7 +628,6 @@ iii) if symbol is found more than once then first-symbol-found,list of packages,
                (:for p in (if (eq package *keyword-package*) 
                               (list package)
                             (cons package (package-seen-packages-list package))))
-            ;(print p)(print (:first-time-p))
                (:for (values p-sym storage-type same-case-p) = (find-symbol-with-advanced-readtable-case name p rt *token-starts-with-vertical-line*))
                (when (and storage-type  ; есть такой символ
                           (or (eq storage-type :external) ; должен быть внешним 
@@ -696,6 +668,7 @@ iii) if symbol is found more than once then first-symbol-found,list of packages,
          (when (and (symbolp res) stream (not starts-with-vertical-line))
            (let1 readmacro (symbol-readmacro res)
              (when readmacro 
+               ;(break)
                (return-from function (funcall readmacro stream res)))))
          res))
       (t token))))
@@ -758,6 +731,9 @@ iii) if symbol is found more than once then first-symbol-found,list of packages,
     (let the-package *package*)
     (let rt-to-restore *readtable*)
     (let *reading-up-to-colons* *reading-up-to-colons*) ; для thread-safety
+    (let *have-colon* *have-colon*)
+    (let *package-stack* *package-stack*)
+    (let *colon-no-stack* *colon-no-stack*)
     (setf stream (unread-char* char stream))
     (when *read-suppress*
       (return-from function (with-good-readtable-2 () (read stream))))
@@ -773,12 +749,12 @@ iii) if symbol is found more than once then first-symbol-found,list of packages,
              ; Что за ней? Двоеточие, или ещё что-то? 
          (:for cnt :from 0)
          (:for c :next (read-char stream nil nil))
-         (unless c ; ничего нет. 
+         (:with local-have-colon = nil)
+         (unless c ; ничего нет.  FIXME - случай "cl-user:" тоже сюда попадает
            (return-from function (reintern-1 stream tok the-package rt-to-restore *token-starts-with-vertical-line*)))
-         (:with have-colon = nil)
          (case c
            (#\:
-            (setf have-colon t)
+            (setf local-have-colon t)
             (when (and (> cnt 2) (not *read-suppress*)) ; сделать 3 двоеточия - полноценное переключение пакета + @?
               (simple-reader-error stream "To many colons in ~S" result))
                ; если ещё нормальное число двоеточий, то ничего не делаем - cnt увеличится и 
@@ -787,48 +763,48 @@ iii) if symbol is found more than once then first-symbol-found,list of packages,
            (t ; не двоеточие
             (setf stream (unread-char* c stream))
             (cond 
-             (have-colon ; но закончили читать на двоеточии
+             (local-have-colon ; но закончили читать на двоеточии
               (proga
                 (let pack nil)
                 (cond ((and (string= (string tok) "_") *package-stack*)
                        (setf pack (or (second *package-stack*) the-package))
                        (setf cnt 2) ; даже если было одно двоеточие, ищем всё же любые символы, включая внутренние
+                       (pop *package-stack*)
+                       (pop *colon-no-stack*)
+                       (setf *have-colon* nil) ; делаем вид, что вернулись в старый пакет
                        )
-                      (t
+                      (t ; задан квалификатор пакета, и этот квалификатор - не "_"
+                       (unless (eq the-package *xlam-package*) 
+                         (push the-package *package-stack*)
+                         (push cnt *colon-no-stack*))
                        (setf pack (hp-find-package-with-advanced-readtable-case (string tok) *token-starts-with-vertical-line*))
+                       (setf *have-colon* t)
                        (unless pack 
                          (loop 
                           (cerror "Retry" "No ~A package found" tok)))))
-                (let *package-stack* 
-                  (if (eq the-package *xlam-package*)
-                      *package-stack*
-                    (cons pack *package-stack*)))
-                (let *colon-no-stack* (cons cnt *colon-no-stack*))
+                (push pack *package-stack*)
+                (push cnt *colon-no-stack*)
                 (let custom-token-reader (get-custom-reader-for-package pack))
                 (when custom-token-reader
                   (return-from function 
                     (funcall custom-token-reader stream t nil t)))
                 (let id (new-show-package-system-vars-id))
                 (show-package-system-vars "read-token-with-colons: before" id)
-
-
                 ;;; теперь мы не будем переключать таблицы чтения - это слишком сложно.
                 ;;; у нас будет одна таблица чтения на всё. Изменения в неё можно вносить 
                 ;;; только локальными symbol-readmacro
-
                 ;;; за счёт этого, мы пытаемся вырулить из ситуации с see-packages. 
-
                 #+nil (let *readtable* (swank::guess-buffer-readtable (package-name pack)))
-
-
                 (return-from function (read stream t nil t))
                 ))
              (t ; не двоеточие и не было двоеточий
+              ;
               (return-from function (reintern-1 stream tok the-package rt-to-restore *token-starts-with-vertical-line*))
               )
-             )))
-         ))))
-  )
+             )
+            )
+           ))
+       ))))
 
            
 

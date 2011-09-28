@@ -12,8 +12,8 @@
   )
 
 
-(defpackage "BUDDEN-TOOLS"
-  (:nicknames "budden-tools" "bu" "BU")
+(merge-packages-simple::!4 :BUDDEN-TOOLS
+  (:nicknames "budden-tools")
   (:use :cl :named-readtables :buddens-readtable :defstruct-meta :org.tfeb.hax.hierarchical-packages
    :merge-packages-simple)
   (:import-from :iterate-keywords #:iter #:keywordize #:dsetq)
@@ -23,167 +23,170 @@
   (:import-from :swank-backend #:pathname-to-filename #:filename-to-pathname #:make-weak-key-hash-table #:make-weak-value-hash-table)
 ;  (:import-from :merge-packages-and-reexport #:collect-duplicates-into-sublists)
   (:export
-
+   "
 ;; sequences
-   #:sequence-last
-   #:subseq* 
-   #:rmsubseq
-   #:subseq1 ; does not err when run out of sequence, returns emptyness instead
-   #:search-and-replace-seq
-   #:replace-subseq
-   #:split-sequence ; reexported from split-sequence
+   budden-tools:sequence-last
+   budden-tools:subseq* 
+   budden-tools:rmsubseq
+   budden-tools:subseq1 ; does not err when run out of sequence, returns emptyness instead
+   budden-tools:search-and-replace-seq ; reexported from :merge-packages-simple
+   budden-tools:replace-subseq
+   budden-tools:split-sequence ; reexported from :split-sequence
 
 ;; trees
-   #:tree-weight
-   #:maptree
+   budden-tools:tree-weight
+   budden-tools:maptree
 
 ;; lists. Some function are likely not new... 
-   #:mapcarcar 
-   #:mapcarcadr
-   #:direct-sum 
-   #:assert-unique-symbols
-   #:1-to-list 
-   #:list-to-1
-   #:collect-duplicates 
-   #:collect-duplicates-into-sublist 
-   #:splice-list
-   #:unsplice-list
+   budden-tools:mapcarcar 
+   budden-tools:mapcarcadr
+   budden-tools:direct-sum 
+   budden-tools:assert-unique-symbols
+   budden-tools:1-to-list 
+   budden-tools:list-to-1
+   budden-tools:collect-duplicates 
+   budden-tools:collect-duplicates-into-sublist 
+   budden-tools:splice-list
+   budden-tools:unsplice-list
 
-   #:dotted-p ; check if list is dotted and 
+   budden-tools:dotted-p ; check if list is dotted and 
               ; returns its parts in two values
 
 ;; alists, plists, arglist dispatching
-   #:list-to-alist 
-   #:alist-to-list
-   #:assoc-getf*
-   #:getf* ; setfable
-   #:dispatch-keyarg-simple ; helps to build dispatched arglists with &key arguments
-   #:dispatch-keyargs-simple 
-   #:dispatch-keyargs-full 
-   #:_f
-   #:symbol-macroletf   
+   budden-tools:list-to-alist 
+   budden-tools:alist-to-list
+   budden-tools:assoc-getf*
+   budden-tools:getf* ; setfable
+   budden-tools:dispatch-keyarg-simple ; helps to build dispatched arglists with &key arguments
+   budden-tools:dispatch-keyargs-simple 
+   budden-tools:dispatch-keyargs-full 
+   budden-tools:_f
+   budden-tools:symbol-macroletf   
 
 ;; hashes
-   #:ensure-gethash-2 ; gethash with default, better than alexandria
-   #:make-weak-key-hash-table ; from swank
-   #:make-weak-value-hash-table ; from swank
+   budden-tools:ensure-gethash-2 ; gethash with default, better than alexandria
+   budden-tools:make-weak-key-hash-table ; from swank
+   budden-tools:make-weak-value-hash-table ; from swank
 
 ;; structures
-   #:struct-to-alist ; lispworks only for now
+   budden-tools:struct-to-alist ; lispworks only for now
 
 ;; strings and symbols
-   #:str+
-   #:str++ ; converts anything to string with format ~A
-   #:symbol+ 
-   #:dotted-name-to-list 
-   #:splice-list
-   #:unsplice-list
-   #:keywordize ; stolen from iterate
-   #:non-empty-string-p
-   #:string-or ; returns first non empty string from its &rest args
+   budden-tools:str+
+   budden-tools:str++ ; converts anything to string with format ~A
+   budden-tools:symbol+ 
+   budden-tools:dotted-name-to-list 
+   budden-tools:splice-list
+   budden-tools:unsplice-list
+   budden-tools:keywordize ; stolen from iterate
+   budden-tools:non-empty-string-p
+   budden-tools:string-or ; returns first non empty string from its &rest args
 
-   #:char-upcase-cyr
-   #:char-equal-cyr
-   #:char-downcase-cyr
-   #:string-upcase-cyr
-   #:string-downcase-cyr
-   #:string-equal-cyr
-   #:string-designator
-   #:string-designator-p 
-   #:cyrillic-char-p
-   #:translit-reversibly
-   #:textual-equal-cyr
+   budden-tools:char-upcase-cyr
+   budden-tools:char-equal-cyr
+   budden-tools:char-downcase-cyr
+   budden-tools:string-upcase-cyr
+   budden-tools:string-downcase-cyr
+   budden-tools:string-equal-cyr
+   budden-tools:string-designator
+   budden-tools:string-designator-p 
+   budden-tools:cyrillic-char-p
+   budden-tools:translit-reversibly
+   budden-tools:textual-equal-cyr
 
-   #:char-upcase-ascii
-   #:char-downcase-ascii
-   #:string-upcase-ascii
-   #:string-downcase-ascii
+   budden-tools:char-upcase-ascii
+   budden-tools:char-downcase-ascii
+   budden-tools:string-upcase-ascii
+   budden-tools:string-downcase-ascii
 
 ;; evaluation and general shortcuts
-;  #:let1 is interned to CL as it is very necessary :) 
+;  budden-tools:let1 is interned to CL as it is very necessary :) 
    #:let1 ; but we would better reexport it 
-   #:iter ; reexported from iterate
-   #:with-gensyms ; reexported from alexandria
-   #:once-only ; reexported from alexandria
-   #:ignored 
-;   #:eval-when* ; it is defined internal in cl-user for some unknown reason
-   #:print-if 
-   #:proga
-   #:dsetq ; reexported from iterate
-   #:pllet1 ; "bind" place
-   #:smlet ; another name for symbol-macrolet
-   #:defun-to-file ; to see source of your generated function. TODO: package name->file name, gensyms vs `,
-   #:eval-with-file ; write code to file, compile it and load
-   #:not-null ; type (not null)
-   #:the* ; errs if type ain't match. Otherwise, returns a thing
+   budden-tools:iter ; reexported from iterate
+   budden-tools:with-gensyms ; reexported from alexandria
+   budden-tools:once-only ; reexported from alexandria
+   budden-tools:ignored 
+;   budden-tools:eval-when* ; it is defined internal in cl-user for some unknown reason
+   budden-tools:print-if 
+   budden-tools:proga
+   budden-tools:dsetq ; reexported from iterate
+   budden-tools:pllet1 ; 'bind' place
+   budden-tools:smlet ; another name for symbol-macrolet
+   budden-tools:defun-to-file ; to see source of your generated function. TODO: package name->file name, gensyms vs `,
+   budden-tools:eval-with-file ; write code to file, compile it and load
+   budden-tools:not-null ; type (not null)
+   budden-tools:the* ; errs if type ain't match. Otherwise, returns a thing
 
-   #:mlvl-bind ; multiple-value-bind
-   #:mlvl-call ; multiple-value-call
-   #:mlvl-list ; multiple-value-list
-   #:mlvl-prog1 ; multiple-value-prog1
-   #:mlvl-setq ; multiple-value-setq
-   #:mlvls-limit ; multiple-values-limit
+   budden-tools:mlvl-bind ; multiple-value-bind
+   budden-tools:mlvl-call ; multiple-value-call
+   budden-tools:mlvl-list ; multiple-value-list
+   budden-tools:mlvl-prog1 ; multiple-value-prog1
+   budden-tools:mlvl-setq ; multiple-value-setq
+   budden-tools:mlvls-limit ; multiple-values-limit
 
 ;; typed binding
-   #:with-conc-name 
-   #:let-with-conc-type 
-   #:^ 
+   budden-tools:with-conc-name 
+   budden-tools:let-with-conc-type 
+   budden-tools:^ 
 
 ;; i/o utilities
-   #:show-hash
-   #:show-expr
-   #:read-file-into-string
-   #:save-string-to-file  
+   budden-tools:show-hash
+   budden-tools:show-expr
+   budden-tools:read-file-into-string
+   budden-tools:save-string-to-file  
 
 ;; system environment
-   #:map-dir 
-   #:path-to-a-file
-   #:maybe-add-slash ; got a directory name. Make sure it ends with slash
-   #:up-dir
-   #:pathname-to-filename ; from swank-backend
-   #:filename-to-pathname ; from swank-backend
-   #:quit-lisp ; thanks to Thomas A.Russ
+   budden-tools:map-dir 
+   budden-tools:path-to-a-file
+   budden-tools:maybe-add-slash ; got a directory name. Make sure it ends with slash
+   budden-tools:up-dir
+   budden-tools:pathname-to-filename ; from swank-backend
+   budden-tools:filename-to-pathname ; from swank-backend
+   budden-tools:quit-lisp ; thanks to Thomas A.Russ
+   budden-tools:edit-stream-position ; trying to do so at least
 
 ;; make input stream available to sharpsign-dot
-   #:*read-eval-stream*
+   budden-tools:*read-eval-stream*
 
 ;; see-packages and friends
-   #:*keyword-package*
-   #:see-packages-on ; enable see-packages extensions on a (named) readtable. TODO: rename it
-   #:see-packages
-   #:see-packages-find-symbol ; returns (values ((symbol-found . package-where-found) ...) 
-   #:see-packages-check-bad-clashes
-   #:*per-package-alias-table*
-   #:hp-find-package
-   #:hp-in-package
-   #:hp-alias-map   ; stolen from conduit packages
-   #:delete-hp-alias-map ; stolen from conduit packages
+   budden-tools:*keyword-package*
+   budden-tools:see-packages-on ; enable see-packages extensions on a (named) readtable. TODO: rename it
+   budden-tools:see-packages
+   budden-tools:see-packages-find-symbol ; returns (values ((symbol-found . package-where-found) ...) 
+   budden-tools:see-packages-check-bad-clashes
+   budden-tools:*per-package-alias-table*
+   budden-tools:hp-find-package
+   budden-tools:hp-in-package
+   budden-tools:hp-alias-map   ; stolen from conduit packages
+   budden-tools:delete-hp-alias-map ; stolen from conduit packages
 
-   #:defreadtable
-   #:find-readtable
-   #:in-readtable
-   #:package-readtable
-   #:package-seen-packages-list
-   #:*readtable-alist*
-   #:unregister-readtable
+   budden-tools:defreadtable
+   budden-tools:find-readtable
+   budden-tools:in-readtable
+   budden-tools:package-readtable
+   budden-tools:package-seen-packages-list
+   budden-tools:*readtable-alist*
+   budden-tools:unregister-readtable
 
-   #:get-custom-reader-for-package ; use your own reader in package context instead of common lisp reader
-   #:get-custom-token-parsers-for-package ; parse tokens read with custom parsers (which can, but not encouaraged to have side-effects on stream
-   #:symbol-readmacro ; function of two arguments: symbol and a stream. setf symbol-readmacro to reader switched by the symbol
-;   #:def-symbol-readmacro ; def-symbol-readmacro symbol (stream) reader-body. In an attempt to be able to navigate through symbol-readmacros. 
-   #:it-is-a-car-symbol-readmacro ; put this at the first line of your symbol-readmacro definition
-   #:*print-normalize-seen-symbols*
+   budden-tools:get-custom-reader-for-package ; use your own reader in package context instead of common lisp reader
+   budden-tools:get-custom-token-parsers-for-package ; parse tokens read with custom parsers (which can, but not encouaraged to have side-effects on stream
+   budden-tools:symbol-readmacro ; function of two arguments: symbol and a stream. setf symbol-readmacro to reader switched by the symbol
+;   budden-tools:def-symbol-readmacro ; def-symbol-readmacro symbol (stream) reader-body. In an attempt to be able to navigate through symbol-readmacros. 
+   budden-tools:it-is-a-car-symbol-readmacro ; put this at the first line of your symbol-readmacro definition
+   budden-tools:*print-normalize-seen-symbols*
 
-   #:defpackage-autoimport
-   #:find-symbol-in-packages
-   #:package-doctor
+   budden-tools:defpackage-autoimport
+   budden-tools:export-clause
+   budden-tools:find-symbol-in-packages
+   budden-tools:package-doctor
 
 ;; alternative-backquoting
-   "`"
-   ","
+   |`|
+   |,|
 ;; some symbol-readmacros
-   #:/with-package/
-   #:/with-readtable-case/
+   budden-tools:/with-package/
+   budden-tools:/with-readtable-case/
+   "
    ))
 
 ;(merge-packages-and-reexport::! :proga-implementation 
@@ -194,10 +197,6 @@
   (:export #:*run-tests* #:deftest)
   )
 
-(defpackage-autoimport :proga-implementation
-                       (:use :cl)
-                       (:auto-import-from :budden-tools :trivial-deftest :defstruct-meta)
-                       (:auto-import-first-clashing t)
-                       )
+
 
 (defpackage :dat1 (:use)) ; пакет для чтения дат. 
