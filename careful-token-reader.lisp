@@ -144,6 +144,7 @@ package-sym показывает префикс пакета, с которым мы считали имя. num-of-colons
     (let *token-starts-with-vertical-line* nil)
     (setf char (read-char stream))
     (let *package* *keyword-package*)
+    (setf *have-colon* nil)
     (values (read-token-with-colons-1 stream char))
     ))
  

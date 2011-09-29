@@ -220,6 +220,7 @@ from to-package too"
                          auto-reexport-from
                          local-nicknames
                          always
+                         export-s
                          (clauses clauses))
     (multiple-value-setq (auto-import-from clauses) (extract-clause clauses :auto-import-from))
     (multiple-value-setq (auto-import-dont-warn-clashes clauses) (extract-clause clauses :auto-import-dont-warn-clashes))
@@ -228,6 +229,7 @@ from to-package too"
     (multiple-value-setq (print-defpackage-form clauses) (extract-clause clauses :print-defpackage-form))
     (multiple-value-setq (auto-import-shadowing clauses) (extract-clause clauses :auto-import-shadowing))
     (multiple-value-setq (auto-reexport-from clauses) (extract-clause clauses :auto-reexport-from))
+    (multiple-value-setq (export-s clauses) (extract-several-clauses clauses :export))
     (multiple-value-setq (local-nicknames clauses) (extract-clause clauses :local-nicknames))
     (multiple-value-setq (always clauses) (extract-clause clauses :always))
     (assert (subsetp auto-reexport-from auto-import-from :test 'string-equal)
@@ -246,7 +248,17 @@ from to-package too"
            package-definition
            symbols-not-to-import
            process-local-nicknames-form
+           processed-export-s
            )
+      (setf processed-export-s
+            (iter
+              (:for clause in export-s)
+              (cond
+               ((and (= (length clause) 1)
+                     (stringp (car clause)))
+                (:collect (export-clause name (car clause))))
+               (t 
+                (:collect `(:export ,@clause))))))      
       (dolist (p srcs)
         (do-external-symbols (s p)
           (pushnew s all-symbols)))
@@ -294,6 +306,7 @@ from to-package too"
                     (return-from nil `(,@import-clauses
                                        ,@(when exports `((:export ,@(sort exports 'string<))))
                                        ))))
+               ,@processed-export-s
                ,@clauses))
       (when print-defpackage-form
         (let (*print-length* *print-level*) (print package-definition)))
