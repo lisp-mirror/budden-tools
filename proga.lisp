@@ -41,7 +41,8 @@
                    `((,head ,processed-clause-body ,@(proga-body-expander forms-after-clause))))
                  )
             (case head
-              ((let let*)
+              ((let let* #+nil :=)
+               ; (when (eq head :=) (setf head 'let))
                (cond
                 ((atom (cadr clause)) ; sugar
                  (assert (evenp (length tail)) 
@@ -120,7 +121,8 @@ body - уже обработанные формы после clause.
 
 (mapcar (lambda (sym) 
           (setf (get sym 'proga-transformer) 'wind-up-tail-if-second-is-atom))
-        '(with-open-file))
+        '(with-open-file
+          with-input-from-string))
 
 (setf (get 'with-conc-name 'proga-transformer) 'open-up)
 (setf (get 'let-with-conc-type 'proga-transformer) 'open-up)
