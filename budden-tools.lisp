@@ -50,6 +50,7 @@
   (apply #'remove nil seq :test (constantly t) args))
 
 (defun subseq1 (seq start &optional end)
+  "'Safe' version of subseq which allows for invalid range"
   (let1 l (length seq)
     (subseq seq (min l start) (when end (min l end)))))
 
