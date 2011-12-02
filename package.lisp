@@ -61,6 +61,7 @@
    budden-tools:dispatch-keyargs-simple 
    budden-tools:dispatch-keyargs-full 
    budden-tools:_f
+   budden-tools:__f
    budden-tools:symbol-macroletf   
 
 ;; hashes

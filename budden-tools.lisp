@@ -561,6 +561,7 @@ As a short-hand, #\s means *STANDARD-OUTPUT*, #\t - *TRACE-OUTPUT*"
     ; (iter (:for (a b) :in-hashtable lisp->dos) (print `(,a ,(char-code b))))
     `(progn
        (defun lisp-string-to-dos (s)
+         (declare (optimize (speed 3) (safety 0) (debug 0)))
          (let1 s (copy-seq s)
            (iter 
              (:for i from 0)
@@ -569,13 +570,14 @@ As a short-hand, #\s means *STANDARD-OUTPUT*, #\t - *TRACE-OUTPUT*"
              (when ou (setf (aref s i) ou)))
            s))
        (defun dos-string-to-lisp (s)
-         (let1 s (copy-seq s)
+         (declare (optimize (speed 3) (safety 0) (debug 0)))
+         (let1 dest (make-string (length s) :element-type 'lispworks:simple-char)
            (iter 
              (:for i from 0)
              (:for c in-string s)
              (:for ou = (gethash c ,dos->lisp))
-             (when ou (setf (aref s i) ou)))
-           s))
+             (setf (aref dest i) (or ou c)))
+           dest))
        (compile 'lisp-string-to-dos)
        (compile 'dos-string-to-lisp)
        )))
