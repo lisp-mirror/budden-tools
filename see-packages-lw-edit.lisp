@@ -281,6 +281,7 @@ NIL
                                        (print-case nil print-case-supplied-p))
   (multiple-value-bind (str len complete)
       (apply fn string (dispatch-keyargs-full package print-function predicate print-case))
+    ;(break)
     (when
         (and 
          str
@@ -290,7 +291,10 @@ NIL
              (editor::pathetic-parse-symbol str package)
            (declare (ignore pckg xlam1 xlam2))
            ; (print `("returned from p-p-s to d-c-s-1" ,name-only-str))
-           (all-chars-in-same-case-p (sequence-last str (length name-only-str)))))
+           (all-chars-in-same-case-p (sequence-last str (length name-only-str)))
+           )
+    ;     (not (every 'upper-case-p string)) ; если набирали в верхнем регистре, и останемся в верхнем
+         )
       ; (print "ura!")
       (setf str (string-downcase str))
       )
@@ -302,7 +306,25 @@ NIL
 
 (decorate-function 'editor::complete-symbol-1 #'decorated-complete-symbol-1)
 
-; (undecorate-function 'editor::complete-symbol-1)
+(defvar *in-complete-symbol-command* nil)
+(defun decorated-complete-symbol-command (fn &rest args)
+  (proga
+    (let *in-complete-symbol-command* t)
+    (apply fn args)))
+
+(decorate-function 'editor::complete-symbol-command #'decorated-complete-symbol-command)
+
+; string-capitalize
+(defun decorated-string-capitalize (fn string &rest keyargs)
+  (if ; editor::*editor-state* ; опыты показали, что эта переменная - истина внутри окна редактора и нет - иначе
+      ; но она в данном случае не годится, т.к. она истина ещё где-то и от этого начинаются глюки.
+      *in-complete-symbol-command*
+      string
+    (apply fn string keyargs)))
+
+(decorate-function 'string-capitalize #'decorated-string-capitalize)
+
+; (undecorate-function 'editor::complete-symbol-1) 
 
 ; editor:prompt-for-symbol editor:find-source-command
 ; editor::complete-symbol-1
