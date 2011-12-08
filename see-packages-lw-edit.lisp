@@ -281,7 +281,6 @@ NIL
                                        (print-case nil print-case-supplied-p))
   (multiple-value-bind (str len complete)
       (apply fn string (dispatch-keyargs-full package print-function predicate print-case))
-    ;(break)
     (when
         (and 
          str
@@ -293,7 +292,7 @@ NIL
            ; (print `("returned from p-p-s to d-c-s-1" ,name-only-str))
            (all-chars-in-same-case-p (sequence-last str (length name-only-str)))
            )
-    ;     (not (every 'upper-case-p string)) ; если набирали в верхнем регистре, и останемся в верхнем
+         (eq (all-chars-in-same-case-p string) :lowercase) ; если набирали в верхнем или смешанном регистре, и останемся в верхнем
          )
       ; (print "ura!")
       (setf str (string-downcase str))
