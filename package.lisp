@@ -82,6 +82,7 @@
    budden-tools:keywordize ; stolen from iterate
    budden-tools:non-empty-string-p
    budden-tools:string-or ; returns first non empty string from its &rest args
+   budden-tools:princ-to-string-delimited-list
 
    budden-tools:char-upcase-cyr
    budden-tools:char-equal-cyr

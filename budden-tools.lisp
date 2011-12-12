@@ -634,3 +634,11 @@ modifying form, e.g. @code{(_f + a b) @equiv{} (incf a b)}."
                            (symbol-macrolet (,@symbol-macrolet-bindings)
                              ,@body)))))
 
+(defun princ-to-string-delimited-list (delimiter list)
+  "Печатает список с разделителем между каждыми двумя элементами"
+  (with-output-to-string (s)
+    (let1 firsttime t
+      (dolist (x list) 
+        (if firsttime (setf firsttime nil) (princ delimiter s))
+        (princ x s)
+        )))) :budden-tools
