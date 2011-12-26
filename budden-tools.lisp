@@ -43,6 +43,10 @@
 			  ((consp x) (maptree fun x)) 
 			  (t (funcall fun x)))) tree))
 
+;(defun copy-tree-with-structures (tree)
+;  (
+
+
 (defun rmsubseq (seq &rest args &key from-end start end count)
   #+russian "Удаляет из последовательности указанные элементы"
   #-russian "Removes subsequence from sequence"
@@ -115,12 +119,29 @@
   (concatenate type (subseq seq 0 start) new-subseq (when end (subseq seq end))))
 
 
-(defun struct-to-alist (s) "сохраняет данные из структуры в alist"
+(defun struct-to-alist (s) "сохраняет тип и данные из структуры в alist"
   #+lispworks (multiple-value-bind (names values) (structure:structure-names-and-values s)
                 `((:type . ,(type-of s))
                    ,@(loop for x in names for y in values collect `(,x . ,y))))
   #-lispworks (error "struct-to-alist not defined for this lisp version")
   ) 
+
+(defun copy-tree-of-structures (tree)
+  (flet ((copy-structure-and-its-slots (s)
+           (let ((data (cdr (struct-to-alist s)))
+                 (copy (copy-structure s)))
+             (iter 
+               (:for (name . value) :in data)
+               (setf (slot-value copy name) (copy-tree-of-structures value)))
+             copy)))
+    (typecase tree
+     (null tree)
+     (cons
+      (cons (copy-tree-of-structures (car tree))
+            (copy-tree-of-structures (cdr tree))))
+     (structure-object
+      (copy-structure-and-its-slots tree))
+     (t tree))))
                     
           
 (defun str+ (&rest args) (apply 'concatenate 'string (mapcar 'string args))) (export 'str+)

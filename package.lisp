@@ -36,6 +36,7 @@
 ;; trees
    budden-tools:tree-weight
    budden-tools:maptree
+   budden-tools:copy-tree-of-structures
 
 ;; lists. Some function are likely not new... 
    budden-tools:mapcarcar 
