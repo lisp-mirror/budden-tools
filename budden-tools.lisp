@@ -553,7 +553,7 @@ As a short-hand, #\s means *STANDARD-OUTPUT*, #\t - *TRACE-OUTPUT*"
       (:for sou = 
        (with-output-to-string (ou) 
          (system:call-system-showing-output
-          (format nil "echo ~A" c) :prefix "" :show-cmd nil :output-stream ou)))
+          (format nil "cmd /c echo ~A" c) :prefix "" :show-cmd nil :output-stream ou)))
       (:for ou = (elt sou 0))
       (setf (gethash c lisp->dos) ou)
       (setf (gethash ou dos->lisp) c)
@@ -580,6 +580,45 @@ As a short-hand, #\s means *STANDARD-OUTPUT*, #\t - *TRACE-OUTPUT*"
            dest))
        (compile 'lisp-string-to-dos)
        (compile 'dos-string-to-lisp)
+       )))
+
+
+(defmacro define-open-pipe-character-translators-by-sample (sample x-to-lisp lisp-to-x)
+  "ѕолучили из источника представление строки, пон€тное этому источнику (concatenate 'string (append bu::*cyrillic-symbols* '(#\є))). 
+   ќпределим ф-ю x-to-lisp, чтобы прочитать строку из этого источника и lisp-to-x, чтобы записать в источник"
+  (let ((lisp->x (make-hash-table :test #'eql :size 256))
+        (x->lisp (make-hash-table :test #'eql :size 256))
+        (character-list (append *cyrillic-symbols* '(#\є))))
+    (assert (= (length sample) (length (concatenate 'string character-list))))
+    (assert (= (length sample) (length (remove-duplicates (concatenate 'list sample) :test '= :key 'char-code))) () "ќбразец должен содержать все различные буквы")
+    (iter 
+      (:for c :in character-list)
+      (:for ou :in-sequence sample)
+      (setf (gethash c lisp->x) ou)
+      (setf (gethash ou x->lisp) c)
+      )
+    ; (iter (:for (a b) :in-hashtable lisp->dos) (print `(,a ,(char-code b))))
+    `(progn
+       (defun ,lisp-to-x (s)
+         (declare (optimize (speed 3) (safety 0) (debug 0)))
+         (let1 s (copy-seq s)
+           (iter 
+             (:for i from 0)
+             (:for c in-string s)
+             (:for ou = (gethash c ,lisp->x))
+             (when ou (setf (aref s i) ou)))
+           s))
+       (defun ,x-to-lisp (s)
+         (declare (optimize (speed 3) (safety 0) (debug 0)))
+         (let1 dest (make-string (length s) :element-type 'lispworks:simple-char)
+           (iter 
+             (:for i from 0)
+             (:for c in-string s)
+             (:for ou = (gethash c ,x->lisp))
+             (setf (aref dest i) (or ou c)))
+           dest))
+       (compile ',lisp-to-x)
+       (compile ',x-to-lisp)
        )))
              
        
