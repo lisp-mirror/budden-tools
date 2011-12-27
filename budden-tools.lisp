@@ -358,6 +358,13 @@ not found (unless :key is specified, which is a error) and returns value"
 (defmacro mlvl-setq (variables form) `(multiple-value-setq ,variables ,form))
 (defconstant mlvls-limit multiple-values-limit)
 
+(setf (get 'mlvl-bind 'proga-implementation::proga-transformer) 
+      'proga-implementation::open-up-if-3
+      )
+
+         
+
+
 
 (defmacro dynamic-let1 (place-form value &body body)
   "Deprecated. See pllet1"  
