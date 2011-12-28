@@ -135,6 +135,7 @@
 ;; i/o utilities
    budden-tools:show-hash
    budden-tools:show-expr
+   budden-tools:show-exprt
    budden-tools:read-file-into-string
    budden-tools:save-string-to-file  
 

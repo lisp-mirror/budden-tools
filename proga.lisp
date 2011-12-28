@@ -116,7 +116,7 @@
   "Head - ключевое слово, с которого начинается clause.
 tail - всё остальное в clause
 body - уже обработанные формы после clause. 
-Если второй элемент clause - символ, то cdr формы становится вторым аргументом, остальное вносится внутрь формы. Если второй элемент - константа, то это - ошибка. Если он список - то не преобразуем"
+Если второй элемент clause - символ, то tail становится вторым аргументом, остальное вносится внутрь формы. Если второй элемент - константа, то это - ошибка. Если он список - то не преобразуем"
   (assert (not (constantp head)) () "Only symbol or list is allowed at second place in ~S" 
     `(,head ,tail))
   (typecase (car tail)
@@ -125,6 +125,17 @@ body - уже обработанные формы после clause.
     (cons
      nil)
     (t nil)))
+
+
+(defun wind-up-tail-if-3 (head tail body)
+  "Если форма `(,head ,@tail) состоит из трёх элементов, то tail заключается в скобки, а остальное вносится внутрь"
+  (assert (not (constantp head)) () "Only symbol or list is allowed at second place in ~S" 
+    `(,head ,tail))
+  (cond 
+   ((= 2 (length tail))
+    (values t `((,head ,tail ,@body))))
+   (t nil))
+  )
 
 (mapcar (lambda (sym) 
           (setf (get sym 'proga-transformer) 'wind-up-tail-if-second-is-atom))

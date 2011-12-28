@@ -408,6 +408,9 @@ not found (unless :key is specified, which is a error) and returns value"
   "Shows expression and its value on the trace-output"
   `(format ,stream "~S=~S~%" ',expr ,expr))
 
+(defmacro show-exprt (expr)
+  `(show-expr ,expr *trace-output*))
+
 (defmacro cl-user::eval-when* (situations &body body)
   "Use #.(eval-when* (:read ...) body)"
   (when (member :read situations) (eval `(progn ,@body)))
