@@ -584,7 +584,7 @@ As a short-hand, #\s means *STANDARD-OUTPUT*, #\t - *TRACE-OUTPUT*"
       (:for sou = 
        (with-output-to-string (ou) 
          (system:call-system-showing-output
-          (format nil "cmd /c echo ~A" c) :prefix "" :show-cmd nil :output-stream ou)))
+          (format nil "echo ~A" c) :prefix "" :show-cmd nil :output-stream ou)))
       (:for ou = (elt sou 0))
       (setf (gethash c lisp->dos) ou)
       (setf (gethash ou dos->lisp) c)
