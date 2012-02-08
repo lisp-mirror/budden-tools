@@ -480,6 +480,8 @@ while buddens readtable extensions are disabled"
 \(:print-defpackage-form [t | nil]) - if t, print defpackage form
 \(:local-nicknames :nick1 :package1 :nick2 :package2 ...) - Refer to package1 as nick1, package2 as nick2 from package being defined.
 \(:always [t | nil]) - if always, everything is wrapped into (eval-when (:compile-toplevel :load-toplevel :execute))
+  If some symbols from used packages clash, they are shadowed instead and referred as 'forbidden'. Error occurs on an
+  attempt to read these symbols unqualified in package created.
 "
   (macrolet ((get-clause (name)
                `(multiple-value-setq (,name clauses) (extract-clause clauses ,(keywordize name))))
