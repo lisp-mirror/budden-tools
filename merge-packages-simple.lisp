@@ -37,12 +37,10 @@ defpackage-autoimport-2 prefers to use packages and shadowing-import clashes.
    #:package-forbidden-symbol-names ; place of package designator
    #:ensure-package-metadata ; makes sure that *per-package-metadata* entry for package exists
    #:keywordize-package-designator
-   #:defpackage-autoimport ; see package docstring. Note this symbol is exported to CL
-   #:defpackage-autoimport-2 ; particular case of defpackage-autoimport. Uses all listed packages, shadowing-imports first of clashes. Exported to CL
+   #:defpackage-autoimport ; УСТАРЕЛ, не пользоваться. See package docstring. Note this symbol is exported to CL
+   #:defpackage-autoimport-2 ; ПОД ВОПРОСОМ.particular case of defpackage-autoimport. Uses all listed packages, shadowing-imports first of clashes. Exported to CL
+   ; пользоваться !4 .
    #:extract-clause ; extract one clause of def... form (e.g. defpackage) by its head
-   ;#:!       ; take several packages and export all what we can without clashes. 
-   ;          ; There are two ways to manage clashes: either don't export them
-   ;          ; or export leftmost symbol according to package order in ! arglist
    ;#:reexport ; For every symbol in to-package2 which is external in 
    ;           ; package1, export it from to-package2
    #:force-find-package ; force-find-package. If package not found, it is a cerror
@@ -210,7 +208,8 @@ from to-package too"
 
 ;; FIXME - произошло смешение понятий между use и auto-import-from, подорвались на этом в defpackage-autoimport-2. Надо бы не передавать в auto-import-from, 
 ;; но тогда не будет произведён анализ конфликтов. Надо что-то менять, сейчас непонятно, что
-(defmacro !3 (name &rest clauses) ; todo: err on non-existing packages
+; не использовать напрямую!
+(defmacro !33 (name &rest clauses) ; todo: err on non-existing packages
   "See docs for defpackage-autoimport"
   (let (auto-import-from auto-import-dont-warn-clashes 
                          print-defpackage-form
@@ -327,7 +326,8 @@ from to-package too"
       )))
   
 (cl-user::portably-without-package-locks
-; non-toplevel
+; non-toplevel. Используется только один раз. Отказаться? 
+; насколько помню,возникли проблемы с auto-import-shadowing. Проблема возникает в момент пересоздания пакета.
 (defmacro defpackage-autoimport (&rest body)
     "It is like defpackage. It also allows for additional clauses. Currently every additional clause can only occur once. 
 \(:auto-import-from . package-designator-list) - import all non-clashing external symbols + first of every set of clashing symbols. 
@@ -344,7 +344,7 @@ from to-package too"
                                                                      (find-package :name), it is a error. NOT IMPLEMENTED
 \(:always [t | nil]) - if always, everything is wrapped into (eval-when (:compile-toplevel :load-toplevel :execute))
 "
-    `(!3 ,@body))
+    `(!33 ,@body))
   #+lispworks 
 ; non-toplevel
 (dspec:define-dspec-alias defpackage-autoimport (name &rest args)
@@ -355,7 +355,7 @@ from to-package too"
 ; non-toplevel
 (export '(defpackage-autoimport defpackage-autoimport-2) :cl)
 
-; non-toplevel
+; non-toplevel - используется мало. 3 использовния. Но много полезных фич (напримр, "не символы"). Перенести в !4 и/или отказаться.
 (defmacro defpackage-autoimport-2 (name &rest clauses) 
   "particular case of defpackage-autoimport. Uses all listed packages, shadowing-imports first of clashes. Exported to CL"
   (let (use auto-import-shadowing auto-import-first-clashing auto-import-from (clauses clauses))
@@ -474,8 +474,13 @@ while buddens readtable extensions are disabled"
     
 
 
-(defmacro !4 (name &rest clauses) ; todo: err on non-existing packages
-  "See docs for defpackage-autoimport"
+(defmacro !4 (name &rest clauses) ; Наиболее удачный вариант, им пользоваться. todo: err on non-existing packages
+  "It is like defpackage. It also allows for additional clauses. Currently every additional clause can only occur once. 
+\(:auto-import-from . package-designator-list) - import all non-clashing external symbols + first of every set of clashing symbols. 
+\(:print-defpackage-form [t | nil]) - if t, print defpackage form
+\(:local-nicknames :nick1 :package1 :nick2 :package2 ...) - Refer to package1 as nick1, package2 as nick2 from package being defined.
+\(:always [t | nil]) - if always, everything is wrapped into (eval-when (:compile-toplevel :load-toplevel :execute))
+"
   (macrolet ((get-clause (name)
                `(multiple-value-setq (,name clauses) (extract-clause clauses ,(keywordize name))))
              (length-is-1 (name)
