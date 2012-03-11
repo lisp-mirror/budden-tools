@@ -56,7 +56,7 @@
           (values (str+ 'package "-") (find-package :common-lisp)))
          ((subtypep class (find-class 'array))
           (values (str+ 'array "-") (find-package :common-lisp)))
-         ((subtypep class (find-class 'standard-class))
+         ((typep class (find-class 'standard-class))
           (values (str+ class-name "-") type-package))
          (t (error "conc-prefix for class ~S is undefined" class-name))
          ))))))
