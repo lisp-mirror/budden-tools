@@ -16,11 +16,14 @@
 
 
 (cl:defpackage :merge-packages-simple
-  (:documentation "defpackage-autoimport makes new package. It  
+  (:documentation "
+See merge-packages-simple::!4 for docs. !4 is unexported to avoid any symbol clashes, but this is the
+function you most likely want to use. 
+
+defpackage-autoimport (obsolete) makes new package. It  
 resolves symbol clashes automatically in packages it uses. It selects some non-clashing
 set of symbols from interesting packages and import them symbol-by-symbol.
-
-defpackage-autoimport-2 prefers to use packages and shadowing-import clashes.
+defpackage-autoimport-2 (obsolete) prefers to use packages and shadowing-import clashes.
 "   
    )
   (:nicknames :def-merge-packages)
@@ -31,6 +34,7 @@ defpackage-autoimport-2 prefers to use packages and shadowing-import clashes.
    #:package-metadata-forbidden-symbol-names ; and
    #:package-metadata-custom-reader ; its
    #:package-metadata-custom-token-parsers ;slots 
+   #:package-metadata-allow-qualified-intern
 
    #:set-package-lock-portably
    #:*per-package-metadata* ; variable
@@ -415,7 +419,8 @@ tests:
                        ; Stream is at the end of the token at the time of the call.
                        ; Parsers are called from left to right until some parser returns t as its
                        ; secondary value. If no parser returns t, 
-  forbidden-symbol-names ; list of names which can't be read as symbols from that package. 
+  forbidden-symbol-names ; FIXME rename to forbidden-symbols. This is a list of forbidden symbols. Forbidden symbols are internal (and in shadowing-import list) in the package 
+                       ; and, if buddens readtable extensions are on,  you can't read them with reader 
   allow-qualified-intern ; with buddens readtable extensions, by default, if package::symbol is being read for non-existent symbol, this is cerror. To return to default cl behaviour, set 
                          ; this variable to t. E.g. (setf budden-tools::package-metadata-allow-qualified-intern (budden-tools::ensure-package-metadata :my-package))
   )
@@ -440,7 +445,7 @@ tests:
         (setf (gethash d *per-package-metadata*) (make-package-metadata)))))
 
 (defun package-forbidden-symbol-names (package)
-  "Note that symbol forbidding would work well in buddens readtables extensions only"
+  "Note that symbol forbidding would work only when buddens readtables extensions are enabled"
   (let ((m (ensure-package-metadata package)))
     (package-metadata-forbidden-symbol-names m)))
 
@@ -452,27 +457,35 @@ tests:
        )))
 
 (defun forbid-symbols-simple (symbols &optional (package *package*))
-  "Forbids existing symbol names. Does that by assigning absurd definitions to that symbol which is supposed to be in a package-shadowing-symbols list of the package. 
-Also unexports the symbol from the package. This is a simple and not reliable symbol forbidding tool which allows you both to read and redefine the symbol. The 
-only good news is that at least you will be unable to call this function as a symbol or variable by omission. But you are free to redefine it. Use this
-while buddens readtable extensions are disabled"
-  (let ((symbols-to-forbid
-         (iter 
-           (:with sh = (package-shadowing-symbols package)) 
-           (:for sname in (1-to-list symbols))
-           (:for s = (find-symbol (string sname) package))
-           (assert s () "Unable to forbid-symbols-simple: ~A is not found in ~A" sname package)
-           (assert (member s sh) () "Unable to forbid-symbols-simple: ~A is not shadowing in ~A" s package)
-           (:collect s)
-           )))
+  "Forbid symbols designated in the package. 
+Symbols should be a symbol designator list. Shadows all symbol names in the package.
+Then installs definitions to that symbols so that they would err as soon as possible.
+If buddens readtable extensions are used for the readtable, symbols can't be read by reader.
+Also unexports symbols designated from the package.
+Returns list of symbols.
+"
+  (let* ((p (find-package package))
+         (symbols-to-forbid
+          (iter 
+            ; (:with sh = (package-shadowing-symbols p)) 
+            (:for sname in symbols)
+            (:for ssname = (string sname))
+            (shadow ssname p)
+            (:for s = (find-symbol ssname p))
+            ; (assert (eq (symbol-package s) p))
+            ; (assert s () "Unable to forbid-symbols-simple: ~A is not found in ~A" sname p)
+            ; (assert (member s sh) () "Unable to forbid-symbols-simple: ~A is not shadowing in ~A" s p)
+            (:collect s)
+            )))
     (iter (:for s in symbols-to-forbid)
       (unexport s package)
       (cl-user::portably-without-package-locks
         (eval 
          `(progn
             (defconstant ,s :forbidden-symbol)
-            (define-symbol-macro ,s (error "symbol ~S is forbidden in ~S" ,s ,package))
-            (defmacro ,s (&rest ignore) (declare (ignore ignore)) (error "symbol ~S is forbidden in ~S" ,(symbol-name s) ,package))))))))
+            (define-symbol-macro ,s (error "symbol ~S is forbidden in ~S" ,s ,p))
+            (defmacro ,s (&rest ignore) (declare (ignore ignore)) (error "symbol ~S is forbidden in ~S" ,(symbol-name s) ,p))))))
+    symbols-to-forbid))
     
 
 
@@ -564,7 +577,8 @@ when you're in another package. Set allow-qualified-intern to allow this.
         (setf forbidden-symbol-names 
               (iter 
                 (:for (dup) in (append duplicates (mapcar 'list forbid)))
-                (:collect (make-symbol (string dup)))))
+                (assert (or (symbolp dup) (stringp dup)) () "forbidden-symbol-names clause must contain a list of string designators")
+                (:collect dup)))
         (setf generated-import-clauses
               (iter 
                 (:for p :in sources-for-import)
@@ -603,9 +617,9 @@ when you're in another package. Set allow-qualified-intern to allow this.
                          ',(process-local-nicknames name local-nicknames :to-alist t))
                 `(remhash (find-package ,name) *per-package-alias-table*)))
         (setf forbid-symbols-forms
-              `((setf (package-forbidden-symbol-names ,name) '(,@forbidden-symbol-names))
-                ,@(when forbidden-symbol-names `((forbid-symbols-simple ',forbidden-symbol-names ,name)))
-                ))
+              `(; (setf (package-forbidden-symbol-names ,name) '(,@forbidden-symbol-names))
+                (setf (package-metadata-forbidden-symbol-names (ensure-package-metadata ,name)) (forbid-symbols-simple ',forbidden-symbol-names ,name)))
+                )
         (setf allow-qualified-intern-forms `((setf (package-metadata-allow-qualified-intern (ensure-package-metadata ,name)) ,allow-qualified-intern)))
         (setf package-definition 
               (if always 
