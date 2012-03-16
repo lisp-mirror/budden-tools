@@ -602,6 +602,14 @@ iii) if symbol is found more than once then first-symbol-found,list of packages,
       (assert (null (find name fs :test 'string=)) () "Symbol name ~S is forbidden in ~A" name package))
     (intern name package)))
 
+(defun check-symbol-forbidden (symbol package)
+  "Check if the symbol's symbol-package is package and errs if it is in forbidden names list"
+  (when (member symbol (package-metadata-forbidden-symbol-names (ensure-package-metadata package)))
+    (error "Symbol ~S is forbidden in ~A" symbol package)
+    )
+  symbol 
+  )
+
 (defun reintern-1 (stream token default-package rt starts-with-vertical-line)  
   "Прочитали что-то. Заинтёрним его в контект, определяемый default-package (по смыслу это - *package*), *package-stack*, *colon-no-stack*. Можно вызывать только один раз для 
 каждого символа, т.к. вызывается readmacro"
@@ -625,7 +633,7 @@ iii) if symbol is found more than once then first-symbol-found,list of packages,
                (when parsed
                  (return-from function (values result t))))))
          (let res 
-           (cond
+           (cond ; unqualified symbol
             ((null qualified-package)
              (iter
                (:with sym-found = +some-uninterned-symbol+)
@@ -650,14 +658,14 @@ iii) if symbol is found more than once then first-symbol-found,list of packages,
                    (0 (intern-check-forbidden (fix-symbol-name-for-advanced-readtable-case 
                                                name package rt starts-with-vertical-line same-case-p)
                                               package))
-                   (1 sym-found)
+                   (1 (check-symbol-forbidden sym-found package))
                    (t (simple-reader-error stream "symbol name ~A is ambigious between ~S" 
                                            name packs-found)))))))
-            (t
+            (t ; qualified symbol
              (multiple-value-bind (sym status same-case-p)
                  (find-symbol-with-advanced-readtable-case name qualified-package rt starts-with-vertical-line)
                (setf name (fix-symbol-name-for-advanced-readtable-case name qualified-package rt starts-with-vertical-line same-case-p))
-               (unless status
+               (unless status ; symbol not found
                  (or (package-metadata-allow-qualified-intern (ensure-package-metadata qualified-package))
                      (let ((*readtable* (copy-readtable nil))) 
                        (cerror "Create symbol and use it" "Symbol ~A~A~A does not exist" 
@@ -665,7 +673,9 @@ iii) if symbol is found more than once then first-symbol-found,list of packages,
                                (make-string qualified-colon-no :initial-element #\:)
                                name)))
                  (return-from function (intern-check-forbidden name qualified-package)))
-               (when (= qualified-colon-no 1)
+               ; hence symbol is found 
+               (check-symbol-forbidden sym qualified-package)
+               (when (= qualified-colon-no 1) ; were looking for external symbol
                  (unless (eq status :external)
                    (cerror "Use symbol anyway" "Symbol ~S is not external in ~A" 
                            sym qualified-package)))
