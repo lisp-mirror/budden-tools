@@ -187,7 +187,7 @@
 (with-my-readtable ; et ((*readtable* *my-readtable*))
   (iter 
     (:with budden-tools::*print-normalize-seen-symbols* = nil)
-    (:with budden-tools::*intern-to-qualified-package-silently* = nil)
+    ; (:with budden-tools::*intern-to-qualified-package-silently* = nil)
     (:for x :in 
          '(((in-package :tst))
            (*package*)

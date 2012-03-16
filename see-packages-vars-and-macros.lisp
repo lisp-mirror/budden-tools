@@ -73,7 +73,7 @@
 (defvar *have-colon* nil "Если последняя считанная буква - это двоеточие, входящее в квалификатор пакета, то t")
 (defvar *package-stack* nil "Стек пакетов. При foo:: кладём текущий пакет, а затем <#package foo> на вершину стека")
 (defvar *colon-no-stack* nil "Стек, параллельный стеку пакетов, в к-рый кладётся число колонок")
-(defvar *intern-to-qualified-package-silently* nil "foo::bar может ссылаться на новые символы")
+; (defvar *intern-to-qualified-package-silently* nil "foo::bar может ссылаться на новые символы") - moved to per-package-metadata
 
 (defvar *print-normalize-seen-symbols* t "Print seen symbols with package
 prefix even if they can be read without the prefix")

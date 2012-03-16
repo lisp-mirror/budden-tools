@@ -574,6 +574,10 @@ iii) if symbol is found more than once then first-symbol-found,list of packages,
          (values p-sym storage-type nil)))
     ))
 
+(defun budden-tools-find-symbol (name p)
+  "unteted. Intended to be used instead of normal find-symbol. FIXME shadow find-symbol? "
+  (find-symbol-with-advanced-readtable-case name (or p *package*) *readtable* nil))
+
 (proclaim '(ftype (function (string package readtable symbol) symbol)
                   fix-symbol-name-for-advanced-readtable-case))
 (defun fix-symbol-name-for-advanced-readtable-case (name package rt starts-with-vertical-line same-case-p)
@@ -654,7 +658,7 @@ iii) if symbol is found more than once then first-symbol-found,list of packages,
                  (find-symbol-with-advanced-readtable-case name qualified-package rt starts-with-vertical-line)
                (setf name (fix-symbol-name-for-advanced-readtable-case name qualified-package rt starts-with-vertical-line same-case-p))
                (unless status
-                 (or *intern-to-qualified-package-silently*
+                 (or (package-metadata-allow-qualified-intern (ensure-package-metadata qualified-package))
                      (let ((*readtable* (copy-readtable nil))) 
                        (cerror "Create symbol and use it" "Symbol ~A~A~A does not exist" 
                                (package-name qualified-package) 

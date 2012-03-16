@@ -416,6 +416,8 @@ tests:
                        ; Parsers are called from left to right until some parser returns t as its
                        ; secondary value. If no parser returns t, 
   forbidden-symbol-names ; list of names which can't be read as symbols from that package. 
+  allow-qualified-intern ; with buddens readtable extensions, by default, if package::symbol is being read for non-existent symbol, this is cerror. To return to default cl behaviour, set 
+                         ; this variable to t. E.g. (setf budden-tools::package-metadata-allow-qualified-intern (budden-tools::ensure-package-metadata :my-package))
   )
 
 (defvar *per-package-metadata* (make-hash-table :test 'eq)
@@ -475,13 +477,17 @@ while buddens readtable extensions are disabled"
 
 
 (defmacro !4 (name &rest clauses) ; Ќаиболее удачный вариант, им пользоватьс€. todo: err on non-existing packages
-  "It is like defpackage. It also allows for additional clauses. Currently every additional clause can only occur once. 
+  "This form is like defpackage. If some symbols from used packages clash, they are shadowed instead and referred
+as 'forbidden'. Error occurs on an attempt to read these symbols unqualified in package created.
+
+It also allows for additional clauses. Currently every additional clause can only occur once. 
+\(:forbid . string-designators) - explicitly forbid some symbol names with addition to clashes
 \(:auto-import-from . package-designator-list) - import all non-clashing external symbols + first of every set of clashing symbols. 
-\(:print-defpackage-form [t | nil]) - if t, print defpackage form
+\(:print-defpackage-form [ t | nil ]) - if t, print defpackage form
 \(:local-nicknames :nick1 :package1 :nick2 :package2 ...) - Refer to package1 as nick1, package2 as nick2 from package being defined.
-\(:always [t | nil]) - if always, everything is wrapped into (eval-when (:compile-toplevel :load-toplevel :execute))
-  If some symbols from used packages clash, they are shadowed instead and referred as 'forbidden'. Error occurs on an
-  attempt to read these symbols unqualified in package created.
+\(:always [ t | nil ]) - if always, everything is wrapped into (eval-when (:compile-toplevel :load-toplevel :execute))
+\(:allow-qualified-intern [ t | nil ]) - with buddens readtable extensions, by default you can't intern bar to foo typing foo::bar
+when you're in another package. Set allow-qualified-intern to allow this.
 "
   (macrolet ((get-clause (name)
                `(multiple-value-setq (,name clauses) (extract-clause clauses ,(keywordize name))))
@@ -491,26 +497,33 @@ while buddens readtable extensions are disabled"
                   (setf ,name (first ,name)))
                )
              )
-    (let (auto-import-from use
-                           print-defpackage-form
-                         ; non-symbols non-hosted-symbols 
-                           local-nicknames
-                           always
-                           shadowing-import-from-s
-                           export-s
-                           (clauses clauses))
+    (let (
+          auto-import-from 
+          use
+          forbid
+          print-defpackage-form
+                         ;  non-hosted-symbols 
+          local-nicknames
+          always
+          shadowing-import-from-s
+          export-s
+          allow-qualified-intern
+          (clauses clauses))
       
       (get-clause use)
       (get-clause auto-import-from)
       (get-clause print-defpackage-form)
       (get-clause local-nicknames)
       (get-clause always)
+      (get-clause allow-qualified-intern)
+      (get-clause forbid)
       (multiple-value-setq (shadowing-import-from-s clauses) (extract-several-clauses clauses :shadowing-import-from))
       (multiple-value-setq (export-s clauses) (extract-several-clauses clauses :export))
 ;    (multiple-value-setq (non-symbols clauses) (extract-clause clauses :non-symbols))
 ;    (multiple-value-setq (non-hosted-symbols clauses) (extract-clause clauses :non-hosted-symbols))    
       (length-is-1 print-defpackage-form)
       (length-is-1 always)
+      (length-is-1 allow-qualified-intern)
       (assert (null (intersection use auto-import-from))
           () ":use and :auto-import-from clauses must be disjoint")
       (let* (; (dest (keywordize name))
@@ -525,6 +538,7 @@ while buddens readtable extensions are disabled"
              forbid-symbols-forms
              process-local-nicknames-form
              processed-export-s
+             allow-qualified-intern-forms
              )
         (dolist (p sources-for-clashes)
           (do-external-symbols (s p)
@@ -549,7 +563,7 @@ while buddens readtable extensions are disabled"
               (pushnew s all-symbols-for-import))))
         (setf forbidden-symbol-names 
               (iter 
-                (:for (dup) in duplicates)
+                (:for (dup) in (append duplicates (mapcar 'list forbid)))
                 (:collect (make-symbol (string dup)))))
         (setf generated-import-clauses
               (iter 
@@ -592,6 +606,7 @@ while buddens readtable extensions are disabled"
               `((setf (package-forbidden-symbol-names ,name) '(,@forbidden-symbol-names))
                 ,@(when forbidden-symbol-names `((forbid-symbols-simple ',forbidden-symbol-names ,name)))
                 ))
+        (setf allow-qualified-intern-forms `((setf (package-metadata-allow-qualified-intern (ensure-package-metadata ,name)) ,allow-qualified-intern)))
         (setf package-definition 
               (if always 
                   `(eval-when (:compile-toplevel :load-toplevel :execute)
@@ -603,7 +618,8 @@ while buddens readtable extensions are disabled"
                      ,package-definition
                    (eval-when (:load-toplevel :execute)
                      ,process-local-nicknames-form
-                     ,@forbid-symbols-forms))))
+                     ,@forbid-symbols-forms
+                     ,@allow-qualified-intern-forms))))
         (when print-defpackage-form
           (let (*print-length* *print-level*) (print package-definition)))
         package-definition
