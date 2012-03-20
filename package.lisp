@@ -204,4 +204,4 @@
 
 
 
-(defpackage :dat1 (:use)) ; пакет для чтения дат. 
+(defpackage :dat1 (:use)) ; package for date reading 
