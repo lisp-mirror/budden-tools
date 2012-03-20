@@ -1,0 +1,682 @@
+<html xmlns:o="urn:schemas-microsoft-com:office:office"
+xmlns:w="urn:schemas-microsoft-com:office:word"
+xmlns="http://www.w3.org/TR/REC-html40">
+
+<head>
+<meta http-equiv=Content-Type content="text/html; charset=windows-1251">
+<meta name=ProgId content=Word.Document>
+<meta name=Generator content="Microsoft Word 9">
+<meta name=Originator content="Microsoft Word 9">
+<link rel=File-List href="./cl-fix-0.991.files/filelist.xml">
+<title>Переносимые расширения для читателя Common Lisp</title>
+<!--[if gte mso 9]><xml>
+ <o:DocumentProperties>
+  <o:Author>denis</o:Author>
+  <o:Template>Normal</o:Template>
+  <o:LastAuthor>denis</o:LastAuthor>
+  <o:Revision>11</o:Revision>
+  <o:TotalTime>261</o:TotalTime>
+  <o:Created>2009-10-05T13:16:00Z</o:Created>
+  <o:LastSaved>2009-10-05T13:18:00Z</o:LastSaved>
+  <o:Pages>3</o:Pages>
+  <o:Words>1220</o:Words>
+  <o:Characters>6956</o:Characters>
+  <o:Company>mcfr</o:Company>
+  <o:Lines>57</o:Lines>
+  <o:Paragraphs>13</o:Paragraphs>
+  <o:CharactersWithSpaces>8542</o:CharactersWithSpaces>
+  <o:Version>9.2812</o:Version>
+ </o:DocumentProperties>
+</xml><![endif]-->
+<style>
+<!--
+ /* Font Definitions */
+@font-face
+	{font-family:Wingdings;
+	panose-1:5 0 0 0 0 0 0 0 0 0;
+	mso-font-charset:2;
+	mso-generic-font-family:auto;
+	mso-font-pitch:variable;
+	mso-font-signature:0 268435456 0 0 -2147483648 0;}
+ /* Style Definitions */
+p.MsoNormal, li.MsoNormal, div.MsoNormal
+	{mso-style-parent:"";
+	margin:0cm;
+	margin-bottom:.0001pt;
+	mso-pagination:widow-orphan;
+	font-size:12.0pt;
+	font-family:"Times New Roman";
+	mso-fareast-font-family:"Times New Roman";}
+h2
+	{mso-style-next:Обычный;
+	margin-top:12.0pt;
+	margin-right:0cm;
+	margin-bottom:3.0pt;
+	margin-left:0cm;
+	mso-pagination:widow-orphan;
+	page-break-after:avoid;
+	mso-outline-level:2;
+	font-size:14.0pt;
+	font-family:Arial;
+	font-style:italic;}
+h3
+	{mso-style-next:Обычный;
+	margin-top:12.0pt;
+	margin-right:0cm;
+	margin-bottom:3.0pt;
+	margin-left:0cm;
+	mso-pagination:widow-orphan;
+	page-break-after:avoid;
+	mso-outline-level:3;
+	font-size:13.0pt;
+	font-family:Arial;}
+@page Section1
+	{size:595.3pt 841.9pt;
+	margin:2.0cm 42.5pt 2.0cm 3.0cm;
+	mso-header-margin:35.4pt;
+	mso-footer-margin:35.4pt;
+	mso-paper-source:0;}
+div.Section1
+	{page:Section1;}
+ /* List Definitions */
+@list l0
+	{mso-list-id:-132;
+	mso-list-type:simple;
+	mso-list-template-ids:-510507260;}
+@list l0:level1
+	{mso-level-tab-stop:74.6pt;
+	mso-level-number-position:left;
+	margin-left:74.6pt;
+	text-indent:-18.0pt;}
+@list l1
+	{mso-list-id:-131;
+	mso-list-type:simple;
+	mso-list-template-ids:-505887062;}
+@list l1:level1
+	{mso-level-tab-stop:60.45pt;
+	mso-level-number-position:left;
+	margin-left:60.45pt;
+	text-indent:-18.0pt;}
+@list l2
+	{mso-list-id:-130;
+	mso-list-type:simple;
+	mso-list-template-ids:-113111116;}
+@list l2:level1
+	{mso-level-tab-stop:46.3pt;
+	mso-level-number-position:left;
+	margin-left:46.3pt;
+	text-indent:-18.0pt;}
+@list l3
+	{mso-list-id:-129;
+	mso-list-type:simple;
+	mso-list-template-ids:-39661028;}
+@list l3:level1
+	{mso-level-tab-stop:32.15pt;
+	mso-level-number-position:left;
+	margin-left:32.15pt;
+	text-indent:-18.0pt;}
+@list l4
+	{mso-list-id:-128;
+	mso-list-type:simple;
+	mso-list-template-ids:413593816;}
+@list l4:level1
+	{mso-level-number-format:bullet;
+	mso-level-text:\F0B7;
+	mso-level-tab-stop:74.6pt;
+	mso-level-number-position:left;
+	margin-left:74.6pt;
+	text-indent:-18.0pt;
+	font-family:Symbol;}
+@list l5
+	{mso-list-id:-127;
+	mso-list-type:simple;
+	mso-list-template-ids:966179194;}
+@list l5:level1
+	{mso-level-number-format:bullet;
+	mso-level-text:\F0B7;
+	mso-level-tab-stop:60.45pt;
+	mso-level-number-position:left;
+	margin-left:60.45pt;
+	text-indent:-18.0pt;
+	font-family:Symbol;}
+@list l6
+	{mso-list-id:-126;
+	mso-list-type:simple;
+	mso-list-template-ids:-700147602;}
+@list l6:level1
+	{mso-level-number-format:bullet;
+	mso-level-text:\F0B7;
+	mso-level-tab-stop:46.3pt;
+	mso-level-number-position:left;
+	margin-left:46.3pt;
+	text-indent:-18.0pt;
+	font-family:Symbol;}
+@list l7
+	{mso-list-id:-125;
+	mso-list-type:simple;
+	mso-list-template-ids:905506602;}
+@list l7:level1
+	{mso-level-number-format:bullet;
+	mso-level-text:\F0B7;
+	mso-level-tab-stop:32.15pt;
+	mso-level-number-position:left;
+	margin-left:32.15pt;
+	text-indent:-18.0pt;
+	font-family:Symbol;}
+@list l8
+	{mso-list-id:-120;
+	mso-list-type:simple;
+	mso-list-template-ids:762054294;}
+@list l8:level1
+	{mso-level-tab-stop:18.0pt;
+	mso-level-number-position:left;
+	margin-left:18.0pt;
+	text-indent:-18.0pt;}
+@list l9
+	{mso-list-id:-119;
+	mso-list-type:simple;
+	mso-list-template-ids:-903826818;}
+@list l9:level1
+	{mso-level-number-format:bullet;
+	mso-level-text:\F0B7;
+	mso-level-tab-stop:18.0pt;
+	mso-level-number-position:left;
+	margin-left:18.0pt;
+	text-indent:-18.0pt;
+	font-family:Symbol;}
+ol
+	{margin-bottom:0cm;}
+ul
+	{margin-bottom:0cm;}
+-->
+</style>
+</head>
+
+<body lang=RU style='tab-interval:35.4pt'>
+
+<div class=Section1>
+
+<h2><span lang=EN-US style='mso-ansi-language:EN-US'>Cl-fix 0.991<o:p></o:p></span></h2>
+
+<h2>Изменения для чтения и пакеты</h2>
+
+<h3>Иерархические пакеты</h3>
+
+<p class=MsoNormal>Как в <span lang=EN-US style='mso-ansi-language:EN-US'>Allegro
+CL. <o:p></o:p></span></p>
+
+<h3>Именованные таблицы чтения</h3>
+
+<p class=MsoNormal>Таблица чтения может иметь имя. </p>
+
+<p class=MsoNormal><span lang=EN-US style='mso-ansi-language:EN-US'>(defreadtable
+</span>имя)<span lang=EN-US style='mso-ansi-language:EN-US'>, <o:p></o:p></span></p>
+
+<p class=MsoNormal>см http://common-lisp.net/~trittweiler/darcs/editor-hints/named-readtables/</p>
+
+<p class=MsoNormal>Можно декларативно выводить таблицы чтения из других таблиц.
+Поскольку не существует переносимого метода итерации по всем элементам таблицы
+чтения, при этом будет нужно указать буквы, </p>
+
+<p class=MsoNormal>данные которых переносятся (с помощью <span lang=EN-US
+style='mso-ansi-language:EN-US'>set-syntax-from-char)</span>. Этого у Тобиаса не
+сделано. </p>
+
+<p class=MsoNormal><span lang=EN-US style='mso-ansi-language:EN-US'><![if !supportEmptyParas]>&nbsp;<![endif]><o:p></o:p></span></p>
+
+<p class=MsoNormal>Одно и то же имя может быть сопоставлено пакету и<span
+lang=EN-US style='mso-ansi-language:EN-US'>/</span>или таблице чтения и это следующее
+значение:</p>
+
+<p class=MsoNormal><span style="mso-spacerun: yes"> </span></p>
+
+<p class=MsoNormal><span lang=EN-US style='mso-ansi-language:EN-US'>budden-tools:in-readtable
+</span>меняет таблицу чтения на таблицу с заданным именем</p>
+
+<p class=MsoNormal><span lang=EN-US style='mso-ansi-language:EN-US'>budden-tools:in-package
+</span>меняет пакет и таблицу чтения, если существует таблица чтения с таким
+именем.</p>
+
+<h3>Расширения для <span lang=EN-US style='mso-ansi-language:EN-US'>defpackage<o:p></o:p></span></h3>
+
+<p class=MsoNormal>(<span lang=EN-US style='mso-ansi-language:EN-US'>budden-tools::defpackage
+:my-package (:inherits :parent) (:sees :package1 :package2) </span></p>
+
+<p class=MsoNormal>(<span lang=EN-US style='mso-ansi-language:EN-US'>:aliases
+:cl-ppcre :re)<o:p></o:p></span></p>
+
+<p class=MsoNormal><span lang=EN-US style='mso-ansi-language:EN-US'>&amp;rest
+other-defpackage-options)<o:p></o:p></span></p>
+
+<p class=MsoNormal><span lang=EN-US style='mso-ansi-language:EN-US'><![if !supportEmptyParas]>&nbsp;<![endif]><o:p></o:p></span></p>
+
+<p class=MsoNormal>Выражение <span lang=EN-US style='mso-ansi-language:EN-US'>inherits
+</span>говорит о том, что все, в том числе, внутренние, символы пакета <span
+lang=EN-US style='mso-ansi-language:EN-US'>:parent </span>наследуются вновь
+определяемым пакетом <span lang=EN-US style='mso-ansi-language:EN-US'>:my-package.
+<o:p></o:p></span></p>
+
+<p class=MsoNormal><![if !supportEmptyParas]>&nbsp;<![endif]><o:p></o:p></p>
+
+<p class=MsoNormal>Выражение <span lang=EN-US style='mso-ansi-language:EN-US'>sees</span>
+аналогично выражению <span lang=EN-US style='mso-ansi-language:EN-US'>use, </span>но
+действует по-другому. Общий смысл – конфликты между пакетами выявляются не в
+момент определения пакета, а в момент обращения к конфликтующим именам
+символов. Подобный способ выявления конфликтов применён в языке <span
+lang=EN-US style='mso-ansi-language:EN-US'>SQL. <o:p></o:p></span></p>
+
+<p class=MsoNormal>Именно:</p>
+
+<p class=MsoNormal>- допускается существование различных символов <span
+lang=EN-US style='mso-ansi-language:EN-US'>my-package::sym, package1:sym,
+package2:sym. <o:p></o:p></span></p>
+
+<p class=MsoNormal><span lang=EN-US style='mso-ansi-language:EN-US'>- </span>если
+такие различные символы существуют, то <span lang=EN-US style='mso-ansi-language:
+EN-US'><o:p></o:p></span></p>
+
+<p class=MsoNormal>(<span lang=EN-US style='mso-ansi-language:EN-US'>let1
+*package* (find-package :my-package)<o:p></o:p></span></p>
+
+<p class=MsoNormal><span lang=EN-US style='mso-ansi-language:EN-US'><span
+style="mso-spacerun: yes">  </span>(read-from-string “SYM”)<o:p></o:p></span></p>
+
+<p class=MsoNormal><span lang=EN-US style='mso-ansi-language:EN-US'><span
+style="mso-spacerun: yes">  </span>)<o:p></o:p></span></p>
+
+<p class=MsoNormal>вернёт ошибку, т.к. имя <span lang=EN-US style='mso-ansi-language:
+EN-US'>sym </span>будет рассматриваться как неоднозначное. </p>
+
+<p class=MsoNormal>- если среди всех пакетов существует только один символ
+(считая внешние символы пакетов <span lang=EN-US style='mso-ansi-language:EN-US'>package1,
+package2 </span>и все символы пакета <span lang=EN-US style='mso-ansi-language:
+EN-US'>my-package), </span>то вышеприведённый код выполнится без ошибки и
+вернёт этот символ. <span lang=EN-US style='mso-ansi-language:EN-US'><o:p></o:p></span></p>
+
+<p class=MsoNormal><span lang=EN-US style='mso-ansi-language:EN-US'>- </span>если
+символа не существует, он будет создан в текущем пакете, как и обычно</p>
+
+<p class=MsoNormal>- в любом случае, можно обращаться к символу, используя
+квалификатор:</p>
+
+<p class=MsoNormal><span lang=EN-US style='mso-ansi-language:EN-US'>(read-from-string
+“(MY-PACKAGE::SYM PACKAGE2:SYM)” </span>вернёт результат. </p>
+
+<p class=MsoNormal><![if !supportEmptyParas]>&nbsp;<![endif]><o:p></o:p></p>
+
+<p class=MsoNormal>При этом, меняется и печать символа. Символ, требующий квалификатор<span
+style='mso-ansi-language:EN-US'> </span>пакета в момент чтения, печатается с
+этим квалификатором функций <span lang=EN-US style='mso-ansi-language:EN-US'>print.
+<o:p></o:p></span></p>
+
+<p class=MsoNormal>- правило срабатывает в момент поиска символа по имени,
+т.е., оно отражает динамические изменения в составах пакетов. </p>
+
+<p class=MsoNormal><![if !supportEmptyParas]>&nbsp;<![endif]><o:p></o:p></p>
+
+<p class=MsoNormal>Выражение <span lang=EN-US style='mso-ansi-language:EN-US'>aliases
+</span>задаёт локальные алиасы пакетов. Т.е., в области действия (<span
+lang=EN-US style='mso-ansi-language:EN-US'>in-package :my-package)</span> можно
+обращаться к <span lang=EN-US style='mso-ansi-language:EN-US'>cl-ppcre </span>по
+имени <span lang=EN-US style='mso-ansi-language:EN-US'>re, </span>например, <span
+lang=EN-US style='mso-ansi-language:EN-US'>re:create-scanner. <o:p></o:p></span></p>
+
+<h3>Чтение с квалификаторами</h3>
+
+<p class=MsoNormal><span lang=EN-US style='mso-ansi-language:EN-US'>Package:symbol-name,
+package::symbol-name </span>воспринимаются как обычно.<span lang=EN-US
+style='mso-ansi-language:EN-US'><o:p></o:p></span></p>
+
+<p class=MsoNormal>Пусть буква <span lang=EN-US style='mso-ansi-language:EN-US'>S
+</span>в таблице чтения с именеме <span lang=EN-US style='mso-ansi-language:
+EN-US'>:readtable</span> является <span lang=EN-US style='mso-ansi-language:
+EN-US'>macro-character</span>,</p>
+
+<p class=MsoNormal>Буква <span lang=EN-US style='mso-ansi-language:EN-US'>D </span>является
+<span lang=EN-US style='mso-ansi-language:EN-US'>dispatch-macro-character, </span>а
+буква <span lang=EN-US style='mso-ansi-language:EN-US'>Y </span>имеет значение
+как <span lang=EN-US style='mso-ansi-language:EN-US'>macro-character для D. </span>Тогда</p>
+
+<p class=MsoNormal><span lang=EN-US style='mso-ansi-language:EN-US'><![if !supportEmptyParas]>&nbsp;<![endif]><o:p></o:p></span></p>
+
+<p class=MsoNormal><span lang=EN-US style='mso-ansi-language:EN-US'>readtable:S</span></p>
+
+<p class=MsoNormal>приводит к вызову <span lang=EN-US style='mso-ansi-language:
+EN-US'>macro-character </span>для <span lang=EN-US style='mso-ansi-language:
+EN-US'>S </span>из таблицы <span lang=EN-US style='mso-ansi-language:EN-US'>:readtable.<o:p></o:p></span></p>
+
+<p class=MsoNormal><span lang=EN-US style='mso-ansi-language:EN-US'><![if !supportEmptyParas]>&nbsp;<![endif]><o:p></o:p></span></p>
+
+<p class=MsoNormal><span lang=EN-US style='mso-ansi-language:EN-US'>readtable:DY
+</span>приводит к вызову функции для <span lang=EN-US style='mso-ansi-language:
+EN-US'>Y </span>из таблицы <span lang=EN-US style='mso-ansi-language:EN-US'>:readtable.<o:p></o:p></span></p>
+
+<p class=MsoNormal><span lang=EN-US style='mso-ansi-language:EN-US'><![if !supportEmptyParas]>&nbsp;<![endif]><o:p></o:p></span></p>
+
+<p class=MsoNormal><span lang=EN-US style='mso-ansi-language:EN-US'>readtable::
+</span>аналогично</p>
+
+<p class=MsoNormal><span lang=EN-US style='mso-ansi-language:EN-US'>(let1 *<b>readtable*</b>
+(find-readtable :readtable) (read stream))</span></p>
+
+<p class=MsoNormal>т.е., производится временное переключение <span lang=EN-US
+style='mso-ansi-language:EN-US'>readtable.</span></p>
+
+<p class=MsoNormal><![if !supportEmptyParas]>&nbsp;<![endif]><o:p></o:p></p>
+
+<p class=MsoNormal><span lang=EN-US style='mso-ansi-language:EN-US'>package:&lt;</span>не-имя-символа<span
+lang=EN-US style='mso-ansi-language:EN-US'>&gt;<o:p></o:p></span></p>
+
+<p class=MsoNormal>приводит к тому, что <span lang=EN-US style='mso-ansi-language:
+EN-US'>package </span>временно вставляется в список «видимых» с помощью <span
+lang=EN-US style='mso-ansi-language:EN-US'>see </span>пакетов и производится
+чтение.<span lang=EN-US style='mso-ansi-language:EN-US'><o:p></o:p></span></p>
+
+<p class=MsoNormal><![if !supportEmptyParas]>&nbsp;<![endif]><o:p></o:p></p>
+
+<p class=MsoNormal><span lang=EN-US style='mso-ansi-language:EN-US'>package::&lt;</span>не-имя-символа<span
+lang=EN-US style='mso-ansi-language:EN-US'>&gt;<o:p></o:p></span></p>
+
+<p class=MsoNormal>эквивалентно</p>
+
+<p class=MsoNormal><span lang=EN-US style='mso-ansi-language:EN-US'>(let1
+*package* (find-package :package) (read stream))<o:p></o:p></span></p>
+
+<p class=MsoNormal>но, при этом, пакет, активный в момент связывания, доступен
+с помощью псевдонима <span lang=EN-US style='mso-ansi-language:EN-US'>_. <o:p></o:p></span></p>
+
+<p class=MsoNormal>Например, </p>
+
+<p class=MsoNormal><span lang=EN-US style='mso-ansi-language:EN-US'>(defpackage
+p1 ())<o:p></o:p></span></p>
+
+<p class=MsoNormal><span lang=EN-US style='mso-ansi-language:EN-US'>‘p1::a<o:p></o:p></span></p>
+
+<p class=MsoNormal><span lang=EN-US style='mso-ansi-language:EN-US'>(defpackage
+p2 ())<o:p></o:p></span></p>
+
+<p class=MsoNormal><span lang=EN-US style='mso-ansi-language:EN-US'>‘p2::a<o:p></o:p></span></p>
+
+<p class=MsoNormal><span lang=EN-US style='mso-ansi-language:EN-US'>(in-package
+:p2)<o:p></o:p></span></p>
+
+<p class=MsoNormal><span lang=EN-US style='mso-ansi-language:EN-US'>p1::’(a
+_::a) </span><span lang=EN-US style='font-family:Wingdings;mso-ascii-font-family:
+"Times New Roman";mso-hansi-font-family:"Times New Roman";mso-ansi-language:
+EN-US;mso-char-type:symbol;mso-symbol-font-family:Wingdings'><span
+style='mso-char-type:symbol;mso-symbol-font-family:Wingdings'>&egrave;</span></span><span
+lang=EN-US style='mso-ansi-language:EN-US'> ‘(p1::a p2::a)<o:p></o:p></span></p>
+
+<p class=MsoNormal><span lang=EN-US style='mso-ansi-language:EN-US'><![if !supportEmptyParas]>&nbsp;<![endif]><o:p></o:p></span></p>
+
+<p class=MsoNormal>Если существует <span lang=EN-US style='mso-ansi-language:
+EN-US'>readtable </span>и <span lang=EN-US style='mso-ansi-language:EN-US'>package
+</span>с одинаковым именем, эффекты комбинируются. Например, пусть имя будет <span
+lang=EN-US style='mso-ansi-language:EN-US'>p&amp;rt</span>. Тогда</p>
+
+<p class=MsoNormal><span lang=EN-US style='mso-ansi-language:EN-US'>p&amp;rt:<span
+style="mso-spacerun: yes">  </span></span>временно включает пакет в список
+«видимых» пакетов и один раз использует <span lang=EN-US style='mso-ansi-language:
+EN-US'>readtable. <o:p></o:p></span></p>
+
+<p class=MsoNormal><span lang=EN-US style='mso-ansi-language:EN-US'>p&amp;rt:: </span>временно
+меняет пакет и <span lang=EN-US style='mso-ansi-language:EN-US'>readtable </span>и
+производит чтение</p>
+
+<p class=MsoNormal><![if !supportEmptyParas]>&nbsp;<![endif]><o:p></o:p></p>
+
+<p class=MsoNormal><span lang=EN-US style='mso-ansi-language:EN-US'>p&amp;rt:PR:
+, </span>где <span lang=EN-US style='mso-ansi-language:EN-US'>P </span>и <span
+lang=EN-US style='mso-ansi-language:EN-US'>R – </span>Это буквы <span
+lang=EN-US style='mso-ansi-language:EN-US'>#\0, #\1 </span>или <span
+lang=EN-US style='mso-ansi-language:EN-US'>#\2, </span>меняет пакет и<span
+lang=EN-US style='mso-ansi-language:EN-US'>/</span>или <span lang=EN-US
+style='mso-ansi-language:EN-US'>readtable. <o:p></o:p></span></p>
+
+<p class=MsoNormal><span lang=EN-US style='mso-ansi-language:EN-US'>P – </span>это
+как бы число двоеточий, относящееся к квалификатору пакета, а <span lang=EN-US
+style='mso-ansi-language:EN-US'>R – </span>к таблице чтения. </p>
+
+<p class=MsoNormal>Т.е., </p>
+
+<p class=MsoNormal><span lang=EN-US style='mso-ansi-language:EN-US'>P&amp;rt:00:
+</span>ничего не делает. </p>
+
+<p class=MsoNormal><span lang=EN-US style='mso-ansi-language:EN-US'>P&amp;rt:21:
+</span>действует на пакеты как <span lang=EN-US style='mso-ansi-language:EN-US'>p&amp;rt::
+</span>, а на таблицу чтения – как <span lang=EN-US style='mso-ansi-language:
+EN-US'>p&amp;rt:<o:p></o:p></span></p>
+
+<p class=MsoNormal><span lang=EN-US style='mso-ansi-language:EN-US'><![if !supportEmptyParas]>&nbsp;<![endif]><o:p></o:p></span></p>
+
+<h3><span lang=EN-US style='mso-ansi-language:EN-US'>Get-custom-reader-for-package
+<o:p></o:p></span></h3>
+
+<p class=MsoNormal>С помощью <span lang=EN-US style='mso-ansi-language:EN-US'>setf-расширителя
+</span>этой функции можно назначить пакету функцию, которая производит чтение,
+когда виден квалификатор этого пакета. Функция получает пакет и поток. Она
+вызывается после чтения одного двоеточия. Если нужно разное поведение в
+зависимости от числа двоеточий, то функция должна сама это организовать. Эта
+функция полезна, например, для чтения даты:</p>
+
+<p class=MsoNormal><span lang=EN-US style='mso-ansi-language:EN-US'>dat1:</span>2009-09-16,
+если есть функция, читающая дату из потока. </p>
+
+<p class=MsoNormal><![if !supportEmptyParas]>&nbsp;<![endif]><o:p></o:p></p>
+
+<h3><span lang=EN-US style='mso-ansi-language:EN-US'>GET-CUSTOM-TOKEN-PARSERS-FOR-PACKAGE
+</span></h3>
+
+<p class=MsoNormal><span lang=EN-US style='mso-ansi-language:EN-US'>Можно
+назначить список функций, которые будут вызываться для каждого token</span>-а,
+считанного функцией <span lang=EN-US style='mso-ansi-language:EN-US'>read, </span>и
+их можно будет интерпретировать специальным образом. </p>
+
+<p class=MsoNormal>Например, можно сделать так, чтобы в некоторых пакетах
+символы типа <span lang=EN-US style='mso-ansi-language:EN-US'>a.b </span>имели
+специальное значение и читались как список (<span lang=EN-US style='mso-ansi-language:
+EN-US'>dots a :b). <o:p></o:p></span></p>
+
+<h3><span lang=EN-US style='mso-ansi-language:EN-US'>S</span>ymbol-readmacro<span
+lang=EN-US style='mso-ansi-language:EN-US'><o:p></o:p></span></h3>
+
+<p class=MsoNormal>Позволяет назначить символу <span lang=EN-US
+style='mso-ansi-language:EN-US'>readmacro. </span>В этом случае, после чтения
+символа будет вызвана эта функция. Ей будет передан поток, начиная с буквы,
+непосредственно следующей за именем символа. С помощью этой возможности можно
+расширить пространство имён <span lang=EN-US style='mso-ansi-language:EN-US'>readmacro</span>-сов,
+т.к. в лиспе слишком мало букв, которым можно назначить свойства. Например, можно
+реализовать макрос <span lang=EN-US style='mso-ansi-language:EN-US'>sql:select </span>и
+читать <span lang=EN-US style='mso-ansi-language:EN-US'>sql</span>-запросы как</p>
+
+<p class=MsoNormal><span lang=EN-US style='mso-ansi-language:EN-US'>sql:select
+* from foo; <o:p></o:p></span></p>
+
+<h3>Блокировка пакетов</h3>
+
+<p class=MsoNormal>Можно заблокировать любой пакет и тогда попытка создать в
+нём новый символ приведёт к возобновляемой ошибке. </p>
+
+<h3>Специальная обработка <span lang=EN-US style='mso-ansi-language:EN-US'>readtable-case</span></h3>
+
+<p class=MsoNormal>Современные ЯП, как правило, чувствительны к регистру. <span
+lang=EN-US style='mso-ansi-language:EN-US'>Common Lisp </span>по умолчанию
+приводит символы к верхнему регистру и это неудобно. Самое главное, что все
+символы из пакета <span lang=EN-US style='mso-ansi-language:EN-US'>lisp </span>и
+т.п., обязательно должны вводиться в верхнем регистре. Что можно сделать?
+Предлагается следующее решение. Выделить некий набор «системных» пакетов. Для
+каждого такого пакета можно будет вводить символы как в верхнем, так и в нижнем
+регистре, но не в смешанном регистре, например, <span lang=EN-US
+style='mso-ansi-language:EN-US'>LIST, list, </span>но не <span lang=EN-US
+style='mso-ansi-language:EN-US'>List</span>. Печататься символы будут как с <span
+lang=EN-US style='mso-ansi-language:EN-US'>readtable-case = :reverse. </span>При
+этом, функция <span lang=EN-US style='mso-ansi-language:EN-US'>intern </span>будет
+вести себя аномально, т.к. она будет<span style='mso-ansi-language:EN-US'> </span>правильно
+понимать только имена в верхнем регистре. Весь остальной лисп нужно сделать
+чувствительным к регистру. </p>
+
+<p class=MsoNormal><![if !supportEmptyParas]>&nbsp;<![endif]><o:p></o:p></p>
+
+<h2>Немного о методике<span style='mso-ansi-language:EN-US'> </span>применения
+чужеродного синтаксиса внутри Лиспа</h2>
+
+<p class=MsoNormal>С помощью приведённого здесь набора средств можно легко
+внедрять в лисп разнообразные элементы чужеродного синтаксиса. Например, можно
+внедрять <span lang=EN-US style='mso-ansi-language:EN-US'>sql</span> и
+выглядеть это будет так:</p>
+
+<p class=MsoNormal><span lang=EN-US style='mso-ansi-language:EN-US'>(defun
+sql-statement-lexer (stream) <o:p></o:p></span></p>
+
+<p class=MsoNormal><span lang=EN-US style='mso-ansi-language:EN-US'><span
+style="mso-spacerun: yes">   </span>….<o:p></o:p></span></p>
+
+<p class=MsoNormal><span lang=EN-US style='mso-ansi-language:EN-US'><span
+style="mso-spacerun: yes">   </span>; </span>читаем исходный текст <span
+lang=EN-US style='mso-ansi-language:EN-US'>sql </span>выражения до завершающей
+точки с запятой</p>
+
+<p class=MsoNormal><span style="mso-spacerun: yes">   </span>)</p>
+
+<p class=MsoNormal><span lang=EN-US style='mso-ansi-language:EN-US'>(setf
+(symbol-readmacro (find-symbol “fsel”)) <o:p></o:p></span></p>
+
+<p class=MsoNormal><span lang=EN-US style='mso-ansi-language:EN-US'><span
+style="mso-spacerun: yes">   </span>(lambda (symbol stream)<o:p></o:p></span></p>
+
+<p class=MsoNormal><span lang=EN-US style='mso-ansi-language:EN-US'><span
+style="mso-spacerun: yes">     </span>(declare (ignore symbol)) <o:p></o:p></span></p>
+
+<p class=MsoNormal><span lang=EN-US style='mso-ansi-language:EN-US'><span
+style="mso-spacerun: yes">     </span>(let1 sql-text (sql-statement-lexer
+stream)<o:p></o:p></span></p>
+
+<p class=MsoNormal><span lang=EN-US style='mso-ansi-language:EN-US'><span
+style="mso-spacerun: yes">        </span>`(sql:select ,sql-text)<o:p></o:p></span></p>
+
+<p class=MsoNormal><span lang=EN-US style='mso-ansi-language:EN-US'><span
+style="mso-spacerun: yes">          </span>)))<o:p></o:p></span></p>
+
+<p class=MsoNormal><span lang=EN-US style='mso-ansi-language:EN-US'><![if !supportEmptyParas]>&nbsp;<![endif]><o:p></o:p></span></p>
+
+<p class=MsoNormal>и теперь в интерпретаторе можно писать</p>
+
+<p class=MsoNormal><span lang=EN-US style='mso-ansi-language:EN-US'><![if !supportEmptyParas]>&nbsp;<![endif]><o:p></o:p></span></p>
+
+<p class=MsoNormal><span lang=EN-US style='mso-ansi-language:EN-US'>fse select
+* from client; <o:p></o:p></span></p>
+
+<p class=MsoNormal><span lang=EN-US style='mso-ansi-language:EN-US'><![if !supportEmptyParas]>&nbsp;<![endif]><o:p></o:p></span></p>
+
+<p class=MsoNormal>Всё это очень здорово и удобно, чтобы работать из командной
+строки. Более того, можно подразумевать <span lang=EN-US style='mso-ansi-language:
+EN-US'>select </span>и тогда всё будет выглядить ещё короче:</p>
+
+<p class=MsoNormal><span lang=EN-US style='mso-ansi-language:EN-US'><![if !supportEmptyParas]>&nbsp;<![endif]><o:p></o:p></span></p>
+
+<p class=MsoNormal><span lang=EN-US style='mso-ansi-language:EN-US'>fse * from
+client; <o:p></o:p></span></p>
+
+<p class=MsoNormal><![if !supportEmptyParas]>&nbsp;<![endif]><o:p></o:p></p>
+
+<p class=MsoNormal>Плохо здесь то, что текст перестал быть <span lang=EN-US
+style='mso-ansi-language:EN-US'>s-</span>выражением и с ним стало труднее
+работать в файле. </p>
+
+<p class=MsoNormal><![if !supportEmptyParas]>&nbsp;<![endif]><o:p></o:p></p>
+
+<p class=MsoNormal>Поэтому, предлагается писать парсеры, которые могут парсить
+только фрагменты текста в чужеродном синтаксисе, в которых сбалансированы все
+скобки. Если все скобки сбалансированы, то излишняя закрывающая скобка приводит
+к завершению чтения. Тогда можно оформить то же самое по-другому:</p>
+
+<p class=MsoNormal><![if !supportEmptyParas]>&nbsp;<![endif]><o:p></o:p></p>
+
+<p class=MsoNormal><span lang=EN-US style='mso-ansi-language:EN-US'>(defun
+sql-statement-lexer (stream) <o:p></o:p></span></p>
+
+<p class=MsoNormal><span lang=EN-US style='mso-ansi-language:EN-US'><span
+style="mso-spacerun: yes">   </span>….<o:p></o:p></span></p>
+
+<p class=MsoNormal><span lang=EN-US style='mso-ansi-language:EN-US'><span
+style="mso-spacerun: yes">   </span>; </span>читаем исходный текст <span
+lang=EN-US style='mso-ansi-language:EN-US'>sql </span>выражения, пока
+закрывающая скобка не нарушит баланс.<span style="mso-spacerun: yes">   </span></p>
+
+<p class=MsoNormal><span style="mso-spacerun: yes">   </span>; возвращаем эту
+скобку в поток</p>
+
+<p class=MsoNormal>)</p>
+
+<p class=MsoNormal><span lang=EN-US style='mso-ansi-language:EN-US'>(setf
+(symbol-readmacro (find-symbol “fse2”)) <o:p></o:p></span></p>
+
+<p class=MsoNormal><span lang=EN-US style='mso-ansi-language:EN-US'><span
+style="mso-spacerun: yes">   </span>(lambda (symbol stream)<o:p></o:p></span></p>
+
+<p class=MsoNormal><span lang=EN-US style='mso-ansi-language:EN-US'><span
+style="mso-spacerun: yes">     </span>(declare (ignore symbol)) <o:p></o:p></span></p>
+
+<p class=MsoNormal><span lang=EN-US style='mso-ansi-language:EN-US'><span
+style="mso-spacerun: yes"> </span></span><span style="mso-spacerun: yes">   
+</span>(<span lang=EN-US style='mso-ansi-language:EN-US'>assert (eql (read-char
+stream) #\( ))<o:p></o:p></span></p>
+
+<p class=MsoNormal><span lang=EN-US style='mso-ansi-language:EN-US'><span
+style="mso-spacerun: yes">     </span>(let1 sql-text (sql-statement-lexer
+stream)</span></p>
+
+<p class=MsoNormal><span style="mso-spacerun: yes">        </span>(<span
+lang=EN-US style='mso-ansi-language:EN-US'>assert (eql (read-char stream) #\)
+))<o:p></o:p></span></p>
+
+<p class=MsoNormal><span lang=EN-US style='mso-ansi-language:EN-US'><span
+style="mso-spacerun: yes">        </span>`(sql:select ,sql-text)<o:p></o:p></span></p>
+
+<p class=MsoNormal><span lang=EN-US style='mso-ansi-language:EN-US'><span
+style="mso-spacerun: yes">      </span><span style="mso-spacerun:
+yes">    </span>)))<o:p></o:p></span></p>
+
+<p class=MsoNormal><![if !supportEmptyParas]>&nbsp;<![endif]><o:p></o:p></p>
+
+<p class=MsoNormal>теперь запись будет выглядеть так:</p>
+
+<p class=MsoNormal><span lang=EN-US style='mso-ansi-language:EN-US'>fse2(* from
+client)<o:p></o:p></span></p>
+
+<p class=MsoNormal>примерно то же самое, что и предыдущий вариант, но более
+удобно для работы в редакторе. Наверное, ещё лучше было бы </p>
+
+<p class=MsoNormal><span lang=EN-US style='mso-ansi-language:EN-US'>(fse2 *
+from client), </span>но я не вижу, как это можно сделать, не меняя функцию
+чтения для <span lang=EN-US style='mso-ansi-language:EN-US'>#\(. <o:p></o:p></span></p>
+
+<p class=MsoNormal><span lang=EN-US style='mso-ansi-language:EN-US'><![if !supportEmptyParas]>&nbsp;<![endif]><o:p></o:p></span></p>
+
+<p class=MsoNormal><span lang=EN-US style='mso-ansi-language:EN-US'><![if !supportEmptyParas]>&nbsp;<![endif]><o:p></o:p></span></p>
+
+<p class=MsoNormal><span lang=EN-US style='mso-ansi-language:EN-US'>sql:query-source
+</span>(<span lang=EN-US style='mso-ansi-language:EN-US'>select 1 from </span>(<span
+lang=EN-US style='mso-ansi-language:EN-US'>select ‘aaaaa’ from “dual”)) <o:p></o:p></span></p>
+
+<p class=MsoNormal>Здесь закрывающая круглая скобка служит маркером завершения <span
+lang=EN-US style='mso-ansi-language:EN-US'>sql </span>синтаксиса. Поскольку <span
+lang=EN-US style='mso-ansi-language:EN-US'>sql-</span>предложение само по себе
+сбалансировано по скобкам и кавычкам, <span lang=EN-US style='mso-ansi-language:
+EN-US'>EMACS </span>сможет оперировать с ним как с целым. Можно даже сделать
+так:</p>
+
+<p class=MsoNormal><span lang=EN-US style='mso-ansi-language:EN-US'>(sql:query-source
+select 1 from (select ‘aaaaa’ from “dual”)) <o:p></o:p></span></p>
+
+<p class=MsoNormal><![if !supportEmptyParas]>&nbsp;<![endif]><o:p></o:p></p>
+
+<p class=MsoNormal><span lang=EN-US style='mso-ansi-language:EN-US'><![if !supportEmptyParas]>&nbsp;<![endif]><o:p></o:p></span></p>
+
+<p class=MsoNormal>Денис Будяк, 2009-10-05</p>
+
+</div>
+
+</body>
+
+</html>
