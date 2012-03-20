@@ -575,8 +575,18 @@ iii) if symbol is found more than once then first-symbol-found,list of packages,
     ))
 
 (defun budden-tools-find-symbol (name p)
-  "unteted. Intended to be used instead of normal find-symbol. FIXME shadow find-symbol? "
-  (find-symbol-with-advanced-readtable-case name (or p *package*) *readtable* nil))
+  "Untested! Intended to be used instead of normal find-symbol. Transforms readtable case, and does not 'find' forbidden symbols.
+FIXME shadow find-symbol? FIXME rename"
+  (proga
+    (let p (or p *package*))
+    (let result (find-symbol-with-advanced-readtable-case name p *readtable* nil))
+    (and 
+     (not 
+      (member result (package-metadata-forbidden-symbol-names (ensure-package-metadata p)) :test 'string=)
+      )
+     result
+     )
+    ))
 
 (proclaim '(ftype (function (string package readtable symbol) symbol)
                   fix-symbol-name-for-advanced-readtable-case))
@@ -594,6 +604,7 @@ iii) if symbol is found more than once then first-symbol-found,list of packages,
 (defvar +some-uninterned-symbol+ '#:some-uninterned-symbol)
 
 (defun intern-check-forbidden (name package)
+  "Looks if the name is forbidden. Prior to call of the function, name should be transformed according to readtable-case conventions. Internal function, do not use it in your code."
   (proga
     (let m (gethash (keywordize-package-designator package) 
                     *per-package-metadata*))
@@ -603,8 +614,9 @@ iii) if symbol is found more than once then first-symbol-found,list of packages,
     (intern name package)))
 
 (defun check-symbol-forbidden (symbol package)
-  "Check if the symbol's symbol-package is package and errs if it is in forbidden names list"
-  (when (member symbol (package-metadata-forbidden-symbol-names (ensure-package-metadata package)))
+  "Check if the symbol's name is forbidden in the package. Prior to call of the function, name should be transformed according to readtable-case conventions. This is interal function, don't use it in your code"
+  (when (member symbol (package-metadata-forbidden-symbol-names (ensure-package-metadata package)) :test 'string=) ;
+    ; find with string= so that to intercept symbol with the wrong name even if someone evil have uninterned our 'true' forbidden symbol
     (error "Symbol ~S is forbidden in ~A" symbol package)
     )
   symbol 
