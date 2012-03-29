@@ -244,7 +244,8 @@ supplied-p è ò.ï."
   (with-open-file (in filename :direction :input)
     (with-output-to-string (result)
       (iter (:for line :in-file in :using #'read-line)
-        (princ line result)))))
+        (princ line result)
+        (terpri result)))))
 
 
 (defun save-string-to-file (string filename)
