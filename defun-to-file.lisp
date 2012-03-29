@@ -6,9 +6,10 @@
 
 (defun maybe-add-slash (string)
   #+russian "Добавляет / в конец имени папки, если его там ещё нет"
-  (if (string= (sequence-last string) "/")
-    string
-    (str+ string "/")))
+  (cond
+   ((string= string "") string)
+   ((string= (sequence-last string) "/") string)
+   (t (str+ string "/"))))
 
 (defmacro defun-to-file (name &rest more)
   #+russian "Определяет функцию с таким исходником в файле с именем *defun-to-file-directory*/имя-функции.
