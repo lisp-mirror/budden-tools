@@ -57,11 +57,13 @@ defpackage-autoimport-2 (obsolete) prefers to use packages and shadowing-import 
    ;  #:find-symbol-extended ; like find-symbol, but also returns if symbol is (f)bound and home package
    ))
 
-(cl-user::portably-without-package-locks
+(in-package :merge-packages-simple)
+
+#|(cl-user::portably-without-package-locks
   (when (find-package :merge-packages-simple.forbidden-symbols)
     (delete-package :merge-packages-simple.forbidden-symbols))
   (cl:make-package :merge-packages-simple.forbidden-symbols :use nil)
-  )
+  )|#
 
 
 (defun search-and-replace-seq (type seq subseq newseq &key all (test #'equalp))
@@ -107,12 +109,10 @@ defpackage-autoimport-2 (obsolete) prefers to use packages and shadowing-import 
   (warn "set-package-lock-portably not implemented for your lisp")
   )
 
-(cl-user::set-package-lock-portably :merge-packages-simple.forbidden-symbols t)
-
-(in-package :merge-packages-simple)
+; (cl-user::set-package-lock-portably :merge-packages-simple.forbidden-symbols t)
 
 
-(defvar *forbidden-symbols-package* (find-package :merge-packages-simple.forbidden-symbols))
+; (defvar *forbidden-symbols-package* (find-package :merge-packages-simple.forbidden-symbols))
 
 (defun collect-duplicates-into-sublists (list &rest key-args &key key test test-not)
   "Select duplicates from the list and collect them into sublists. Returns list of such sublists. E.g.,
