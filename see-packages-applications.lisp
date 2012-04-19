@@ -86,6 +86,7 @@ symbol-readmacro должен вернуть список. cdr считанного списка вставляется в хвос
   )
 
 (setf (budden-tools:symbol-readmacro '|^|) '^-reader)
+; функция ^ определена в variable-type.lisp
 
 (defun convert-carat-to-^ (stream symbol-name package)
   "превращает инфиксный ^ в ^"
