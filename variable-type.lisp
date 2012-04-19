@@ -111,10 +111,15 @@
 
 ; we need this as we attach symbol-readmacro on ^ so that it can't be 
 
-(defmacro |^| (object field-name &rest args)
+(defmacro carat-implementation (object field-name &rest args)
+  "This implementation can be shadowed in with-custom-carat-implementation"
+  `(common-carat-implementation ,object ,field-name ,@args))
+
+(defmacro common-carat-implementation (object field-name &rest args)
+  "One more level of indirection due to presence of compiler-macro"
   `(runtime^ ,object ',field-name ,@args))
 
-(define-compiler-macro |^| (object field-name &rest args &environment env)
+(define-compiler-macro common-carat-implementation (object field-name &rest args &environment env)
   (let1 variable-type-or-class (variable-type-or-class object env)
     (case variable-type-or-class
       ((t nil) `(runtime^ ,object ',field-name ,@args))
@@ -122,11 +127,32 @@
        `(funcall ',(function-symbol-for-^ variable-type-or-class field-name) ,object ,@args))
       )))
       
+(defmacro |^| (object field-name &rest args)
+  `(carat-implementation ,object ,field-name ,@args))
       
 (defmacro with-the1 (var type object &body body)
   `(let ((,var ,object))
      (declare (type ,type ,var))
      ,@body))
      
+
+(defmacro with-freezed-env (&environment env &body body) 
+  "Ѕлагодар€ наличию именованного символа с замороженным env, можно сослатьс€ на 
+затенЄнный экземпл€р макросов"
+  `(symbol-macrolet 
+       ((the-freezed-env ,env)) 
+     ,@body))
   
-  
+(defmacro with-custom-carat-implementation ((object lambda-list &body expansion) &body body)
+  "when object is eq to a given symbol, runs custom expansion"
+  (assert (symbolp object))
+  (print `(with-freezed-env
+            (macrolet ((carat-implementation (&whole form ,@lambda-list)
+                       (print (if (eq ',object ,(car lambda-list))
+                                  (progn ,@expansion)
+                                (macroexpand-1 form the-freezed-env)))))
+            ,@body))))
+
+
+
+        
