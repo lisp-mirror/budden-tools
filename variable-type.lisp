@@ -146,13 +146,23 @@
 (defmacro with-custom-carat-implementation ((object lambda-list &body expansion) &body body)
   "when object is eq to a given symbol, runs custom expansion"
   (assert (symbolp object))
-  (print `(with-freezed-env
-            (macrolet ((carat-implementation (&whole form ,@lambda-list)
-                       (print (if (eq ',object ,(car lambda-list))
-                                  (progn ,@expansion)
-                                (macroexpand-1 form the-freezed-env)))))
-            ,@body))))
+  `(with-freezed-env
+     (macrolet ((carat-implementation (&whole form ,@lambda-list)
+                  (if (eq ',object ,(car lambda-list))
+                      (progn ,@expansion)
+                    (macroexpand-1 form the-freezed-env))))
+       ,@body)))
 
+(def-trivial-test::! custom-carat-implementation.1 
+                     (let1 *readtable* 
+                         (find-readtable nil)
+                       (eval 
+                        (read-from-string 
+                         "(with-custom-carat-implementation 
+                              (foo (o f &rest mo) `(str+ ',o ',f))
+                            (^ foo bar))"))
+                       )
+                     "FOOBAR")
 
 
         
