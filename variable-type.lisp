@@ -159,10 +159,10 @@
                        (eval 
                         (read-from-string 
                          "(with-custom-carat-implementation 
-                              (foo (o f &rest mo) `(str+ ',o ',f))
-                            (^ foo bar))"))
+                              (a (o f &rest mo) `(str+ ',o ',f))
+                            (^ a b))"))
                        )
-                     "FOOBAR")
+                     "AB")
 
 
         
