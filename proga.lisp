@@ -105,13 +105,15 @@
   "Всё, что за формой, нужно внести в скобки формы после формы"
   (values t `((,head ,@tail ,@body))))
 
+(defun wind-up (head tail body)
+  "То, чем заканчивается clause, вносим в скобки, а за ними пишем body"
+  (values t `((,head ,tail ,@body))))
+
 (defun open-up-if-3 (head tail body)
   "Если форма `(,head ,@tail) состоит из трёх элементов, то внести в скобки формы после формы"
   (when (= 2 (length tail))
     (open-up head tail body)))
     
-  
-
 (defun wind-up-tail-if-second-is-atom (head tail body)
   "Head - ключевое слово, с которого начинается clause.
 tail - всё остальное в clause
