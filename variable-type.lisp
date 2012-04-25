@@ -165,4 +165,21 @@
                      "AB")
 
 
+(defmacro with-conc-namec (var conc-name &body body)
+  "var^something превращается в conc-name-something var"
+  `(with-custom-carat-implementation
+    (,var (o f &rest mo)
+          (let* ((target-name (str+ ',conc-name "-" f))
+                 (target-package (symbol-package ',conc-name))
+                 (target-symbol (budden-tools-find-symbol target-name target-package)))
+            (unless target-symbol 
+              (error "with-conc-namec: symbol ~S not found in ~S" target-name target-package))
+            `(,target-symbol ,o ,@mo)))
+    ,@body))
+
+
+(setf (get 'with-conc-namec 'proga-implementation::proga-transformer) 
+      'proga-implementation::open-up)
+
+
         

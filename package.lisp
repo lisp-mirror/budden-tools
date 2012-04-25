@@ -120,6 +120,11 @@
    budden-tools:not-null ; type (not null)
    budden-tools:the* ; errs if type ain't match. Otherwise, returns a thing
 
+   budden-tools:with-byref-params ; declare function to accept some
+   ; params by reference
+   budden-tools:byref ; pass parameter by reference
+  
+
    budden-tools:mlvl-bind ; multiple-value-bind
    budden-tools:mlvl-call ; multiple-value-call
    budden-tools:mlvl-list ; multiple-value-list
@@ -128,9 +133,11 @@
    budden-tools:mlvls-limit ; multiple-values-limit
 
 ;; typed binding
-   budden-tools:with-conc-name 
-   budden-tools:let-with-conc-type 
+   budden-tools:with-conc-name  ; obsolete
+   budden-tools:let-with-conc-type ; 
+
    budden-tools:^ 
+   budden-tools:with-conc-namec 
 
 ;; i/o utilities
    budden-tools:show-hash
