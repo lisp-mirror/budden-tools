@@ -206,7 +206,8 @@
   (:nicknames :def-trivial-test)
   (:documentation "Very simple test suite you can optionally run at load time. Use ! for brevity")
   (:use :cl)
-  (:export #:*run-tests* #:deftest)
+  (:export #:*run-tests* ; #:deftest
+   )
   )
 
 
