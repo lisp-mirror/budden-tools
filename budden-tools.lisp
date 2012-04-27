@@ -407,7 +407,12 @@ not found (unless :key is specified, which is a error) and returns value"
 
 (defmacro show-expr (expr &optional (stream '*trace-output*))
   "Shows expression and its value on the trace-output"
-  `(format ,stream "~S=~S~%" ',expr ,expr))
+  (let1 e1 expr
+    (once-only (e1)
+      `(progn 
+         (format ,stream "~S=~S~%" ',expr ,e1)
+         ,e1))))
+     
 
 (defmacro show-exprt (expr)
   `(show-expr ,expr *trace-output*))
