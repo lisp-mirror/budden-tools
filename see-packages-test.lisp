@@ -3,7 +3,7 @@
 (defpackage see-packages-test 
   (:use :cl :budden-tools)
   (:shadowing-import-from :iterate #:ITER)
-  (:shadowing-import-from :trivial-deftest #:DEFTEST)
+  ; (:shadowing-import-from :trivial-deftest #:DEFTEST)
   #+nil (:shadowing-import-from :budden-tools))
 
 (in-package :see-packages-test)
@@ -41,14 +41,14 @@
 
 
 (defmacro def-rd-test (name rd &key (test ''equalp))
-  `(deftest ,name 
+  `(def-trivial-test::! ,name 
             (with-good-readtable (read-from-string ,rd))
             (with-my-readtable (read-from-string ,rd))
             :test ,test
             ))
 
 (defmacro def-rd-eval-test (name rd &key (test ''equalp))
-  `(deftest ,name 
+  `(def-trivial-test::! ,name 
             (eval (with-good-readtable (read-from-string ,rd)))
             (eval (with-my-readtable (read-from-string ,rd)))
             :test ,test
@@ -56,7 +56,7 @@
 
 
 (defmacro def-rd-ignore-error-test (name rd &key (test ''equalp))
-  `(deftest ,name 
+  `(def-trivial-test::! ,name 
             (nth-value 0 (ignore-errors (with-good-readtable (read-from-string ,rd))))
             (nth-value 0 (ignore-errors (with-my-readtable (read-from-string ,rd))))
             :test ,test
@@ -68,7 +68,7 @@
 (def-rd-test symbol.2 "t")
 (def-rd-test symbol.3 "\\t")
 
-(deftest symbol.3.5
+(def-trivial-test::! symbol.3.5
                          (let1 *package* budden-tools::*keyword-package* 
                            (with-good-readtable
                              (read-from-string "\\`")))
@@ -127,11 +127,11 @@
 (def-rd-ignore-error-test intern.2 "ducker:duck")  ; non-existing-package
 
 
-(deftest package-prefix.1
+(def-trivial-test::! package-prefix.1
                          (with-my-readtable (read-from-string "keyword::(a b c)"))
                          '(:a :b :c))
 
-(deftest package-prefix.2
+(def-trivial-test::! package-prefix.2
                          (with-my-readtable (read-from-string "keyword::(a _:let c)"))
                          '(:a let :c))
 
@@ -145,12 +145,12 @@
 
 (setf (get-custom-token-parsers-for-package :tst2) `(,#'parser1))
 
-(deftest custom-parsers-and-preserve-case.1
+(def-trivial-test::! custom-parsers-and-preserve-case.1
                          (let1 *package* (find-package :tst2) 
                            (with-my-readtable (read-from-string "(foo bar)")))
                          '(:|We-got-FOO| :|we-got-not-a-FOO|))
 
-(deftest case.1
+(def-trivial-test::! case.1
          (with-my-readtable-a (symbol-name (read-from-string ":preserve")))
          "PRESERVE"
          :test 'string=)
@@ -167,14 +167,14 @@
 (setf (gethash (find-package :tst) org.tfeb.hax.hierarchical-packages:*per-package-alias-table*)
       `(("HP" . "ORG.TFEB.HAX.HIERARCHICAL-PACKAGES")))
 
-(deftest
+(def-trivial-test::!
  per-package-aliases.1
  (with-my-readtable (let1 *package* (find-package :tst) (read-from-string "hp::foo")))
  'ORG.TFEB.HAX.HIERARCHICAL-PACKAGES::FOO)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; minimal portable backquote test. Place it to the appropriate place!
-;(deftest symbolic-bq 
+;(def-trivial-test::! symbolic-bq 
 ;         (with-my-readtable (eval (read-from-string "\\`'(foo \\,(+ 4 8))")))
 ;         `'(foo ,(+ 4 8)))
 
