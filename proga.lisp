@@ -167,7 +167,7 @@ body - уже обработанные формы после clause.
   (proga-expander body))
 
 (defmacro def-p-t (name x y)
-  `(deftest ,name (macroexpand ,x) (macroexpand ,y)))
+  `(def-trivial-test::! ,name (macroexpand ,x) (macroexpand ,y)))
 
 (def-p-t proga.1 '(proga 2) 2)
 
@@ -184,13 +184,13 @@ body - уже обработанные формы после clause.
 (def-p-t proga.6 '(proga (let a 1 b 2) (flet f () (list a b)) (f))
          '(LET ((A 1) (B 2)) (FLET ((F () (LIST A B))) (F))))
 
-(deftest proga.7 (macroexpand-1 
+(def-trivial-test::! proga.7 (macroexpand-1 
                   '(proga (destructuring-bind ((a &optional (b 'bee)) one two three) `((alpha) ,@(iota 3)))
                      (list a b three two one)))
          '(destructuring-bind ((a &optional (b 'bee)) one two three) `((alpha) ,@(iota 3))
             (list a b three two one)))
 
-(deftest proga.8
+(def-trivial-test::! proga.8
          (proga
            (let a 1)
            (flet foo () (+ a 1))
@@ -198,23 +198,23 @@ body - уже обработанные формы после clause.
            (bar))
          2)
 
-(deftest proga.9
+(def-trivial-test::! proga.9
          (macroexpand-1 
           '(proga (block foo) bar))
          '(block foo bar))
 
-(deftest proga.10.dont-process
+(def-trivial-test::! proga.10.dont-process
          (macroexpand-1
           '(proga (let (a b)) c))
          '(progn (let (a b)) c))
 
-(deftest proga.11 ; не можем сделать, т.к. нужно смотреть вперёд
+(def-trivial-test::! proga.11 ; не можем сделать, т.к. нужно смотреть вперёд
          (macroexpand-1
           '(proga (let ((a b)) c) d))
          '(progn (let ((a b)) c) d))
 
 
-(deftest proga.12
+(def-trivial-test::! proga.12
          (proga
            (flet the-best-dotted-list-p (l)
              (let ((res nil))
@@ -252,29 +252,29 @@ body - уже обработанные формы после clause.
                    '(nil '(nil) '(1 2) '(1 . 2) '(1 2 3) '(1 2 . 3)))
            ))
 
-(deftest proga.13
+(def-trivial-test::! proga.13
          (macroexpand-1 '(proga (with-open-file foo "bar") (print "bar" foo)))
          `(with-open-file (foo "bar") (print "bar" foo)))
 
-(deftest proga.13.a
+(def-trivial-test::! proga.13.a
          (macroexpand-1 '(proga (with-open-file (foo "bar") (print "bar" foo))))
          `(with-open-file (foo "bar") (print "bar" foo)))
 
-(deftest proga.14.process-flet-body
+(def-trivial-test::! proga.14.process-flet-body
          (proga (flet f (x) (let y x) y) (f 4))
          4)
 
-(deftest proga.14.1.process-flet-body
+(def-trivial-test::! proga.14.1.process-flet-body
          (proga (flet f (x) "Doc" (let y x) y) (f 4))
          4)
 
-(deftest proga.15.empty-tail
+(def-trivial-test::! proga.15.empty-tail
          (let1 x 1 
            (proga (let y (incf x))) 
            x)
          2)
 
-(deftest proga.16.when
+(def-trivial-test::! proga.16.when
          (proga (when t (let a 5) a)) 
          5)
 
@@ -283,13 +283,13 @@ body - уже обработанные формы после clause.
          '(cond (q (let ((a 6))))
                 (t (let ((b 7)) b))))
 
-(deftest proga.18.case
+(def-trivial-test::! proga.18.case
          (macroexpand-1 '(proga (case 4 (1 (let a 6)) (t (let b 7) b))))
          '(case 4 (1 (let ((a 6))))
             (t (let ((b 7)) b))))
 
 #+see-packages
- (deftest proga.19.let-with-conc-type
+ (def-trivial-test::! proga.19.let-with-conc-type
           (proga 
             (let-with-conc-type x package (find-package :lisp))
             x.name
@@ -299,7 +299,7 @@ body - уже обработанные формы после clause.
 
 
 #+see-packages 
-(deftest #:let-with-conc-type.1
+(def-trivial-test::! #:let-with-conc-type.1
                     (proga (let-with-conc-type x string "asdf") 
                       `(,(x.equal "asdf") ,(x.upcase) ,(x.equal x.upcase))
                       )
