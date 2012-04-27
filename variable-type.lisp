@@ -128,6 +128,7 @@
       )))
       
 (defmacro |^| (object field-name &rest args)
+  "See also ^-READER"
   `(carat-implementation ,object ,field-name ,@args))
       
 (defmacro with-the1 (var type object &body body)
