@@ -27,6 +27,7 @@
    (:file "with-conc-name")
    (:file "defstruct-meta")
    (#.russian-file "proga")
+   (:file "proga-test")
    (:file "iterate-extensions")
    (#.russian-file "defun-to-file")
    (:file "decorate-function")
