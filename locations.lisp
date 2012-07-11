@@ -220,9 +220,13 @@ srcpl - symbol-readmacro. Прочитать объект и запрограммировать запоминание его м
     (_f remove-duplicates res :test 'equalp)
     (if (and res (> (length res) 1))
         (list 
-         (nth (progn 
-                (format *query-io* "Sources are ~A~%Which (from 1)?" res) 
-                (- (read *query-io*) 1))
+         (nth #-lispworks (progn 
+                            (format *query-io* "Sources are ~A~%Which (from 1)?" res) 
+                            (- (read *query-io*) 1))
+              #+lispworks (let* ((choice-list (mapcar 'str++ res))
+                                 (choice (capi:prompt-with-list choice-list "Choose one of the sources"))
+                                 (pos (position choice choice-list :test 'equalp)))
+                            pos)
               res))
       res)))
 
