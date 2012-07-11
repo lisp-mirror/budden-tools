@@ -89,6 +89,9 @@
                       ("CHAR-" "common-lisp"))
                     :test 'equalp)
 
+
+; ---------------------------------------------------------------- runtime^ --------------------------------------------------------------
+
 (defun function-symbol-for-^ (type-or-class field-name)
   "возвращает функцию для выполнения ^"
   (multiple-value-bind (prefix package) (conc-prefix-by-type-or-class type-or-class)
@@ -102,18 +105,14 @@
       target-symbol
       )))
                             
+; we need this as we attach symbol-readmacro on ^ so that it can't be 
 (defun runtime^ (object field-name &rest args)
+  "Вызывается, если на этапе компиляции не удалось определить тип объекта"
   (assert object () "(runtime^ nil ~S): Sorry, object can't be null!" field-name)
   (let* ((class (class-of object))
          (target-function-symbol (function-symbol-for-^ class field-name)))
     (apply target-function-symbol object args)
     ))
-
-; we need this as we attach symbol-readmacro on ^ so that it can't be 
-
-(defmacro carat-implementation (object field-name &rest args)
-  "This implementation can be shadowed in with-custom-carat-implementation"
-  `(common-carat-implementation ,object ,field-name ,@args))
 
 (defmacro common-carat-implementation (object field-name &rest args)
   "One more level of indirection due to presence of compiler-macro"
@@ -126,15 +125,64 @@
       (t 
        `(funcall ',(function-symbol-for-^ variable-type-or-class field-name) ,object ,@args))
       )))
-      
+
+(defmacro carat-implementation (object field-name &rest args)
+  "This implementation can be shadowed in with-custom-carat-implementation"
+  `(common-carat-implementation ,object ,field-name ,@args))
+
+(defun setf-apply (new-value function-name args)
+  "Позволяет присвоить значение, имея на входе имя функции для получения места, например, 
+  (let1 v '(1 3 4)
+             (bu::setf-apply 0 'car v)
+             v) => (0 3 4).
+  Вызывает eval!!!"
+  (eval `(setf (,function-name ,@args) ',new-value)))
+
+(defsetf runtime^ (object field-name &rest args) (new-value)
+  "Вызывает eval в runtime!"
+  (with-gensyms (o target-function-symbol class)
+    (once-only (object)
+      `(progn
+         (let* ((,o ,object)
+                (,class (class-of ,o))
+                (,target-function-symbol (function-symbol-for-^ ,class ,field-name)))
+           (assert ,o () "(^set nil ~S): Sorry, object can't be null!" ,field-name)
+           (setf-apply ,new-value ,target-function-symbol (cons ,o ,args))
+           )))))
+
+#| Скорость:
+(defstruct qq Aa)
+(defparameter -v- (make-qq))
+(defun setit2 () (setf (QQ-Aa -v-) 234234))
+(defun setit () (setf -v-^Aa 234234))
+(compile 'setit)
+(compile 'setit2)
+(time (dotimes (i 100000) (setit)))
+user time    =      0.703
+(time (dotimes (i 100000) (setit2)))
+user time    =      0.015
+(/ 0.703 0.015)
+46.86666666666667
+|#
+
+
+
+
+;--------------------------------------------------------------      Читалка   ^ -----------------------------------------------------------
+(defparameter ^-reader nil "Этот параметр нужен только для тогО, чтобы было возможно с помощью Alt-. Alt-, найти определение функции ^,которую невозможно прочитать")
+
 (defmacro |^| (object field-name &rest args)
   "See also ^-READER"
   `(carat-implementation ,object ,field-name ,@args))
       
 (defmacro with-the1 (var type object &body body)
-  `(let ((,var ,object))
+  `(let ((,var (the* ,type ,object)))
      (declare (type ,type ,var))
      ,@body))
+
+(setf (get 'with-the1 'proga-implementation::proga-transformer) 
+      'proga-implementation::open-up-if-4
+      )
      
 
 (defmacro with-freezed-env (&environment env &body body) 
