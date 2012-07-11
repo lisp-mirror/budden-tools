@@ -37,7 +37,7 @@
 (defmacro symbol-readmacro (symbol) `(get ,symbol 'symbol-readmacro))
 
 #| FIXME!!!!! Пока что мы не можем запустить всё это, остались ещё случаи с невыясненным поведением по отношению к регистру:
-
+*readtable*
 - keywords (можно всё апкейсить)
 - uninterned символы (нужно всё оставлять как есть или можно тоже апкейсить, хз)
 
@@ -150,25 +150,32 @@ package-sym показывает префикс пакета, с которым мы считали имя. num-of-colons
  
 
 ;;;; open-paren for symbol-readmacro
-(defvar *function-to-call-when-paren-is-closing* nil
+(defvar *reading-parens* nil "Если истина, то мы находимся внутри чтения скобок")
+(defvar *functions-to-call-when-paren-is-closing* nil
        "Здесь может быть функция от аргументов (считанный-список поток), к-рую мы вызовем на закрытии скобки")
 
 (let ((default-open-paren-reader (get-macro-character #\( (copy-readtable nil))))
   (defun paren-reader-with-closing-paren-notification (stream char)
-    "Если внутри readera кто-то установил ф-ю в *function-to-call-when-paren-is-closing*,
-то эта ф-я будет вызвана над результатом чтения (...) и потоком" 
-    (let* ((*function-to-call-when-paren-is-closing* nil)
-           (position (extract-file-position stream))
+    "Если внутри readera кто-то заполнил ф-ями в *functions-to-call-when-paren-is-closing*,
+то эти ф-и будут вызвана над результатом чтения (...) и потоком с первой по последнюю, преобразуя результат" 
+    (let* ((position (extract-file-position stream))
+           (*reading-parens* (cons position *reading-parens*))
+           (*functions-to-call-when-paren-is-closing* nil)
            (result (funcall default-open-paren-reader stream char)))
       (ignored position)
-      (cond 
-       (*function-to-call-when-paren-is-closing*
-        (funcall *function-to-call-when-paren-is-closing* result stream))
-       (t result)))))       
+      (dolist (f *functions-to-call-when-paren-is-closing*)
+        (setf result (funcall f result stream)))
+      result
+      )))       
 
+
+(defun push-function-to-call-when-paren-is-closing (f)
+  (if *reading-parens* 
+      (push f *functions-to-call-when-paren-is-closing*)
+    (warn "Попытка назначить действие на чтение закрывающей скобки вне чтения скобок")))
 
 (defun check-correct-use-of-a-car-symbol-readmacro (object)
-  (setf *function-to-call-when-paren-is-closing*
+  (push-function-to-call-when-paren-is-closing
         (lambda (result stream)
           (assert (consp result) () 
             "Something wrong with symbol readmacro: list reader on ~S returned atom ~S" stream result)
