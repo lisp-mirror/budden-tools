@@ -24,7 +24,8 @@
   )
 
 (defvar *record-paren-locations* nil
-  "When t, records locations of all objects starting from opening paren"
+  "When t, records locations of all objects starting from opening paren - not implemented, but see 
+  PAREN-READER-WITH-CLOSING-PAREN-NOTIFICATION where file locations are stored on stack while reading is accomplished"
   )
 
 (defmacro with-my-readtable-0 (&body body)
