@@ -110,8 +110,21 @@
   (values t `((,head ,tail ,@body))))
 
 (defun open-up-if-3 (head tail body)
-  "Если форма `(,head ,@tail) состоит из трёх элементов, то внести в скобки формы после формы"
+  "Если форма `(,head ,@tail) состоит из трёх элементов, то внести в скобки формы после формы. Пример - mlvl-bind.
+   (setf (get 'mlvl-bind 'proga-implementation::proga-transformer) 
+      'proga-implementation::open-up-if-3
+      ) 
+   и далее 
+   (macroexpand-1 '(proga (mlvl-bind (a b) (values 1 2)) (list a b)))
+   ==>
+   (MLVL-BIND (A B) (VALUES 1 2) (LIST A B))
+   "
   (when (= 2 (length tail))
+    (open-up head tail body)))
+
+(defun open-up-if-4 (head tail body)
+  "Аналогично open-up-if-3"
+  (when (= 3 (length tail))
     (open-up head tail body)))
     
 (defun wind-up-tail-if-second-is-atom (head tail body)
