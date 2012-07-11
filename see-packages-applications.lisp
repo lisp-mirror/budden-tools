@@ -38,8 +38,45 @@
     `(|^| ,object ,field-name ,@args)))
 
 
-(defun ^-reader-internal-2 (stream read-object object read-field-name field-name)
-  "Если read-object=nil, то мы уже считали объект и читаем только то, что идёт после него"
+#|ф-я была только для примера (defun guess-where-i-am (object)
+  "Делает так, что при закрытии скобки пишется сообщение, является ли этот объект каром списка.
+  Если объект читается вне скобок, то ничего не происходит"
+  (when *reading-parens* 
+    (budden-tools::push-function-to-call-when-paren-is-closing
+     (lambda (result stream)
+       (assert (consp result) () 
+         "Something wrong with symbol readmacro: list reader on ~S returned atom ~S" stream result)
+       (cond ((eq object (car result)) 
+              (format *trace-output* "~S: I am a car" object)
+              result)
+             (t 
+              (format *trace-output* "~S: i am not a car" object)
+              result))
+       )))
+  object)|#
+
+(defun splice-later-if-a-car (object)
+  "При закрытии скобки, если этот объект является каром списка, то ожидает, что он сам является списком. 
+Сплайсит в его хвост хвост прочитанного списка и поднимает на один уровень. Например 
+ (a^b c) ---/custom-token-parser/---> ((^ a b) c) ---/splice-if-a-car/---> (^ a b c)"
+  (when *reading-parens* 
+    (budden-tools::push-function-to-call-when-paren-is-closing
+     (lambda (result stream)
+       (assert (consp result) () 
+         "Something wrong with symbol readmacro: list reader on ~S returned atom ~S" stream result)
+       (cond ((eq object (car result)) 
+              ;(format *trace-output* "~S: I am a car" object)
+              (assert (listp object) () "splice-later-if-a-car: object ~S was expected to be a list" object)
+              (append object (cdr result)) ; вернём при закрытии скобки
+              )
+             (t 
+              ;(format *trace-output* "~S: i am not a car" object)
+              result ; вернём при закрытии скобки
+              )))))
+  object)
+
+#|(defun ^-reader-internal-2 (stream read-object object read-field-name field-name)
+  "СМ НИЖЕ ПЕРЕОПРЕДЕЛЕНО Если read-object=nil, то мы уже считали объект и читаем только то, что идёт после него"
   (let* ((object (if read-object (read stream t) object))
          (field-name (if read-field-name (read-symbol-name stream) field-name))
          (symbol (make-symbol (str+ "(^ " (if (string-designator-p object)
@@ -49,7 +86,18 @@
     (eval `(defmacro ,symbol (&rest ,args) 
              `(|^| ,',object ,',field-name ,@,args)))
     (eval `(define-symbol-macro ,symbol (|^| ,object ,field-name)))
-    symbol))
+    symbol
+    ))|#
+
+
+(defun ^-reader-internal-2 (stream read-object object read-field-name field-name)
+  "Если read-object=nil, то мы уже считали объект и читаем только то, что идёт после него"
+  (let* ((object (if read-object (read stream t) object))
+         (field-name (if read-field-name (read-symbol-name stream) field-name))
+         (ret `(|^| ,object ,field-name))
+         )
+    (splice-later-if-a-car ret)
+    ret))
 
 
 (defun ^-reader-internal-3 (stream read-object object read-field-name field-name)
@@ -65,9 +113,9 @@
   "Для symbol-readmacro, допускающего дополнительные данные после себя до закрытия скобки. 
 symbol-readmacro должен вернуть список. cdr считанного списка вставляется в хвост того
 списка, который вернул symbol-readmacro."
-  (assert (null *function-to-call-when-paren-is-closing*)
-      () "Wrong call to closing-paren-splice-cdr-into-car")
-  (setf *function-to-call-when-paren-is-closing* 
+  ;(assert (null *functions-to-call-when-paren-is-closing*)
+  ;    () "Wrong call to closing-paren-splice-cdr-into-car")
+  (push-function-to-call-when-paren-is-closing 
         (lambda (list stream)
           (declare (ignore stream))
           (let1 car (car list)
@@ -80,17 +128,20 @@ symbol-readmacro должен вернуть список. cdr считанного списка вставляется в хвос
 ;; FIXME при печати-чтении ^ выполняется повторно. Переименовать ^ во что-то, если это опасно 
 ;; (а опасно это может быть, если читать '(a b c --> d e f), хотя опасность не столь велика - ошибка чтения
 (defun ^-reader (stream symbol)
+  "См. также второе определение и найдёшь определение макроса ^"
   (declare (ignore symbol))
 ;  (it-is-a-car-symbol-readmacro (^-reader-internal-2 stream t nil t nil))
   (closing-paren-splice-cdr-into-car (^-reader-internal-3 stream t nil t nil))
   )
 
+
+
 (setf (budden-tools:symbol-readmacro '|^|) '^-reader)
 ; функция ^ определена в variable-type.lisp
 
 (defun convert-carat-to-^ (stream symbol-name package)
-  "превращает инфиксный ^ в (^ a b). Для этого генерирует символ, 
-к которому назначается defmacro и define-symbol-macro. 
+  "превращает инфиксный ^ в (^ a b). Для этого анализирует структуру
+прочитанного списка после того, как он прочитан.
 Это позволяет писать как (о^fun arg), так и o^field (а не (o^field)). 
 Здесь есть ещё не вполне понятная проблема: если результат выполнения в виде 
 символа является данными (например, заключён внутрь eval), и всё это написано
