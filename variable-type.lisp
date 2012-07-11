@@ -138,8 +138,9 @@
   Вызывает eval!!!"
   (eval `(setf (,function-name ,@args) ',new-value)))
 
-(defsetf runtime^ (object field-name &rest args) (new-value)
+(defsetf runtime^ (object field-name &rest args &environment env) (new-value)
   "Вызывает eval в runtime!"
+  ;(assert (constantp object env))
   (with-gensyms (o target-function-symbol class)
     (once-only (object)
       `(progn
@@ -151,18 +152,20 @@
            )))))
 
 #| Скорость:
-(defstruct qq Aa)
-(defparameter -v- (make-qq))
-(defun setit2 () (setf (QQ-Aa -v-) 234234))
-(defun setit () (setf -v-^Aa 234234))
-(compile 'setit)
-(compile 'setit2)
-(time (dotimes (i 100000) (setit)))
-user time    =      0.703
-(time (dotimes (i 100000) (setit2)))
-user time    =      0.015
-(/ 0.703 0.015)
-46.86666666666667
+(progn
+  (defstruct qq Aa)
+  (defparameter -v- (make-qq))
+  (defun setit2 () (setf (QQ-Aa -v-) 234234))
+  (defun setit () (setf -v-^Aa 234234))
+  (compile 'setit)
+  (compile 'setit2)
+  (time (dotimes (i 100000) (setit)))
+;user time    =      0.703
+  (time (dotimes (i 100000) (setit2)))
+;user time    =      0.015
+  (/ 0.703 0.015)
+;46.86666666666667
+  )
 |#
 
 
