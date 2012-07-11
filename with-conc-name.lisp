@@ -1,3 +1,5 @@
+;; DO NOT USE, USE ^ EXPANDER INSTEAD
+
 (in-package :budden-tools)
 ;;; with-conc-name 0.4
 ;;; Written by Denis Budyak, 2009-12-28
