@@ -49,6 +49,7 @@
    budden-tools:collect-duplicates-into-sublist 
    budden-tools:splice-list
    budden-tools:unsplice-list
+   budden-tools:npushback ; pushes item at the end of the list
 
    budden-tools:dotted-p ; check if list is dotted and 
               ; returns its parts in two values
@@ -134,7 +135,8 @@
 
 ;; typed binding
    budden-tools:with-conc-name  ; obsolete
-   budden-tools:let-with-conc-type ; 
+   budden-tools:let-with-conc-type ; obsolete?
+   budden-tools:with-the1
 
    budden-tools:^ 
    budden-tools:with-conc-namec 

@@ -668,6 +668,10 @@ modifying form, e.g. @code{(_f + a b) @equiv{} (incf a b)}."
             (,(car var) (,op ,access ,@args)))
        ,set)))
 
+(defmacro npushback (place item)
+  "Add item to the end of list. Beware the macro affects all references to the list in 'place'"
+  `(_f nconc ,place (list ,item)))
+
 (defmacro __f (op arg1 place &rest args)
   "Неудачное имя"
   (multiple-value-bind (vars forms var set access)
