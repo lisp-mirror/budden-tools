@@ -175,16 +175,17 @@ package-sym показывает префикс пакета, с которым мы считали им€. num-of-colons
     (warn "ѕопытка назначить действие на чтение закрывающей скобки вне чтени€ скобок")))
 
 (defun check-correct-use-of-a-car-symbol-readmacro (object)
-  (push-function-to-call-when-paren-is-closing
-        (lambda (result stream)
-          (assert (consp result) () 
-            "Something wrong with symbol readmacro: list reader on ~S returned atom ~S" stream result)
-          (assert (eq object (car result)) ()
-            "In ~S, symbol-readmacro should be at the first position in a list" result)
-          (assert (null (cdr result)) ()
-            "car-symbol-readmacro should have read entire list in ~S" result)
-          (car result)))
-  object)   
+  (when *reading-parens*
+    (push-function-to-call-when-paren-is-closing
+     (lambda (result stream)
+       (assert (consp result) () 
+         "Something wrong with symbol readmacro: list reader on ~S returned atom ~S" stream result)
+       (assert (eq object (car result)) ()
+         "In ~S, symbol-readmacro should be at the first position in a list" result)
+       (assert (null (cdr result)) ()
+         "car-symbol-readmacro should have read entire list in ~S" result)
+       (car result))))
+    object)
 
 (defun it-is-a-car-symbol-readmacro (object-read)
   "≈сли определение symbol-readmacro-reader, то имеет место следующее:
