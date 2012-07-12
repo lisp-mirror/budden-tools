@@ -127,7 +127,7 @@
   ) 
 
 (defun copy-tree-of-structures (tree)
-  (flet ((copy-structure-and-its-slots (s)
+  (labels ((copy-structure-and-its-slots (s)
            (let ((data (cdr (struct-to-alist s)))
                  (copy (copy-structure s)))
              (iter 
@@ -137,8 +137,8 @@
     (typecase tree
      (null tree)
      (cons
-      (cons (copy-tree-of-structures (car tree))
-            (copy-tree-of-structures (cdr tree))))
+      (iter (:for x in tree)
+        (:collect (copy-tree-of-structures x))))
      (structure-object
       (copy-structure-and-its-slots tree))
      (t tree))))
