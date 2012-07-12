@@ -413,13 +413,23 @@ srcpl - symbol-readmacro. Прочитать объект и запрограммировать запоминание его м
   "Дубль аналогичной функции из editor-budden-tools"
   (+ (editor::point-offset point) (slot-value (editor::point-bigline point) 'editor::start-char)))
 
+(defvar *stream-line-count* 
+  (make-weak-key-hash-table :test 'eq)
+  "Для потока отражает число прочитанных строк, если, конечно, функция чтения его прописывает. См., например
+   ystok.meta::read-char1")
+
 (defun extract-file-position (stream)
   (typecase stream
+    #+lispworks
     (editor::editor-region-stream
-     #+lispworks
      (+ (file-position stream) 
         (real-point-offset (slot-value stream 'editor::start)))
-     #-lispworks (error "define me!"))
+     )
+    #+lispworks
+    (stream::ef-file-stream 
+     (let1 v (or (gethash stream *stream-line-count*) 0)
+       (- (file-position stream) v)
+       ))
     (t (file-position stream))))
  
         
