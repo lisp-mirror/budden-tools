@@ -234,3 +234,21 @@ may cause data loss. Other clashing symbols are ~S. You can unintern it manually
         (t 
          (return-from see-packages-check-bad-clashes nil)))))))
 
+
+; FIXME - теперь мы не можем добавлять новые свойства и записывать
+; существующие
+(defmacro with-proplist-carat (var &body body)
+  "в var содержится property-list (:key value :key2 value2). Тогда var^key и var^KEY раскроется в 
+код с getf* для поиска value"
+  `(with-custom-carat-implementation 
+    (,var (o f &rest mo) 
+          `(prog1
+               (getf* ,o ,f :test 'string-equal)
+             (assert (assoc-getf* ,o ,f :test 'string-equal))))
+    ,@body))
+
+(setf (get 'with-proplist-carat 'proga-implementation::proga-transformer) 
+      'proga-implementation::open-up)
+
+
+

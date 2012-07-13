@@ -1,4 +1,9 @@
 (in-package :cl-user) 
+
+
+(eval-when (:execute)
+  (break "it is preferrable to process the file via compilation, otherwise *readtable* might change"))
+
 #.(progn 
    (setf *readtable* (copy-readtable nil))
    nil)
@@ -17,7 +22,7 @@
   (:use :cl :named-readtables :buddens-readtable :defstruct-meta :org.tfeb.hax.hierarchical-packages
    :merge-packages-simple)
   (:import-from :iterate-keywords #:iter #:keywordize #:dsetq)
-  (:import-from :alexandria #:with-gensyms #:once-only #:string-designator)
+  (:import-from :alexandria #:with-gensyms #:once-only #:string-designator #:eswitch)
   (:import-from :split-sequence #:split-sequence)
   (:import-from :swank #:*readtable-alist*)
   (:import-from :swank-backend #:pathname-to-filename #:filename-to-pathname #:make-weak-key-hash-table #:make-weak-value-hash-table)
@@ -120,6 +125,7 @@
    budden-tools:eval-with-file ; write code to file, compile it and load
    budden-tools:not-null ; type (not null)
    budden-tools:the* ; errs if type ain't match. Otherwise, returns a thing
+   budden-tools:eswitch ; reexported from alexandria
 
    budden-tools:with-byref-params ; declare function to accept some
    ; params by reference
@@ -140,6 +146,7 @@
 
    budden-tools:^ 
    budden-tools:with-conc-namec 
+   budden-tools:with-proplist-carat
 
 ;; i/o utilities
    budden-tools:show-hash

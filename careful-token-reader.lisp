@@ -154,6 +154,12 @@ package-sym показывает префикс пакета, с которым мы считали имя. num-of-colons
 (defvar *functions-to-call-when-paren-is-closing* nil
        "Здесь может быть функция от аргументов (считанный-список поток), к-рую мы вызовем на закрытии скобки")
 
+
+(defvar *package-designator-starts-from-vertical-line* nil)  
+(defvar *symbol-name-starts-from-vertical-line* nil)  
+(defvar *token-starts-with-vertical-line* nil)
+
+
 (let ((default-open-paren-reader (get-macro-character #\( (copy-readtable nil))))
   (defun paren-reader-with-closing-paren-notification (stream char)
     "Если внутри readera кто-то заполнил ф-ями в *functions-to-call-when-paren-is-closing*,
@@ -601,6 +607,7 @@ FIXME shadow find-symbol? FIXME rename"
 (defun fix-symbol-name-for-advanced-readtable-case (name package rt starts-with-vertical-line same-case-p)
   ;"Хотим заинтёрнить имя name в пакет package. Преобразуем его к верхнему регистру, если он - в пакет keyword"
   "Хотим заинтёрнить имя name в пакет package. Преобразуем его к верхнему регистру, если он набран в нижнем регистре без ||"
+  (declare (ignore package))
   (cond
    ((and ;(eq package *keyword-package*) 
          (eq same-case-p :lowercase)
@@ -754,10 +761,6 @@ FIXME shadow find-symbol? FIXME rename"
   (hp-find-package (if starts-with-vertical-line string (string-upcase string)) ; FIXME? 
                    ))
 
-  
-(defvar *package-designator-starts-from-vertical-line* nil)  
-(defvar *symbol-name-starts-from-vertical-line* nil)  
-(defvar *token-starts-with-vertical-line* nil)
 
 (defun read-token-with-colons-1 (stream char)
   "читает кусок до двоеточий. Прочитав, пихает в стек пакетов и вызывает read"
