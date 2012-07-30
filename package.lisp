@@ -54,7 +54,8 @@
    budden-tools:collect-duplicates-into-sublist 
    budden-tools:splice-list
    budden-tools:unsplice-list
-   budden-tools:npushback ; pushes item at the end of the list
+   budden-tools:npushback ; DEPRECATED pushes item at the end of the list
+   budden-tools:nenqueue ; pushes item at the end of the list
 
    budden-tools:dotted-p ; check if list is dotted and 
               ; returns its parts in two values

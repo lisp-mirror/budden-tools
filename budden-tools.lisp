@@ -395,9 +395,10 @@ not found (unless :key is specified, which is a error) and returns value"
 
 (defmacro the* (typespec value)
   "Asserts type and returns value. If type do not match, errs"
-  `(progn
-     (assert (typep ,value ',typespec))
-     ,value))
+  (once-only (value)
+    `(progn
+       (assert (typep ,value ',typespec))
+       ,value)))
 
 (defun tree-weight (tree) #+russian "Общее количество консов в дереве"
   #-russian "number of conses in a tree (or smth like this :)"
@@ -549,8 +550,8 @@ As a short-hand, #\s means *STANDARD-OUTPUT*, #\t - *TRACE-OUTPUT*"
 (defun string-equal-cyr (s1 s2)
     (let* ((s1 (string s1))
            (s2 (string s2)))
-      (or (string-equal s1 s2)
-          (every 'char-equal-cyr s1 s2))))
+      (and (= (length s1) (length s2))
+           (every 'char-equal-cyr s1 s2))))
 
 ; non-toplevel
 (defun textual-equal-cyr (s1 s2)
@@ -669,6 +670,10 @@ modifying form, e.g. @code{(_f + a b) @equiv{} (incf a b)}."
        ,set)))
 
 (defmacro npushback (place item)
+  "Add item to the end of list. Beware the macro affects all references to the list in 'place'"
+  `(_f nconc ,place (list ,item)))
+
+(defmacro nenqueue (place item)
   "Add item to the end of list. Beware the macro affects all references to the list in 'place'"
   `(_f nconc ,place (list ,item)))
 
