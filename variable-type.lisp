@@ -123,7 +123,7 @@
     (case variable-type-or-class
       ((t nil) `(runtime^ ,object ',field-name ,@args))
       (t 
-       `(funcall ',(function-symbol-for-^ variable-type-or-class field-name) ,object ,@args))
+       `(,(function-symbol-for-^ variable-type-or-class field-name) ,object ,@args))
       )))
 
 (defmacro carat-implementation (object field-name &rest args)
