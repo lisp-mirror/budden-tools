@@ -64,10 +64,16 @@
                  )
                 (t (dont-process))))
               ((block)
-               (if (= (length clause) 2) (open-up) (dont-process))) ; (with-input-from-string)
+               (cond 
+                ((= (length clause) 2) 
+                 (break "дурная идея писать (block name)") 
+                 (open-up))
+                (t
+                 `((,head ,@(proga-body-expander tail)) 
+                   ,@(proga-body-expander forms-after-clause)))))
               ((destructuring-bind multiple-value-bind progv with-struct let1 pllet1)
                (if (= (length clause) 3) (open-up) (dont-process)))
-              ((when unless dolist)
+              ((when unless dolist loop)
                `((,head ,@(proga-body-expander tail))
                  ,@(proga-body-expander forms-after-clause)
                  )

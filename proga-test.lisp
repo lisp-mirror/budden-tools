@@ -34,10 +34,15 @@
                        (bar))
                      '2)
 
-(def-trivial-test::! proga.9
-         (macroexpand-1 
-          '(proga (block foo) bar))
-         '(block foo bar))
+;(def-trivial-test::! proga.9 так больше не делаем
+;         (macroexpand-1 
+;          '(proga (block foo) bar))
+;         '(block foo bar))
+
+(def-trivial-test::! proga.9a
+                     (macroexpand-1
+                      '(proga (block foo bar) baz))
+                     '(progn (block foo bar) baz))
 
 (def-trivial-test::! proga.10.dont-process
          (macroexpand-1
