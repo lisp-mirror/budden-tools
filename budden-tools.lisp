@@ -127,6 +127,7 @@
   ) 
 
 (defun copy-tree-of-structures (tree)
+  ;(declare (optimize (speed 3) (safety 0) (debug 0)))
   (labels ((copy-structure-and-its-slots (s)
            (let ((data (cdr (struct-to-alist s)))
                  (copy (copy-structure s)))
