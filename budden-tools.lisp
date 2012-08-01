@@ -120,6 +120,7 @@
 
 
 (defun struct-to-alist (s) "сохраняет тип и данные из структуры в alist"
+  (assert (typep (class-of s) 'structure-class))
   #+lispworks (multiple-value-bind (names values) (structure:structure-names-and-values s)
                 `((:type . ,(type-of s))
                    ,@(loop for x in names for y in values collect `(,x . ,y))))
