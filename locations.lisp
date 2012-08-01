@@ -400,14 +400,13 @@ srcpl - symbol-readmacro. Прочитать объект и запрограммировать запоминание его м
 ;  (declare (optimize speed))
   #-lispworks (error "Not implemented")
   #+lispworks
-  (typecase stream
+  (etypecase stream
     (editor::editor-region-stream
      (slot-value (slot-value (slot-value stream 'editor::point) 'editor::buffer) 'editor::%pathname))
     (stream::ef-file-stream (slot-value (slot-value stream 'stream::underlying-stream) 'stream::path))
     (stream::file-stream (slot-value stream 'stream::path))
     (string-stream nil)
-    (t
-     (break "Can't extract source filename here"))))
+    ))
 
 (defun real-point-offset (point) 
   "Дубль аналогичной функции из editor-budden-tools"
@@ -418,7 +417,25 @@ srcpl - symbol-readmacro. Прочитать объект и запрограммировать запоминание его м
   "Для потока отражает число прочитанных строк, если, конечно, функция чтения его прописывает. См., например
    ystok.meta::read-char1")
 
+(defun read-char-recording-line-number (&optional stream &rest args)
+  "аналог (read-char), но записывает информацию о номере строки, к-рую можно получить с помощью (get-stream-line-number).
+ Информация будет верной только, если весь поток читается с помощью функций, считающих строки. Например, если читаем файл не сначала, наверняка будет неправильно"
+  (let ((res (apply 'read-char stream args)))
+    (when (eql res #\Newline)
+      (incf (gethash stream *stream-line-count* 0) 
+            ))
+    res))
+
+(defun stream-get-line-number (stream &key )
+  "Если происходит запись информаци о номере строки, возвращает её. Иначе, возвращает 0"
+  (assert (open-stream-p stream))
+  (gethash stream *stream-line-count* 0)
+  )
+
+
+
 (defun extract-file-position (stream)
+  "Возвращает текущую позицию в потоке (в каких единицах?)"
   (typecase stream
     #+lispworks
     (editor::editor-region-stream
