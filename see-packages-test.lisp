@@ -135,7 +135,10 @@
                          (with-my-readtable (read-from-string "keyword::(a _:let c)"))
                          '(:a let :c))
 
-(defpackage :tst2 (:use))
+(def-merge-packages::!4 :tst2 
+                        (:use)
+                        (:custom-token-parsers parser1)
+                        )
 
 (defun parser1 (stream string package)
   (declare (ignore stream package))
@@ -183,59 +186,7 @@
 ; see-packages tets
 
  
-#+really-see-packages 
-(with-my-readtable ; et ((*readtable* *my-readtable*))
-  (iter 
-    (:with budden-tools::*print-normalize-seen-symbols* = nil)
-    ; (:with budden-tools::*intern-to-qualified-package-silently* = nil)
-    (:for x :in 
-         '(((in-package :tst))
-           (*package*)
-           ((see-packages))
-           ;"Now should err as there is no symbol p1::s2" 
-           ((multiple-value-list
-            (ignore-errors
-              (read-from-string "p1::s2")))
-            )
-           ((see-packages :p1 :p2))
-           ((read-from-string "((s1 . s2) (p1::s1 p2:s2))")
-            "((S1 . S2) (S1 S2))")
-           ;"Now should err as sym is ambigious"
-           ((multiple-value-list
-            (ignore-errors
-              (read-from-string "sym"))))
-           ((read-from-string "(p1:sym p2:sym)")
-            "(P1:SYM P2:SYM)")
-           ;"Now should err as s3 is ambigious"
-           ((multiple-value-list
-            (ignore-errors
-              (read-from-string "s3"))) :error)
-           ((read-from-string "tst::s3")
-            "TST::S3"
-            )
 
-           ((setf budden-tools::*print-normalize-seen-symbols* t))
-           ((read-from-string "p2:s2")
-            "P2:S2")
-           ((setf budden-tools::*print-normalize-seen-symbols* nil))
-
-
-           ((read-from-string "(s1 s2 tst::s3 p2:s3)")
-            "(S1 S2 TST::S3 P2:S3)"
-            )
-           ))
-    (if (stringp x)
-        (format t "~%~A" x)
-      (let* ((code (car x))
-             (must-be (cadr x))
-             (test-result (eval code))
-             (test-text (format nil "~%~S => ~S~%" x test-result)))
-        (cond
-         ((stringp must-be)
-          (assert (equalp (prin1-to-string test-result) must-be) () "~A" test-text))
-         ((eq must-be :error)
-          (assert (typep test-result '(cons null (cons error null))) () "~A" test-text)))
-        ))))
 
 
 ; (import 'org.tfeb.hax.hierarchical-packages::hp-find-package)

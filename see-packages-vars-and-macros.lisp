@@ -150,7 +150,7 @@ pack не поддерживает наших расширений
     ))
 
 
-(defmacro %seen-package-list (package)
+#|2012-08-27(defmacro %seen-package-list (package)
   `(gethash ,package *package-seen-packages*))
 
 (defmacro package-seen-packages-list (package-designator)
@@ -164,7 +164,7 @@ pack не поддерживает наших расширений
      (setf (%seen-package-list *package*) (mapcar 'force-find-package ',packages))
      ; (format t "~%Now seeing packages ~S" ',packages)
      )
-  )
+  )|#
 
 (defmacro in-readtable-upcase-if-uniform (rt-designator)
   `(progn

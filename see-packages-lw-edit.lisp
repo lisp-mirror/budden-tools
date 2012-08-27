@@ -81,11 +81,11 @@
            nil)
      (t 
       (alexandria.0.dev:starts-with-subseq 
-       partial-name 
-       (symbol-name symbol)
+       partial-name
+       (typecase symbol (symbol (symbol-name symbol)) (t (string symbol)))
        :test (if all-chars-in-same-case-p #'char-equal #'char=)))
      )))
-  
+
 
 #|BUDDEN 100 > editor::pathetic-parse-symbol "budden::cons" *package*
 #<PACKAGE BUDDEN>
@@ -124,7 +124,6 @@ NIL
     
   
 
-
 (defun decorated-complete-symbol 
        (fn partial-name &key predicate symbols default-package return-common-string)
   (declare (ignorable predicate symbols return-common-string))
@@ -155,9 +154,10 @@ NIL
                 (ignored length)
                 (values symbols pos1 some-symbol some-package)))))))
       (iter:iter 
-      (:with sp = (package-seen-packages-list default-package))
+      ;2012-08-27 (:with sp = (package-seen-packages-list default-package))
       (:with (rlist rlength rstring rpackage) = nil)
-      (:for p :initially default-package :then (pop sp))
+      ;2012-08-27 (:for p :initially default-package :then (pop sp))
+      (:for p in (list default-package)) ; 2012-08-27 ; FIXME remove loop here
       (:while p)
       (:for (values list length string package) = 
        (let1 *editors-real-package* p
@@ -274,6 +274,7 @@ NIL
 
 (decorate-function 'editor:parse-symbol #'decorated-parse-symbol)
 
+
 (defun decorated-complete-symbol-1 (fn string &key 
                                        (package nil package-supplied-p)
                                        (print-function nil print-function-supplied-p)
@@ -358,10 +359,70 @@ NIL
   (declare (ignorable p))
   (setf *readtable* *my-readtable*))
 
+(editor::defcommand "Complete package name command"
+     (p) "Complete package at point" "Complete package at point"
+  (declare (ignorable p))
+  (proga all
+    (let package (editor::buffer-package-to-use (editor:current-point)))
+    (flet last-elt (sequence) 
+      (let len (length sequence))
+      (if (= len 0) nil
+        (elt sequence (- (length sequence) 1))))
+    (flet may-string-complete-string (completion partial-name all-chars-in-same-case-p)
+      ;(break)
+      (alexandria.0.dev:starts-with-subseq 
+       partial-name
+       completion
+       :test (if all-chars-in-same-case-p #'char-equal #'char=)))
+    (let partial-name (editor::symbol-string-at-point (editor:current-point)))
+    ; process some characters in a special way, as symbol-string-at-point treats listener prompt as a symbol string
+    (when (member (last-elt partial-name) '(#\  #\() :test 'char=)
+      (setf partial-name ""))
+    (let starts-with-colon (alexandria.0.dev:starts-with-subseq ":" partial-name :test 'char=))
+    (when starts-with-colon
+      (setf partial-name (subseq partial-name 1)))
+    (let partial-name-length (length partial-name))
+    (mlvl-bind (titles prefixes)
+        (iter 
+          (:for p in (append (gethash package *per-package-alias-table*)
+                             (list-all-packages)))
+          (:for title = (typecase p 
+                          (cons 
+                           (str++ (car p) '= (cdr p)))
+                          (package (package-name p))))
+          (:for prefix = (typecase p
+                           (cons (string (car p)))
+                           (package (package-name p))))
+          (when (may-string-complete-string prefix partial-name t)
+            (:collect title :into titles)
+            (:collect prefix :into prefixes))
+          (:finally 
+           (return (values titles prefixes)))))
+    (let choice
+      (cond ((= (length titles) 0) 
+             (editor:message "No package names to complete ~A" partial-name)
+             nil)
+            ((= (length titles) 1) (first titles))
+            (t
+             (capi:prompt-with-list
+              titles
+              "Complete package"))))
+    (unless choice 
+      (return-from all nil))
+    (let pos (position choice titles :test 'equalp))
+    (let prefix (elt prefixes pos))
+    (when (> partial-name-length 0)
+      (editor:delete-previous-character-command partial-name-length))
+    (editor:insert-string (editor:current-point) 
+                          (string-downcase 
+                           (str++ prefix (if starts-with-colon "" ":"))))))
+     
+(editor::bind-key "Complete package name command" "control-meta-j")
+
 
 #| 
 
-budden-tools:se
+bu
 
 Что тестировать?
 1. Completion символа без квалификатора пакета

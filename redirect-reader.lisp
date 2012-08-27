@@ -209,7 +209,7 @@ is already an altered readtable, simply returns it TODO: rename me"
                      (iter
                        (:with sym-is-seen = nil)
                        (:for real-first-time-p :initially t :then nil)
-                       (:for p in (cons *package* (package-seen-packages-list *package*)))
+                       (:for p in (cons *package* nil #|2012-08-27 (package-seen-packages-list *package*)|#))
                        (:for (values p-sym storage-type) = (find-symbol name p))
                        (when (and p-sym (or real-first-time-p (eq storage-type :external)))
                          (when (eq p-sym obj) 
@@ -248,7 +248,7 @@ is already an altered readtable, simply returns it TODO: rename me"
           (string (intern symbol-or-string :keyword))))
 )
 
-(defpackage :tst (:use))
+#|2012-08-27 (defpackage :tst (:use))
   ;(print "-----------------4---------------------")
 (let ((*readtable* *my-readtable*)
       (*package* (find-package :tst)))
@@ -257,3 +257,4 @@ is already an altered readtable, simply returns it TODO: rename me"
 ;(print "-----------------5---------------------")
 
 
+|#
