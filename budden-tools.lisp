@@ -400,7 +400,7 @@ not found (unless :key is specified, which is a error) and returns value"
   (once-only (value)
     `(progn
        (assert (typep ,value ',typespec))
-       ,value)))
+       (the ,typespec ,value))))
 
 (defun tree-weight (tree) #+russian "Общее количество консов в дереве"
   #-russian "number of conses in a tree (or smth like this :)"
