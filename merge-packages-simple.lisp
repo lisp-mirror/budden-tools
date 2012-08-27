@@ -55,6 +55,8 @@ defpackage-autoimport-2 (obsolete) prefers to use packages and shadowing-import 
    #:search-and-replace-seq
    #:package-doctor ; try to diagnose trash symbols, duplicate symbols, etc
    ;  #:find-symbol-extended ; like find-symbol, but also returns if symbol is (f)bound and home package
+   #:get-custom-reader-for-package
+   #:get-custom-token-parsers-for-package
    ))
 
 (in-package :merge-packages-simple)
@@ -224,6 +226,7 @@ from to-package too"
                          local-nicknames
                          always
                          export-s
+                         custom-token-parsers
                          (clauses clauses))
     (multiple-value-setq (auto-import-from clauses) (extract-clause clauses :auto-import-from))
     (multiple-value-setq (auto-import-dont-warn-clashes clauses) (extract-clause clauses :auto-import-dont-warn-clashes))
@@ -429,6 +432,44 @@ tests:
   "Mapping of keywordized package names to their metadata"
   )
 
+#|
+¬ принципе, есть два варианта - либо парсер токенов, который вернул нам лисп. Ёто хорошо
+дл€ парсеров, принимающих строку, но плохо дл€ парсеров, принимающих поток. ѕример
+парсера, принимающего токен - парсер выражений a.b.c пример второго типа - парсер дат. 
+—ейчас, custom-reader-for-package должен учитывать, что его могут вызвать изнутри read, поэтому
+просто вызов read скорее всего, вызовет безконечную рекурсию
+|#
+
+(defun get-custom-reader-for-package (package-designator)
+  "custom-reader, если он назначен (с помощью setf), имеет те же параметры, что и read. ¬ызываетс€ дл€ чтени€ во временном контексте пакета, т.е., после custom-reader-for-package должен учитывать, что его могут вызвать изнутри read, поэтому просто вызов read скорее всего, вызовет безконечную рекурсию"
+  (let ((pm (gethash (keywordize-package-designator package-designator) 
+                    *per-package-metadata*)))
+    (and pm (package-metadata-custom-reader pm))))
+
+(defun get-custom-token-parsers-for-package (package-designator)
+  "custom-token-parsers, если назначены (с помощью setf) - это список function designators (дл€ funcall), которые вызываютс€ слева направо над каждым токеном. ќни получают на вход: поток, строку и пакет. ¬озвращают два значени€. ѕервое значение - считанный объект. ¬торое - t, если объект считан, иначе - nil"
+  (let ((pm (gethash (keywordize-package-designator package-designator) 
+                     *per-package-metadata*)))
+    (and pm (package-metadata-custom-token-parsers pm))))
+  
+
+(defsetf get-custom-reader-for-package (package-designator) (new-value)
+  (let ((md (gensym)))
+    `(progn
+       (check-type ,new-value (or null symbol function))
+       (let ((,md (ensure-package-metadata ,package-designator)))
+         (setf (package-metadata-custom-reader ,md) ,new-value)))))
+
+(defsetf get-custom-token-parsers-for-package (package-designator) (new-value)
+  (let ((md (make-symbol "MD"))
+        (new-value-v (make-symbol "NEW-VALUE-V"))
+        (x (make-symbol "X")))
+    `(let ((,new-value-v ,new-value))
+       (check-type ,new-value-v (or null cons))
+       (dolist (,x ,new-value) (check-type ,x (or symbol function)))
+       (let ((,md (ensure-package-metadata ,package-designator)))
+         (setf (package-metadata-custom-token-parsers ,md) ,new-value-v)))))
+
 ; FIXME - иногда при удалении текущего пакета пакет становитс€ NIL. 
 ; тогда наша хитра€ читалка ломаетс€
 (defun keywordize-package-designator (package-designator)
@@ -499,8 +540,10 @@ It also allows for additional clauses. Currently every additional clause can onl
 \(:print-defpackage-form [ t | nil ]) - if t, print defpackage form
 \(:local-nicknames :nick1 :package1 :nick2 :package2 ...) - Refer to package1 as nick1, package2 as nick2 from package being defined.
 \(:always [ t | nil ]) - if always, everything is wrapped into (eval-when (:compile-toplevel :load-toplevel :execute))
-\(:allow-qualified-intern [ t | nil ]) - with buddens readtable extensions, by default you can't intern bar to foo typing foo::bar
-when you're in another package. Set allow-qualified-intern to allow this.
+\(:allow-qualified-intern [ t | nil ]) - with buddens readtable extensions, by default you can't intern bar to foo typing foo::bar. Set allow-qualified-intern to allow this.
+\(:custom-token-parsers custom-token-parser-spec1 ...) where 
+custom-token-parser-spec is [ symbol | (:packages &rest package-designators) ] - define custom token parsers for the package. Symbols should be from another package and should be names of functions (stream symbol-name package) => (values processed-value processed-p). Custom token parser functions (including inherited ones) are applied from left to right to any new symbol token just before it is interned. If it processed-p is t, then processed-value is inserted into reader output instead of creating symbol named by token. (:packages &rest package-designator) spec
+ causes all custom-token-parsers from the package named to be copied to the package being defined. 
 "
   (macrolet ((get-clause (name)
                `(multiple-value-setq (,name clauses) (extract-clause clauses ,(keywordize name))))
@@ -521,6 +564,7 @@ when you're in another package. Set allow-qualified-intern to allow this.
           shadowing-import-from-s
           export-s
           allow-qualified-intern
+          custom-token-parsers
           (clauses clauses))
       
       (get-clause use)
@@ -530,6 +574,7 @@ when you're in another package. Set allow-qualified-intern to allow this.
       (get-clause always)
       (get-clause allow-qualified-intern)
       (get-clause forbid)
+      (get-clause custom-token-parsers)
       (multiple-value-setq (shadowing-import-from-s clauses) (extract-several-clauses clauses :shadowing-import-from))
       (multiple-value-setq (export-s clauses) (extract-several-clauses clauses :export))
 ;    (multiple-value-setq (non-symbols clauses) (extract-clause clauses :non-symbols))
@@ -546,12 +591,11 @@ when you're in another package. Set allow-qualified-intern to allow this.
              all-symbols-for-import
              duplicates
              package-definition
-             forbidden-symbol-names
+             forbidden-symbol-names forbid-symbols-forms
              generated-import-clauses
-             forbid-symbols-forms
              process-local-nicknames-form
-             processed-export-s
-             allow-qualified-intern-forms
+             processed-export-s allow-qualified-intern-forms
+             custom-token-parsers-form
              )
         (dolist (p sources-for-clashes)
           (do-external-symbols (s p)
@@ -621,17 +665,50 @@ when you're in another package. Set allow-qualified-intern to allow this.
                 (setf (package-metadata-forbidden-symbol-names (ensure-package-metadata ,name)) (forbid-symbols-simple ',forbidden-symbol-names ,name)))
                 )
         (setf allow-qualified-intern-forms `((setf (package-metadata-allow-qualified-intern (ensure-package-metadata ,name)) ,allow-qualified-intern)))
+        (setf custom-token-parsers-form nil)
+        (let ((custom-token-parser-list
+               (iter 
+                 (:for spec in custom-token-parsers)
+                 (cond 
+                  ((and (listp spec)
+                        (eq (car spec) :packages)) ; it is a (:packages . designators) spec
+                   (flet ((outer-append (x) (:appending x)))
+                     (iter 
+                       (:for pack-name in (cdr spec))
+                       (:for pack = (force-find-package pack-name))
+                       (outer-append (get-custom-token-parsers-for-package pack)))))
+                  ((symbolp spec)
+                   (assert (symbol-package spec)
+                       () "in custom-token-parsers clause for ~S, symbol ~S should have a home package" 
+                     name spec)
+                   (unless (fboundp spec)
+                     (warn "in custom-token-parsers clause for ~S, symbol ~S should name a function" 
+                           name spec))
+                   (:collecting spec)
+                   )
+                  ((functionp spec)
+                   (error "specifying function as a custom-token-parser for ~S is (currently) not supported" 
+                          name))
+                  (t 
+                   (error "something unknown ~S is passed as a custom-token-parser spec for ~S" 
+                          spec name))))))
+          (setf custom-token-parsers-form
+                (when custom-token-parser-list
+                  `(setf (get-custom-token-parsers-for-package ,name) ',custom-token-parser-list)))
+          ); let ((custom-token-parser-list ...))
         (setf package-definition 
               (if always 
                   `(eval-when (:compile-toplevel :load-toplevel :execute)
                      (prog1
                          ,package-definition
                        ,process-local-nicknames-form
+                       ,custom-token-parsers-form
                        ,@forbid-symbols-forms))
                 `(prog1
                      ,package-definition
                    (eval-when (:load-toplevel :execute)
                      ,process-local-nicknames-form
+                     ,custom-token-parsers-form
                      ,@forbid-symbols-forms
                      ,@allow-qualified-intern-forms))))
         (when print-defpackage-form

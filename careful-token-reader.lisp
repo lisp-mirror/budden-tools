@@ -253,43 +253,6 @@ resolved in the scope of *package*"
 
 
 
-#|
-В принципе, есть два варианта - либо парсер токенов, который вернул нам лисп. Это хорошо
-для парсеров, принимающих строку, но плохо для парсеров, принимающих поток. Пример
-парсера, принимающего токен - парсер выражений a.b.c пример второго типа - парсер дат. 
-Сейчас, custom-reader-for-package должен учитывать, что его могут вызвать изнутри read, поэтому
-просто вызов read скорее всего, вызовет безконечную рекурсию
-|#
-
-(defun get-custom-reader-for-package (package-designator)
-  "custom-reader, если он назначен (с помощью setf), имеет те же параметры, что и read. Вызывается для чтения во временном контексте пакета, т.е., после custom-reader-for-package должен учитывать, что его могут вызвать изнутри read, поэтому просто вызов read скорее всего, вызовет безконечную рекурсию"
-  (let1 pm (gethash (keywordize-package-designator package-designator) 
-                    *per-package-metadata*)
-    (and pm (package-metadata-custom-reader pm))))
-
-(defun get-custom-token-parsers-for-package (package-designator)
-  "custom-token-parsers, если назначены (с помощью setf) - это список function designators (для funcall), которые вызываются слева направо над каждым токеном. Они получают на вход: поток, строку и пакет. Возвращают два значения. Первое значение - считанный объект. Второе - t, если объект считан, иначе - nil"
-  (let1 pm (gethash (keywordize-package-designator package-designator) 
-                    *per-package-metadata*)
-    (and pm (package-metadata-custom-token-parsers pm))))
-  
-
-(defsetf get-custom-reader-for-package (package-designator) (new-value)
-  (with-gensyms (md)
-    `(proga
-       (check-type ,new-value (or null symbol function))
-       (let ,md (ensure-package-metadata ,package-designator))
-       (setf (package-metadata-custom-reader ,md) ,new-value))))
-
-(defsetf get-custom-token-parsers-for-package (package-designator) (new-value)
-  (with-gensyms (md)
-    (once-only (new-value)
-      `(proga
-         (check-type ,new-value (or null cons))
-         (loop :for x :in ,new-value :do (check-type x (or symbol function)))
-         (let ,md (ensure-package-metadata ,package-designator))
-         (setf (package-metadata-custom-token-parsers ,md) ,new-value)))))
-
 ;; redefining from tfeb... 
 (defun relative-package-name-to-package (name &optional (relative-to-package *package*))
   ;; Given a package name, a string, do a relative package name lookup.
@@ -393,7 +356,7 @@ iii) if symbol is found more than once then first-symbol-found,list of packages,
       (:with first-sym-found = nil)
       (:with first-status = nil)
       (:with first-package = nil)
-      (:with seen-package-list = (package-seen-packages-list package))
+      (:with seen-package-list = nil #|2012-08-27 (package-seen-packages-list package)|#)
       (:for real-first-time-p :initially t :then nil)
       (:for p :initially package :then (pop seen-package-list))
       (:while p)
@@ -429,7 +392,7 @@ iii) if symbol is found more than once then first-symbol-found,list of packages,
     (:for real-first-time-p :initially t :then nil)
     (:for p in (if (eq default-package (find-package :keyword)) 
                    default-package
-                 (cons default-package (package-seen-packages-list default-package))))
+                 (cons default-package nil #|2012-08-27 (package-seen-packages-list default-package)|#)))
     (:for (values p-sym storage-type) = (find-symbol name p))
     (when (and p-sym  ; символ 
                (or (eq storage-type :external) ; должен быть внешним 
@@ -665,9 +628,11 @@ FIXME shadow find-symbol? FIXME rename"
              (iter
                (:with sym-found = +some-uninterned-symbol+)
                (:for real-first-time-p :initially t :then nil)
-               (:for p in (if (eq package *keyword-package*) 
-                              (list package)
-                            (cons package (package-seen-packages-list package))))
+               (:for p in (list package)
+               #|2012-08-27 (if (eq package *keyword-package*) 
+                   (list package)
+                 (cons package (package-seen-packages-list package)))|#
+                )
                (:for (values p-sym storage-type same-case-p) = (find-symbol-with-advanced-readtable-case name p rt *token-starts-with-vertical-line*))
                (when (and storage-type  ; есть такой символ
                           (or (eq storage-type :external) ; должен быть внешним 
