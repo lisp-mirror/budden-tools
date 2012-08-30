@@ -192,7 +192,7 @@
    budden-tools:get-custom-reader-for-package ; use your own reader in package context instead of common lisp reader
    budden-tools:get-custom-token-parsers-for-package ; parse tokens read with custom parsers (which can, but not encouaraged to have side-effects on stream
    budden-tools:symbol-readmacro ; function of two arguments: symbol and a stream. setf symbol-readmacro to reader switched by the symbol
-;   budden-tools:def-symbol-readmacro ; def-symbol-readmacro symbol (stream) reader-body. In an attempt to be able to navigate through symbol-readmacros. 
+   budden-tools:def-symbol-readmacro ; Navigation does not work
    budden-tools:it-is-a-car-symbol-readmacro ; put this at the first line of your symbol-readmacro definition
    budden-tools:*print-normalize-seen-symbols*
 

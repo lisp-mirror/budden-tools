@@ -36,6 +36,14 @@
 
 (defmacro symbol-readmacro (symbol) `(get ,symbol 'symbol-readmacro))
 
+(defmacro def-symbol-readmacro (symbol reader)
+  `(setf (symbol-readmacro ',symbol) ,reader))
+
+;(defun foo5 (stream symbol) `'(foo5 ,symbol ,(read stream)))
+;(def-symbol-readmacro |BUDDEN::FOO6| 'foo5)
+
+
+
 #| FIXME!!!!! ѕока что мы не можем запустить всЄ это, остались ещЄ случаи с невы€сненным поведением по отношению к регистру:
 *readtable*
 - keywords (можно всЄ апкейсить)
@@ -159,6 +167,7 @@ package-sym показывает префикс пакета, с которым мы считали им€. num-of-colons
 (defvar *symbol-name-starts-from-vertical-line* nil)  
 (defvar *token-starts-with-vertical-line* nil)
 
+(defvar *reading-parens-stream* nil)
 
 (let ((default-open-paren-reader (get-macro-character #\( (copy-readtable nil))))
   (defun paren-reader-with-closing-paren-notification (stream char)
@@ -166,6 +175,7 @@ package-sym показывает префикс пакета, с которым мы считали им€. num-of-colons
 то эти ф-и будут вызвана над результатом чтени€ (...) и потоком с первой по последнюю, преобразу€ результат" 
     (let* ((position (extract-file-position stream))
            (*reading-parens* (cons position *reading-parens*))
+           (*reading-parens-stream* stream)
            (*functions-to-call-when-paren-is-closing* nil)
            (result (funcall default-open-paren-reader stream char)))
       (ignored position)
