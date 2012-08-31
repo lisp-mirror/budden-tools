@@ -10,10 +10,14 @@
 
 (ignore-errors (budden-tools::unregister-readtable :see-packages-test-readtable))
 (ignore-errors (budden-tools::unregister-readtable :see-packages-test-readtable-a))
-(defreadtable :see-packages-test-readtable (:merge))
-(see-packages-on :see-packages-test-readtable)
-(defreadtable :see-packages-test-readtable-a (:merge))
-(see-packages-on :see-packages-test-readtable-a)
+
+(with-output-to-string (*error-output*)                                
+  (defreadtable :see-packages-test-readtable (:merge))
+  (see-packages-on :see-packages-test-readtable)
+  (defreadtable :see-packages-test-readtable-a (:merge))
+  (see-packages-on :see-packages-test-readtable-a)
+  )
+
 (setf (budden-tools::readtable-case-advanced (find-readtable :see-packages-test-readtable-a)) :upcase-if-uniform)
 
 (defmacro with-good-readtable (&body body)
@@ -33,11 +37,19 @@
   (ignore-errors (delete-package pname)))
 
 (defpackage :tst (:use :cl))
-(defpackage :tst2 (:use))
+                     
+(with-output-to-string (*error-output*)                                
+  (defpackage :tst2 (:use)))
+
 (intern "S3" :tst)
 (intern "S3" :tst2)
 (defpackage :p1 (:export :sym :s1))
 (defpackage :p2 (:export :sym :s2 :s3))
+
+(with-output-to-string (*error-output*) ; suppress warnings
+  (eval 
+   '(def-merge-packages::!4 :p1+p2 (:use :p1 :p2)) ; sym is forbidden
+   ))
 
 
 (defmacro def-rd-test (name rd &key (test ''equalp))
@@ -124,8 +136,15 @@
 
 (def-rd-test intern.1 "(def-rd-eval-test cl-user::let1)") ; intern of existing symbol
 (def-rd-ignore-error-test intern.2 "cl-user:let1") ; non-external-symbol
-(def-rd-ignore-error-test intern.2 "ducker:duck")  ; non-existing-package
+(def-rd-ignore-error-test intern.3 "ducker:duck")  ; non-existing-package
 
+(def-trivial-test::! clash.4 ; sym is forbidden due to clash so error must occur
+                     (null
+                      (nth-value 1 
+                                 (ignore-errors
+                                   (with-my-readtable (read-from-string "p1+p2::sym")))))
+                     nil)
+                      
 
 (def-trivial-test::! package-prefix.1
                          (with-my-readtable (read-from-string "keyword::(a b c)"))
@@ -135,10 +154,12 @@
                          (with-my-readtable (read-from-string "keyword::(a _:let c)"))
                          '(:a let :c))
 
-(def-merge-packages::!4 :tst2 
-                        (:use)
-                        (:custom-token-parsers parser1)
-                        )
+(with-output-to-string (*error-output*)
+  (eval
+   '(def-merge-packages::!4 :tst2 
+                            (:use)
+                            (:custom-token-parsers parser1)
+                            )))
 
 (defun parser1 (stream string package)
   (declare (ignore stream package))
