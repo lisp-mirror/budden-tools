@@ -153,28 +153,13 @@ NIL
                            ,@(dispatch-keyarg-simple return-common-string)))
                 (ignored length)
                 (values symbols pos1 some-symbol some-package)))))))
-      (iter:iter 
-      ;2012-08-27 (:with sp = (package-seen-packages-list default-package))
-      (:with (rlist rlength rstring rpackage) = nil)
-      ;2012-08-27 (:for p :initially default-package :then (pop sp))
-      (:for p in (list default-package)) ; 2012-08-27 ; FIXME remove loop here
-      (:while p)
-      (:for (values list length string package) = 
-       (let1 *editors-real-package* p
-         (apply fn partial-name `(,@(dispatch-keyarg-simple predicate)
-                            ,@(dispatch-keyarg-simple symbols)
-                            :default-package ,p
-                            ,@(dispatch-keyarg-simple return-common-string)))))
-      (cond
-       ((and list rlist)
-        (alexandria:appendf rlist list))
-       ((and list (not rlist))
-        (setf rlist list rlength length rstring string rpackage package))
-       )
-      (:finally 
-       ;(break)
-       (return-from function (values (sort rlist 'editor::symbol-string-<)
-                                     rlength rstring rpackage))))))
+    (mlvl-bind (rlist rlength rstring rpackage) 
+        (let1 *editors-real-package* default-package
+          (apply fn partial-name (dispatch-keyargs-simple predicate symbols default-package return-common-string))))
+    (return-from function 
+      (values 
+       (sort rlist 'editor::symbol-string-<)
+       rlength rstring rpackage))))
 
 (decorate-function 'editor::complete-symbol
                    #'decorated-complete-symbol)
