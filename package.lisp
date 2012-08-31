@@ -68,8 +68,8 @@
    budden-tools:dispatch-keyarg-simple ; helps to build dispatched arglists with &key arguments
    budden-tools:dispatch-keyargs-simple 
    budden-tools:dispatch-keyargs-full 
-   budden-tools:_f
-   budden-tools:__f
+   budden-tools:_f ; apply f to its first argument (which should be a place) and store result in the place. E.g. (_f nconc x '(1)) adds '(1) to x. 
+   budden-tools:__f ; apply f to its second argument
    budden-tools:symbol-macroletf   
 
 ;; hashes
@@ -81,7 +81,7 @@
    budden-tools:struct-to-alist ; lispworks only for now
 
 ;; strings and symbols
-   budden-tools:str+
+   budden-tools:str+ ; concatenate strings
    budden-tools:str++ ; converts anything to string with format ~A
    budden-tools:symbol+ 
    budden-tools:dotted-name-to-list 
@@ -145,9 +145,27 @@
    budden-tools:let-with-conc-type ; obsolete?
    budden-tools:with-the1
 
-   budden-tools:^ 
-   budden-tools:with-conc-namec 
-   budden-tools:with-proplist-carat
+   budden-tools:^ #| There is lispy form (^ A B) and infix form A^B.
+       ^ can be considered as a \"dot\" in languages such as C,Java or Basic.
+       That is, A^B is similar to A.B in Java.
+       To enable it, set custom-token-parsers appropriately. 
+       In an infix form, A must be a symbol. B is always a sequence of characters, which is
+       used to determine action of ^. 
+       Action of (^ a b) might depend on:
+     -- environment 
+     -- declared type of a
+     -- actual type of a
+     -- value of b
+       Action of a^b also depends on either it is located at the beginning of list or not.
+       (x A^B) is expanded to (x (^ A B)), (A^B . args) is expanded to (^ A B . args) at read-time.
+       (^ A B) is further processed at compile time.
+
+       Example: 
+       If it is known at compile time, that A is a structure of type FOO, A^BAR is 
+       expanded into (FOO-BAR A). 
+       |#
+   budden-tools:with-conc-namec ; set translaction prefix for V^X where V is a given symbol.
+   budden-tools:with-proplist-carat  ; another (experimental) example of per-variable assignment of ^ 
 
 ;; i/o utilities
    budden-tools:show-hash
@@ -164,24 +182,23 @@
    budden-tools:pathname-to-filename ; from swank-backend
    budden-tools:filename-to-pathname ; from swank-backend
    budden-tools:quit-lisp ; thanks to Thomas A.Russ
-   budden-tools:edit-stream-position ; trying to do so at least
+   budden-tools:edit-stream-position ; trying to find out position in a file stream, open the file at the cursor and edit it
 
 ;; make input stream available to sharpsign-dot
    budden-tools:*read-eval-stream*
 
 ;; see-packages and friends
-   budden-tools:*keyword-package*
-   budden-tools:see-packages-on ; enable see-packages extensions on a (named) readtable. TODO: rename it
+   budden-tools:*keyword-package* ; just a keyword package
+   budden-tools:see-packages-on ; enable symbol-readmacros, custom-token-parsers, advanced-readtable-case and local-nicknames on a (named) readtable. TODO: rename it
    budden-tools:see-packages
-   budden-tools:see-packages-find-symbol ; returns (values ((symbol-found . package-where-found) ...) 
-   budden-tools:see-packages-check-bad-clashes
-   budden-tools:*per-package-alias-table*
-   budden-tools:hp-find-package
-   budden-tools:hp-in-package
+   budden-tools:*per-package-alias-table* ; stolen from \"hierarchical packages\"
+   budden-tools:hp-find-package ; stolen from \"hierarchical packages\"
+   budden-tools:hp-in-package  ; stolen from \"hierarchical packages\"
    budden-tools:hp-alias-map   ; stolen from conduit packages
    budden-tools:delete-hp-alias-map ; stolen from conduit packages
+   budden-tools:*essential-binding-checkers* ; currently unused
 
-   budden-tools:defreadtable
+   budden-tools:defreadtable ; stolen from named-readtables project
    budden-tools:find-readtable
    budden-tools:in-readtable
    budden-tools:package-readtable
@@ -189,7 +206,8 @@
    budden-tools:*readtable-alist*
    budden-tools:unregister-readtable
 
-   budden-tools:get-custom-reader-for-package ; use your own reader in package context instead of common lisp reader
+   budden-tools:get-custom-reader-for-package ; use your own reader in package context instead of common lisp reader, 
+                                              ; e.g. you can do so that dat1:2011-01-01 would read a localtime:timestamp value
    budden-tools:get-custom-token-parsers-for-package ; parse tokens read with custom parsers (which can, but not encouaraged to have side-effects on stream
    budden-tools:symbol-readmacro ; function of two arguments: symbol and a stream. setf symbol-readmacro to reader switched by the symbol
    budden-tools:def-symbol-readmacro ; Navigation does not work

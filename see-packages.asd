@@ -1,7 +1,5 @@
 (in-package :asdf)
 
-; this is GOOD system
-
 #.(defclass russian-file
   (#-(and sbcl russian) cl-source-file 
    #+(and sbcl russian) windows-1251-file)
@@ -19,7 +17,6 @@
 	(:russian-file "study-readtable")
 	(:russian-file "careful-token-reader")
 	(:russian-file "redirect-reader")
-	(:russian-file "see-packages-2")
 	(:russian-file "see-packages-applications")
 	#+(and lispworks win32) 
         (:russian-file "see-packages-lw-edit")

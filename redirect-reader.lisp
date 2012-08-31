@@ -175,77 +175,12 @@ is already an altered readtable, simply returns it TODO: rename me"
 
 (defun rd (s) (with-my-readtable-0 (read-from-string s)))
 
-;;;;;;;;;;;;;;;;;;;;;;;;; Change a printer ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-
-#+lispworks 
-(defun decorated-output-symbol (undecorated-output-symbol obj)
-  "Что надо ещё сделать? Работать с readtable-case"  
-;  (when (symbolp obj) 
-;    (trace-into-text-file (str+ "decorated-output-symbol: " (symbol-package obj)))
-;    (trace-into-text-file (str+ "decorated-output-symbol: " (symbol-name obj))))
-  (let1 id (new-show-package-system-vars-id)
-    (unwind-protect
-        (proga
-          (show-package-system-vars "decorated-output-symbol: before" id)
-          ;(trace-into-text-file (str+ "decorated-output-symbol: " (symbol-name obj)) id)
-          ;(maybe-bind-package (or *real-package* *last-used-real-package*)
-          (let ((*package* *package* #+nil (or *real-package* *package*)))
-            (proga
-              (flet print-as-usual () (progn 
-                                        (show-package-system-vars "decorated-output-symbol: inside" id)
-                                        (funcall undecorated-output-symbol obj)))
-              (typecase obj
-                (null (print-as-usual))
-                (symbol
-                 (proga if-symbol  
-                   (let name (symbol-name obj))
-                   (let pack (symbol-package obj))
-                   (cond
-                    ((member pack '(#.(find-package :keyword) nil))
-                     (print-as-usual)
-                     )
-                    (t 
-                     (iter
-                       (:with sym-is-seen = nil)
-                       (:for real-first-time-p :initially t :then nil)
-                       (:for p in (cons *package* nil #|2012-08-27 (package-seen-packages-list *package*)|#))
-                       (:for (values p-sym storage-type) = (find-symbol name p))
-                       (when (and p-sym (or real-first-time-p (eq storage-type :external)))
-                         (when (eq p-sym obj) 
-                           (setf sym-is-seen t))
-                         (:count 1 into cnt))
-                       (:finally
-                        (cond
-                         ((and sym-is-seen (= cnt 1)) ; если символ виден и нет конкурентов
-                          (let1 *package* (if *print-normalize-seen-symbols*
-                                              *package*
-                                            pack
-                                            ); печатаем без квалификатора
-                            (print-as-usual)))
-                         ((and sym-is-seen (> cnt 1)) ; символ виден, есть конкуренты, печатаем с квалификатором
-                          (with-xlam-package-for-output
-                            (print-as-usual)))
-                         (t
-                          (print-as-usual) ; по построению здесь будет квалификатор
-                          ))))))))))))
-      (show-package-system-vars "decorated-output-symbol: restored" id)
-      )
-    ))
-
-#+(and :lispworks :really-see-packages)
-(decorate-function 'io::output-symbol #'decorated-output-symbol)
-
-#+(and (not :lispworks) :really-see-packages) (error "oy!")
-;;;;;;;;;;;;;;;;;;;;;;; Change a printer end ;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-
 (cl-user::portably-without-package-locks
+
+;non-toplevel
 (defun keywordize (symbol-or-string) ; altering keywordize from iterate
   (careful-keywordize symbol-or-string)
-  #+nil (etypecase symbol-or-string
-          (symbol (intern (symbol-name symbol-or-string) :keyword))
-          (string (intern symbol-or-string :keyword))))
+  )
 )
 
 #|2012-08-27 (defpackage :tst (:use))

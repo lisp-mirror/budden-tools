@@ -251,7 +251,7 @@ NIL
       << VALUE-1 : NIL
 
 |#
-(defun decorated-parse-symbol (fn string &key package)
+#|(defun decorated-parse-symbol (fn string &key package)
   (let1 *use-decorated-package-system-fns* t
     (multiple-value-bind
         (out-package name found-p prefix-length)
@@ -270,9 +270,9 @@ NIL
             (:external
              (values packages (symbol-name symbol) t nil))
             (t
-             (values out-package name found-p prefix-length)))))))))
+             (values out-package name found-p prefix-length)))))))))|#
 
-(decorate-function 'editor:parse-symbol #'decorated-parse-symbol)
+;(undecorate-function 'editor:parse-symbol #'decorated-parse-symbol)
 
 
 (defun decorated-complete-symbol-1 (fn string &key 
