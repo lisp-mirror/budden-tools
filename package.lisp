@@ -190,7 +190,6 @@
 ;; see-packages and friends
    budden-tools:*keyword-package* ; just a keyword package
    budden-tools:see-packages-on ; enable symbol-readmacros, custom-token-parsers, advanced-readtable-case and local-nicknames on a (named) readtable. TODO: rename it
-   budden-tools:see-packages
    budden-tools:*per-package-alias-table* ; stolen from \"hierarchical packages\"
    budden-tools:hp-find-package ; stolen from \"hierarchical packages\"
    budden-tools:hp-in-package  ; stolen from \"hierarchical packages\"

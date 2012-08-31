@@ -150,22 +150,6 @@ pack не поддерживает наших расширений
     ))
 
 
-#|2012-08-27(defmacro %seen-package-list (package)
-  `(gethash ,package *package-seen-packages*))
-
-(defmacro package-seen-packages-list (package-designator)
-  `(%seen-package-list (the* package (find-package ,package-designator))))
-
-(defmacro see-packages (&rest packages)
-  "Дополнительно к основному высказыванию in-package говорит о том, что 
-для работы в пр-ве имён также используются другие пакеты"
-  `(eval-when (:compile-toplevel :load-toplevel :execute)
-     (see-packages-on *readtable*)
-     (setf (%seen-package-list *package*) (mapcar 'force-find-package ',packages))
-     ; (format t "~%Now seeing packages ~S" ',packages)
-     )
-  )|#
-
 (defmacro in-readtable-upcase-if-uniform (rt-designator)
   `(progn
      (in-readtable ,rt-designator)
