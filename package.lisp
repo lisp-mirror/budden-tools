@@ -230,8 +230,8 @@
 
 ;(merge-packages-and-reexport::! :proga-implementation 
 ;                                )
-(defpackage :trivial-deftest 
-  (:nicknames :def-trivial-test)
+(defpackage :def-trivial-test 
+  (:nicknames :trivial-deftest)
   (:documentation "Very simple test suite you can optionally run at load time. Use ! for brevity")
   (:use :cl)
   (:export #:*run-tests* ; #:deftest
