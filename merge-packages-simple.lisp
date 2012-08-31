@@ -544,6 +544,8 @@ It also allows for additional clauses. Currently every additional clause can onl
 \(:custom-token-parsers custom-token-parser-spec1 ...) where 
 custom-token-parser-spec is [ symbol | (:packages &rest package-designators) ] - define custom token parsers for the package. Symbols should be from another package and should be names of functions (stream symbol-name package) => (values processed-value processed-p). Custom token parser functions (including inherited ones) are applied from left to right to any new symbol token just before it is interned. If it processed-p is t, then processed-value is inserted into reader output instead of creating symbol named by token. (:packages &rest package-designator) spec
  causes all custom-token-parsers from the package named to be copied to the package being defined. 
+\(:custom-reader symbol) - define custom token reader. 
+With buddens readtable extensions enabled, when reader finds \"that-package:\" in the stream, function named by custom-token-reader is invoked with the same signature as READ. 
 "
   (macrolet ((get-clause (name)
                `(multiple-value-setq (,name clauses) (extract-clause clauses ,(keywordize name))))
@@ -565,8 +567,8 @@ custom-token-parser-spec is [ symbol | (:packages &rest package-designators) ] -
           export-s
           allow-qualified-intern
           custom-token-parsers
+          custom-reader
           (clauses clauses))
-      
       (get-clause use)
       (get-clause auto-import-from)
       (get-clause print-defpackage-form)
@@ -575,6 +577,7 @@ custom-token-parser-spec is [ symbol | (:packages &rest package-designators) ] -
       (get-clause allow-qualified-intern)
       (get-clause forbid)
       (get-clause custom-token-parsers)
+      (get-clause custom-reader)
       (multiple-value-setq (shadowing-import-from-s clauses) (extract-several-clauses clauses :shadowing-import-from))
       (multiple-value-setq (export-s clauses) (extract-several-clauses clauses :export))
 ;    (multiple-value-setq (non-symbols clauses) (extract-clause clauses :non-symbols))
@@ -582,6 +585,7 @@ custom-token-parser-spec is [ symbol | (:packages &rest package-designators) ] -
       (length-is-1 print-defpackage-form)
       (length-is-1 always)
       (length-is-1 allow-qualified-intern)
+      (length-is-1 custom-reader)
       (assert (null (intersection use auto-import-from))
           () ":use and :auto-import-from clauses must be disjoint")
       (let* (; (dest (keywordize name))
@@ -594,8 +598,10 @@ custom-token-parser-spec is [ symbol | (:packages &rest package-designators) ] -
              forbidden-symbol-names forbid-symbols-forms
              generated-import-clauses
              process-local-nicknames-form
-             processed-export-s allow-qualified-intern-forms
+             processed-export-s 
+             allow-qualified-intern-form
              custom-token-parsers-form
+             custom-reader-form
              )
         (dolist (p sources-for-clashes)
           (do-external-symbols (s p)
@@ -664,7 +670,7 @@ custom-token-parser-spec is [ symbol | (:packages &rest package-designators) ] -
               `(; (setf (package-forbidden-symbol-names ,name) '(,@forbidden-symbol-names))
                 (setf (package-metadata-forbidden-symbol-names (ensure-package-metadata ,name)) (forbid-symbols-simple ',forbidden-symbol-names ,name)))
                 )
-        (setf allow-qualified-intern-forms `((setf (package-metadata-allow-qualified-intern (ensure-package-metadata ,name)) ,allow-qualified-intern)))
+        (setf allow-qualified-intern-form `(setf (package-metadata-allow-qualified-intern (ensure-package-metadata ,name)) ,allow-qualified-intern))
         (setf custom-token-parsers-form nil)
         (let ((custom-token-parser-list
                (iter 
@@ -693,9 +699,11 @@ custom-token-parser-spec is [ symbol | (:packages &rest package-designators) ] -
                    (error "something unknown ~S is passed as a custom-token-parser spec for ~S" 
                           spec name))))))
           (setf custom-token-parsers-form
-                (when custom-token-parser-list
-                  `(setf (get-custom-token-parsers-for-package ,name) ',custom-token-parser-list)))
+                `(setf (get-custom-token-parsers-for-package ,name) ',custom-token-parser-list))
           ); let ((custom-token-parser-list ...))
+        (assert (symbolp custom-reader))
+        (setf custom-reader-form 
+              `(setf (package-metadata-custom-reader (ensure-package-metadata ,name)) ',custom-reader))
         (setf package-definition 
               (if always 
                   `(eval-when (:compile-toplevel :load-toplevel :execute)
@@ -710,7 +718,8 @@ custom-token-parser-spec is [ symbol | (:packages &rest package-designators) ] -
                      ,process-local-nicknames-form
                      ,custom-token-parsers-form
                      ,@forbid-symbols-forms
-                     ,@allow-qualified-intern-forms))))
+                     ,allow-qualified-intern-form
+                     ,custom-reader-form))))
         (when print-defpackage-form
           (let (*print-length* *print-level*) (print package-definition)))
         package-definition
