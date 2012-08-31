@@ -633,36 +633,17 @@ FIXME shadow find-symbol? FIXME rename"
                (when parsed
                  (return-from function (values result t))))))
          (let res 
-           (cond ; unqualified symbol
-            ((null qualified-package)
-             (iter
-               (:with sym-found = +some-uninterned-symbol+)
-               (:for real-first-time-p :initially t :then nil)
-               (:for p in (list package)
-               #|2012-08-27 (if (eq package *keyword-package*) 
-                   (list package)
-                 (cons package (package-seen-packages-list package)))|#
-                )
-               (:for (values p-sym storage-type same-case-p) = (find-symbol-with-advanced-readtable-case name p rt *token-starts-with-vertical-line*))
-               (when (and storage-type  ; есть такой символ
-                          (or (eq storage-type :external) ; должен быть внешним 
-                              real-first-time-p  ; или мы смотрим в *package* и тогда он может быть внутренним тоже
-                              ))
-          ; если у нас несколько символов, то они могут совпадать. 
-                 (unless (eq p-sym sym-found) ; если не совпадают, то это сыграет более одного раза.
-                   (setf sym-found p-sym)
-                   (:count 1 :into cnt))
-                 (:collect p :into packs-found)
-                 )
-               (:finally
-                (return
-                 (case cnt
-                   (0 (intern-check-forbidden (fix-symbol-name-for-advanced-readtable-case 
-                                               name package rt starts-with-vertical-line same-case-p)
-                                              package))
-                   (1 (check-symbol-forbidden sym-found package))
-                   (t (simple-reader-error stream "symbol name ~A is ambigious between ~S" 
-                                           name packs-found)))))))
+           (cond 
+            ((null qualified-package) ; unqualified symbol
+             (proga
+               (mlvl-bind (p-sym storage-type same-case-p) (find-symbol-with-advanced-readtable-case name package rt *token-starts-with-vertical-line*))
+               (cond
+                ((null storage-type) 
+                 (intern-check-forbidden (fix-symbol-name-for-advanced-readtable-case 
+                                          name package rt starts-with-vertical-line same-case-p)
+                                         package))
+                (t (check-symbol-forbidden p-sym package))
+                )))
             (t ; qualified symbol
              (multiple-value-bind (sym status same-case-p)
                  (find-symbol-with-advanced-readtable-case name qualified-package rt starts-with-vertical-line)
