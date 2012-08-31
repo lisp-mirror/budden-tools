@@ -589,8 +589,6 @@ FIXME shadow find-symbol? FIXME rename"
     (setf name (string-upcase-ascii name)))
    (t name)))
 
-(defvar +some-uninterned-symbol+ '#:some-uninterned-symbol)
-
 (defun intern-check-forbidden (name package)
   "Looks if the name is forbidden. Prior to call of the function, name should be transformed according to readtable-case conventions. Internal function, do not use it in your code."
   (proga
