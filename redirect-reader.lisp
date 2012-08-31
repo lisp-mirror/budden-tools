@@ -160,6 +160,7 @@ is already an altered readtable, simply returns it TODO: rename me"
       (when (eq obj *readtable*) (princ '(:current) stream)))))
 
 (defun package-readtable (package-designator)
+  "Use of the data is currently unknown. Maybe should be used to develop SLIME extension?"
   (cdr (assoc (package-name (find-package package-designator))
                  *readtable-alist* :test 'equalp)))
 
