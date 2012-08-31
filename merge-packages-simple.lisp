@@ -15,7 +15,7 @@
 ;; 
 
 
-(cl:defpackage :merge-packages-simple
+(cl:defpackage :def-merge-packages
   (:documentation "
 See merge-packages-simple::!4 for docs. !4 is unexported to avoid any symbol clashes, but this is the
 function you most likely want to use. 
@@ -26,7 +26,7 @@ set of symbols from interesting packages and import them symbol-by-symbol.
 defpackage-autoimport-2 (obsolete) prefers to use packages and shadowing-import clashes.
 "   
    )
-  (:nicknames :def-merge-packages)
+  (:nicknames :merge-packages-simple)
   (:use :cl :org.tfeb.hax.hierarchical-packages)
   (:import-from :iter #:iter #:keywordize)
   (:export 
