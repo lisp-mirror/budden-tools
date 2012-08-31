@@ -167,8 +167,6 @@
       (values :|We-got-FOO| t)
     (values :|we-got-not-a-FOO| t)))
 
-(setf (get-custom-token-parsers-for-package :tst2) `(,#'parser1))
-
 (def-trivial-test::! custom-parsers-and-preserve-case.1
                          (let1 *package* (find-package :tst2) 
                            (with-my-readtable (read-from-string "(foo bar)")))

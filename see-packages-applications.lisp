@@ -170,7 +170,7 @@ make-load-form
                   t))))))
 
 ; (setf (get-custom-token-parsers-for-package :budden) nil)
-(pushnew 'convert-carat-to-^ (get-custom-token-parsers-for-package :budden))
+; (pushnew 'convert-carat-to-^ (get-custom-token-parsers-for-package :budden))
 
 
 ;; (/with-readtable-case/ :preserve '(foo bar))
