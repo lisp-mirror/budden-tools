@@ -41,3 +41,32 @@ can be forbidden
 - custom token parsers. Run your code
 when reader finds "PACKAGE-QUALIFIER:" in 
 a stream. 
+
+- proga. Get rid of some 
+parens and nestings. Instead
+of
+ 
+(let ((a b))
+ (flet ((f (x) y))
+  (with-open-file (f "v" ...)
+   (f a))
+
+write just
+
+(proga
+ (let a b)
+ (flet f (x) y)
+ (with-open-file f "v" ...)
+ (f a))
+
+which is easier to read and
+write (when you get used to it). 
+
+- iterate-keywords (need to be 
+downloaded from http://sourceforge.net/projects/iteratekeywords/
+)
+now you need to import just only
+one symbol to use iterate in 
+your package. Use keywords as clause heads. 
+(iter (:for ...)) 
+
