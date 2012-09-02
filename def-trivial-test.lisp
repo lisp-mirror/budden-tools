@@ -1,5 +1,5 @@
 ;; Written by Denis Budyak. 
-;; #.+BSD-license+
+;; Code is in public domain
 
 (in-package :trivial-deftest)
 
