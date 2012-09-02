@@ -1,0 +1,15 @@
+*Features* used in the library
+------------------------------
+
+:budden - add this if you're budden
+:building-see-packages - installed temporarily when
+the library is being build to localize changes I have
+made to third-party libraries I've included in :buddens-tools
+library. 
+:ORG.TFEB.HAX.HIERARCHICAL-PACKAGES,:ORG.TFEB.HAX.RELATIVE-PACKAGE-NAMES
+- are present as we have hierarchical packages loaded.
+:russian - if this feature is set, there are functions, e.g.,
+string-upcase-cyr to work with Russian character case. 
+also, there are comment string in Russian which can cause reader error
+on some systems. So, set this feature if you're Russian :)
+

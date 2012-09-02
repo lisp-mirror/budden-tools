@@ -1,108 +1,43 @@
-Just to whip up interest. This library contains: 
+This library contains: 
 
-- port of Allegros/Tim Bradshaw's hierarchical 
-packages to (at least) CCL, CLISP and SBCL. 
-Code should be completely portable to any 
-standard-compliant CL. 
+- per-package package nicknames,
+for (at least) Lispworks, Allegro, CCL, CLISP and SBCL. 
 
-Как быть? SLIME должно быть легче перепрограммировать. Сами реализации? 
-Принтер? ХЗ. Наверное, принтер без патча всё равно не получится поменять. 
-Для данной фичи это не нужно. Для see-packages - нужно. 
+- def-symbol-readmacro. Usually you assign readmacros
+to characters. But there are just too few characters. 
+Now you can assign readmacros to symbols, too, so there
+is an unlimited space for making your DSLs with custom
+syntax.
 
-- ability to set up package nicknames per *package*,
-ported to implemetations listed above
-для лиспворкс можно через декораторы. Для других - патчить, чтобы 
-был крюк в find-package. 
+- def-merge-packages::!
+resolve some kinds of symbol clashes 
+automatically. There are two policies, 
+one is safer (import neither of clashing 
+symbols), other is "denser" (import first 
+of them). This small macro in conjunction
+with readtable extensions simplifies 
+a task of managing multiple small 
+packages and thus helps improve modularity
 
-- package qualifier can be applied to any expression,
-including readmacros, not to symbols only. In the 
-scope of that expression, readtable can be
-switched to some other readtable associated with
-the package qualified.
-E.g.: 
+- "advanced" readtable case:
+You can assign "advanced" readtable-case to 
+your readtable so that:
+(read-from-string "sym") is SYM
+(read-from-string "SYM") is SYM
+but
+(read-from-string "CamelCase") is |CamelCase|)
+see budden-tools::readtable-case-advanced
+There are some caveats with keywords and a bug
+with uninterned symbols. 
 
-'keyword::(a b c) 
-would read as (:a :b :c)
+- forbidden symbol names. You can explicitly
+state that some symbol name is forbidden in a package.
+After that, reader errs when that symbol is attempted
+to be read into the package.
 
-меняем на symbol-readmacros:
-(/with-package/ :keyword (a b c))
-замену таблицы чтения делаем так:
-(/with-readtable/ nil (a b c))
+- interning to another package with package::symbol
+can be forbidden
 
-
-sql:[select 1 from dual]
-would invoke #\[ readmacro from readtable
-bound to sql package
-sh:[ls]
-would invoke #\[ readmacro from readtable
-bound to sh package
-
-(/sql/ select 1 from dual)
-(/sh/ ls) 
-(/readmacro-let/ ("$" "#x" :another-readtable)
-	($er3423 $vvvv $rewqwrqwe))
-
-
-- custom token parsers. Normally, reader 
-attempts to intern any symbol it reads
-to some package. In this library, you 
-can intercept this call and run arbitrary
-code which is associated to a *package*
-or a package qualifier of the symbol. 
-
-Крюк на find-symbol и intern сделает это. 
-
-- merge-packages-and-reexport
-automate symbol clash resolution when
-using several packages. There are two 
-policy, one is safer (import neither
-of clashing symbols), other is "denser"
-(import first of them). This small
-macro simplifies a task of managing
-multiple small packages and thus 
-helps improve modularity
-
-see-packages. 
-lispworks - можно сделать через крюки. 
-
-перевернуть регистр в системных пакетах:
-создать и заюзать другой пакет, а дальше сделать на уровне декоратора:
-если символ - из этого пакета, то вместо него возвращается соответствующий
-символ из системного пакета. Сам этот символ хранится в свойстве. Дыра будет, 
-если мы добавили новый символ. 
-
-
-Сейчас сделал: 
-(readtable-case-advanced rt-designator)
-если "символ" вводится в одинаковом регистре, то ищется "символ" и "СИМВОЛ"
-если "сиМвол" содержит разные буквы, то ищется только "сиМвол". 
-Продолжение работает, игнорируя регистр (независимо от readtable-case). 
-Найденный в рез-те продолжения символ, если у него все буквы в одинаковом регистре, 
-приводится к нижнему регистру. 
-
-10.11.19 - readtable-case-advanced не работает, из-за keywords. Получается, что 
-keywords имеют неизвестный регистр, а keyword-аргумент должен иметь регистр, совпадающий
-с регистром данного keyword. В результате, в 
-(defun foo (&key abc))
-(foo :abc 4) 
-abc и :abc могут иметь разный регистр. Даже если писать
-&key ABC и интёрнить keywords приведёнными к верхнему регистру, это не поможет, т.к.
-ABC может означать abc. Т.е.,писать можно только |ABC|, а это уже несерьёзно. 
-Выходом могло бы стать Abc, но функции из ранее загруженных пакетов всё равно пострадают.
-
-Идея: может быть, апкейсить идентификатор, начинающийся с большой буквы? 
-Т.е., Abc=ABC, abc=(ABC или abc), (AbcDef = AbcDef)
-
-
-Выход вижу только один: делать все keywords и 
-key
-
-
-
-Собственно see-packages (возможность видеть другие пакеты), скорее всего, сломан.
-Может быть, стоит сделать see-packages только для продолжения, чтобы символы из "видимых" 
-пакетов попадали в список продолжения, но печатались как есть, с префиксом. 
-
-
-запрет на определенные имена. через крюки. 
-
+- custom token parsers. Run your code
+when reader finds "PACKAGE-QUALIFIER:" in 
+a stream. 
