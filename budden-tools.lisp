@@ -582,6 +582,14 @@ As a short-hand, #\s means *STANDARD-OUTPUT*, #\t - *TRACE-OUTPUT*"
 
 )
 
+#-russian
+(defun string-upcase-ascii (s)
+  (string-upcase s))
+
+#-russian
+(defun string-downcase-ascii (s)
+  (string-downcase s))
+
 
 ;; преобразование русских символов для чтения-записи в open-pipe
 #+(and russian lispworks (or windows win32))
