@@ -3,9 +3,7 @@
 ;; Description	     - cleaned-up hierarchical packages from acl 6
 ;; Author	     - Tim Bradshaw (tfb at lostwithiel)
 ;; Created On	     - Wed Aug 30 01:44:37 2000
-;; Last Modified On  - Tue Apr 30 14:23:25 2002
-;; Last Modified By  - Tim Bradshaw (tfb at lostwithiel)
-;; Update Count	     - 8
+;; Last Modified By  - Denis Budyak
 ;; Status	     - Unknown
 ;; 
 ;; $Id: //depot/www-tfeb-org/main/www-tfeb-org/html/programs/lisp/hierarchical-packages.lisp#1 $
@@ -22,7 +20,14 @@
 ;;; Despite the header above, I, Tim Bradshaw, am not the author of this
 ;;; code, I just changed it a bit.
 ;;;
-
+;;; Notes by Budden
+;;; this code relies on begin able to process ".relative-name" package name. 
+;;; I've added read hooks which work at the time of finding symbol, this is done
+;;; by assigning macro-character to any character from which symbol name can start.
+;;; But I was unable to assign macro-character to #\. in a portable way due to
+;;; non-conformance in SBCL reader. So hierarchical packages stuff will not work
+;;; in any implementation where (read) does not call (symbol-function 'find-package),
+;;; e.g. SBCL
 
 #+(and allegro (not building-see-packages))
 (eval-when (:load-toplevel :compile-toplevel :execute)
