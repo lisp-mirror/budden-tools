@@ -186,13 +186,14 @@
           :collect '*-*)
     ))
 
+#|commented out 2012-09-03 as we're removing hp dependency
 (setf (gethash (find-package :tst) org.tfeb.hax.hierarchical-packages:*per-package-alias-table*)
       `(("HP" . "ORG.TFEB.HAX.HIERARCHICAL-PACKAGES")))
 
 (def-trivial-test::!
  per-package-aliases.1
  (with-my-readtable (let1 *package* (find-package :tst) (read-from-string "hp::foo")))
- 'ORG.TFEB.HAX.HIERARCHICAL-PACKAGES::FOO)
+ 'ORG.TFEB.HAX.HIERARCHICAL-PACKAGES::FOO) |#
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; minimal portable backquote test. Place it to the appropriate place!
@@ -209,9 +210,11 @@
 
 
 ; (import 'org.tfeb.hax.hierarchical-packages::hp-find-package)
+#|commented out 2012-09-03 as we're removing hp dependency
 (defpackage pp1)
 (defpackage pp1.pp2)
 
 (let1 *package* (find-package :pp1)
   (print `(1 ,(hp-find-package :.pp2))))
+|#
 
