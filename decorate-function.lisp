@@ -72,7 +72,9 @@
 
 
 (defun apply-undecorated (symbol args)
-  (apply (gethash symbol *undecorated-functions* (symbol-function symbol)) args))
+  "If function of a symbol is decorated, calls original function. If it is not decorated, call just the #'symbol"
+  (apply (or (gethash symbol *undecorated-functions* (symbol-function symbol))
+             symbol) args))
 
 
 #+example
