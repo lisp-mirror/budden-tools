@@ -20,20 +20,6 @@
 
 ; (defparameter *char-table* (make-array 256 :initial-element nil))
 
-#+nil (iter:iter ; какие символы у нас составляют токен? 
-  (:for i :from 0 to 255) 
-  (:for c := (code-char i))
-  (setf (elt *char-table* i)
-        (cond
-         ((member c '(#\.)) :dot) ; symbol names starting from these would be misinterpreted
-         ((eql c #\:) :colon)           ; здесь тоже неплохо написать тест
-         ((eql c #\() :open-brace)      ; здесь тоже неплохо написать тест
-         ((test-does-not-terminate-token c) :does-not-terminate-token)
-         ((test-whitespace[2]p c) :whitespace[2])
-         ((test-multiple-escape-p c) :multiple-escape)
-         ((test-single-escape-p c) :single-escape))
-   ))
-
 (defmacro symbol-readmacro (symbol) `(get ,symbol 'symbol-readmacro))
 
 (defmacro def-symbol-readmacro (symbol reader)
@@ -213,10 +199,6 @@ package-sym показывает префикс пакета, с которым мы считали имя. num-of-colons
 Если readmacro находится вне круглых скобок, то ничего особенного не происходит. 
 "
   (check-correct-use-of-a-car-symbol-readmacro object-read))
-
-; (defun it-is-a-half-car-symbol-readmacro (object-read))
-;  "То же самое, но без требования прочи
-
 
 ;;; end of open-paren for symbol-readmacro
 
