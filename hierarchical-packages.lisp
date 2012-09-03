@@ -36,6 +36,7 @@
 (defpackage :org.tfeb.hax.hierarchical-packages
   (:nicknames :org.tfeb.hax.relative-package-names)
   (:use :cl)
+  (:documentation "Port of Allegro's hierarchical packages  to some other implementations"
   (:export 
    #:*per-package-alias-table*
    #:hp-find-package))

@@ -17,7 +17,7 @@
 
 (cl:defpackage :def-merge-packages
   (:documentation "
-See merge-packages-simple::!4 for docs. !4 is unexported to avoid any symbol clashes, but this is the
+See merge-packages-simple:! for docs. !4 is unexported to avoid any symbol clashes, but this is the
 function you most likely want to use. 
 
 defpackage-autoimport (obsolete) makes new package. It  
@@ -30,6 +30,7 @@ defpackage-autoimport-2 (obsolete) prefers to use packages and shadowing-import 
   (:use :cl :org.tfeb.hax.hierarchical-packages)
   (:import-from :iter #:iter #:keywordize)
   (:export 
+   #:def-merge-packages ; exported name for !. ! itself is unexported
    #:package-metadata ; structure 
    #:package-metadata-forbidden-symbol-names ; and
    #:package-metadata-custom-reader ; its
@@ -41,8 +42,8 @@ defpackage-autoimport-2 (obsolete) prefers to use packages and shadowing-import 
    #:package-forbidden-symbol-names ; place of package designator
    #:ensure-package-metadata ; makes sure that *per-package-metadata* entry for package exists
    #:keywordize-package-designator
-   #:defpackage-autoimport ; УСТАРЕЛ, не пользоваться. See package docstring. Note this symbol is exported to CL
-   #:defpackage-autoimport-2 ; ПОД ВОПРОСОМ.particular case of defpackage-autoimport. Uses all listed packages, shadowing-imports first of clashes. Exported to CL
+   ; #:defpackage-autoimport ; УСТАРЕЛ, не пользоваться. See package docstring. Note this symbol is exported to CL
+   ; #:defpackage-autoimport-2 ; ПОД ВОПРОСОМ.particular case of defpackage-autoimport. Uses all listed packages, shadowing-imports first of clashes. Exported to CL
    ; пользоваться !4 .
    #:extract-clause ; extract one clause of def... form (e.g. defpackage) by its head
    ;#:reexport ; For every symbol in to-package2 which is external in 
@@ -529,9 +530,8 @@ Returns list of symbols.
     symbols-to-forbid))
     
 
-
-(defmacro !4 (name &rest clauses) ; Наиболее удачный вариант, им пользоваться. todo: err on non-existing packages
-  "This form is like defpackage. If some symbols from used packages clash, they are shadowed instead and referred
+#.(defparameter +!docstring+ "This form is like defpackage and it has some additional features. 
+If some symbols from used packages clash, they are shadowed instead and referred
 as 'forbidden'. Error occurs on an attempt to read these symbols unqualified in package created.
 
 It also allows for additional clauses. Currently every additional clause can only occur once. 
@@ -546,7 +546,18 @@ custom-token-parser-spec is [ symbol | (:packages &rest package-designators) ] -
  causes all custom-token-parsers from the package named to be copied to the package being defined. 
 \(:custom-reader symbol) - define custom token reader. 
 With buddens readtable extensions enabled, when reader finds \"that-package:\" in the stream, function named by custom-token-reader is invoked with the same signature as READ. 
+")
+
+(defmacro def-merge-packages (name &rest clauses)
+  #.(concatenate 'string "This form is identical to def-merge-packages::!. I recommend use def-merge-packages::! whenewer possible,
+as it is less verbose. But def-merge-packages is exported so that one could find it easily.
 "
+                 +!docstring+)
+  `(! ,name ,@clauses)
+  )
+
+(defmacro ! (name &rest clauses) ; Best variant.: err on non-existing packages
+  #.+!docstring+
   (macrolet ((get-clause (name)
                `(multiple-value-setq (,name clauses) (extract-clause clauses ,(keywordize name))))
              (length-is-1 (name)
@@ -726,9 +737,13 @@ With buddens readtable extensions enabled, when reader finds \"that-package:\" i
         ))))
 
 
-(dspec:define-dspec-alias !4 (name &rest args)
+(dspec:define-dspec-alias ! (name &rest args)
   (setf args args)
   `(defpackage ,name))
+
+(defmacro !4 (name &rest clauses)
+  "Backward compatibility alias for !"
+  `(! ,name ,@clauses))
 
 
 (defun delete-symbols-from-package (pack &rest symbols)

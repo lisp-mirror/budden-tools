@@ -10,6 +10,7 @@
 
 (defsystem budden-tools
   :serial t
+  :doc "Some utilities by Budden, public domain"
   :depends-on 
   (:alexandria :split-sequence :cl-utilities :named-readtables
    :buddens-readtable :cl-ppcre		

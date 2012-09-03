@@ -10,15 +10,18 @@
 
 ; deprecate it? вряд ли, потому что struct-to-alist
 (defpackage :defstruct-meta (:use :cl)
-  (:export #:defstruct*m-slot-names-and-accessors
-   #:defstruct*m
-   #:defstruct*mc
-   #:with-struct)
-  )
+  (:documentation "defstruct does not record names of accessors. defstruct*m was intended to address this, 
+but it is unfinished. Also it seem to violate GNU. So it is likely to be removed some time"
+   (:export #:defstruct*m-slot-names-and-accessors
+    #:defstruct*m
+    #:defstruct*mc
+    #:with-struct)
+   ))
 
 
-(merge-packages-simple::!4 :BUDDEN-TOOLS
+(merge-packages-simple::! :BUDDEN-TOOLS
   (:nicknames "budden-tools")
+  (:documentation "Some tools by budden. See packages definition to find a list of symbols")
   (:use :cl :named-readtables :buddens-readtable :defstruct-meta :org.tfeb.hax.hierarchical-packages
    :merge-packages-simple)
   (:import-from :iterate-keywords #:iter #:keywordize #:dsetq)
@@ -118,7 +121,8 @@
    budden-tools:ignored 
 ;   budden-tools:eval-when* ; it is defined internal in cl-user for some unknown reason
    budden-tools:print-if 
-   budden-tools:proga
+   budden-tools:proga ; macro to get rid of some extra parens and nesting levels. Changes lisp syntax significantly. 
+                      ; currently it needs to be redesigned. 
    budden-tools:dsetq ; reexported from iterate
    budden-tools:pllet1 ; 'bind' place
    budden-tools:smlet ; another name for symbol-macrolet
