@@ -5,3 +5,4 @@ syntax: glob
 *.fsl
 *.fasl
 *.bak
+glob:doc/tinaa/*
