@@ -1,7 +1,3 @@
-This is an implementation of portable common lisp reader. 
-See "packages revisited" topic at comp.lang.lisp
-and *test* files. 
-
 1. Put asd systems and shortcuts as usual.
 2. Download dependencies. 
 Iterate-keywords can be downloaded from 
@@ -15,6 +11,6 @@ CLISP, ccl and sbcl under 32-bit debian etch.
 This code is a complete mess, it has to be 
 cleaned, de-localized and documented. 
 
-Defstruct staff does not work at all. 
+Defstruct stuff does not work at all. 
 
 Budden, 2009-04-29

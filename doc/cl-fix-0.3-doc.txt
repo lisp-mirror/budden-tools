@@ -70,3 +70,53 @@ one symbol to use iterate in
 your package. Use keywords as clause heads. 
 (iter (:for ...)) 
 
+
+Caveats/bugs
+------------
+When advanced-readtable-case is :upcase-if-uniform, #:foo would read
+as #:|foo|. This bug should be addressed in a near future.
+In a #-non-existent-symbol, nested conditionals some times go wrong. 
+Any symbol or package which name starts with . can't be interpreted
+by the reader correctly. Package aliases for that names are not resolved,
+case transformation is not accomplished. This is because . is used for
+reading conses. This issue can be resolved by redefining macro-character
+for #\( properly, but this was not done. 
+
+Portability issues
+------------------
+Some time ago, this code passed all tests in SBCL,CCL,Allegro and CLISP.
+Now it is used in lispworks 4.4.6 for Windows only. 
+
+Related work
+------------
+Hierarchical packages by Allegro - are incompatible to this library.
+Hierarchicl packages rely on package nicknames like ".subpackage".
+It was not possible at the time of the development of budden-tools 
+to assign macro-char for #\. (see caveats/bugs). 
+
+Named readtables - Stolen and included into this library.
+
+IDE/Completion
+--------------
+THis code is hardly usable without IDE support. Completion is done for lispworks only. 
+This should be easy to port that to SLIME, I dont' know about Allegro. 
+
+in-package/find-package
+-----------------------
+When using local-package-nicknames, it can be possible to arrange that
+current-package>(in-package :local-nickname-for-another-package-in-current-package)
+would work. It is possible if:
+
+i) implementation's reader calls (symbol-function find-package). This seem to
+be true for SBCL,Allegro,Lispworks,CCL and to be false for ECL and CLISP.
+If your implementation support this, you just load some portions of 
+see-packages-lw-edit.lisp into your init file. 
+
+ii) you (not me) write your own in-package and shadowing-import it to your
+package. This could be simply 
+(defun my:in-package (name) 
+  (cl-user::in-package (apply budden-tools::hp-find-package name *package*)))
+
+
+
+
