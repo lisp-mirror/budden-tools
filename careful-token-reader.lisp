@@ -200,90 +200,29 @@ package-sym показывает префикс пакета, с которым мы считали имя. num-of-colons
 
 (defun char-type (c) (elt *char-table* (char-code c)))
 
-(defun hp-alias-map (p &key (resolve-hp-alias t))
-  "Finds alias map for a package. p is a package designator. 
-When resolve-hp-alias is true, p may also be a package alias which is
-resolved in the scope of *package*" 
+(defun hp-alias-map (p)
+  "Finds alias map for a package. p is a package designator" 
   (declare (ignorable p))
-  #+org.tfeb.hax.hierarchical-packages
   (gethash 
-   (the* not-null (if resolve-hp-alias (hp-find-package p) (apply-undecorated 'find-package (list p))))
+   (the* not-null (apply-undecorated 'find-package (list p)))
    *per-package-alias-table*)
-  #-org.tfeb.hax.hierarchical-packages
-  '())
+  )
 
-(defun (setf hp-alias-map) (new p &key (resolve-hp-alias t))
+(defun (setf hp-alias-map) (new p)
   "Example: (setf (budden-tools:hp-alias-map :lgrep) '((:p . :meta-parse))). TODO: check structure"
   ;; This one should never be called if HP is not loaded.
   (declare (ignorable new p))
-  #+org.tfeb.hax.hierarchical-packages
   (setf 
    (gethash 
-    (the* not-null (if resolve-hp-alias (hp-find-package p) (find-package p)))
+    (the* not-null (apply-undecorated 'find-package (list p)))
     *per-package-alias-table*)
    new)
-  #-org.tfeb.hax.hierarchical-packages
-  (error "No hierarchical packages, so aliases will not work"))
+  )
 
-(defun delete-hp-alias-map (p &key (resolve-hp-alias t))
+(defun delete-hp-alias-map (p)
   (declare (ignorable p))
-  #+org.tfeb.hax.hierarchical-packages
-  (remhash (the* not-null (if resolve-hp-alias (hp-find-package p) (find-package p)))
+  (remhash (the* not-null (apply-undecorated 'find-package (list p)))
            *per-package-alias-table*))
-
-
-
-;; redefining from tfeb... 
-(defun relative-package-name-to-package (name &optional (relative-to-package *package*))
-  ;; Given a package name, a string, do a relative package name lookup.
-  ;;
-  ;; It is intended that this function will be called from find-package.
-  ;; In Allegro, find-package calls package-name-to-package, and the latter
-  ;; function calls this function when it does not find the package.
-  ;;
-  ;; Because this function is called via the reader, we want it to be as
-  ;; fast as possible.
-  (declare (optimize speed)
-	   ;#+sbcl
-	   ;(type simple-base-string name)
-	   ;#-sbcl
-	   (type string name))
-  (flet ((relative-to (package name)
-	   (declare (type string name))
-           (if (string= "" name)
-              package
-              (org.tfeb.hax.hierarchical-packages::real-find-package
-	       (concatenate 'simple-string
-			    (package-name package) "." name))))
-         (find-non-dot (name)
-	   ;#+sbcl
-	   ;(declare (type simple-base-string name))
-	   ;#-sbcl
-	   (declare (type string name))
-           (do* ((len (length name))
-                 (i 0 (1+ i)))
-               ((= i len) nil)
-             (declare (fixnum len i))
-             (when (char/= #\. (char name i)) (return i)))))
-    (when (char= #\. (char name 0))
-      (let* ((last-dot-position (or (find-non-dot name) (length name)))
-             (n-dots last-dot-position)
-             (name (subseq name last-dot-position)))
-        (cond ((= 1 n-dots)
-               ;; relative to current package
-               (relative-to relative-to-package name))
-              (t
-               ;; relative to our (- n-dots 1)'th parent
-               (let ((p relative-to-package)
-                     tmp)
-                 (dotimes (i (1- n-dots))
-                   (when (not (setq tmp (org.tfeb.hax.hierarchical-packages::package-parent p)))
-                     (error 'simple-hierarchical-package-error
-                            :package p
-                            :format-control "The parent of ~a does not exist."
-                            :format-arguments (list p)))
-                   (setq p tmp))
-                 (relative-to p name))))))))
 
 ;; redefining hp-find-package to know about qualified-package
 ;; note this was initially defined in hierarchial-packages with some conditionals
@@ -292,20 +231,20 @@ resolved in the scope of *package*"
     (name/package &optional (relative-to-package *package*) real-find-package-fn) 
     (declare (optimize speed))          ;this is critical code
     (let1 *package* *keyword-package* ; otherwise might crash on error messages
-    (typecase name/package
-      (package name/package)
-      (t                                ;should be STRINGable
-       ;; PN is package name, EPN is effective (aliased) name
-       ;; if there is one
-       (let* ((pn (string name/package))
-              (map (hp-alias-map relative-to-package :resolve-hp-alias nil))
-              (epn (and map (cdr (assoc pn map :test #'string=)))))
-         ;; if there is an EPN, then do REAL-FIND-PACKAGE on it, 
-         ;; otherwise use NAME/PACKAGE. not PN, in case it can do some
-         ;; magic.  Otherwise look up a relative name.
-         (or (if real-find-package-fn (funcall real-find-package-fn  (or epn name/package))
-                                      (org.tfeb.hax.hierarchical-packages::real-find-package (or epn name/package)))
-             (budden-tools::relative-package-name-to-package (or epn pn) relative-to-package)))))))
+      (typecase name/package
+        (package name/package)
+        (t                                ;should be STRINGable
+         ;; PN is package name, EPN is effective (aliased) name
+         ;; if there is one
+         (let* ((pn (string name/package))
+                (map (hp-alias-map relative-to-package))
+                (epn (and map (cdr (assoc pn map :test #'string=)))))
+           ;; if there is an EPN, then do REAL-FIND-PACKAGE on it, 
+           ;; otherwise use NAME/PACKAGE. not PN, in case it can do some
+           ;; magic.  Otherwise look up a relative name.
+           (if real-find-package-fn (funcall real-find-package-fn  (or epn name/package))
+             (apply-undecorated 'find-package (list (or epn name/package))))
+           )))))
 
 
 (defmacro hp-in-package (name/package)
