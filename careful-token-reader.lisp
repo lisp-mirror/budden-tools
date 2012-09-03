@@ -93,18 +93,6 @@ package-sym показывает префикс пакета, с которым мы считали им€. num-of-colons
 
 
 
-#| (defun collect-duplicates (list &rest key-args &key key test test-not)
-  "Sub-optimal. Might sort, but does not..." 
-  (declare (ignore key test test-not))          
-  (iter 
-    (:with known-values) ; don't forget to download iterate-keywords ;)
-    (:with old-known-values) 
-    (:for x in list)
-    (setf old-known-values known-values known-values 
-	  (apply 'adjoin x known-values key-args))
-    (when (eq old-known-values known-values)
-      (:collect x)))) |#
-
 #| (defun interpret-compound-token (stream token)
   "–азбирает токен, прочитанный из read-token-with-colons и начинающийс€ с char"
   (cond 
