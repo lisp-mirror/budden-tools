@@ -27,7 +27,8 @@ defpackage-autoimport-2 (obsolete) prefers to use packages and shadowing-import 
 "   
    )
   (:nicknames :merge-packages-simple)
-  (:use :cl :org.tfeb.hax.hierarchical-packages)
+  (:use :cl ;:org.tfeb.hax.hierarchical-packages
+   )
   (:import-from :iter #:iter #:keywordize)
   (:export 
    #:def-merge-packages ; exported name for !. ! itself is unexported
@@ -39,6 +40,7 @@ defpackage-autoimport-2 (obsolete) prefers to use packages and shadowing-import 
 
    #:set-package-lock-portably
    #:*per-package-metadata* ; variable
+   #:*per-package-alias-table* ; variable, stolen from hierarchical-packages
    #:package-forbidden-symbol-names ; place of package designator
    #:ensure-package-metadata ; makes sure that *per-package-metadata* entry for package exists
    #:keywordize-package-designator
@@ -433,6 +435,17 @@ tests:
   "Mapping of keywordized package names to their metadata"
   )
 
+
+(defvar *per-package-alias-table*
+  ;; maps from package -> alist of alias -> real names.
+  ;; Lookups are nopt recursive in this list.
+  ;; (could this be a constant?)
+  (make-hash-table))
+
+#+LispWorks
+;;; Try and let entries go away when packages go away
+(hcl:set-hash-table-weak *per-package-alias-table* :key) 
+
 #|
 В принципе, есть два варианта - либо парсер токенов, который вернул нам лисп. Это хорошо
 для парсеров, принимающих строку, но плохо для парсеров, принимающих поток. Пример
@@ -530,7 +543,7 @@ Returns list of symbols.
     symbols-to-forbid))
     
 
-#.(defparameter +!docstring+ "This form is like defpackage and it has some additional features. 
+(defparameter +!docstring+ "This form is like defpackage and it has some additional features. 
 If some symbols from used packages clash, they are shadowed instead and referred
 as 'forbidden'. Error occurs on an attempt to read these symbols unqualified in package created.
 
@@ -548,16 +561,10 @@ custom-token-parser-spec is [ symbol | (:packages &rest package-designators) ] -
 With buddens readtable extensions enabled, when reader finds \"that-package:\" in the stream, function named by custom-token-reader is invoked with the same signature as READ. 
 ")
 
-(defmacro def-merge-packages (name &rest clauses)
-  #.(concatenate 'string "This form is identical to def-merge-packages::!. I recommend use def-merge-packages::! whenewer possible,
-as it is less verbose. But def-merge-packages is exported so that one could find it easily.
-"
-                 +!docstring+)
-  `(! ,name ,@clauses)
-  )
+
 
 (defmacro ! (name &rest clauses) ; Best variant.: err on non-existing packages
-  #.+!docstring+
+  "see docstring above"
   (macrolet ((get-clause (name)
                `(multiple-value-setq (,name clauses) (extract-clause clauses ,(keywordize name))))
              (length-is-1 (name)
@@ -735,6 +742,21 @@ as it is less verbose. But def-merge-packages is exported so that one could find
           (let (*print-length* *print-level*) (print package-definition)))
         package-definition
         ))))
+
+(setf (documentation 'def-merge-packages 'function)
+      +!docstring+)
+
+
+(defmacro def-merge-packages (name &rest clauses)
+  "see docstring below"
+  `(! ,name ,@clauses)
+  )
+
+(setf (documentation 'def-merge-packages 'function)
+      (concatenate 'string "This form is identical to def-merge-packages::!. I recommend use def-merge-packages::! whenewer possible,
+as it is less verbose. But def-merge-packages is exported so that one could find it easily.
+"
+                 +!docstring+))
 
 
 (dspec:define-dspec-alias ! (name &rest args)

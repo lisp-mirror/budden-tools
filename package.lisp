@@ -22,7 +22,7 @@ but it is unfinished. Also it seem to violate GNU. So it is likely to be removed
 (merge-packages-simple::! :BUDDEN-TOOLS
   (:nicknames "budden-tools")
   (:documentation "Some tools by budden. See packages definition to find a list of symbols")
-  (:use :cl :named-readtables :buddens-readtable :defstruct-meta :org.tfeb.hax.hierarchical-packages
+  (:use :cl :named-readtables :buddens-readtable :defstruct-meta ; :org.tfeb.hax.hierarchical-packages
    :merge-packages-simple)
   (:import-from :iterate-keywords #:iter #:keywordize #:dsetq)
   (:import-from :alexandria #:with-gensyms #:once-only #:string-designator #:eswitch)
