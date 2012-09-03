@@ -27,7 +27,8 @@
 ;;; But I was unable to assign macro-character to #\. in a portable way due to
 ;;; non-conformance in SBCL reader. So hierarchical packages stuff will not work
 ;;; in any implementation where (read) does not call (symbol-function 'find-package),
-;;; e.g. SBCL
+;;; e.g. CLISP
+;;; Notes for ccl - we need to replace ccl::%find-pkg
 
 #+(and allegro (not building-see-packages))
 (eval-when (:load-toplevel :compile-toplevel :execute)
@@ -36,7 +37,7 @@
 (defpackage :org.tfeb.hax.hierarchical-packages
   (:nicknames :org.tfeb.hax.relative-package-names)
   (:use :cl)
-  (:documentation "Port of Allegro's hierarchical packages  to some other implementations"
+  (:documentation "Port of Allegro's hierarchical packages  to some other implementations")
   (:export 
    #:*per-package-alias-table*
    #:hp-find-package))
