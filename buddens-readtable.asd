@@ -1,3 +1,5 @@
+;; -*- Mode: Lisp -*-
+
 (defsystem :buddens-readtable
         :serial t
         :depends-on 

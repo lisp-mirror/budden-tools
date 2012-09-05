@@ -14,6 +14,13 @@
 ;; нечитаемые символы (API для одного символа, а также декларативно)
 ;; 
 
+(eval-when (:execute)
+  (error "Do not execute the file, use compile/load sequence"))
+
+(eval-when (:load-toplevel :compile-toplevel)
+    (setf *readtable* (copy-readtable nil))
+    nil)
+
 
 (cl:defpackage :def-merge-packages
   (:documentation "
@@ -32,6 +39,7 @@ defpackage-autoimport-2 (obsolete) prefers to use packages and shadowing-import 
   (:import-from :iter #:iter #:keywordize)
   (:export 
    #:def-merge-packages ; exported name for !. ! itself is unexported
+   ; #:export2 ; smart export clause
    #:package-metadata ; structure 
    #:package-metadata-forbidden-symbol-names ; and
    #:package-metadata-custom-reader ; its
@@ -85,6 +93,18 @@ defpackage-autoimport-2 (obsolete) prefers to use packages and shadowing-import 
          (return))))
     (values seq num-matches)))
 
+
+(defun export2-reader (stream symbol)
+  "(:export2 package:name ;comment
+    package:camelName ; comment
+    )" 
+  (declare (ignore symbol))
+  (let ((*readtable* (or (EDITOR-HINTS.NAMED-READTABLES:FIND-READTABLE :buddens-readtable-a)
+                        *readtable*)))
+    (read stream)
+    ))
+
+
 (defun merge-packages-simple::export-clause (nickname string)
   "Generates :export clause from string containing qualified symbol names and comments. 
    nickname: is replaced with #:. So, you can safely navigate to it via 
@@ -98,11 +118,12 @@ defpackage-autoimport-2 (obsolete) prefers to use packages and shadowing-import 
   " 
   (let ((nickname (string nickname)))
     `(:export
-      ,@(read-from-string (concatenate 'string
-                                       "(" 
-                                       (search-and-replace-seq 
-                                        'string string 
-                                        (concatenate 'string nickname ":") "#:" :all t :test 'equalp) ")")))))
+      ,@(with-input-from-string (s (concatenate 'string
+                                                "(" 
+                                                (search-and-replace-seq 
+                                                 'string string 
+                                                 (concatenate 'string nickname ":") "#:" :all t :test 'equalp) ")"))
+          (export2-reader s nil)))))
 
 (defun set-package-lock-portably (package lock)
   "When t, package designator is locked. Designators are compared with string="

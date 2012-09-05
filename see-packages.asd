@@ -1,3 +1,5 @@
+;; -*- Mode: Lisp -*-
+
 (in-package :asdf)
 
 #.(defclass russian-file

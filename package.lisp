@@ -2,11 +2,10 @@
 
 
 (eval-when (:execute)
-  (break "it is preferrable to process the file via compilation, otherwise *readtable* might change"))
-
-#.(progn 
-   (setf *readtable* (copy-readtable nil))
-   nil)
+  (error "Do not :execute the file, use compile/load sequence"))
+(eval-when (:load-toplevel :compile-toplevel)
+    (setf *readtable* (copy-readtable nil))
+    nil)
 
 ; deprecate it? вряд ли, потому что struct-to-alist
 (defpackage :defstruct-meta (:use :cl)
