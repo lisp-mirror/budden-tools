@@ -18,11 +18,11 @@ but it is unfinished. Also it seem to violate GNU. So it is likely to be removed
    )
 
 
-(merge-packages-simple::! :BUDDEN-TOOLS
+(def-merge-packages::! :BUDDEN-TOOLS
   (:nicknames "budden-tools")
   (:documentation "Some tools by budden. See packages definition to find a list of symbols")
   (:use :cl :named-readtables :buddens-readtable :defstruct-meta ; :org.tfeb.hax.hierarchical-packages
-   :merge-packages-simple)
+   :def-merge-packages)
   (:import-from :iterate-keywords #:iter #:keywordize #:dsetq)
   (:import-from :alexandria #:with-gensyms #:once-only #:string-designator #:eswitch)
   (:import-from :split-sequence #:split-sequence)
@@ -83,6 +83,12 @@ but it is unfinished. Also it seem to violate GNU. So it is likely to be removed
    budden-tools:struct-to-alist ; lispworks only for now
 
 ;; strings and symbols
+   def-merge-packages:char-upcase-ascii
+   def-merge-packages:char-downcase-ascii
+   def-merge-packages:string-upcase-ascii
+   def-merge-packages:string-downcase-ascii
+   def-merge-packages:all-ascii-chars-in-same-case-p
+
    budden-tools:str+ ; concatenate strings
    budden-tools:str++ ; converts anything to string with format ~A
    budden-tools:symbol+ 
@@ -93,23 +99,7 @@ but it is unfinished. Also it seem to violate GNU. So it is likely to be removed
    budden-tools:non-empty-string-p
    budden-tools:string-or ; returns first non empty string from its &rest args
    budden-tools:princ-to-string-delimited-list
-
-   budden-tools:char-upcase-cyr
-   budden-tools:char-equal-cyr
-   budden-tools:char-downcase-cyr
-   budden-tools:string-upcase-cyr
-   budden-tools:string-downcase-cyr
-   budden-tools:string-equal-cyr
-   budden-tools:string-designator
-   budden-tools:string-designator-p 
-   budden-tools:cyrillic-char-p
-   budden-tools:translit-reversibly
-   budden-tools:textual-equal-cyr
-
-   budden-tools:char-upcase-ascii
-   budden-tools:char-downcase-ascii
-   budden-tools:string-upcase-ascii
-   budden-tools:string-downcase-ascii
+   budden-tools:string-designator-p
 
 ;; evaluation and general shortcuts
 ;  budden-tools:let1 is interned to CL as it is very necessary :) 
@@ -224,7 +214,7 @@ but it is unfinished. Also it seem to violate GNU. So it is likely to be removed
 ;; alternative-backquoting
    |`|
    |,|
-;; some symbol-readmacros
+;; some symbol-readmacros. Will work when :def-symbol-readmacro is loaded
    budden-tools:/with-package/
    budden-tools:/with-readtable-case/
    "

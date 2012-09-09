@@ -21,7 +21,6 @@
     (setf *readtable* (copy-readtable nil))
     nil)
 
-
 (cl:defpackage :def-merge-packages
   (:documentation "
 See merge-packages-simple:! for docs. !4 is unexported to avoid any symbol clashes, but this is the
@@ -68,6 +67,13 @@ defpackage-autoimport-2 (obsolete) prefers to use packages and shadowing-import 
    ;  #:find-symbol-extended ; like find-symbol, but also returns if symbol is (f)bound and home package
    #:get-custom-reader-for-package
    #:get-custom-token-parsers-for-package
+
+   #:char-upcase-ascii
+   #:char-downcase-ascii
+   #:string-upcase-ascii
+   #:string-downcase-ascii
+
+   #:all-ascii-chars-in-same-case-p
    ))
 
 (in-package :merge-packages-simple)
@@ -78,6 +84,78 @@ defpackage-autoimport-2 (obsolete) prefers to use packages and shadowing-import 
   (cl:make-package :merge-packages-simple.forbidden-symbols :use nil)
   )|#
 
+
+(defparameter *ascii-letters* 
+  (let ((lowercase-ascii-letters
+      "abcdefghijklmnopqrstuvwxyz"))
+    (append
+     (concatenate
+      'list
+      lowercase-ascii-letters
+      (string-upcase lowercase-ascii-letters)
+      ))))
+
+(let* ((numchars (/ (length *ascii-letters*) 2))
+       (up (make-hash-table :test #'eql))
+       (down (make-hash-table :test #'eql)))
+  (check-type numchars integer)
+  (iter 
+    (:for i from 0 to (- numchars 1))
+    (:for j from numchars to (- (* 2 numchars) 1))
+    (:for lochar = (elt *ascii-letters* i))
+    (:for hichar = (elt *ascii-letters* j))
+    (setf (gethash lochar up) hichar)
+    (setf (gethash hichar down) lochar))
+
+; non-toplevel
+(defun char-upcase-ascii (char) 
+  (gethash char up char))
+
+; non-toplevel
+(defun char-downcase-ascii (char)
+  (gethash char down char))
+
+; non-toplevel
+(defun char-equal-ascii (c1 c2) 
+  (char-equal (char-upcase-ascii c1)
+              (char-upcase-ascii c2)))
+
+; non-toplevel
+(defun string-upcase-ascii (s)
+    (map 'string 'char-upcase-ascii s))
+
+(defun string-downcase-ascii (s)
+  (map 'string 'char-downcase-ascii s))
+
+);let*
+
+(defun all-ascii-chars-in-same-case-p (s)
+  (let ((all-downs t)
+        (all-ups t)
+        (up #\a)
+        (down #\a))
+    (declare (symbol all-ups all-downs))
+    (declare (character up down))
+    (iter 
+      (:while (or all-ups all-downs))
+      (:for c :in-string s)
+      (declare (character c))
+      (when all-ups
+        (setf up 
+              (char-upcase-ascii c))
+        (unless (char= up c)
+          (setf all-ups nil)))
+      (when all-downs 
+        (setf down 
+              (char-downcase-ascii c))
+        (unless (char= down c)
+          (setf all-downs nil)))
+      )
+    (cond
+     ((and all-ups all-downs) :ignore-case)
+     (all-ups :uppercase)
+     (all-downs :lowercase)
+     (t nil))))
 
 (defun search-and-replace-seq (type seq subseq newseq &key all (test #'equalp))
   (let ((num-matches 0))
@@ -856,31 +934,7 @@ and explain if we can't"
     (if show-symbols result
       (mapcar 'cdr result))))
 
-(defun all-chars-in-same-case-p (s)
-  (let ((all-downs t)
-        (all-ups t)
-        (up #\a)
-        (down #\a))
-    (declare (symbol all-ups all-downs))
-    (declare (character up down))
-    (iter 
-      (:while (or all-ups all-downs))
-      (:for c :in-string s)
-      (declare (character c))
-      (when all-ups
-        (setf up (char-upcase c))
-        (unless (char= up c)
-          (setf all-ups nil)))
-      (when all-downs 
-        (setf down (char-downcase c))
-        (unless (char= down c)
-          (setf all-downs nil)))
-      )
-    (cond
-     ((and all-ups all-downs) :ignore-case)
-     (all-ups :uppercase)
-     (all-downs :lowercase)
-     (t nil))))
+
 
 
 (defmacro package-doctor (package-with-trash &key packages)
@@ -950,7 +1004,7 @@ and explain if we can't"
          (iter 
            (:for sym :in-package package-with-trash)
            (:for sname = (symbol-name sym))
-           (:for case = (all-chars-in-same-case-p sname))
+           (:for case = (all-ascii-chars-in-same-case-p sname))
            (:for other-sym = 
             (case case
               (:uppercase (find-symbol (string-downcase sname) package-with-trash))

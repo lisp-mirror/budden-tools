@@ -327,91 +327,8 @@ iii) if symbol is found more than once then first-symbol-found,list of packages,
     (:finally
      (return (values syms-found found-in-package-itself)))))
 
-(defun all-chars-in-same-case-p (s)
-  (let ((all-downs t)
-        (all-ups t)
-        (up #\a)
-        (down #\a))
-    (declare (symbol all-ups all-downs))
-    (declare (character up down))
-    (iter 
-      (:while (or all-ups all-downs))
-      (:for c :in-string s)
-      (declare (character c))
-      (when all-ups
-        (setf up ; (#+russian char-upcase-cyr #-russian char-upcase c)
-              (char-upcase c))
-        (unless (char= up c)
-          (setf all-ups nil)))
-      (when all-downs 
-        (setf down ; (#+russian char-downcase-cyr #-russian char-downcase c)
-              (char-downcase c))
-        (unless (char= down c)
-          (setf all-downs nil)))
-      )
-    (cond
-     ((and all-ups all-downs) :ignore-case)
-     (all-ups :uppercase)
-     (all-downs :lowercase)
-     (t nil))))
+ 
 
-  
-#|(defun all-chars-in-same-case-p (s)
-  "Все ли символы латиницы в одинаково регистре?
-Возможные возвраты: 
-:ingore-case - нет разницы между верхним и нижним регистром
-:uppercase - все в верхнем регистре
-:lowercase - все в нижнем
-:capitalized - первый в верхнем, остальные - либо в нижнем, либо для остальных нет разницы"
-  (let ((all-downs t)
-        (all-ups t)
-        (capitalized t)
-        (up #\a)
-        (down #\a))
-    (declare (symbol all-ups all-downs capitalized))
-    (declare (character up down))
-    (iter 
-      (:while (or all-ups all-downs))
-      (:for c :in-string s)
-      (declare (character c))
-      (when all-ups
-        (setf up ; (#+russian char-upcase-cyr #-russian char-upcase c)
-              (char-upcase-ascii c))
-        (unless (char= up c)
-          (setf all-ups nil)
-          (when (iter:first-time-p)
-            (setf capitalized nil))
-          ))
-      (when all-downs 
-        (setf down ; (#+russian char-downcase-cyr #-russian char-downcase c)
-              (char-downcase-ascii c))
-        (unless (char= down c)
-          (setf all-downs nil)))
-      (when (and capitalized (not (iter:first-time-p)))
-        (setf down (char-downcase-ascii c))
-        (unless (char= down c)
-          (setf capitalized nil)))
-      )
-    (cond
-     ((and all-ups all-downs) :ignore-case)
-     (all-downs :lowercase)
-     (all-ups :uppercase)
-     (capitalized :capitalised)
-     (t nil))))|#
-
-
-
-#+russian 
-(trivial-deftest::! all-chars-in-same-case-p 
-                    (list (budden-tools::all-chars-in-same-case-p "аУреки")
-                          (budden-tools::all-chars-in-same-case-p "АУРЕКИ")
-                          (budden-tools::all-chars-in-same-case-p "ауреки")
-                          (budden-tools::all-chars-in-same-case-p "aureki")
-                          (budden-tools::all-chars-in-same-case-p "AUReki")
-                          (budden-tools::all-chars-in-same-case-p "AUREKI")
-                          )
-                    (list :ignore-case :ignore-case :ignore-case
-                          :lowercase nil :uppercase))
     
 (defun readtable-case-advanced (rt)
   (let1 rt (ensure-readtable rt)
@@ -453,7 +370,7 @@ iii) if symbol is found more than once then first-symbol-found,list of packages,
   (let ((p-sym nil) (storage-type nil))
     (case (readtable-case-advanced rt)
       (:upcase-if-uniform
-       (let ((same-case-p (and (not starts-with-vertical-line) (all-chars-in-same-case-p name))))
+       (let ((same-case-p (and (not starts-with-vertical-line) (all-ascii-chars-in-same-case-p name))))
          (ecase same-case-p
            (:lowercase
             (setf (values p-sym storage-type) (find-symbol (string-upcase-ascii name) p))

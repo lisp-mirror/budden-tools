@@ -108,7 +108,7 @@ NIL
         (editor::pathetic-parse-symbol partial-name default-package))
     (let partial-name-length (length partial-name))
     (when prefix-length (setf partial-name sym-str))
-    (let all-chars-in-same-case-p (all-chars-in-same-case-p partial-name))
+    (let all-chars-in-same-case-p (all-ascii-chars-in-same-case-p partial-name))
     ; тогда ищЄм всЄ, что подходит. Ќо только в default-package
     (let list
       (iter:iter
@@ -276,9 +276,9 @@ NIL
              (editor::pathetic-parse-symbol str package)
            (declare (ignore pckg xlam1 xlam2))
            ; (print `("returned from p-p-s to d-c-s-1" ,name-only-str))
-           (all-chars-in-same-case-p (sequence-last str (length name-only-str)))
+           (all-ascii-chars-in-same-case-p (sequence-last str (length name-only-str)))
            )
-         (eq (all-chars-in-same-case-p string) :lowercase) ; если набирали в верхнем или смешанном регистре, и останемс€ в верхнем
+         (eq (all-ascii-chars-in-same-case-p string) :lowercase) ; если набирали в верхнем или смешанном регистре, и останемс€ в верхнем
          )
       ; (print "ura!")
       (setf str (string-downcase str))
@@ -353,12 +353,12 @@ NIL
       (let len (length sequence))
       (if (= len 0) nil
         (elt sequence (- (length sequence) 1))))
-    (flet may-string-complete-string (completion partial-name all-chars-in-same-case-p)
+    (flet may-string-complete-string (completion partial-name all-ascii-chars-in-same-case-p)
       ;(break)
       (alexandria.0.dev:starts-with-subseq 
        partial-name
        completion
-       :test (if all-chars-in-same-case-p #'char-equal #'char=)))
+       :test (if all-ascii-chars-in-same-case-p #'char-equal #'char=)))
     (let partial-name (editor::symbol-string-at-point (editor:current-point)))
     ; process some characters in a special way, as symbol-string-at-point treats listener prompt as a symbol string
     (when (member (last-elt partial-name) '(#\  #\() :test 'char=)

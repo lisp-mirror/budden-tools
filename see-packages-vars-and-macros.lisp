@@ -28,6 +28,14 @@
   PAREN-READER-WITH-CLOSING-PAREN-NOTIFICATION where file locations are stored on stack while reading is accomplished"
   )
 
+
+(defparameter *def-symbol-reamacro-additional-name-starting-characters* nil
+  "By default, if first character of symbol/package (nick)name is constituent, 
+\(with some exclusions) and its char-code <= 255, this token is processed by 
+the library's machinery. You can list some more characters in the variable. 
+E.g., national characters of your language. Do not try to include #\. 
+reading would be broken.")
+
 (defmacro with-my-readtable-0 (&body body)
   `(let1 *readtable* *my-readtable*
      ,@body))

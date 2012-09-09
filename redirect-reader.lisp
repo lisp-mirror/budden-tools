@@ -102,9 +102,8 @@ is already an altered readtable, simply returns it TODO: rename me"
         )
        ))
 
-    #+russian 
     (iter:iter
-      (:for c in *cyrillic-symbols*)
+      (:for c in *def-symbol-reamacro-additional-name-starting-characters*)
       (set-macro-character c #'careful-token-reader t rt))
 
     (set-dispatch-macro-character 
