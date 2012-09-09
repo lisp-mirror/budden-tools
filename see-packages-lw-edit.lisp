@@ -344,7 +344,7 @@ NIL
   (declare (ignorable p))
   (setf *readtable* *my-readtable*))
 
-(editor::defcommand "Complete package name command"
+(editor::defcommand "Complete package name"
      (p) "Complete package at point" "Complete package at point"
   (declare (ignorable p))
   (proga all
