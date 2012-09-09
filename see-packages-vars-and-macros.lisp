@@ -176,27 +176,3 @@ pack не поддерживает наших расширений
   `(gethash ,object *nplm))
 
 
-
-#| Всё это не работает
-(defun def-symbol-readmacro-symbol ()
-  (intern (symbol-name '#:def-symbol-readmacro) :budden-tools))
-
-(defmacro do-def-symbol-readmacro (symbol (streamvar) &body body)
-  "It is impossible to read symbol naming symbol-readmacro directly, so there is a hack. See def-symbol-readmacro-reader below"
-  `(,(def-symbol-readmacro-symbol) ,symbol (,streamvar) ,@body))
-
-(eval 
- `(dspec:define-form-parser ,(def-symbol-readmacro-symbol) (name &rest args)
-    (declare (ignore ,(def-symbol-readmacro-symbol) args))
-    name))
-
-(eval 
- `(defmacro ,(def-symbol-readmacro-symbol) (symbol (streamvar) &body body)
-    "It is a temporary macro binding. It is a symbol-readmacro indeed. See def-symbol-readmacro-reader"
-    (with-gensyms (sym)
-      `(dspec:def ,symbol 
-         (setf (symbol-readmacro ',symbol)
-               (lambda (,streamvar ,sym) 
-                 (declare (ignore ,sym))
-                 ,@body))))))
-|#

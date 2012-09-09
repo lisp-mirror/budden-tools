@@ -631,20 +631,3 @@ FIXME shadow find-symbol? FIXME rename"
            (elt *char-table* (char-code c)))))
 
  
-#|
-Всё это не работает
-(defun def-symbol-readmacro-reader (stream symbol)
-  (declare (ignore symbol))
-  (it-is-a-car-symbol-readmacro)
-  (let* ((symbol-to-define (with-good-readtable-2 (:ensure-this-is-a-bad-one nil) (read stream)))
-         (rest (prog1 
-                   (read-delimited-list #\) stream)
-                 (unread-char #\) stream))
-               ))
-    (assert (symbolp symbol-to-define))
-    `(do-def-symbol-readmacro ,symbol-to-define ,@rest) *DEBUG-IO*))
-
-(setf (symbol-readmacro (intern "DEF-SYMBOL-READMACRO" :budden-tools))
-      #'def-symbol-readmacro-reader)
-
-|#
