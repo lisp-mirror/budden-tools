@@ -177,7 +177,7 @@ defpackage-autoimport-2 (obsolete) prefers to use packages and shadowing-import 
     package:camelName ; comment
     )" 
   (declare (ignore symbol))
-  (let ((*readtable* (or (EDITOR-HINTS.NAMED-READTABLES:FIND-READTABLE :buddens-readtable-a)
+  (let (#+nil (*readtable* (or (EDITOR-HINTS.NAMED-READTABLES:FIND-READTABLE :buddens-readtable-a)
                         *readtable*)))
     (read stream)
     ))
