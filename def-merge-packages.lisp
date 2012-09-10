@@ -636,8 +636,12 @@ Returns list of symbols.
       (cl-user::portably-without-package-locks
         (eval 
          `(progn
+            #+lispworks4.4 
             (defconstant ,s :forbidden-symbol)
-            (define-symbol-macro ,s (error "symbol ~S is forbidden in ~S" ,s ,p))
+            ; lispworks 4.4. is non-conformant. Error is signalled in lispworks 6.0 when
+            ; attempting is made to define both variable and symbol-macro,
+            ; so we choose define-symbol-macro in other lisps as it is more agressive
+            (define-symbol-macro ,s (error "symbol ~S is forbidden in ~S" ,s ,p)) 
             (defmacro ,s (&rest ignore) (declare (ignore ignore)) (error "symbol ~S is forbidden in ~S" ,(symbol-name s) ,p))))))
     symbols-to-forbid))
     
