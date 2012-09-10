@@ -20,7 +20,21 @@
                           ,(slot-value venv 'type))))
           (cadr (assoc var variable-types))))
       )))
-  #-:LISPWORKS4.4
+  #+lispworks6
+  (cond 
+   ((constantp var env)
+    (class-of var))
+   (env
+    (let1 venvs (slot-value env 'compiler::venv)
+      (when venvs
+        (let1 variable-types
+            (iter (:for venv in venvs)
+              (ignored (struct-to-alist venv))
+              (:collect `(,(slot-value venv 'compiler::name)
+                          ,(slot-value venv 'type))))
+          (cadr (assoc var variable-types))))))
+   );cond
+  #-(or :LISPWORKS4.4 :lispworks6)
   (error "You lose"))
 
 
