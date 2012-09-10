@@ -112,6 +112,10 @@
 
 (def-rd-test symbol.9a "cl-user::|foo|")
 
+
+(def-rd-test string.1 "\"\"")
+(def-rd-test string.2 "\"\\\"\"")
+
 (def-rd-test list.3 "`a")
 (def-rd-eval-test list.4 "`(a ,'b)")
 (def-rd-eval-test list.5 "(let1 bb (list 'x) (list `(a ,bb) `(a ,@bb) `(a ,@bb ,bb)))")
