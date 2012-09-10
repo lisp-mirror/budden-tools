@@ -402,7 +402,7 @@ NIL
                           (string-downcase 
                            (str++ prefix (if starts-with-colon "" ":"))))))
      
-(editor::bind-key "Complete package name command" "control-meta-j")
+(editor::bind-key "Complete package name" "control-meta-j")
 
 
 #| 
