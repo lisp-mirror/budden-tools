@@ -207,11 +207,11 @@ is already an altered readtable, simply returns it TODO: rename me"
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; Change printer if needed ;;;;;;;;;;;;;;;;;;;;;;;;
 #+lispworks6 
 (cl-user::PORTABLY-WITHOUT-PACKAGE-LOCKS
-  (defmethod print-object :around ((o t) (s stream))
+  (defmethod print-object :around ((o symbol) (s stream))
     "Lispworks6 prints '|ASDF| as \\A\\S\\D\\F in our readtables. As a quick fix,
      we just set up 'good' readtable around printing"
     (let1 *readtable* (gethash *readtable* BUDDEN-TOOLS::*MY-READTABLE-TO-GOOD-READTABLE* *readtable*)
       (call-next-method))))
 
-; TODO: output ASDF as asdf when :upcase-if-uniform is set up. 
+; TODO: output JKL as jkl when :upcase-if-uniform is set up. 
 

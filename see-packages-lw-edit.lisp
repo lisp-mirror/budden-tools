@@ -125,7 +125,8 @@ NIL
   
 
 (defun decorated-complete-symbol 
-       (fn partial-name &key predicate symbols default-package return-common-string)
+       (fn partial-name &key abbreviated predicate symbols default-package return-common-string)
+  (declare (ignore abbreviated))
   (declare (ignorable predicate symbols return-common-string))
   (setf fn 'my-complete-symbol)
   (proga function
