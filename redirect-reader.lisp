@@ -92,15 +92,23 @@ is already an altered readtable, simply returns it TODO: rename me"
        ((consp b))
        (t
         (ecase b 
-          ((:does-not-terminate-token :multiple-escape :single-escape)
+          ((:does-not-terminate-token :multiple-escape 
+            ; :single-escape
+            ; In a past, we could start tokens with \ with no problem. 
+            ; with lispworks6, we can't do that anymore as it conforms to a standard in treating #\\ in string
+            ; When #\\ is a macro char, it is not a single-escape anymore, so string reading becomes broken
+            ; let's try to live without #\\ as a token starting character. 
+            )
            (set-syntax-from-char c #\# rt good-readtable) ; will make it non-terminating macro character
            (set-macro-character c #'careful-token-reader t rt))
           (:colon
            (set-macro-character c #'starting-colon-reader t rt))
-          ((:dot :whitespace[2] nil))
+          ((:dot :whitespace[2] :single-escape
+            nil))
           )
         )
-       ))
+       )
+      )
 
     (iter:iter
       (:for c in *def-symbol-reamacro-additional-name-starting-characters*)
@@ -194,3 +202,16 @@ is already an altered readtable, simply returns it TODO: rename me"
 
 
 |#
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; Change printer if needed ;;;;;;;;;;;;;;;;;;;;;;;;
+#+lispworks6 
+(cl-user::PORTABLY-WITHOUT-PACKAGE-LOCKS
+  (defmethod print-object :around ((o t) (s stream))
+    "Lispworks6 prints '|ASDF| as \\A\\S\\D\\F in our readtables. As a quick fix,
+     we just set up 'good' readtable around printing"
+    (let1 *readtable* (gethash *readtable* BUDDEN-TOOLS::*MY-READTABLE-TO-GOOD-READTABLE* *readtable*)
+      (call-next-method))))
+
+; TODO: output ASDF as asdf when :upcase-if-uniform is set up. 
+
