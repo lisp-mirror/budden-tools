@@ -258,7 +258,8 @@ package-sym показывает префикс пакета, с которым мы считали имя. num-of-colons
 
 (defun hp-relative-package-name-p (name)
   "True if string designates a relative package name"
-  (char= #\. (elt (string name) 0)))
+  (and (> (length name) 0)
+       (char= #\. (elt (string name) 0))))
 
 
 
