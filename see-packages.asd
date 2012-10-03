@@ -12,7 +12,7 @@
 
 (defsystem :see-packages
 	:serial t
-        :depends-on (:cl-utilities :budden-tools :swank)	
+        :depends-on (:cl-utilities :budden-tools :swank :decorate-function)	
 	:components
         (
 	(:russian-file "see-packages-vars-and-macros")

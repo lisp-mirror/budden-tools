@@ -14,7 +14,7 @@
   :depends-on 
   (:alexandria :split-sequence :cl-utilities :named-readtables
    :buddens-readtable :cl-ppcre		
-   :iterate-keywords :swank)
+   :iterate-keywords :swank :decorate-function)
   :components ( 
     ;(:file "hierarchical-packages"
     ; :doc "port of Allergo's hierarchical packages to some more implementations by Tim Bradshaw with some changes by Budden"
