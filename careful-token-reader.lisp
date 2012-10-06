@@ -539,7 +539,7 @@ FIXME shadow find-symbol? FIXME rename"
 
 (defun trace-into-text-file (s)
   (declare (ignorable s))
-  #+nil (with-open-file (oo "c:/lisp.trace.txt" :direction :output :if-does-not-exist :create :if-exists :append)
+  (with-open-file (oo "c:/lisp.trace.txt" :direction :output :if-does-not-exist :create :if-exists :append)
     (write-string (str+ (the* string s) "
 ") oo)))
 

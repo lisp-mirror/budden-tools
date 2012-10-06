@@ -54,6 +54,7 @@
         (progn 
           (trace-into-text-file "minimal-fix-xlam-package :ouch!") 
           nil)
+        (break)
         *keyword-package*))
    (t pack)))
 
@@ -163,9 +164,19 @@ NIL
                    #'decorated-complete-symbol)
 
 
+;(defun decorated-i-find-package-name-for-point (fn p direction length pattern point limit)
+;  (let* ((*readtable* (copy-readtable nil))
+;         (*package* (find-package :common-lisp-user)))
+;    (trace (read-token-with-colons-1 :break t))
+;    (let1 res (funcall fn p direction length pattern point limit)
+;      res)))
+;(decorate-function 'editor::i-find-package-name-for-point 'decorated-i-find-package-name-for-point)
+
 
 (defun decorated-buffer-package-to-use (fn &rest args)
-  (let1 res (minimal-fix-xlam-package (apply fn args))
+  (let1 res 
+      (let* ((found-package (apply fn args)))
+        (minimal-fix-xlam-package found-package))
     (cond ; здесь задаём по умолчанию пакет budden вместо cl-user для Help и Background Output
      ((not (eq res #.(find-package :common-lisp-user))) res)
      (t
@@ -245,7 +256,7 @@ NIL
   "To be called from editor command only"
   (proga
     (mlvl-bind (string beg end) (extract-symbol-string-from-point-with-range pnt))
-    (show-expr `(,string ,beg ,end))
+    ;(show-expr `(,string ,beg ,end))
     (editor:delete-between-points beg end)
     (editor:insert-string beg (print-symbol-string-with-advanced-readtable-case string))
     ))
