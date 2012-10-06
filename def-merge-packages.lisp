@@ -44,6 +44,7 @@ defpackage-autoimport-2 (obsolete) prefers to use packages and shadowing-import 
    #:package-metadata-custom-reader ; its
    #:package-metadata-custom-token-parsers ;slots 
    #:package-metadata-allow-qualified-intern
+   #:package-metadata-interning-is-forbidden
 
    #:set-package-lock-portably
    #:*per-package-metadata* ; variable
@@ -528,6 +529,7 @@ tests:
                        ; and, if buddens readtable extensions are on,  you can't read them with reader 
   allow-qualified-intern ; with buddens readtable extensions, by default, if package::symbol is being read for non-existent symbol, this is cerror. To return to default cl behaviour, set 
                          ; this variable to t. E.g. (setf budden-tools::package-metadata-allow-qualified-intern (budden-tools::ensure-package-metadata :my-package))
+  interning-is-forbidden ; when this is true, interning via reading is prohibited for the package (in our readtable)
   )
 
 (defvar *per-package-metadata* (make-hash-table :test 'eq)

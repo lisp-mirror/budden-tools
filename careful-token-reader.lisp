@@ -22,6 +22,23 @@
 
 (defmacro symbol-readmacro (symbol) `(get ,symbol 'symbol-readmacro))
 
+#+lispworks 
+(dspec:define-form-parser def-symbol-readmacro (name &rest args)
+  (declare (ignore def-symbol-readmacro args))
+  name)
+
+#+lispworks 
+(defmacro def-symbol-readmacro (symbol reader) 
+  "Определяет интерфейс или враппер к стандартному интерфейсу. Заносится в wrapper.lisp с таким именем. Похоже, non-standard нужен, только чтобы обойти проверку на существование таблицы"
+  (when (dspec:location)
+    (lispworks:record-definition symbol (dspec:location)))
+  `(dspec:def ,symbol
+     (setf (symbol-readmacro ',symbol) ,reader)
+     ))
+
+(def-symbol-readmacro |JUST-READ| 'read)
+
+#-lispworks
 (defmacro def-symbol-readmacro (symbol reader)
   `(setf (symbol-readmacro ',symbol) ,reader))
 
@@ -120,6 +137,20 @@ package-sym показывает префикс пакета, с которым мы считали имя. num-of-colons
        ,@body
        )))
 
+(defvar *token-starts-with-vertical-line* nil) ; don't need to be threadvar (?)
+
+
+;;;; open-paren for symbol-readmacro
+(defvar *reading-parens* nil "Если истина, то мы находимся внутри чтения скобок")  
+(defvar *functions-to-call-when-paren-is-closing* nil
+       "Здесь может быть функция от аргументов (считанный-список поток), к-рую мы вызовем на закрытии скобки")
+
+
+; factored out (defvar *package-designator-starts-from-vertical-line* nil)  
+; factored out (defvar *symbol-name-starts-from-vertical-line* nil)  
+(defvar *inhibit-readmacro* nil "When true, readmacros are not processed and treated as normal symbols. It is used to find readmacro definition") 
+(defvar *reading-parens-stream* nil) 
+
 (defun starting-colon-reader (stream char)
   (proga  
     ;(break)
@@ -129,19 +160,6 @@ package-sym показывает префикс пакета, с которым мы считали имя. num-of-colons
     (setf *have-colon* nil)
     (values (read-token-with-colons-1 stream char))
     ))
- 
-
-;;;; open-paren for symbol-readmacro
-(defvar *reading-parens* nil "Если истина, то мы находимся внутри чтения скобок")
-(defvar *functions-to-call-when-paren-is-closing* nil
-       "Здесь может быть функция от аргументов (считанный-список поток), к-рую мы вызовем на закрытии скобки")
-
-
-(defvar *package-designator-starts-from-vertical-line* nil)  
-(defvar *symbol-name-starts-from-vertical-line* nil)  
-(defvar *token-starts-with-vertical-line* nil)
-
-(defvar *reading-parens-stream* nil)
 
 (let ((default-open-paren-reader (get-macro-character #\( (copy-readtable nil))))
   (defun paren-reader-with-closing-paren-notification (stream char)
@@ -423,7 +441,10 @@ FIXME shadow find-symbol? FIXME rename"
                     *per-package-metadata*))
     (when m
       (let fs (package-metadata-forbidden-symbol-names m))
-      (assert (null (find name fs :test 'string=)) () "Symbol name ~S is forbidden in ~A" name package))
+      (assert (null (find name fs :test 'string=)) () "Symbol name ~S is forbidden in ~A" name package)
+      ;(break)
+      (assert (null (package-metadata-interning-is-forbidden m)) () "Unable to intern ~S into ~A as interning is currently forbidden for ~A" name package package)
+      )
     (intern name package)))
 
 (defun check-symbol-forbidden (symbol package)
@@ -490,7 +511,7 @@ FIXME shadow find-symbol? FIXME rename"
                sym))))
          (when (and (symbolp res) stream (not starts-with-vertical-line))
            (let1 readmacro (symbol-readmacro res)
-             (when readmacro 
+             (when (and readmacro (not *inhibit-readmacro*))
                ;(break)
                (return-from function (funcall readmacro stream res)))))
          res))
@@ -499,7 +520,8 @@ FIXME shadow find-symbol? FIXME rename"
 
 
 (defun careful-token-reader (stream char) 
-  (let1 *token-starts-with-vertical-line* nil
+  (let ((*token-starts-with-vertical-line* nil)
+        (*inhibit-readmacro* *inhibit-readmacro*))
     (values (read-token-with-colons-1 stream char))
     ))
 
