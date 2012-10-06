@@ -28,15 +28,18 @@
   name)
 
 #+lispworks 
+(defun def-symbol-readmacro-fun (symbol reader location)
+  (setf (symbol-readmacro symbol) reader)
+  (lispworks:record-definition symbol location)
+  )
+
+#+lispworks 
 (defmacro def-symbol-readmacro (symbol reader) 
-  "Определяет интерфейс или враппер к стандартному интерфейсу. Заносится в wrapper.lisp с таким именем. Похоже, non-standard нужен, только чтобы обойти проверку на существование таблицы"
-  (when (dspec:location)
-    (lispworks:record-definition symbol (dspec:location)))
   `(dspec:def ,symbol
-     (setf (symbol-readmacro ',symbol) ,reader)
+     (def-symbol-readmacro-fun ',symbol ,reader (dspec:location))
      ))
 
-(def-symbol-readmacro |JUST-READ| 'read)
+#+example (def-symbol-readmacro |JUST-READ| 'read)
 
 #-lispworks
 (defmacro def-symbol-readmacro (symbol reader)
