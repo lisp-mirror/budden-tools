@@ -225,7 +225,11 @@ srcpl - symbol-readmacro. Прочитать объект и запрограммировать запоминание его м
                             (- (read *query-io*) 1))
               #+lispworks (let* ((choice-list (mapcar 'str++ res))
                                  (choice (capi:prompt-with-list choice-list "Choose one of the sources"))
-                                 (pos (position choice choice-list :test 'equalp)))
+                                 (pos 
+                                  (if choice 
+                                      (position choice choice-list :test 'equalp)
+                                    (return-from l/find-sources-in-file nil))
+                                  ))
                             pos)
               res))
       res)))
@@ -433,20 +437,34 @@ srcpl - symbol-readmacro. Прочитать объект и запрограммировать запоминание его м
   )
 
 
+#+lispworks 
+(defun point-file-offset (point)
+  (let* ((buffer (editor::point-buffer point))
+         (lineno (editor::count-lines (editor::buffers-start buffer) point)))
+    (+ (real-point-offset point) lineno)))
 
 (defun extract-file-position (stream)
-  "Возвращает текущую позицию в потоке (в каких единицах?)"
+  "Возвращает текущую позицию в потоке (в каких единицах?)" 0
   (typecase stream
     #+lispworks
     (editor::editor-region-stream
-     (+ (file-position stream) 
-        (real-point-offset (slot-value stream 'editor::start)))
+     (point-file-offset (slot-value stream 'editor::point))
+     ;1 point-of-the-position (copy-point 
+     ;(+ (file-position stream) 
+     ;   (point-file-offset #|05 real-point-offset|# (slot-value stream 'editor::start))
+     ;   
+     ;   )
      )
-    #+lispworks
+    #+lispworks4 ; всё равно не работает, т.к. *stream-line-count* меняет только наш ридер, а не лисповый
     (stream::ef-file-stream 
      (let1 v (or (gethash stream *stream-line-count*) 0)
        (- (file-position stream) v)
        ))
+    #|#+nothingLispworks6
+    (stream::ef-file-stream 
+     (let1 v (or (gethash stream *stream-line-count*) 0)
+       (- (file-position stream) v)
+       ))|#
     (t (file-position stream))))
  
         
