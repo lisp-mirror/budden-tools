@@ -6,6 +6,8 @@
 (defparameter *my-readtable* nil "Readtable for testing see-packages")
 (defparameter *good-readtable* (copy-readtable nil) "Sample initial readtable for tests")
 
+(defparameter *cached-default-readtable* (copy-readtable nil))
+
 (defvar *keyword-package* (find-package :keyword))
 
 (defvar *package-seen-packages* (make-weak-key-hash-table :test 'eq)

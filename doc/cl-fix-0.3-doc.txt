@@ -70,11 +70,27 @@ one symbol to use iterate in
 your package. Use keywords as clause heads. 
 (iter (:for ...)) 
 
+Usage
+-----
+(asdf::oos 'asdf:load-op :budden-tools)
+#+YouAreRussian (asdf::oos 'asdf:load-op :russian-budden-tools)
+
+#+YouAreRussian 
+(setf budden-tools::*def-symbol-reamacro-additional-name-starting-characters*
+      (append budden-tools::*def-symbol-reamacro-additional-name-starting-characters*
+              russian-budden-tools::*cyrillic-characters*))
+
+(budden-tools:see-packages-on :buddens-readtable-a)
+(setf (budden-tools::readtable-case-advanced :buddens-readtable-a) :upcase-if-uniform)
+(budden-tools::in-readtable :buddens-readtable-a)
+#+lispworks6 (setf *print-case* :downcase)
+#+lispworks6 (setf SYSTEM:*PRINT-SYMBOLS-USING-BARS* t)
+
 
 Caveats/bugs
 ------------
-When advanced-readtable-case is :upcase-if-uniform, #:foo would read
-as #:|foo|. This bug should be addressed in a near future.
+When advanced-readtable-case is :upcase-if-uniform, #:foo used to 
+as #:|foo|. This seem to be fixed now. 
 In a #-non-existent-symbol, nested conditionals some times go wrong. 
 Any symbol or package which name starts with . can't be interpreted
 by the reader correctly. Package aliases for that names are not resolved,

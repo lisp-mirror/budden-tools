@@ -207,11 +207,26 @@ is already an altered readtable, simply returns it TODO: rename me"
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; Change printer if needed ;;;;;;;;;;;;;;;;;;;;;;;;
 #+lispworks6 
 (cl-user::PORTABLY-WITHOUT-PACKAGE-LOCKS
-  (defmethod print-object :around ((o symbol) (s stream))
+  (defmethod print-object :around ((o symbol) s)
     "Lispworks6 prints '|ASDF| as \\A\\S\\D\\F in our readtables. As a quick fix,
      we just set up 'good' readtable around printing"
-    (let1 *readtable* (gethash *readtable* BUDDEN-TOOLS::*MY-READTABLE-TO-GOOD-READTABLE* *readtable*)
+    (let1 *readtable* *cached-default-readtable* 
+    ; #+nil (if 
+    ;                      (eq (symbol-package o) *keyword-package*) 
+    ;                      *cached-default-readtable*
+    ;                    (gethash *readtable* *my-readtable-to-good-readtable* *readtable*))
+    ;(with-good-readtable-2 (:ensure-this-is-a-bad-one nil)
       (call-next-method))))
+
+#+lispworks6
+(cl-user::PORTABLY-WITHOUT-PACKAGE-LOCKS
+  (defmethod print-object :around ((o structure-object) s)
+    "Lispworks6 prints '|ASDF| as \\A\\S\\D\\F in our readtables. As a quick fix,
+     we just set up 'good' readtable around printing"
+    (let1 *readtable* *cached-default-readtable* 
+      (call-next-method)
+      )
+    ))
 
 ; TODO: output JKL as jkl when :upcase-if-uniform is set up. 
 
