@@ -14,7 +14,7 @@
 (defmacro defun-to-file (name &rest more)
   #+russian "Определяет функцию с таким исходником в файле с именем *defun-to-file-directory*/имя-функции.
 Имя функции должно быть допустимым именем файла и не должно содержать всяких мерзких символов. 
-Нужно бы добавить сюда ещё имя пакета, но пока не сделано. В функции не могут быть gensyms, т.к. они криво
+Нужно бы добавить сюда ещё имя пакета, но пока не сделано. Для лиспворкс 4 в функции не могут быть gensyms, т.к. они криво
 печатаются (что, в общем-то сводит всю идею на нет). Возвращает два значения - имя функции и имя файла"
   (proga 
     (assert (every #L(not (find !1 "\\/.?* ")) (string name)))
@@ -22,12 +22,13 @@
     (proga
       (with-open-file out (str+ filename ".lisp") :direction :output
         :if-does-not-exist :create :if-exists :supersede)
-;      (let *print-circle* t *print-readably* t *print-pretty* t)
+      #+lispworks6 (let *print-circle* t *print-readably* t *print-pretty* t)
 ;      (let *print-circle* t *print-pretty* t)
-      (let *print-pretty* t)
+      #-lispworks6 (let *print-pretty* t)
       (print `(in-package ,(keywordize (package-name *package*))) out)
       (print `(in-readtable :buddens-readtable-a) out)
-      (print `(defun ,name ,@more) out))
+      (print `(defun ,name ,@more) out)
+      )
     (assert (compile-file (str+ filename ".lisp")))
     `(values (load ,filename) ,filename)))
 
