@@ -78,6 +78,7 @@ but it is unfinished. Also it seem to violate GNU. So it is likely to be removed
    budden-tools:ensure-gethash-2 ; gethash with default, better than alexandria
    budden-tools:make-weak-key-hash-table ; from swank
    budden-tools:make-weak-value-hash-table ; from swank
+   budden-tools:mkhash ; make hash and fill it with data, used for printing hash-tables readably
 
 ;; structures
    budden-tools:struct-to-alist ; lispworks only for now

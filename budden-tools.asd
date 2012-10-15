@@ -38,5 +38,6 @@
    (:file "decorate-function" :doc "Smart API for substituting previously defined functions by their new versions")
    (#.russian-file "variable-type" :doc "Some environment related stuff")
    (:file "pass-by-ref" :doc "Pass place to a function by reference")
+   (:file "print-hash-table" :doc "Print hashtable readably")
    )
   ) 
