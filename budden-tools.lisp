@@ -473,6 +473,9 @@ modifying form, e.g. @code{(_f + a b) @equiv{} (incf a b)}."
   "Add item to the end of list. Beware the macro affects all references to the list in 'place'"
   `(_f nconc ,place (list ,item)))
 
+;; see also atomic-queue.lisp
+
+
 (defmacro __f (op arg1 place &rest args)
   "Неудачное имя"
   (multiple-value-bind (vars forms var set access)
