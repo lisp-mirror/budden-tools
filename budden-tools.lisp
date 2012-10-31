@@ -250,8 +250,9 @@ supplied-p è ò.ï."
         (terpri result)))))
 
 
-(defun save-string-to-file (string filename)
-  (with-open-file (out filename :direction :output :if-does-not-exist :create :if-exists :supersede)
+(defun save-string-to-file (string filename &key (external-format #-(and lispworks6 mswindows russian) :default 
+                                                                  #+(and lispworks6 mswindows russian) '(win32:code-page :id 1251)))
+  (with-open-file (out filename :direction :output :if-does-not-exist :create :if-exists :supersede :external-format external-format)
     (format out "~A" string)))
 
 (defun add-string-to-file (string filename)
