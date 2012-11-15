@@ -17,7 +17,7 @@
    :iterate-keywords :swank :decorate-function)
   :components ( 
     ;(:file "hierarchical-packages"
-    ; :doc "port of Allergo's hierarchical packages to some more implementations by Tim Bradshaw with some changes by Budden"
+    ;:doc "port of Allergo's hierarchical packages to some more implementations by Tim Bradshaw with some changes by Budden"
     ; )
    (:file "def-merge-packages"
     :doc "defpackage with some new clauses which are useful in conjunction with this library. See def-merge-packages::!"
