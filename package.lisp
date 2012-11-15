@@ -67,6 +67,7 @@ but it is unfinished. Also it seem to violate GNU. So it is likely to be removed
    budden-tools:alist-to-list
    budden-tools:assoc-getf*
    budden-tools:getf* ; setfable
+   budden-tools:pass-keyargs
    budden-tools:dispatch-keyarg-simple ; helps to build dispatched arglists with &key arguments
    budden-tools:dispatch-keyargs-simple 
    budden-tools:dispatch-keyargs-full 

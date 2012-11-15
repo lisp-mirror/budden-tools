@@ -173,8 +173,9 @@
         (intern symbol-name *keyword-package*))))
 
 (defmacro dispatch-keyarg-simple (keyarg)
-  #+russian "Для передачи похожих аргументов в apply. На самом деле, тут нужно учитывать default,
-supplied-p и т.п."
+  #+russian "Для передачи похожих аргументов в apply. Подразумевается, что вызывающая сторона не даёт
+ключам значения по умолчанию. Если параметр равен nil, он не передаётся, в этом случае значение по умолчанию
+будет взято из вызываемой функции"
   `(when ,keyarg `(,(careful-keywordize ',keyarg) ,,keyarg)))
 
 (defmacro dispatch-keyargs-simple (&rest keyargs)
@@ -204,7 +205,9 @@ supplied-p и т.п."
 
 
 (defmacro dispatch-keyarg-full (keyarg) 
-  #+russian "С учётом supplied-p. предполагаем, что supplied-p имеет вид keyarg-supplied-p"
+  #+russian "Пусть есть вызываемая функция с &key параметром, и вызывающай с таким же &key параметром.
+Мы хотим передать параметры так, чтобы умолчание было взято от вызываемой функции. Нужно в вызывающей функции задать параметр в виде
+&key (param-name nil param-name-supplied-p), а в вызваемой - в виде &key (param-name default [supplied-p])" 
   (let1 package (symbol-package keyarg)
     (assert (not (eq package *keyword-package*)))
     (let1 supplied-p-symbol (careful-add-suffix-to-a-symbol keyarg '-supplied-p)
@@ -214,6 +217,16 @@ supplied-p и т.п."
 (defmacro dispatch-keyargs-full (&rest keyargs)
   `(append ,@(iter (:for keyarg :in keyargs) 
                (:collecting `(dispatch-keyarg-full ,keyarg)))))  
+
+(defmacro pass-keyarg (keyarg)
+  "Имеется вызывающая функция и вызываемая, у них одинаковый &key arg. Хотим передать из вызывающей в вызываемую. Можно написать так:
+ (apply 'вызываемая (pass-keyarg arg)), имя аргумента пишется в виде символа, а не в виде keyword-а"
+  ``(,(careful-keywordize ',keyarg) ,,keyarg)
+  )
+
+(defmacro pass-keyargs (&rest keyargs)
+  `(append ,.(iter (:for keyarg :in keyargs) 
+               (:collecting `(pass-keyarg ,keyarg)))))
 
 
 (defun path-to-a-file (filename) "d:/foo/file.ext --> d:/foo/" 
