@@ -225,7 +225,7 @@
   )
 
 (defmacro pass-keyargs (&rest keyargs)
-  `(append ,.(iter (:for keyarg :in keyargs) 
+  `(append ,@(iter (:for keyarg :in keyargs) 
                (:collecting `(pass-keyarg ,keyarg)))))
 
 
