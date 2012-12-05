@@ -297,6 +297,22 @@ if to-alist is true, to ((a . b) (c . d) ...)"
     (:collect (if to-alist (cons a b) (list a b)))
     ))
 
+
+(defun plist-names (list)
+  (iter 
+    (:while list)
+    (:for name = (pop list))
+    (pop list) ;value
+    (:collect name)))
+
+(defun plist-values (list)
+  (iter
+    (:while list)
+    (pop list) ; name
+    (:for value = (pop list))
+    (:collect value)))
+       
+
 (defun alist-to-list (x) "Превращает alist в список ((a . b) (c . d)) -> (a b c d)"
   (loop for (key . value) in x append (list key value)))
 

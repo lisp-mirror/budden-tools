@@ -58,7 +58,6 @@ but it is unfinished. Also it seem to violate GNU. So it is likely to be removed
    budden-tools:unsplice-list
    budden-tools:npushback ; DEPRECATED pushes item at the end of the list
    budden-tools:nenqueue ; pushes item at the end of the list
-
    budden-tools:dotted-p ; check if list is dotted and 
               ; returns its parts in two values
 
@@ -74,6 +73,8 @@ but it is unfinished. Also it seem to violate GNU. So it is likely to be removed
    budden-tools:_f ; apply f to its first argument (which should be a place) and store result in the place. E.g. (_f nconc x '(1)) adds '(1) to x. 
    budden-tools:__f ; apply f to its second argument
    budden-tools:symbol-macroletf   
+   budden-tools:plist-names  ; items of list at odd places
+   budden-tools:plist-values  ; items of a list at even places
 
 ;; hashes
    budden-tools:ensure-gethash-2 ; gethash with default, better than alexandria
