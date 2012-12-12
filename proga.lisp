@@ -184,7 +184,7 @@ body - уже обработанные формы после clause.
           `(progn ,@expanded-body))
          (t (first expanded-body))))))))
 
-
+; FIXME go tags inside dolist do not work
 (defmacro proga (&body body)
   "proga is an extensible macro which helps to get rid of some unnecessary parens and nesting levels 
 which are present in lisp syntax.
