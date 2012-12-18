@@ -574,6 +574,17 @@ if you undefsystem it"
 (defmethod perform ((op compile-op) (c dependable-file)) (print "compiled resolved_types.h") nil)
 (defmethod perform ((op load-op) (c dependable-file)) (print "loaded resolved_types.h") nil)
 
+
+(defun load-system-by-asd-file (asd-pathname)
+  (flet ((path-to-a-file (filename) "d:/foo/file.ext --> d:/foo/" 
+           (let ((p (pathname filename)))
+             (make-pathname 
+              :host (pathname-host p) 
+              :directory (pathname-directory p)))))
+    (let* ((dir (path-to-a-file asd-pathname))
+           (asdf:*central-registry* (cons dir asdf:*central-registry*)))
+      (! (pathname-name asd-pathname)))))
+
 (defclass package-file (cl-source-file) 
   (
    (packages :initarg :packages))
