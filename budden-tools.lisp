@@ -230,7 +230,7 @@
 
 
 (defun path-to-a-file (filename) "d:/foo/file.ext --> d:/foo/" 
-  (let1 p (pathname filename)
+  (let ((p (pathname filename)))
     (make-pathname 
      :host (pathname-host p) 
      :directory (pathname-directory p))))
