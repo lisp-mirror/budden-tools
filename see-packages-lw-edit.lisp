@@ -1,3 +1,6 @@
+;;;; Только для lispworks 4, хотя глючит
+
+
 (in-package :budden-tools)
 (in-readtable nil)
 
