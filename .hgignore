@@ -6,4 +6,4 @@ syntax: glob
 *.fasl
 *.bak
 glob:doc/tinaa/*
-glob:xlam/*~
+glob:xlam/*.*
