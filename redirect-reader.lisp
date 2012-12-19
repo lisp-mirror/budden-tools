@@ -81,8 +81,9 @@ is already an altered readtable, simply returns it TODO: rename me"
     (let good-readtable (copy-readtable rt)) 
 
     (set-dispatch-macro-character #\# #\: #'sharpdot-colon-reader rt)
-
     (setf entry good-readtable)
+
+    ; (set-dispatch-macro-character #\# #\: #'sbcl-reader-budden-tools-lispworks::sharpdot-colon-reader2 rt)
 
     (iter:iter 
       (:for i :from 0 to 255)
@@ -118,6 +119,65 @@ is already an altered readtable, simply returns it TODO: rename me"
      #\# #\\ 
      (make-safer-sharp-backslash-reader rt) rt)
     rt))
+
+
+
+(defun enable-buddens-readtable-extensions (readtable-designator-or-nil)
+  "Alters readtable to enable budden's readtable extensions. If readtable is nil, 
+alters a new copy of standard readtable. Returns readtable it has altered. If readtable
+is already an altered readtable, simply returns it"
+  (proga nil
+    ; (let readtable (ensure-readtable readtable-designator))
+    (let rt
+      (etypecase readtable-designator-or-nil
+        (null (copy-readtable nil))
+        (t (ensure-readtable readtable-designator-or-nil))))
+    (when (gethash rt *readtable-uses-sbcl-reader-budden-tools-lispworks*)
+      (warn "buddens readtable extensions are already enabled on ~S" rt)
+      (return rt))
+
+    (set-macro-character #\( #'paren-reader-with-closing-paren-notification nil rt)
+
+    (setf (gethash rt *readtable-uses-sbcl-reader-budden-tools-lispworks*) t)
+
+    (set-dispatch-macro-character #\# #\: #'sbcl-reader-budden-tools-lispworks::sharp-colon rt)
+
+    (let good-readtable (copy-readtable rt))
+
+    (iter:iter 
+      (:for i :from 0 to 255)
+      (:for b := (elt *char-table* i))
+      (:for c := (code-char i))
+      (cond 
+       ((consp b))
+       (t
+        (ecase b 
+          ((:does-not-terminate-token ; :multiple-escape 
+            ; :single-escape
+            ; In a past, we could start tokens with \ with no problem. 
+            ; with lispworks6, we can't do that anymore as it conforms to a standard in treating #\\ in string
+            ; When #\\ is a macro char, it is not a single-escape anymore, so string reading becomes broken
+            ; let's try to live without #\\ as a token starting character. 
+            )
+           ;?? (set-syntax-from-char c #\# rt good-readtable) ; will make it non-terminating macro character
+           (set-macro-character c #'sbcl-reader-budden-tools-lispworks::read-token t rt))
+          (:colon
+           (set-macro-character c #'sbcl-reader-budden-tools-lispworks::read-token #+nil #'starting-colon-reader t rt))
+          ((:dot :whitespace[2] :single-escape :multiple-escape nil))
+          )
+        )
+       )
+      )
+
+    (iter:iter
+      (:for c in *def-symbol-reamacro-additional-name-starting-characters*)
+      (set-macro-character c #'sbcl-reader-budden-tools-lispworks::read-token t rt))
+
+    #+nil (set-dispatch-macro-character 
+     #\# #\\ 
+     (make-safer-sharp-backslash-reader rt) rt)
+    rt)
+  )
 
 
 

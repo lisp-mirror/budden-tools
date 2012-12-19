@@ -14,12 +14,14 @@
   "Additional packages to see from that package")
 
 (defvar *my-readtable-to-good-readtable* (make-weak-key-hash-table :test 'eq)
-  "Maps altered readtable with reader extensions to their unaltered counterparts"
-  )
+  "Maps altered readtable with reader extensions to their unaltered counterparts")
 
 (defvar *my-readtable-to-colon-readtable* (make-weak-key-hash-table :test 'eq)
   "Maps altered readtable to their colon-readtable"
   )
+
+(defvar *readtable-uses-sbcl-reader-budden-tools-lispworks* (make-weak-key-hash-table :test 'eq)
+  "Readtable implements reader extensions via SBCL reader")
 
 (defvar *readtable-case-is-upcase-if-uniform* (make-weak-key-hash-table :test 'eq)
   "Если readtable - в этой таблице, то для него действуют особые правила поиска имён. При этом readtable-case нужно поставить в preserve"
@@ -68,6 +70,7 @@ reading would be broken.")
   "Мы находимся внутри with-xlam-package и подменённой readtable. Нам нужно выполнить тело в условиях, когда
 всё как бы нормально. Это нужно для обмана редактора в lispworks."
   `(with-good-readtable-2 (:ensure-this-is-a-bad-one nil)
+     (break "with-fallback-reader-behaviour не должен вызываться")
      (let1 *package* (or *real-package* *package*)
        ,@body)))
 
@@ -118,6 +121,7 @@ pack не поддерживает наших расширений
               (,pack *package*)
               (t *real-package*)))
             (*package* (or ,pack *package*)))
+       (break "maybe-bind-package не должен вызываться")
        (if *real-package* (setf *last-used-real-package* *real-package*))
        ,@body)))
 
@@ -131,11 +135,13 @@ pack не поддерживает наших расширений
 (defmacro with-xlam-package (&body body) "Заменить на with-xlam-package-2"
   `(let ((*real-package* *package*)
          (*package* *xlam-package*)) 
+     (break "with-xlam-package не должен вызываться")
      (setf *last-used-real-package* *real-package*)
      ,@body))
 
 (defmacro with-xlam-package-2 (temp-rt &body pbody)
   `(proga
+     (break "with-xlam-package-2 не должен вызываться")
      (let real-rt *readtable* *real-package* *package*)
      (let *readtable* ,temp-rt)
      (let *package* *xlam-package*)
@@ -147,6 +153,7 @@ pack не поддерживает наших расширений
 (defmacro with-xlam-package-for-output (&body body)
   `(let ((*real-package* *package*)
          (*package* *xlam-package-for-output*))
+     (break "with-xlam-package-for-output не должен вызываться")
      ,@body))
   
 

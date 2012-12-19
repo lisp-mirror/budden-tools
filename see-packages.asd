@@ -18,6 +18,8 @@
 	(:russian-file "see-packages-vars-and-macros")
 	(:russian-file "study-readtable")
 	(:russian-file "careful-token-reader")
+        (:file "sbcl-reader-budden-tools-lispworks-consts")
+        (:file "sbcl-reader-budden-tools-lispworks")
 	(:russian-file "redirect-reader")
 	(:russian-file "see-packages-applications")
 	#+(and lispworks4 win32) 
@@ -26,7 +28,8 @@
         (:russian-file "lispworks60-def-symbol-readmacro")
         (:file "package-aliases")	
 	(:russian-file "locations")
-	(:russian-file "see-packages-test")
+	;2012-12-19 (:russian-file "see-packages-test")
+        (:russian-file "test-sbcl-reader-budden-tools-lispworks")
 	)
 	)
 

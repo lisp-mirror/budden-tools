@@ -21,16 +21,19 @@
 ;;; т.к. мы не можем назначить наш ридмакрос на #\. 
 (defun decorated-find-package (fn name)
   (budden-tools::hp-find-package (if (stringp name) (string-upcase name) name)
-                       (if *use-decorated-package-system-fns*
+                       (if (and 
+                            nil ;2012-12-19
+                            *use-decorated-package-system-fns*)
                            (minimal-fix-xlam-package *package* :stack :find-package)
-                         *package*) fn))
+                         *package*) fn)
+  )
 
 (decorate-function 'find-package #'decorated-find-package)
 
 (defun decorated-find-symbol 
        (fn string &optional (package nil package-supplied-p))
   (cond
-   (*use-decorated-package-system-fns*
+   #+not-2012-12-19 (*use-decorated-package-system-fns*
     (let1 *use-decorated-package-system-fns* nil
       (unless package 
         (setf package (minimal-fix-xlam-package *package*)))
@@ -46,6 +49,7 @@
 (defun minimal-fix-xlam-package (pack &key stack)
   "Stack is passed for trace purposes only"
   (declare (ignore stack))
+  (format *error-output* "minimal-fix-xlam-package must not be called")
   (cond
    ((null pack) pack)
    (*editors-real-package* *editors-real-package*)
@@ -200,7 +204,7 @@ NIL
     ))
 
 
-(decorate-function 'editor::buffer-package-to-use #'decorated-buffer-package-to-use)
+;2012-12-19 (decorate-function 'editor::buffer-package-to-use #'decorated-buffer-package-to-use)
 
 (defun decorated-pathetic-parse-symbol (fn symbol default-package &optional errorp)
 ;  (print "decorated-pathetic-parse-symbol IN")
@@ -221,8 +225,8 @@ NIL
 
 ; budden-tools::see-packages-find-unqualified-symbol "S1" :tst
 
-(decorate-function 'editor::pathetic-parse-symbol
-                   #'decorated-pathetic-parse-symbol)
+;2012-12-19 (decorate-function 'editor::pathetic-parse-symbol
+;                   #'decorated-pathetic-parse-symbol)
 
        
 (defun decorated-symbol-string-at-point (fn point)
@@ -234,7 +238,7 @@ NIL
        string
        (minimal-fix-xlam-package package)))))
 
-(decorate-function 'editor::symbol-string-at-point #'decorated-symbol-string-at-point)
+;2012-12-19(decorate-function 'editor::symbol-string-at-point #'decorated-symbol-string-at-point)
 
 (defun extract-symbol-string-from-point-with-range (pnt)
   (proga function

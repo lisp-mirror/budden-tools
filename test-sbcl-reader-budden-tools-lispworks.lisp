@@ -1,6 +1,6 @@
 ; -*- coding: windows-1251-dos; -*-
 
-(defpackage see-packages-test 
+(defpackage :test-sbcl-reader-budden-tools-lispworks 
   (:use :cl :budden-tools :named-readtables)
   (:shadowing-import-from :iterate #:ITER)
   ; (:shadowing-import-from :trivial-deftest #:DEFTEST)
@@ -21,7 +21,7 @@
 (setf (budden-tools::readtable-case-advanced (find-readtable :tsrbtl-rt-a)) :upcase-if-uniform)
 
 (defmacro with-good-readtable (&body body)
-  `(let1 *readtable* (budden-tools::packages-seen-p :tsrbtl-rt)
+  `(let1 *readtable* (copy-readtable nil)
      ,@body))
 
 (defmacro with-my-readtable (&body body)
@@ -112,6 +112,7 @@
 
 (def-rd-test symbol.9a "cl-user::|foo|")
 
+#+lispworks6 (def-rd-test symbol.9a "lispworks:quit")
 
 (def-rd-test string.1 "\"\"")
 (def-rd-test string.2 "\"\\\"\"")
@@ -150,13 +151,13 @@
                      nil)
                       
 
-(def-trivial-test::! package-prefix.1
+#|2012-12-19 (def-trivial-test::! package-prefix.1
                          (with-my-readtable (read-from-string "keyword::(a b c)"))
-                         '(:a :b :c))
+                         '(:a :b :c))|#
 
-(def-trivial-test::! package-prefix.2
+#|2012-12-19 (def-trivial-test::! package-prefix.2
                          (with-my-readtable (read-from-string "keyword::(a _:let c)"))
-                         '(:a let :c))
+                         '(:a let :c))|#
 
 (with-output-to-string (*error-output*)
   (eval

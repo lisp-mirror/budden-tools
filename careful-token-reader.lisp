@@ -364,16 +364,18 @@ iii) if symbol is found more than once then first-symbol-found,list of packages,
 (defun set-readtable-case-advanced (rt rtcase)
   (proga
     (let rt (ensure-readtable rt))
-    (let good-rt (packages-seen-p rt))
+    (let good-rt (or (packages-seen-p rt) (gethash rt *readtable-uses-sbcl-reader-budden-tools-lispworks*)))
     (case rtcase
       (:upcase-if-uniform
-       (assert good-rt () "Readtable ~S must be mangled by see-packages to be set to upcase-if-uniform" rt)
+       (assert good-rt () "Readtable ~S must be mangled by see-packages or enable-buddens-readtable-extensions to be set to upcase-if-uniform" rt)
        (setf (readtable-case rt) :preserve
-             (readtable-case good-rt) :preserve
-             (gethash rt *readtable-case-is-upcase-if-uniform*) t))
+             (gethash rt *readtable-case-is-upcase-if-uniform*) t)
+       (when (typep good-rt 'readtable)
+         (setf (readtable-case good-rt) :preserve))
+       )
       (t
        (setf (readtable-case rt) rtcase)
-       (when good-rt
+       (when (typep good-rt 'readtable)
          (setf (readtable-case good-rt) :preserve))))))
 
 (defsetf readtable-case-advanced set-readtable-case-advanced)
@@ -387,7 +389,7 @@ iii) if symbol is found more than once then first-symbol-found,list of packages,
 
 ; новшества: 1. символы со всеми ascii в нижнем регистре ищутся только в верхнем регистре
 ; Все остальные - только "как есть"
-; 2. все keywords преобразуются к верхнему регистру в момент чтения
+; 2. ЭТО ЗАКОММЕНТИРОВАНО все keywords преобразуются к верхнему регистру в момент чтения
 (defun find-symbol-with-advanced-readtable-case (name p rt starts-with-vertical-line)
   (let ((p-sym nil) (storage-type nil))
     (case (readtable-case-advanced rt)
