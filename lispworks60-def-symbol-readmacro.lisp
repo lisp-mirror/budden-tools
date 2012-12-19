@@ -43,7 +43,7 @@
    (t 
     (funcall fn string))))
 
-(decorate-function 'find-symbol #'decorated-find-symbol)
+;2012-12-19 (decorate-function 'find-symbol #'decorated-find-symbol)
 
 
 (defun minimal-fix-xlam-package (pack &key stack)
@@ -112,6 +112,7 @@ NIL
     (when prefix-length (setf partial-name sym-str))
     (let all-chars-in-same-case-p (all-ascii-chars-in-same-case-p partial-name))
     ; тогда ищём всё, что подходит. Но только в default-package
+    ;(break)
     (let list
       (iter:iter
         (:for sym :in-package pckg)
@@ -180,7 +181,8 @@ NIL
 (defun decorated-buffer-package-to-use (fn &rest args)
   (let1 res 
       (let* ((found-package (apply fn args)))
-        (minimal-fix-xlam-package found-package))
+        found-package ;(minimal-fix-xlam-package found-package)
+        )
     (cond ; здесь задаём по умолчанию пакет budden вместо cl-user для Help и Background Output
      ((not (eq res #.(find-package :common-lisp-user))) res)
      (t
@@ -196,7 +198,7 @@ NIL
         (cond 
          ((or (alexandria.0.dev::STARTS-WITH-SUBSEQ "Background Output" buffer-name)
               (alexandria.0.dev::STARTS-WITH-SUBSEQ "Help" buffer-name)
-              (warn "Странный пакет в decorated-buffer-package-to-use"))
+              (warn "Странный пакет ~S в decorated-buffer-package-to-use" res))
           (or (find-package :budden) res))
          (t res)))
       )
@@ -204,7 +206,7 @@ NIL
     ))
 
 
-;2012-12-19 (decorate-function 'editor::buffer-package-to-use #'decorated-buffer-package-to-use)
+;2012-12-19(decorate-function 'editor::buffer-package-to-use #'decorated-buffer-package-to-use)
 
 (defun decorated-pathetic-parse-symbol (fn symbol default-package &optional errorp)
 ;  (print "decorated-pathetic-parse-symbol IN")
@@ -218,15 +220,14 @@ NIL
       (multiple-value-prog1 
           (funcall fn 
                    symbol 
-                   (minimal-fix-xlam-package default-package :stack :parse-symbol)
+                   default-package ;2012-12-19 (minimal-fix-xlam-package default-package :stack :parse-symbol)
                    errorp)
        ; (print "decorated-pathetic-parse-symbol OUT")
         ))))
 
 ; budden-tools::see-packages-find-unqualified-symbol "S1" :tst
 
-;2012-12-19 (decorate-function 'editor::pathetic-parse-symbol
-;                   #'decorated-pathetic-parse-symbol)
+(decorate-function 'editor::pathetic-parse-symbol #'decorated-pathetic-parse-symbol)
 
        
 (defun decorated-symbol-string-at-point (fn point)
@@ -236,9 +237,10 @@ NIL
       (SHOW-EXPR `(symbol-string-at-point returned ,string ,package))
       (values
        string
-       (minimal-fix-xlam-package package)))))
+       package ;2012-20-19(minimal-fix-xlam-package package)
+       ))))
 
-;2012-12-19(decorate-function 'editor::symbol-string-at-point #'decorated-symbol-string-at-point)
+(decorate-function 'editor::symbol-string-at-point #'decorated-symbol-string-at-point)
 
 (defun extract-symbol-string-from-point-with-range (pnt)
   (proga function
