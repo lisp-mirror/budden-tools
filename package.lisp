@@ -185,7 +185,7 @@ but it is unfinished. Also it seem to violate GNU. So it is likely to be removed
 
 ;; see-packages and friends
    budden-tools:*keyword-package* ; just a keyword package
-   budden-tools:see-packages-on ; enable symbol-readmacros, custom-token-parsers, advanced-readtable-case and local-nicknames on a (named) readtable. TODO: rename it
+   budden-tools:enable-buddens-readtable-extensions ; enable symbol-readmacros, custom-token-parsers, advanced-readtable-case and local-nicknames on a (named) readtable. TODO: rename it
    budden-tools:*per-package-alias-table* ; stolen from \"hierarchical packages\"
    budden-tools:hp-find-package ; stolen from \"hierarchical packages\"
    budden-tools:hp-in-package  ; stolen from \"hierarchical packages\"

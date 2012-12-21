@@ -75,20 +75,6 @@
               )))))
   object)
 
-#|(defun ^-reader-internal-2 (stream read-object object read-field-name field-name)
-  "СМ НИЖЕ ПЕРЕОПРЕДЕЛЕНО Если read-object=nil, то мы уже считали объект и читаем только то, что идёт после него"
-  (let* ((object (if read-object (read stream t) object))
-         (field-name (if read-field-name (read-symbol-name stream) field-name))
-         (symbol (make-symbol (str+ "(^ " (if (string-designator-p object)
-                                                (string object) "#<...>")
-                                    " " field-name ")")))
-         (args (make-symbol "args")))
-    (eval `(defmacro ,symbol (&rest ,args) 
-             `(|^| ,',object ,',field-name ,@,args)))
-    (eval `(define-symbol-macro ,symbol (|^| ,object ,field-name)))
-    symbol
-    ))|#
-
 
 (defun ^-reader-internal-2 (stream read-object object read-field-name field-name)
   "Если read-object=nil, то мы уже считали объект и читаем только то, что идёт после него"
@@ -101,7 +87,8 @@
 
 
 (defun ^-reader-internal-3 (stream read-object object read-field-name field-name)
-  "Если read-object=nil, то мы уже считали объект и читаем только то, что идёт после него"
+  "Если read-object=nil, то мы уже считали объект и читаем только то, что идёт после него.FIXME - здесь делается let пакету, 
+в результате чего может многое испортиться. поправить read-symbol-name"
   (let* ((object (if read-object (read stream t) object))
          (field-name (if read-field-name (read-symbol-name stream) field-name))
          

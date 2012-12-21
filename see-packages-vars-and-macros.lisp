@@ -60,77 +60,8 @@ reading would be broken.")
        ,@body
        )))
 
-; FIXME. На самом деле, тут отсутствует потокобезопасность. 
-; нужно что-то думать. Например, использовать property-list процесса (не потокобезопасно)
-; или делать read частично-рекурсивным. Каждый readmacro-character входного токена рекурсивный и связывает все переменные. 
-; а также связывает переменную *мы-внутри-нашего-рида*
-; дальнейший, внутренний read обращается к переменной *мы-внутри-нашего-рида* и, в зависимости от этого
-; ведёт себя по-разному. Или проблема - только в том, что мы связываем *package*? 
-(defmacro with-fallback-reader-behaviour (&body body) 
-  "Мы находимся внутри with-xlam-package и подменённой readtable. Нам нужно выполнить тело в условиях, когда
-всё как бы нормально. Это нужно для обмана редактора в lispworks."
-  `(with-good-readtable-2 (:ensure-this-is-a-bad-one nil)
-     (break "with-fallback-reader-behaviour не должен вызываться")
-     (let1 *package* (or *real-package* *package*)
-       ,@body)))
-
-(defpackage :xlam-package (:use))
-(defpackage :xlam-package-for-output (:use))
-(defparameter *xlam-package* (find-package :xlam-package))
-(defparameter *xlam-package-for-output* (find-package :xlam-package-for-output))
-
-(defvar *in-with-xlam-package* nil "FIXME - не используется, вычистить и удалить")
-(defvar *real-package* nil "Во время with-xlam-package сюда сохраняется *package* с помощью let")
-(defvar *last-used-real-package* nil "Во время with-xlam-package сюда присваивается последнее значение
-*package* с помощью setf. Переменная, наверное, глючная")
-
-(defvar *have-colon* nil "Если последняя считанная буква - это двоеточие, входящее в квалификатор пакета, то t")
-(defvar *package-stack* nil "Стек пакетов. При foo:: кладём текущий пакет, а затем <#package foo> на вершину стека")
-(defvar *colon-no-stack* nil "Стек, параллельный стеку пакетов, в к-рый кладётся число колонок")
-; (defvar *intern-to-qualified-package-silently* nil "foo::bar может ссылаться на новые символы") - moved to per-package-metadata
-
 (defvar *print-normalize-seen-symbols* t "Print seen symbols with package
 prefix even if they can be read without the prefix")
-
-#+nil (defmacro maybe-bind-package (pack &body body)
-  "Если pack - истина, то выполняет тело, привязав *package* к pack. 
-При этом, старое значение *pack* находится в *real-package*, а также
-записывается с помощью setf переменная *last-used-real-package*. 
-Если же *package* = *xlam-package*, то не меняет *real-package* и *last-used-real-package*"
-  (once-only (pack)
-    `(let* ((*real-package* 
-             (cond
-              ((eq *package* *xlam-package*) *real-package*)
-              (,pack *package*)
-              (t *real-package*)))
-            (*package* (or ,pack *package*)))
-       (if *real-package* (setf *last-used-real-package* *real-package*))
-       ,@body)))
-
-(defmacro maybe-bind-package (pack &body body)
-  "Работает для чтения pack::symbol, где таблица чтения
-pack не поддерживает наших расширений
-  Если pack - истина, то выполняет тело, привязав *package* к pack. 
-При этом, старое значение *pack* находится в *real-package*, а также
-записывается с помощью setf переменная *last-used-real-package*. 
-Если же *package* = *xlam-package*, то не меняет *real-package* и *last-used-real-package*"
-  (once-only (pack)
-    `(let* ((*real-package* 
-             (cond
-              ((eq *package* *xlam-package*) *real-package*)
-              (,pack *package*)
-              (t *real-package*)))
-            (*package* (or ,pack *package*)))
-       (break "maybe-bind-package не должен вызываться")
-       (if *real-package* (setf *last-used-real-package* *real-package*))
-       ,@body)))
-
-#+nil
-(defmacro with-xlam-package (&body body)
-  `(maybe-bind-package *xlam-package*
-     (proga
-       (let *in-with-xlam-package* t)
-       ,@body)))
 
 (defmacro with-xlam-package (&body body) "Заменить на with-xlam-package-2"
   `(let ((*real-package* *package*)
@@ -149,36 +80,6 @@ pack не поддерживает наших расширений
      (pllet1 (readtable-case *readtable*)
          (xlam-package-readtable-case real-rt))
      ,@pbody))
-
-(defmacro with-xlam-package-for-output (&body body)
-  `(let ((*real-package* *package*)
-         (*package* *xlam-package-for-output*))
-     (break "with-xlam-package-for-output не должен вызываться")
-     ,@body))
-  
-
-
-#+nil (defun force-find-package (package-designator)
-  "Makes sure that package is found. If not, gives sane error message"
-  (iter 
-    (:for package = (find-package package-designator))
-    (when package (return package))
-    (cerror "Retry" "Tried to see non-existent package ~A" package-designator)
-    ))
-
-
-(defmacro in-readtable-upcase-if-uniform (rt-designator)
-  `(progn
-     (in-readtable ,rt-designator)
-     (setf (readtable-case-advanced *readtable*) :upcase-if-uniform)))
-
-(defvar *number-of-colons*) ; число колонок в последнем квалификаторе, к-рый мы считали
-(defvar *in-careful-token-reader* nil)
-(defvar *reading-up-to-colons* nil) ; читаем, как мы предполагаем, имя пакета. Хотя может оказаться, что это обычный символ
-(defparameter *colon-readtable* (copy-readtable nil))
-
-
-
 
 
 (defmacro get-non-persistent-object-locations (object)

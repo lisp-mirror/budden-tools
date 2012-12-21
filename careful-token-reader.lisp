@@ -3,7 +3,7 @@
 (in-package :budden-tools)
 (setf *readtable* (copy-readtable nil))
 
-(defun unread-char* (char stream) "Возвращает новый stream"
+(defun unread-char* (char stream) "Раньше возвращал новый stream, а теперь - просто unread-char"
   (progn 
     (unread-char char stream)
     stream
@@ -45,88 +45,6 @@
 (defmacro def-symbol-readmacro (symbol reader)
   `(setf (symbol-readmacro ',symbol) ,reader))
 
-;(defun foo5 (stream symbol) `'(foo5 ,symbol ,(read stream)))
-;(def-symbol-readmacro |BUDDEN::FOO6| 'foo5)
-
-
-
-#| FIXME!!!!! Пока что мы не можем запустить всё это, остались ещё случаи с невыясненным поведением по отношению к регистру:
-*readtable*
-- keywords (можно всё апкейсить)
-- uninterned символы (нужно всё оставлять как есть или можно тоже апкейсить, хз)
-
-
-(defun reintern (stream symbol package-sym num-of-colons)
-  "Интёрнит символ с таким же именем согласно *package* и *my-packages*
-Если это не символ, то возвращает его как есть. Если конфликт, то ругается.
-package-sym показывает префикс пакета, с которым мы считали имя. num-of-colons
-показывает, сколько двоеточий разделяют имя символа от имени пакета"
-  (unless (symbolp symbol) (return-from reintern symbol))
-  (let1 res
-      (let1 nm (symbol-name symbol)
-        (cond
-         (package-sym
-          (let1 pack (find-package package-sym)
-            (multiple-value-bind (target-sym storage-type)
-                (find-symbol nm pack)
-              (cond
-               ((null target-sym)
-                (cerror "Go on and intern it" "When reading from ~S, symbol ~A::~A does not exist at all" stream package-sym nm)
-                (intern nm package-sym)
-                )
-               ((and (= num-of-colons 1)
-                     (not (eq storage-type :external)))
-                (simple-reader-error stream "~A is not an external symbol in ~A" nm package-sym))
-               (t target-sym)))))
-         (t ; пакет не указан. Ищем символ во всех пакетах, но найтись он должен только в одном. 
-          (iter
-            (:with sym-found = nil)
-            (:for p in (if (eq *package* (find-package :keyword)) 
-                           *package*
-                         (cons *package* *my-packages*)))
-            (:for (values p-sym storage-type) = (find-symbol nm p))
-            (when (and p-sym  ; символ 
-                       (or (eq storage-type :external) ; должен быть внешним 
-                           (:first-time-p)  ; или мы смотрим в *package* и тогда он может быть внутренним тоже
-                           ))
-          ; если у нас несколько символов, то они могут совпадать. 
-              (unless (eq p-sym sym-found) ; если не совпадают, то это сыграет более одного раза.
-                (setf sym-found p-sym)
-                (:count 1 :into cnt))
-              (:collect p :into packs-found)
-              )
-            (:finally
-             (return
-              (case cnt
-                (0 (intern nm *package*))
-                (1 sym-found)
-                (2 (simple-reader-error stream "symbol name ~A is ambigious between ~S" 
-                                        nm packs-found)))))))
-         ))
-    (when (symbolp res)
-      (let1 readmacro (symbol-readmacro res)
-        (break)
-        (when readmacro 
-          (return-from reintern (funcall readmacro stream res)))))
-    res
-    )) |#
-
-
-
-#| (defun interpret-compound-token (stream token)
-  "Разбирает токен, прочитанный из read-token-with-colons и начинающийся с char"
-  (cond 
-   ((null token) token) ;; например, #-
-   (t
-    (case (length token)
-      (1 (reintern stream (car token) nil nil))
-      (3 (let1 2nd  (second token)
-           (or (and (consp 2nd)
-                    (eq (car 2nd) 'colons)) 
-               (simple-reader-error stream "Strange compound token ~S" token))
-           (reintern stream (third token) (first token) (cdr 2nd))))
-      (t (simple-reader-error stream "Strange compound token ~S" token)))))) |#
-
 
 (defmacro with-good-readtable-2 ((&key (ensure-this-is-a-bad-one t)) &body body)
   "переданная readtable должна быть получена с помощью see-packages-on"
@@ -153,16 +71,6 @@ package-sym показывает префикс пакета, с которым мы считали имя. num-of-colons
 ; factored out (defvar *symbol-name-starts-from-vertical-line* nil)  
 (defvar *inhibit-readmacro* nil "When true, readmacros are not processed and treated as normal symbols. It is used to find readmacro definition") 
 (defvar *reading-parens-stream* nil) 
-
-(defun starting-colon-reader (stream char)
-  (proga  
-    ;(break)
-    (let *token-starts-with-vertical-line* nil)
-    (setf char (read-char stream))
-    (let *package* *keyword-package*)
-    (setf *have-colon* nil)
-    (values (read-token-with-colons-1 stream char))
-    ))
 
 (let ((default-open-paren-reader (get-macro-character #\( (copy-readtable nil))))
   (defun paren-reader-with-closing-paren-notification (stream char)
@@ -217,7 +125,6 @@ package-sym показывает префикс пакета, с которым мы считали имя. num-of-colons
 
 
 (eval-when (:load-toplevel) (print "6--------------------------------------"))
-(set-syntax-from-char #\: #\  *colon-readtable* *colon-readtable*)
 
 (defun char-type (c) (elt *char-table* (char-code c)))
 
@@ -349,9 +256,7 @@ iii) if symbol is found more than once then first-symbol-found,list of packages,
     (:finally
      (return (values syms-found found-in-package-itself)))))
 
- 
-
-    
+   
 (defun readtable-case-advanced (rt)
   (let1 rt (ensure-readtable rt)
     (cond
@@ -379,13 +284,6 @@ iii) if symbol is found more than once then first-symbol-found,list of packages,
          (setf (readtable-case good-rt) :preserve))))))
 
 (defsetf readtable-case-advanced set-readtable-case-advanced)
-
-(defun xlam-package-readtable-case (rt)
-  (proga 
-    (let rtcase (readtable-case-advanced rt))
-    (case rtcase
-      (:upcase-if-uniform :preserve)
-      (t rtcase))))
 
 ; новшества: 1. символы со всеми ascii в нижнем регистре ищутся только в верхнем регистре
 ; Все остальные - только "как есть"
@@ -461,83 +359,10 @@ FIXME shadow find-symbol? FIXME rename"
   symbol 
   )
 
-(defun reintern-1 (stream token default-package rt starts-with-vertical-line)  
-  "Прочитали что-то. Заинтёрним его в контект, определяемый default-package (по смыслу это - *package*), *package-stack*, *colon-no-stack*. Можно вызывать только один раз для 
-каждого символа, т.к. вызывается readmacro"
-  (proga function
-    (typecase token
-      (symbol 
-       (proga 
-         (let* name (symbol-name token) 
-           qualified-package (when *have-colon* (car *package-stack*))
-           qualified-colon-no (when *have-colon* (car *colon-no-stack*))
-           package (or qualified-package default-package)
-           package-kwd (keywordize-package-designator package)
-           custom-token-parsers (unless starts-with-vertical-line (get-custom-token-parsers-for-package package-kwd))
-           )
-         (setf *have-colon* nil)
-         (assert (or (null token) (eq (symbol-package token) *xlam-package*)))
-         (unintern token *xlam-package*)
-         (when stream ; stream может быть nil при вызове из decorated-get-symbol-from-point
-           (dolist (parser custom-token-parsers)
-             (multiple-value-bind (result parsed) (funcall parser stream name package)
-               (when parsed
-                 (return-from function (values result t))))))
-         (let res 
-           (cond 
-            ((null qualified-package) ; unqualified symbol
-             (proga
-               (mlvl-bind (p-sym storage-type same-case-p) (find-symbol-with-advanced-readtable-case name package rt *token-starts-with-vertical-line*))
-               (cond
-                ((null storage-type) 
-                 (intern-check-forbidden (fix-symbol-name-for-advanced-readtable-case 
-                                          name package rt starts-with-vertical-line same-case-p)
-                                         package))
-                (t (check-symbol-forbidden p-sym package))
-                )))
-            (t ; qualified symbol
-             (multiple-value-bind (sym status same-case-p)
-                 (find-symbol-with-advanced-readtable-case name qualified-package rt starts-with-vertical-line)
-               (setf name (fix-symbol-name-for-advanced-readtable-case name qualified-package rt starts-with-vertical-line same-case-p))
-               (unless status ; symbol not found
-                 (or (package-metadata-allow-qualified-intern (ensure-package-metadata qualified-package))
-                     (let ((*readtable* (copy-readtable nil))) 
-                       (cerror "Create symbol and use it" "Symbol ~A~A~A does not exist" 
-                               (package-name qualified-package) 
-                               (make-string qualified-colon-no :initial-element #\:)
-                               name)))
-                 (return-from function (intern-check-forbidden name qualified-package)))
-               ; hence symbol is found 
-               (check-symbol-forbidden sym qualified-package)
-               (when (= qualified-colon-no 1) ; were looking for external symbol
-                 (unless (eq status :external)
-                   (cerror "Use symbol anyway" "Symbol ~S is not external in ~A" 
-                           sym qualified-package)))
-               sym))))
-         (when (and (symbolp res) stream (not starts-with-vertical-line))
-           (let1 readmacro (symbol-readmacro res)
-             (when (and readmacro (not *inhibit-readmacro*))
-               ;(break)
-               (return-from function (funcall readmacro stream res)))))
-         res))
-      (t token))))
-
-
-
-(defun careful-token-reader (stream char) 
-  (let ((*token-starts-with-vertical-line* nil)
-        (*inhibit-readmacro* *inhibit-readmacro*))
-    (values (read-token-with-colons-1 stream char))
-    ))
-
 (defvar *show-package-system-vars-id* 0)
 
 (defun new-show-package-system-vars-id () 
   #+nil (incf *show-package-system-vars-id*))
-
-(defun new-show-package-system-vars-id-2 () 
-  #+nil
-  (incf *show-package-system-vars-id*))
 
 (defun trace-into-text-file (s)
   (declare (ignorable s))
@@ -545,117 +370,11 @@ FIXME shadow find-symbol? FIXME rename"
           (write-string (str+ (the* string s) "
 ") oo)))
 
-(defun show-package-system-vars (prefix id)
-  (declare (ignorable prefix id))
-  #+nil (with-open-file (oo "c:/lisp.trace.txt" :direction :output :if-does-not-exist :create :if-exists :append)
-    (proga
-      (macrolet d (var)
-        `(format oo "~A ~A:~A=~A~%" prefix id (symbol-name ',var) 
-                 (typecase ,var 
-                   (package (package-name ,var))
-                   (null "NIL")
-                   (readtable (readtable-name ,var))
-                   (symbol (symbol-name ,var))
-                   (t "???"))))
-      (terpri oo) 
-;      (d *package*)
-      (d *real-package*)
-;      (d *last-used-real-package*)
-;      (d *in-with-xlam-package*)
-;      (d *readtable*)
-      )))
 
 (defun hp-find-package-with-advanced-readtable-case (string starts-with-vertical-line)
   (hp-find-package (if starts-with-vertical-line string (string-upcase string)) ; FIXME? 
                    ))
 
 
-(defun read-token-with-colons-1 (stream char)
-  "читает кусок до двоеточий. Прочитав, пихает в стек пакетов и вызывает read"
-  (proga function
-    (setf *token-starts-with-vertical-line* (eql char #\|))
-    (let the-package *package*)
-    (let rt-to-restore *readtable*)
-    (let *reading-up-to-colons* *reading-up-to-colons*) ; для thread-safety
-    (let *have-colon* *have-colon*)
-    (let *package-stack* *package-stack*)
-    (let *colon-no-stack* *colon-no-stack*)
-    (setf stream (unread-char* char stream))
-    (when *read-suppress*
-      (return-from function (with-good-readtable-2 () (read stream))))
-;    (let *readtable* *colon-readtable*)
-    (let result nil)
-    (setf 
-     result 
-     (proga 
-       (let tok (with-xlam-package-2 (make-colon-readtable rt-to-restore)
-                  (read-preserving-whitespace stream nil nil)))
-       (iter ; считали какую то фигню. По построению это должен быть "символ", который
-             ; может быть либо символом, либо package designator
-             ; Что за ней? Двоеточие, или ещё что-то? 
-         (:for cnt :from 0)
-         (:for c :next (read-char stream nil nil))
-         (:with local-have-colon = nil)
-         (unless c ; ничего нет.  FIXME - случай "cl-user:" тоже сюда попадает
-           (return-from function (reintern-1 stream tok the-package rt-to-restore *token-starts-with-vertical-line*)))
-         (case c
-           (#\:
-            (setf local-have-colon t)
-            (when (and (> cnt 2) (not *read-suppress*)) ; сделать 3 двоеточия - полноценное переключение пакета + @?
-              (simple-reader-error stream "To many colons in ~S" result))
-               ; если ещё нормальное число двоеточий, то ничего не делаем - cnt увеличится и 
-               ; считается следующая литера
-            )
-           (t ; не двоеточие
-            (setf stream (unread-char* c stream))
-            (cond 
-             (local-have-colon ; но закончили читать на двоеточии
-              (proga
-                (let pack nil)
-                (cond ((and (string= (string tok) "_") *package-stack*)
-                       (setf pack (or (second *package-stack*) the-package))
-                       (setf cnt 2) ; даже если было одно двоеточие, ищем всё же любые символы, включая внутренние
-                       (pop *package-stack*)
-                       (pop *colon-no-stack*)
-                       (setf *have-colon* nil) ; делаем вид, что вернулись в старый пакет
-                       )
-                      (t ; задан квалификатор пакета, и этот квалификатор - не "_"
-                       (unless (eq the-package *xlam-package*) 
-                         (push the-package *package-stack*)
-                         (push cnt *colon-no-stack*))
-                       (setf pack (hp-find-package-with-advanced-readtable-case (string tok) *token-starts-with-vertical-line*))
-                       (setf *have-colon* t)
-                       (unless pack 
-                         (loop 
-                          (cerror "Retry" "No ~A package found" tok)))))
-                (push pack *package-stack*)
-                (push cnt *colon-no-stack*)
-                (let custom-token-reader (get-custom-reader-for-package pack))
-                (when custom-token-reader
-                  (return-from function 
-                    (funcall custom-token-reader stream t nil t)))
-                (let id (new-show-package-system-vars-id))
-                (show-package-system-vars "read-token-with-colons: before" id)
-                ;;; теперь мы не будем переключать таблицы чтения - это слишком сложно.
-                ;;; у нас будет одна таблица чтения на всё. Изменения в неё можно вносить 
-                ;;; только локальными symbol-readmacro
-                ;;; за счёт этого, мы пытаемся вырулить из ситуации с see-packages. 
-                #+nil (let *readtable* (swank::guess-buffer-readtable (package-name pack)))
-                (return-from function (read stream t nil t))
-                ))
-             (t ; не двоеточие и не было двоеточий
-              ;
-              (return-from function (reintern-1 stream tok the-package rt-to-restore *token-starts-with-vertical-line*))
-              )
-             )
-            )
-           ))
-       ))))
-
-           
-
-(defun token-delimiterp (c) 
-  (not (eq :does-not-terminate-token 
-           (elt *char-table* (char-code c)))))
 
  

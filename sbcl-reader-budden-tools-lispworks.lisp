@@ -1505,19 +1505,6 @@ variables to allow for nested and thread safe reading."
 
 ;;;; reader initialization code
 
-#|(defun sharpdot-colon-reader2 (stream subchar arg)
-  (declare (ignore subchar arg))
-  (let* (; (*package* (find-package :xlam-package))
-         ; (*readtable* (gethash *readtable* *my-readtable-to-good-readtable*))
-         (token (with-xlam-package (read stream)))
-         (symbol (the* symbol token)))
-    (assert (or (null symbol)
-                (eq (symbol-package symbol) 
-                    *xlam-package*)))
-    (when symbol (unintern symbol *xlam-package*))
-    symbol))|#
-
-
 (defun sharp-colon (stream sub-char numarg)
   (declare (ignore sub-char numarg))
   (with-reader ()

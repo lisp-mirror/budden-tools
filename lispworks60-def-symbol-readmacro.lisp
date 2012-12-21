@@ -169,12 +169,6 @@ NIL
                    #'decorated-complete-symbol)
 
 
-;(defun decorated-i-find-package-name-for-point (fn p direction length pattern point limit)
-;  (let* ((*readtable* (copy-readtable nil))
-;         (*package* (find-package :common-lisp-user)))
-;    (trace (read-token-with-colons-1 :break t))
-;    (let1 res (funcall fn p direction length pattern point limit)
-;      res)))
 ;(decorate-function 'editor::i-find-package-name-for-point 'decorated-i-find-package-name-for-point)
 
 
@@ -211,7 +205,7 @@ NIL
 (defun decorated-pathetic-parse-symbol (fn symbol default-package &optional errorp)
 ;  (print "decorated-pathetic-parse-symbol IN")
   (let1 id (new-show-package-system-vars-id)
-    (show-package-system-vars "decorated-pathetic-parse-symbol:before" id)
+    ;(show-package-system-vars "decorated-pathetic-parse-symbol:before" id)
     (trace-into-text-file (str++ "decorated-pathetic-parse-symbol:default-package " id " "
                                  (package-name default-package)))
 ;    (let1 defaul*package* default-package ; (or *last-used-real-package* default-package)
