@@ -49,7 +49,7 @@
 (defun minimal-fix-xlam-package (pack &key stack)
   "Stack is passed for trace purposes only"
   (declare (ignore stack))
-  (format *error-output* "minimal-fix-xlam-package must not be called")
+  (cerror "minimal-fix-xlam-package must not be called")
   (cond
    ((null pack) pack)
    (*editors-real-package* *editors-real-package*)
