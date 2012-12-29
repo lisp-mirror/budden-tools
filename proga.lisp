@@ -76,7 +76,7 @@
                  ,@(proga-body-expander forms-after-clause)))
               ((destructuring-bind multiple-value-bind progv with-struct let1 pllet1)
                (if (= (length clause) 3) (open-up) (dont-process)))
-              ((when unless dolist loop)
+              ((when unless dolist loop dotimes)
                `((,head ,@(proga-body-expander tail))
                  ,@(proga-body-expander forms-after-clause)
                  )

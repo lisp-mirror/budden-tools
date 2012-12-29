@@ -3,7 +3,8 @@
 <head>
 <meta http-equiv=Content-Type content="text/html; charset=windows-1251">
 <meta name=Generator content="Microsoft Word 11 (filtered)">
-<title>Использованные материалы:</title>
+<title>Введение в Common Lisp для профессионалов Delphi/SQL</title>
+
 <style>
 <!--
  /* Font Definitions */
@@ -47,6 +48,14 @@ h3
 	page-break-after:avoid;
 	font-size:13.0pt;
 	font-family:Arial;}
+h4
+	{margin-top:12.0pt;
+	margin-right:0cm;
+	margin-bottom:3.0pt;
+	margin-left:0cm;
+	page-break-after:avoid;
+	font-size:14.0pt;
+	font-family:"Times New Roman";}
 p.MsoBodyTextIndent, li.MsoBodyTextIndent, div.MsoBodyTextIndent
 	{margin:0cm;
 	margin-bottom:.0001pt;
@@ -69,6 +78,10 @@ p.a, li.a, div.a
 	margin-bottom:.0001pt;
 	font-size:12.0pt;
 	font-family:"Courier New";}
+span.2
+	{font-family:Arial;
+	font-weight:bold;
+	font-style:italic;}
 @page Section1
 	{size:841.9pt 595.3pt;
 	margin:57.55pt 2.0cm 57.55pt 2.0cm;}
@@ -377,11 +390,15 @@ lang=EN-US>a</span> защитный код (аналог <span lang=EN-US>finally</span>) выполн
 кавычки и т.п. закрыты, и после этого нажали <span lang=EN-US>Enter</span>. </p>
 
 <p class=MsoNormal>Строковый литерал (строка в кавычках) также может быть
-многострочной. Листенер не показывает, находится ли он в состоянии чтения
-команды или вычисления. Это, конечно, плохо. Если есть сомнения, всегда можно
-нажать <span lang=EN-US>Ctrl</span>-<span lang=EN-US>Break</span> и посмотреть
-стек. Если в стеке нет функции, которая, как Вы думаете, у Вас зависла при
-выполнении, значит, Вы просто недоввели команду.  </p>
+многострочной. Как понять, находится ли листенер в состоянии чтения команды или
+вычисления? После запуска команды на выполнение её текст окрашивается в красный
+цвет. Если есть сомнения, всегда можно нажать <span lang=EN-US>Ctrl</span>-<span
+lang=EN-US>Break</span><span lang=EN-US> </span>(или на вот такой кирпич <img
+border=0 width=24 height=32 src="lisp-tutorial.files/image001.jpg">) и
+посмотреть на стек. Также есть диспетчер процессов, <span lang=EN-US>works</span>/<span
+lang=EN-US>tools</span>/<span lang=EN-US>process</span><span lang=EN-US> </span><span
+lang=EN-US>browser</span>, но не забудьте после открытия нажать <span
+lang=EN-US>F</span>5 для обновления состояния. </p>
 
 <h1>Списки. Квазицитирование</h1>
 
@@ -396,7 +413,7 @@ lang=EN-US>a</span> защитный код (аналог <span lang=EN-US>finally</span>) выполн
 href="http://eli.thegreenplace.net/2007/08/10/sicp-section-221/">http://eli.thegreenplace.net/2007/08/10/sicp-section-221/</a></p>
 
 <p class=MsoBodyTextIndent><img border=0 width=217 height=88
-src="lisp-tutorial.files/image001.jpg"></p>
+src="lisp-tutorial.files/image002.jpg"></p>
 
 <p class=MsoBodyTextIndent>Т.е, наиболее быстрые операции над списком – это
 операции над его первым элементом, а доступ к произвольному элементу имеет
@@ -661,8 +678,8 @@ red'>let</span>. Уже после этого можно читать и присваивать переменную. </p>
 
 <p class=MsoNormal style='text-indent:18.0pt'>Можно продлить жизнь локальной
 переменной на неопределённое время, если &quot;замкнуть&quot; её с помощью
-генератора функций <span lang=EN-US style='color:red'>lambda</span>. Например, следующая
-функция показывает пример этого, с переводом на Дельфи:</p>
+генератора функций <span lang=EN-US style='color:red'>lambda</span>. Например,
+следующая функция показывает пример этого, с переводом на Дельфи:</p>
 
 <p class=MsoNormal style='text-indent:18.0pt'>&nbsp;</p>
 
@@ -691,7 +708,7 @@ red'>let</span>. Уже после этого можно читать и присваивать переменную. </p>
   style='font-size:10.0pt'>lambda</span><span style='font-size:10.0pt'>
   (новЗнач) </span></p>
   <p class=a><span style='font-size:10.0pt'>&nbsp;</span></p>
-  <p class=a><span style='font-size:10.0pt'>           (</span><span
+  <p class=a><span style='font-size:10.0pt'>           (</span><span
   lang=EN-US style='font-size:10.0pt'>let</span><span style='font-size:10.0pt'>
   ((результат ячейка))</span></p>
   <p class=a><span style='font-size:10.0pt'>              (</span><span
@@ -971,7 +988,7 @@ red'>let</span>. Уже после этого можно читать и присваивать переменную. </p>
   <p class=a><span lang=EN-US style='font-size:10.0pt'>              (incf v)</span></p>
   <p class=a><span lang=EN-US style='font-size:10.0pt'>               ))</span></p>
   <p class=a><span lang=EN-US style='font-size:10.0pt'>&nbsp;</span></p>
-  <p class=a><span lang=EN-US style='font-size:10.0pt'>       (inner)</span></p>
+  <p class=a><span lang=EN-US style='font-size:10.0pt'>       (inner)</span></p>
   <p class=a><span lang=EN-US style='font-size:10.0pt'>       )))</span></p>
   <p class=a><span style='font-size:10.0pt'>ЛИБО</span><span lang=EN-US
   style='font-size:10.0pt'> </span></p>
@@ -985,7 +1002,7 @@ red'>let</span>. Уже после этого можно читать и присваивать переменную. </p>
   style='font-size:10.0pt'>let</span><span lang=EN-US style='font-size:10.0pt'>
   </span><span lang=EN-US style='font-size:10.0pt'>v</span><span
   style='font-size:10.0pt'> 0)</span></p>
-  <p class=a><span lang=EN-US style='font-size:10.0pt'>     (flet inner ()</span></p>
+  <p class=a><span lang=EN-US style='font-size:10.0pt'>     (flet inner ()</span></p>
   <p class=a><span lang=EN-US style='font-size:10.0pt'>        (incf v))</span></p>
   <p class=a><span lang=EN-US style='font-size:10.0pt'>     (inner)</span></p>
   <p class=a><span lang=EN-US style='font-size:10.0pt'>     ))</span></p>
@@ -1003,9 +1020,9 @@ red'>let</span>. Уже после этого можно читать и присваивать переменную. </p>
   op2;</span></p>
   <p class=MsoNormal><span lang=EN-US style='font-size:10.0pt;font-family:"Courier New"'>finally</span></p>
   <p class=MsoNormal><span lang=EN-US style='font-size:10.0pt;font-family:"Courier New"'> 
-  op1;</span></p>
+  op3;</span></p>
   <p class=MsoNormal><span lang=EN-US style='font-size:10.0pt;font-family:"Courier New"'> 
-  op2;</span></p>
+  op4;</span></p>
   <p class=MsoNormal><span lang=EN-US style='font-size:10.0pt;font-family:"Courier New"'> 
   end;</span></p>
   </td>
@@ -1016,20 +1033,590 @@ red'>let</span>. Уже после этого можно читать и присваивать переменную. </p>
   <p class=a><span lang=EN-US style='font-size:10.0pt'>  (progn</span></p>
   <p class=a><span lang=EN-US style='font-size:10.0pt'>    op1</span></p>
   <p class=a><span lang=EN-US style='font-size:10.0pt'>    op2)</span></p>
-  <p class=a><span lang=EN-US style='font-size:10.0pt'>  </span></p>
-  <p class=a><span lang=EN-US style='font-size:10.0pt'>  op1</span></p>
-  <p class=a><span lang=EN-US style='font-size:10.0pt'>  op2 </span></p>
+  <p class=a><span lang=EN-US style='font-size:10.0pt'>  op3</span></p>
+  <p class=a><span lang=EN-US style='font-size:10.0pt'>  op4 </span></p>
   <p class=a><span lang=EN-US style='font-size:10.0pt'>  )</span></p>
+  </td>
+ </tr>
+ <tr>
+  <td width=493 valign=top style='width:369.65pt;border:solid windowtext 1.0pt;
+  border-top:none;padding:0cm 5.4pt 0cm 5.4pt'>
+  <p class=MsoNormal><span lang=EN-US style='font-size:10.0pt;font-family:"Courier New"'>try</span></p>
+  <p class=MsoNormal><span lang=EN-US style='font-size:10.0pt;font-family:"Courier New"'>&nbsp;</span></p>
+  <p class=MsoNormal><span lang=EN-US style='font-size:10.0pt;font-family:"Courier New"'> 
+  op1; </span></p>
+  <p class=MsoNormal><span lang=EN-US style='font-size:10.0pt;font-family:"Courier New"'> 
+  op2;</span></p>
+  <p class=MsoNormal><span lang=EN-US style='font-size:10.0pt;font-family:"Courier New"'>except</span></p>
+  <p class=MsoNormal><span lang=EN-US style='font-size:10.0pt;font-family:"Courier New"'> 
+  on E1:class1 do</span></p>
+  <p class=MsoNormal><span lang=EN-US style='font-size:10.0pt;font-family:"Courier New"'>   
+  begin</span></p>
+  <p class=MsoNormal><span lang=EN-US style='font-size:10.0pt;font-family:"Courier New"'>   
+  writeln(E1.message);</span></p>
+  <p class=MsoNormal><span lang=EN-US style='font-size:10.0pt;font-family:"Courier New"'>   
+  op4;</span></p>
+  <p class=MsoNormal><span lang=EN-US style='font-size:10.0pt;font-family:"Courier New"'>   
+  end</span></p>
+  <p class=MsoNormal><span lang=EN-US style='font-size:10.0pt;font-family:"Courier New"'> 
+  on E2:class2 do</span></p>
+  <p class=MsoNormal><span lang=EN-US style='font-size:10.0pt;font-family:"Courier New"'>   
+  begin</span></p>
+  <p class=MsoNormal><span lang=EN-US style='font-size:10.0pt;font-family:"Courier New"'>   
+  raise;</span></p>
+  <p class=MsoNormal><span lang=EN-US style='font-size:10.0pt;font-family:"Courier New"'>   
+  end</span></p>
+  <p class=MsoNormal><span lang=EN-US style='font-size:10.0pt;font-family:"Courier New"'> 
+  end;</span></p>
+  </td>
+  <td width=493 valign=top style='width:369.65pt;border-top:none;border-left:
+  none;border-bottom:solid windowtext 1.0pt;border-right:solid windowtext 1.0pt;
+  padding:0cm 5.4pt 0cm 5.4pt'>
+  <p class=a><span lang=EN-US style='font-size:10.0pt'>(handler-case</span></p>
+  <p class=a><span lang=EN-US style='font-size:10.0pt'>  (progn</span></p>
+  <p class=a><span lang=EN-US style='font-size:10.0pt'>    op1</span></p>
+  <p class=a><span lang=EN-US style='font-size:10.0pt'>    op2)</span></p>
+  <p class=a><span lang=EN-US style='font-size:10.0pt'>&nbsp;</span></p>
+  <p class=a><span lang=EN-US style='font-size:10.0pt'>  (class1 (e1)</span></p>
+  <p class=a><span lang=EN-US style='font-size:10.0pt'>&nbsp;</span></p>
+  <p class=a><span lang=EN-US style='font-size:10.0pt'>    (princ e1)</span></p>
+  <p class=a><span lang=EN-US style='font-size:10.0pt'>    op4</span></p>
+  <p class=a><span lang=EN-US style='font-size:10.0pt'>    )</span></p>
+  <p class=a><span lang=EN-US style='font-size:10.0pt'>  (class2 (e2)</span></p>
+  <p class=a><span lang=EN-US style='font-size:10.0pt'>&nbsp;</span></p>
+  <p class=a><span style='font-size:10.0pt'>    (</span><span lang=EN-US
+  style='font-size:10.0pt'>error</span><span lang=EN-US style='font-size:10.0pt'>
+  </span><span lang=EN-US style='font-size:10.0pt'>e</span><span
+  style='font-size:10.0pt'>2)</span></p>
+  <p class=a><span style='font-size:10.0pt'>    )</span></p>
+  <p class=a><span style='font-size:10.0pt'>  ) ; </span><i><span
+  style='font-size:6.0pt'>ну вот, заодно и сам узнал</span></i><span
+  style='font-size:10.0pt'>   </span></p>
+  <p class=a><span style='font-size:10.0pt'>&nbsp;</span></p>
   </td>
  </tr>
 </table>
 
 <p class=MsoNormal>&nbsp;</p>
 
-<h1>Организация проекта. Файлы, пакеты, <span lang=EN-US>asdf</span>-системы,
-динамическая разработка</h1>
+<h1>Организация проекта. Файлы, пакеты, <span lang=EN-US>eval</span>-<span
+lang=EN-US>when</span>, #., <span lang=EN-US>asdf</span>-системы, динамическая
+разработка</h1>
 
-<p class=MsoNormal>&nbsp;</p>
+<p class=MsoBodyTextIndent>Структура проекта и процесс загрузки приложения на
+Лиспе гораздо сложнее, чем на Дельфи, поскольку:</p>
+
+<p class=MsoBodyTextIndent>- в Дельфи мало что можно поменять во время
+выполнения, а в Лиспе можно поменять почти всё</p>
+
+<p class=MsoBodyTextIndent>- понятие модуля в Дельфи являются монолитными, а в
+Лиспе оно разделено на несколько понятий</p>
+
+<p class=MsoBodyTextIndent>- многое из того, что  в Дельфи делается автоматически,
+в Лиспе нужно делать руками. </p>
+
+<h2>Определения понятий</h2>
+
+<p class=MsoBodyTextIndent>Файл *.<span lang=EN-US>lisp</span><span lang=EN-US>
+</span>– аналог *.<span lang=EN-US>pas</span></p>
+
+<p class=MsoBodyTextIndent>Файл *.<span lang=EN-US>ofasl</span> – аналог *.<span
+lang=EN-US>dcu</span>. Могут размещаться в разных экзотических местах, см. эти
+места при компиляции или ищите поиском по диску. </p>
+
+<p class=MsoBodyTextIndent>Пакет – пространство имён (перечень имён, допустимых
+в определённом контексте, который может меняться во время выполнения).</p>
+
+<p class=MsoBodyTextIndent><span lang=EN-US>eval</span>-<span lang=EN-US>when</span>
+– аналог {$<span lang=EN-US>if</span><span lang=EN-US> </span>файлКомпилируется}
+... {$<span lang=EN-US>elseif</span><span lang=EN-US> </span>файлЗагружается}
+... {$<span lang=EN-US>endif</span>}, позволяет выполнять тот или иной код на
+этапе компиляции и/или загрузки уже скомпилированного файла. </p>
+
+<p class=MsoBodyTextIndent>#. – позволяет выполнять код в момент чтения текста
+программы из файла (до компиляции).</p>
+
+<p class=MsoBodyTextIndent><span lang=EN-US>asdf</span>-система – аналог файла
+проекта или <span lang=EN-US>makefile</span>. Типичная программа содержит
+множество взаимосвязанных систем <span lang=EN-US>asdf</span>, каждая из
+которых имеет свой каталог и определение в файле *.<span lang=EN-US>asd</span>.
+</p>
+
+<p class=MsoBodyTextIndent>Динамическая разработка – возможность менять код
+программы без её остановки. </p>
+
+<p class=MsoBodyTextIndent style='text-indent:0cm'><span class=2><span
+style='font-size:14.0pt'>&nbsp;</span></span></p>
+
+<p class=MsoBodyTextIndent style='text-indent:0cm'><span class=2><span
+style='font-size:14.0pt'>Таблица аналогий</span></span></p>
+
+<table class=MsoNormalTable border=1 cellspacing=0 cellpadding=0
+ style='border-collapse:collapse;border:none'>
+ <tr>
+  <td width=493 valign=top style='width:369.65pt;border:solid windowtext 1.0pt;
+  padding:0cm 5.4pt 0cm 5.4pt'>
+  <p class=MsoNormal><span lang=EN-US style='font-size:10.0pt;font-family:"Courier New"'>Delphi</span></p>
+  </td>
+  <td width=493 valign=top style='width:369.65pt;border:solid windowtext 1.0pt;
+  border-left:none;padding:0cm 5.4pt 0cm 5.4pt'>
+  <p class=a><span lang=EN-US style='font-size:10.0pt'>CL</span></p>
+  <p class=a><span style='font-size:10.0pt'>&nbsp;</span></p>
+  </td>
+ </tr>
+ <tr>
+  <td width=493 valign=top style='width:369.65pt;border:solid windowtext 1.0pt;
+  border-top:none;padding:0cm 5.4pt 0cm 5.4pt'>
+  <p class=MsoNormal><span style='font-size:10.0pt;font-family:"Courier New"'>*</span><span
+  lang=EN-US style='font-size:10.0pt;font-family:"Courier New"'>.dpr</span></p>
+  </td>
+  <td width=493 valign=top style='width:369.65pt;border-top:none;border-left:
+  none;border-bottom:solid windowtext 1.0pt;border-right:solid windowtext 1.0pt;
+  padding:0cm 5.4pt 0cm 5.4pt'>
+  <p class=a><span style='font-size:10.0pt'>Скрипт загрузки, с помощью которого
+  «голая» лисп-система превращается в программу (мы ещё не рассматриваем </span><span
+  lang=EN-US style='font-size:10.0pt'>save</span><span style='font-size:10.0pt'>-</span><span
+  lang=EN-US style='font-size:10.0pt'>image</span><span style='font-size:10.0pt'>,
+  но это в другой раз). Содержит инструкции по компиляции и загрузке всей
+  системы. </span></p>
+  </td>
+ </tr>
+ <tr>
+  <td width=493 valign=top style='width:369.65pt;border:solid windowtext 1.0pt;
+  border-top:none;padding:0cm 5.4pt 0cm 5.4pt'>
+  <p class=MsoNormal><span lang=EN-US style='font-size:10.0pt;font-family:"Courier New"'>unit</span></p>
+  </td>
+  <td width=493 valign=top style='width:369.65pt;border-top:none;border-left:
+  none;border-bottom:solid windowtext 1.0pt;border-right:solid windowtext 1.0pt;
+  padding:0cm 5.4pt 0cm 5.4pt'>
+  <p class=a><span style='font-size:10.0pt'>1. </span><span lang=EN-US
+  style='font-size:10.0pt'>unit</span><span lang=EN-US style='font-size:10.0pt'>
+  </span><span style='font-size:10.0pt'>как единица сборки – файл, включённого
+  в </span><span lang=EN-US style='font-size:10.0pt'>asdf</span><span
+  style='font-size:10.0pt'>-систему или просто загружаемого из скрипта загрузки.
+  </span></p>
+  <p class=a><span style='font-size:10.0pt'>2. </span><span lang=EN-US
+  style='font-size:10.0pt'>unit</span><span lang=EN-US style='font-size:10.0pt'>
+  </span><span style='font-size:10.0pt'>как пространство имён – пакет</span></p>
+  </td>
+ </tr>
+ <tr>
+  <td width=493 valign=top style='width:369.65pt;border:solid windowtext 1.0pt;
+  border-top:none;padding:0cm 5.4pt 0cm 5.4pt'>
+  <p class=MsoNormal><span lang=EN-US style='font-size:10.0pt;font-family:"Courier New"'>interface,
+  implementation</span></p>
+  </td>
+  <td width=493 valign=top style='width:369.65pt;border-top:none;border-left:
+  none;border-bottom:solid windowtext 1.0pt;border-right:solid windowtext 1.0pt;
+  padding:0cm 5.4pt 0cm 5.4pt'>
+  <p class=a><span lang=EN-US style='font-size:10.0pt'>interface</span><span
+  style='font-size:10.0pt'> - внешние символы пакета (обычно – в файле каталогСистемы/</span><span
+  lang=EN-US style='font-size:10.0pt'>package</span><span style='font-size:
+  10.0pt'>.</span><span lang=EN-US style='font-size:10.0pt'>lisp</span><span
+  style='font-size:10.0pt'>, иногда – в файле исходного текста, форма </span><span
+  lang=EN-US style='font-size:10.0pt;color:red'>defpackage</span><span
+  style='font-size:10.0pt'>, </span><span lang=EN-US style='font-size:10.0pt;
+  color:blue'>def</span><span style='font-size:10.0pt;color:blue'>-</span><span
+  lang=EN-US style='font-size:10.0pt;color:blue'>merge</span><span
+  style='font-size:10.0pt;color:blue'>-</span><span lang=EN-US
+  style='font-size:10.0pt;color:blue'>packages</span><span style='font-size:
+  10.0pt;color:blue'>::!</span><span style='font-size:10.0pt'>). Перечислены
+  только имена сущностей, но не их типы.</span></p>
+  <p class=a><span style='font-size:10.0pt'>Сами сущности (функции, макросы,
+  типы, переменные) определены в исходном тексте без разбивки на </span><span
+  lang=EN-US style='font-size:10.0pt'>interface</span><span lang=EN-US
+  style='font-size:10.0pt'> </span><span style='font-size:10.0pt'>и </span><span
+  lang=EN-US style='font-size:10.0pt'>implementation</span></p>
+  </td>
+ </tr>
+ <tr>
+  <td width=493 valign=top style='width:369.65pt;border:solid windowtext 1.0pt;
+  border-top:none;padding:0cm 5.4pt 0cm 5.4pt'>
+  <p class=MsoNormal><span lang=EN-US style='font-size:10.0pt;font-family:"Courier New"'>uses</span></p>
+  </td>
+  <td width=493 valign=top style='width:369.65pt;border-top:none;border-left:
+  none;border-bottom:solid windowtext 1.0pt;border-right:solid windowtext 1.0pt;
+  padding:0cm 5.4pt 0cm 5.4pt'>
+  <p class=a><span style='font-size:10.0pt'>Если рассматривать </span><span
+  lang=EN-US style='font-size:10.0pt'>unit</span><span lang=EN-US
+  style='font-size:10.0pt'> </span><span style='font-size:10.0pt'>как единицу
+  сборки, то зависимости указываются в </span><span lang=EN-US
+  style='font-size:10.0pt'>asdf</span><span lang=EN-US style='font-size:10.0pt'>
+  </span><span style='font-size:10.0pt'>– системе. При неправильном порядке
+  сборки, как правило, будут ошибки или предупреждения, а в худшем случае –
+  молчаливая неправильная работа. </span></p>
+  <p class=a><span style='font-size:10.0pt'>&nbsp;</span></p>
+  <p class=a><span style='font-size:10.0pt'>Если рассматривать </span><span
+  lang=EN-US style='font-size:10.0pt'>unit</span><span lang=EN-US
+  style='font-size:10.0pt'> </span><span style='font-size:10.0pt'>как набор
+  допустимых имён, то зависимости указываются в форме определения пакета (:</span><span
+  lang=EN-US style='font-size:10.0pt'>use</span><span style='font-size:10.0pt'>,
+  :</span><span lang=EN-US style='font-size:10.0pt'>import</span><span
+  style='font-size:10.0pt'>-</span><span lang=EN-US style='font-size:10.0pt'>from</span><span
+  style='font-size:10.0pt'>). Но можно и без этого вызывать функцию из другого
+  пространства имён с помощью префикса, главное, что символ должен существовать
+  на момент чтения файла</span></p>
+  </td>
+ </tr>
+ <tr>
+  <td width=493 valign=top style='width:369.65pt;border:solid windowtext 1.0pt;
+  border-top:none;padding:0cm 5.4pt 0cm 5.4pt'>
+  <p class=MsoNormal><span lang=EN-US style='font-size:10.0pt;font-family:"Courier New"'>initialization</span></p>
+  </td>
+  <td width=493 valign=top style='width:369.65pt;border-top:none;border-left:
+  none;border-bottom:solid windowtext 1.0pt;border-right:solid windowtext 1.0pt;
+  padding:0cm 5.4pt 0cm 5.4pt'>
+  <p class=a><span style='font-size:10.0pt'>Любые формы, записанные в исходном
+  тексте файла .</span><span lang=EN-US style='font-size:10.0pt'>lisp</span><span
+  style='font-size:10.0pt'>, выполняются во время загрузки (за исключением </span><span
+  lang=EN-US style='font-size:10.0pt'>eval</span><span style='font-size:10.0pt'>-</span><span
+  lang=EN-US style='font-size:10.0pt'>when</span><span style='font-size:10.0pt'>).</span></p>
+  <p class=a><span style='font-size:10.0pt'>Даже определение функции является
+  не просто декларацией, а командой лисп-системе «в момент загрузки создай
+  такую-то функцию». </span></p>
+  <p class=a><span style='font-size:10.0pt'>&nbsp;</span></p>
+  <p class=a><span style='font-size:10.0pt'>Нужно учитывать, что в Дельфи
+  сначала компилируется вся программа, а только потом запускается </span><span
+  lang=EN-US style='font-size:10.0pt'>initialization</span><span lang=EN-US
+  style='font-size:10.0pt'> </span><span style='font-size:10.0pt'>первого
+  модуля. В Лиспе, как правило, порядок действий другой: компиляция </span><span
+  lang=EN-US style='font-size:10.0pt'>f</span><span style='font-size:10.0pt'>1.</span><span
+  lang=EN-US style='font-size:10.0pt'>lisp</span><span style='font-size:10.0pt'>
+  (если он требует перекомпиляции) – загрузка </span><span lang=EN-US
+  style='font-size:10.0pt'>f</span><span style='font-size:10.0pt'>1.</span><span
+  lang=EN-US style='font-size:10.0pt'>ofasl</span><span style='font-size:10.0pt'>,
+  компиляция </span><span lang=EN-US style='font-size:10.0pt'>f</span><span
+  style='font-size:10.0pt'>2.</span><span lang=EN-US style='font-size:10.0pt'>lisp</span><span
+  style='font-size:10.0pt'>, загрузка </span><span lang=EN-US style='font-size:
+  10.0pt'>f</span><span style='font-size:10.0pt'>2.</span><span lang=EN-US
+  style='font-size:10.0pt'>ofasl</span><span style='font-size:10.0pt'> и т.п. При
+  этом, для компиляции </span><span lang=EN-US style='font-size:10.0pt'>f</span><span
+  style='font-size:10.0pt'>2.</span><span lang=EN-US style='font-size:10.0pt'>lisp</span><span
+  lang=EN-US style='font-size:10.0pt'> </span><span style='font-size:10.0pt'>могут
+  использоваться символы, функции и данные, определённые в </span><span
+  lang=EN-US style='font-size:10.0pt'>f</span><span style='font-size:10.0pt'>1.</span><span
+  lang=EN-US style='font-size:10.0pt'>lisp</span><span style='font-size:10.0pt'>.
+  Про функции из </span><span lang=EN-US style='font-size:10.0pt'>f</span><span
+  style='font-size:10.0pt'>3.</span><span lang=EN-US style='font-size:10.0pt'>lisp</span><span
+  lang=EN-US style='font-size:10.0pt'> </span><span style='font-size:10.0pt'>система
+  ещё и не подозревает.</span></p>
+  </td>
+ </tr>
+ <tr>
+  <td width=493 valign=top style='width:369.65pt;border:solid windowtext 1.0pt;
+  border-top:none;padding:0cm 5.4pt 0cm 5.4pt'>
+  <p class=MsoNormal><span lang=EN-US style='font-size:10.0pt;font-family:"Courier New"'>finalization</span></p>
+  </td>
+  <td width=493 valign=top style='width:369.65pt;border-top:none;border-left:
+  none;border-bottom:solid windowtext 1.0pt;border-right:solid windowtext 1.0pt;
+  padding:0cm 5.4pt 0cm 5.4pt'>
+  <p class=a><span style='font-size:10.0pt'>отсутствует, хотя можно задавать
+  действия на уровне системы при выгрузке с помощью lispworks:define-action</span></p>
+  </td>
+ </tr>
+</table>
+
+<h3>Что должно входить в файл *.<span lang=EN-US>lisp</span></h3>
+
+<p class=MsoBodyTextIndent>В файле <b>*.</b><b><span lang=EN-US>lisp</span><span
+lang=EN-US> </span></b>обязательно должна быть (в начале) форма (<span
+lang=EN-US>in</span>-<span lang=EN-US>package</span> :имяПространстваИмён),
+которая задаёт пространство имён этого файла. Само пространство имён может быть
+определено в другом месте, но иногда оно определяется в самом файле. Тогда
+форма (<span lang=EN-US>in</span>-<span lang=EN-US>package</span> ...) должна
+идти после определения пакета, а само определение рекомендуется делать с
+помощью <span lang=EN-US style='color:blue'>def</span><span style='color:blue'>-</span><span
+lang=EN-US style='color:blue'>merge</span><span style='color:blue'>-</span><span
+lang=EN-US style='color:blue'>packages</span><span style='color:blue'>::!</span>
+с :<span lang=EN-US>always</span><span lang=EN-US> </span><span lang=EN-US>t</span>.
+</p>
+
+<p class=MsoBodyTextIndent><span style='color:blue'>Также</span><span
+style='color:blue'> </span><span style='color:blue'>должна</span><span
+style='color:blue'> </span><span style='color:blue'>быть</span><span
+style='color:blue'> </span><span style='color:blue'>форма</span><span
+lang=EN-US style='color:blue'> (in-readtable :buddens-readtable-a), </span><span
+style='color:blue'>причём</span><span lang=EN-US style='color:blue'>, </span><span
+style='color:blue'>символ</span><span lang=EN-US style='color:blue'>
+EDITOR-HINTS.NAMED-READTABLES:IN-READTABLE) </span><span style='color:blue'>должен</span><span
+style='color:blue'> </span><span style='color:blue'>быть</span><span
+style='color:blue'> </span><span style='color:blue'>доступен</span><span
+style='color:blue'> </span><span style='color:blue'>в</span><span
+style='color:blue'> </span><span style='color:blue'>данном</span><span
+style='color:blue'> </span><span style='color:blue'>пространстве</span><span
+style='color:blue'> </span><span style='color:blue'>имён</span><span
+lang=EN-US style='color:blue'>. </span></p>
+
+<p class=MsoBodyTextIndent>Во время чтения файла при компиляции могут возникать
+новые символы. Такие символы будут добавляться в заданный пакет в качестве
+внутренних (неэкспортированных). </p>
+
+<p class=MsoBodyTextIndent>Файл *.<span lang=EN-US>asd</span><span lang=EN-US> </span>здесь
+не описан, см. примеры. </p>
+
+<h2>Динамическая разработка, основные сценарии</h2>
+
+<p class=MsoBodyTextIndent>Динамическая разработка есть в <span lang=EN-US>SQL</span>
+(<span lang=EN-US>create</span>/<span lang=EN-US>alter</span>/<span lang=EN-US>drop</span><span
+lang=EN-US> </span><span lang=EN-US>table</span>, <span lang=EN-US>procedure</span><span
+lang=EN-US> </span>и т.п.). В Лиспе она по сути, такая же по смыслу – можно
+менять отдельные объекты. </p>
+
+<h3>Работа в <span lang=EN-US style='color:red'>listener</span><span
+lang=EN-US> (REPL)</span></h3>
+
+<p class=MsoBodyTextIndent>В <span lang=EN-US>listener</span><span lang=EN-US> </span>можно
+выполнять практически любые действия, например, создавать и вызывать функции,
+определять классы, изучать данные. Последнее возвращённое выражение в листенере
+печатает, далее можно нажать на микроскоп (<span lang=EN-US>Inspect</span>) и
+просмотреть внутреннюю структуру объекта, это особенно важно для классов,
+содержимое которых не видно на печати. </p>
+
+<h3>Разработка по одной форме в файле</h3>
+
+<p class=MsoBodyTextIndent>В <span lang=EN-US>listener</span><span lang=EN-US> </span>хорошо
+отлаживать фрагменты программы и программировать факториалы. При
+&quot;настоящем&quot; программировании, для нового логически связанного
+фрагмента программы сразу создают новый файл. Файл сначала создаётся согласно
+пункту «что должно входить в файл *.<span lang=EN-US>lisp</span>», см. чуть
+выше. Далее в него вносят определения функций и с помощью команды <span
+lang=EN-US>Compile</span><span lang=EN-US> </span><span lang=EN-US>defun</span>
+(<span lang=EN-US>f</span>7) компилируют их по одному. Смотрят на
+предупреждения. Каждое определение можно проверить в листенере, при этом
+желательно предварительно сделать в нём команду (<span lang=EN-US>in</span>-<span
+lang=EN-US>package</span><span lang=EN-US> </span>:тотЖеПакет), чтобы было
+меньше путаницы. При перекомпиляции сущности ведут себя так:</p>
+
+<table class=MsoTableGrid border=1 cellspacing=0 cellpadding=0
+ style='border-collapse:collapse;border:none'>
+ <tr>
+  <td width=493 valign=top style='width:369.65pt;border:solid windowtext 1.0pt;
+  padding:0cm 5.4pt 0cm 5.4pt'>
+  <p class=MsoBodyTextIndent style='text-indent:0cm'>Сущность</p>
+  </td>
+  <td width=493 valign=top style='width:369.65pt;border:solid windowtext 1.0pt;
+  border-left:none;padding:0cm 5.4pt 0cm 5.4pt'>
+  <p class=MsoBodyTextIndent style='text-indent:0cm'>Как ведёт себя</p>
+  </td>
+ </tr>
+ <tr>
+  <td width=493 valign=top style='width:369.65pt;border:solid windowtext 1.0pt;
+  border-top:none;padding:0cm 5.4pt 0cm 5.4pt'>
+  <p class=MsoBodyTextIndent style='text-indent:0cm'>функция (<span lang=EN-US>defun)</span></p>
+  </td>
+  <td width=493 valign=top style='width:369.65pt;border-top:none;border-left:
+  none;border-bottom:solid windowtext 1.0pt;border-right:solid windowtext 1.0pt;
+  padding:0cm 5.4pt 0cm 5.4pt'>
+  <p class=MsoBodyTextIndent style='text-indent:0cm'>сразу вступает в действие.
+  Все другие функции будут вызывать её. Если функция находится на стеке,
+  продолжит выполняться старое тело до выхода. Рекурсивные вызовы будут
+  вызывать новое тело. Но! Всё это может не работать при включенных
+  оптимизациях. </p>
+  </td>
+ </tr>
+ <tr>
+  <td width=493 valign=top style='width:369.65pt;border:solid windowtext 1.0pt;
+  border-top:none;padding:0cm 5.4pt 0cm 5.4pt'>
+  <p class=MsoBodyTextIndent style='text-indent:0cm'>глобальная переменная 1 (<span
+  lang=EN-US>defparameter)</span></p>
+  </td>
+  <td width=493 valign=top style='width:369.65pt;border-top:none;border-left:
+  none;border-bottom:solid windowtext 1.0pt;border-right:solid windowtext 1.0pt;
+  padding:0cm 5.4pt 0cm 5.4pt'>
+  <p class=MsoBodyTextIndent style='text-indent:0cm'>присваивается новое
+  значение</p>
+  </td>
+ </tr>
+ <tr>
+  <td width=493 valign=top style='width:369.65pt;border:solid windowtext 1.0pt;
+  border-top:none;padding:0cm 5.4pt 0cm 5.4pt'>
+  <p class=MsoBodyTextIndent style='text-indent:0cm'>глобальная переменная 2 (<span
+  lang=EN-US>defvar)</span></p>
+  </td>
+  <td width=493 valign=top style='width:369.65pt;border-top:none;border-left:
+  none;border-bottom:solid windowtext 1.0pt;border-right:solid windowtext 1.0pt;
+  padding:0cm 5.4pt 0cm 5.4pt'>
+  <p class=MsoBodyTextIndent style='text-indent:0cm'>если переменная уже была
+  переменной, заданной с помощью <span lang=EN-US>defvar</span>, НЕ
+  присваивается новое значение, выдаётся предупреждение</p>
+  </td>
+ </tr>
+ <tr>
+  <td width=493 valign=top style='width:369.65pt;border:solid windowtext 1.0pt;
+  border-top:none;padding:0cm 5.4pt 0cm 5.4pt'>
+  <p class=MsoBodyTextIndent style='text-indent:0cm'><span lang=EN-US>defconstant</span></p>
+  </td>
+  <td width=493 valign=top style='width:369.65pt;border-top:none;border-left:
+  none;border-bottom:solid windowtext 1.0pt;border-right:solid windowtext 1.0pt;
+  padding:0cm 5.4pt 0cm 5.4pt'>
+  <p class=MsoBodyTextIndent style='text-indent:0cm'>лучше так не делать. Если
+  очень надо, сделать <span lang=EN-US>unintern</span> символу из всех пакетов,
+  а затем перекомпилировать весь зависимый код</p>
+  </td>
+ </tr>
+ <tr>
+  <td width=493 valign=top style='width:369.65pt;border:solid windowtext 1.0pt;
+  border-top:none;padding:0cm 5.4pt 0cm 5.4pt'>
+  <p class=MsoBodyTextIndent style='text-indent:0cm'><span lang=EN-US>defstruct</span></p>
+  </td>
+  <td width=493 valign=top style='width:369.65pt;border-top:none;border-left:
+  none;border-bottom:solid windowtext 1.0pt;border-right:solid windowtext 1.0pt;
+  padding:0cm 5.4pt 0cm 5.4pt'>
+  <p class=MsoBodyTextIndent style='text-indent:0cm'>действует новое
+  определение. Экземпляры протухают</p>
+  </td>
+ </tr>
+ <tr>
+  <td width=493 valign=top style='width:369.65pt;border:solid windowtext 1.0pt;
+  border-top:none;padding:0cm 5.4pt 0cm 5.4pt'>
+  <p class=MsoBodyTextIndent style='text-indent:0cm'><span lang=EN-US>defclass</span></p>
+  </td>
+  <td width=493 valign=top style='width:369.65pt;border-top:none;border-left:
+  none;border-bottom:solid windowtext 1.0pt;border-right:solid windowtext 1.0pt;
+  padding:0cm 5.4pt 0cm 5.4pt'>
+  <p class=MsoBodyTextIndent style='text-indent:0cm'>действует новое
+  определение. Экземпляры остаются с новым определением, но конструктор не
+  вызывается заново. </p>
+  </td>
+ </tr>
+ <tr>
+  <td width=493 valign=top style='width:369.65pt;border:solid windowtext 1.0pt;
+  border-top:none;padding:0cm 5.4pt 0cm 5.4pt'>
+  <p class=MsoBodyTextIndent style='text-indent:0cm'><span lang=EN-US>defmacro</span></p>
+  </td>
+  <td width=493 valign=top style='width:369.65pt;border-top:none;border-left:
+  none;border-bottom:solid windowtext 1.0pt;border-right:solid windowtext 1.0pt;
+  padding:0cm 5.4pt 0cm 5.4pt'>
+  <p class=MsoBodyTextIndent style='text-indent:0cm'>действует новое
+  определение, но ранее скомпилированный код, в котором используется этот
+  макрос, не меняется. Нужно его перекомпилировать.</p>
+  </td>
+ </tr>
+ <tr>
+  <td width=493 valign=top style='width:369.65pt;border:solid windowtext 1.0pt;
+  border-top:none;padding:0cm 5.4pt 0cm 5.4pt'>
+  <p class=MsoBodyTextIndent style='text-indent:0cm'><span lang=EN-US>deftype</span></p>
+  </td>
+  <td width=493 valign=top style='width:369.65pt;border-top:none;border-left:
+  none;border-bottom:solid windowtext 1.0pt;border-right:solid windowtext 1.0pt;
+  padding:0cm 5.4pt 0cm 5.4pt'>
+  <p class=MsoBodyTextIndent style='text-indent:0cm'>не знаю. Безопасным будет
+  перекомпилировать зависимый код</p>
+  </td>
+ </tr>
+ <tr>
+  <td width=493 valign=top style='width:369.65pt;border:solid windowtext 1.0pt;
+  border-top:none;padding:0cm 5.4pt 0cm 5.4pt'>
+  <p class=MsoBodyTextIndent style='text-indent:0cm'><span lang=EN-US>def</span>ЧтоТо</p>
+  </td>
+  <td width=493 valign=top style='width:369.65pt;border-top:none;border-left:
+  none;border-bottom:solid windowtext 1.0pt;border-right:solid windowtext 1.0pt;
+  padding:0cm 5.4pt 0cm 5.4pt'>
+  <p class=MsoBodyTextIndent style='text-indent:0cm'>Любой человек может
+  создать своё <span lang=EN-US>def</span>ЧтоТо, см. определение этого <span
+  lang=EN-US>def</span>ЧтоТо</p>
+  </td>
+ </tr>
+ <tr>
+  <td width=493 valign=top style='width:369.65pt;border:solid windowtext 1.0pt;
+  border-top:none;padding:0cm 5.4pt 0cm 5.4pt'>
+  <p class=MsoBodyTextIndent style='text-indent:0cm'>пространство имён <span
+  lang=EN-US>defpackage</span></p>
+  </td>
+  <td width=493 valign=top style='width:369.65pt;border-top:none;border-left:
+  none;border-bottom:solid windowtext 1.0pt;border-right:solid windowtext 1.0pt;
+  padding:0cm 5.4pt 0cm 5.4pt'>
+  <p class=MsoBodyTextIndent style='text-indent:0cm'>сразу вступает в действие
+  новое определение. Старые внутренние символы остаются на месте. </p>
+  </td>
+ </tr>
+ <tr>
+  <td width=493 valign=top style='width:369.65pt;border:solid windowtext 1.0pt;
+  border-top:none;padding:0cm 5.4pt 0cm 5.4pt'>
+  <p class=MsoBodyTextIndent style='text-indent:0cm'>система <span lang=EN-US>asdf</span>
+  (<span lang=EN-US>defsystem</span>) </p>
+  </td>
+  <td width=493 valign=top style='width:369.65pt;border-top:none;border-left:
+  none;border-bottom:solid windowtext 1.0pt;border-right:solid windowtext 1.0pt;
+  padding:0cm 5.4pt 0cm 5.4pt'>
+  <p class=MsoBodyTextIndent style='text-indent:0cm'>её не надо
+  перекомпилировать. Вместо этого попробуйте её перезагрузить (см. мануал <span
+  lang=EN-US>asdf</span><span lang=EN-US> </span>или просто <span lang=EN-US>asdf</span>::!
+  ), внимательно глядя на <span style='color:red'>*</span><span lang=EN-US
+  style='color:red'>standard</span><span style='color:red'>-</span><span
+  lang=EN-US style='color:red'>output</span><span style='color:red'>*</span> В
+  сложных случаях проще всего стереть все *.<span lang=EN-US>ofasl</span><span
+  lang=EN-US> </span>и перезапустить лисп-систему.</p>
+  </td>
+ </tr>
+</table>
+
+<p class=MsoBodyTextIndent>&nbsp;</p>
+
+<h3>Перекомпиляция файла целиком</h3>
+
+<p class=MsoBodyTextIndent>Тоже вполне допустимая практика, если меняли в
+нескольких местах. Она покажет такие ошибки, как неверно закрытые скобки и дважды
+определённую в одном файле функцию или переменную. В случае ошибки чтения можно
+попробовать в отладчике написать <span style='color:blue'>:</span><span
+lang=EN-US style='color:blue'>e</span><span style='color:blue'> &lt;</span><span
+lang=EN-US style='color:blue'>Enter</span><span style='color:blue'>&gt;</span>,
+окрестности ошибки раскрасятся в разные цвета. Также можно щелкать на ворнинги
+какой-то кнопкой мыши и, если повезёт, получится увидеть исходник. </p>
+
+<h3>Подводные камни динамической разработки и как их обойти</h3>
+
+<p class=MsoBodyTextIndent>Только один пример. Мы писали функци <span
+lang=EN-US>foo</span> и другую функцию <span lang=EN-US>bar</span>, которая
+вызывает <span lang=EN-US>foo</span>. Потом решили переименовать функцию <span
+lang=EN-US>foo</span>, взяли её определение, поменяли в ней имя <span
+lang=EN-US>foo</span><span lang=EN-US> </span>на нормальноеИмя и
+перекомпилировали. Всё хорошо, но функция <span lang=EN-US>foo</span><span
+lang=EN-US> </span>тоже существует, и при перекомпиляции функции <span
+lang=EN-US>bar</span><span lang=EN-US> </span>никто нам не скажет, что она всё
+ещё ссылается на <span lang=EN-US>foo</span>, а не на нормальноеИмя. </p>
+
+<p class=MsoBodyTextIndent>Существует множество других подводных камней
+подобного рода, связанных с динамической природой лиспа. </p>
+
+<p class=MsoBodyTextIndent>Не буду объяснять их все, но вот рекомендации: </p>
+
+<p class=MsoBodyTextIndent>1. Макросы, типы данных и глобальные переменные лучше
+выделить в отдельный файл, примерно так же, как это делается в <span
+lang=EN-US>C</span>. </p>
+
+<p class=MsoBodyTextIndent>2. Желательно дробить программу на как можно более
+мелкие пакеты, для этого нужно пользоваться <span lang=EN-US style='color:blue'>def</span><span
+style='color:blue'>-</span><span lang=EN-US style='color:blue'>merge</span><span
+style='color:blue'>-</span><span lang=EN-US style='color:blue'>packages</span><span
+style='color:blue'>::! </span>, т.к. у <span lang=EN-US>defpackage</span><span
+lang=EN-US> </span>хватает граблей, связанных с одноимёнными экспортируемыми
+символами в разных пакетах и др. </p>
+
+<p class=MsoBodyTextIndent>3. Нужно стараться удалять сущности, которые
+потеряли значение. Используйте для этого (<span lang=EN-US>unintern</span><span
+lang=EN-US> </span>'<span lang=EN-US>foo</span>), а затем перекомпилируйте все
+определения.</p>
+
+<p class=MsoBodyTextIndent>4. В процессе интенсивной разработки, нужно
+периодически удалять пакет, находящийся в разработке (сначала нужно выйти из
+него в <span lang=EN-US>listener</span>-е и закрыть файл), после чего
+перекомпилировать все файлы фрагмента. Это не получится сделать, если на данный
+пакет уже ссылаются другие, в этом случае см. следующую рекомендацию. </p>
+
+<p class=MsoBodyTextIndent>5. Также нужно периодически удалять все <span
+lang=EN-US>ofasl</span><span lang=EN-US> </span>- файлы, созданные системой
+(нужно иметь функцию или <span lang=EN-US>bat</span>-файл, к-рый это делает) и
+запускать полную пересборку системы. </p>
+
+<p class=MsoBodyTextIndent>6. <span lang=EN-US>asdf</span><span lang=EN-US> </span>работает
+очень плохо (вроде 2-я версия стала лучше, но точно не знаю). Не полагайтесь на
+задание зависимостей внутри системы, используйте в системе ключ :<span
+lang=EN-US>serial</span>, а также есть <span lang=EN-US style='color:blue'>asdf</span><span
+style='color:blue'>::</span><span lang=EN-US style='color:blue'>undefsystem</span>
+, который сбрасывает кеш <span lang=EN-US>asdf</span><span lang=EN-US> </span>для
+данной системы и который всегда лучше вызвать, если что-то серьёзно поменялось.
+</p>
 
 <h1>Встроенные типы данных: символы, списки, массивы, хеш-таблицы</h1>
 
@@ -1108,8 +1695,8 @@ lang=EN-US>after</span>,<span lang=EN-US>around</span>) не будет происходить. </
 
 <p class=MsoNormal>Методы :<span lang=EN-US>before</span> аналогичны событию <span
 lang=EN-US>Before</span>... в Дельфи, они выполняются в порядке от частного к
-общему, изнутри вызова <span lang=EN-US>around</span>, но до вызова &quot;основных&quot;
-методов, <span lang=EN-US>call</span>-<span lang=EN-US>next</span>-<span
+общему, изнутри вызова <span lang=EN-US>around</span>, но до вызова
+&quot;основных&quot; методов, <span lang=EN-US>call</span>-<span lang=EN-US>next</span>-<span
 lang=EN-US>method</span> вызывать не нужно. Методы :<span lang=EN-US>after</span>
 выполняются после основных, внутри <span lang=EN-US>around</span>, в порядке от
 частного к общему. </p>
@@ -1119,7 +1706,8 @@ lang=EN-US>method</span> вызывать не нужно. Методы :<span lang=EN-US>after</span
 <p class=MsoNormal>В родовой функции, все методы должны иметь одинаковую
 сигнатуру (лямбда-лист). Это означает, что мы не можем завести одну родовую
 функцию &quot;<span lang=EN-US>add</span>&quot; на всю систему. Нужно либо
-размещать функции <span lang=EN-US>add</span> с разными сигнатурами </p>
+размещать функции <span lang=EN-US>add</span> с разными сигнатурами в разных
+пакетах и вызывать их с префиксами, либо называть их по-разному. </p>
 
 <h2>Структуры</h2>
 
@@ -1141,15 +1729,41 @@ lang=EN-US>мояСтруктура поле1 поле2 поле3) </span></p>
 определять родовые функции, можно сделать вывод, что структуры+родовые функции
 примерно соответствуют классам Дельфи. </p>
 
-<h2>Две ложки дёгтя</h2>
+<h3>Конструктор</h3>
 
-<p class=MsoNormal>Первая ложка – при переопределении структуры все её
-экземпляры становятся инвалидными. </p>
+<p class=MsoNormal>Структура пассивна, это - просто набор данных. У неё нет
+конструктора, его нужно эмулировать вызовом какой-то функции, написанной
+пользователем. </p>
 
-<p class=MsoNormal>Вторая ложка – в родовой функции списки аргументов должны
-быть со</p>
+<h3>Деструктор</h3>
+
+<p class=MsoNormal>Деструкторы в лиспе вообще не водятся. Хотя можно назначить
+действие на сборку мусора, (<span lang=EN-US>hcl</span>:add<a
+name=marker-1038990></a>-special-free-action), но неизвестно, когда это
+действие будет осуществлено, и возможности этого действия весьма ограничены,
+т.к. оно вызывается в очень специфических условиях. Поэтому, если объект должен
+быть явно «удалён», например, закрыт поток, нужно добавить в объект поле,
+характеризующее его состояние, в деструкторе закрывать то, что надо, затем
+ставить в поле состояния признак, что объект «убит» и особым образом
+обрабатывать такие «убитые» объекты. </p>
+
+<h3>Ложка дёгтя</h3>
+
+<p class=MsoNormal>При переопределении структуры все её экземпляры становятся
+инвалидными. </p>
 
 <h2>Классы</h2>
+
+<p class=MsoNormal>Классами автор пользуется мало. Основное их преимущество
+перед структурами – их можно переопределять «на лету», так, что все экземпляры
+сохраняются. Для классов доступно множественное наследование, могут быть
+определены конструкторы. Для классов функция  печати по умолчанию очень убогая,
+нужно пользоваться инспектором или писать нужную функцию. Недостатком классов
+можно считать то, что в них все функции – родовые, что сказывается на
+производительности. Синтаксис определения класса могуч и многословен.
+Повторюсь, родовые функции можно определять не только над классами, но и над структурами
+и встроенными типами, так что без классов можно обходиться в большом количестве
+случаев. </p>
 
 <h1>Трассировка, отладка, интроспекция, пошаговое исполнение</h1>
 
@@ -1167,7 +1781,7 @@ lang=EN-US>мояСтруктура поле1 поле2 поле3) </span></p>
 
 <p class=MsoNormal style='text-indent:18.0pt'>&nbsp;</p>
 
-<p class=MsoPlainText><span lang=EN-US>&nbsp;</span></p>
+<p class=MsoPlainText>&nbsp;</p>
 
 </div>
 
