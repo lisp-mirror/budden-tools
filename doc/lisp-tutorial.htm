@@ -3,7 +3,7 @@
 <head>
 <meta http-equiv=Content-Type content="text/html; charset=windows-1251">
 <meta name=Generator content="Microsoft Word 11 (filtered)">
-<title>Введение в Common Lisp для профессионалов Delphi/SQL</title>
+<title>Использованные материалы:</title>
 
 <style>
 <!--
@@ -56,6 +56,27 @@ h4
 	page-break-after:avoid;
 	font-size:14.0pt;
 	font-family:"Times New Roman";}
+p.MsoToc1, li.MsoToc1, div.MsoToc1
+	{margin:0cm;
+	margin-bottom:.0001pt;
+	font-size:12.0pt;
+	font-family:"Times New Roman";}
+p.MsoToc2, li.MsoToc2, div.MsoToc2
+	{margin-top:0cm;
+	margin-right:0cm;
+	margin-bottom:0cm;
+	margin-left:12.0pt;
+	margin-bottom:.0001pt;
+	font-size:12.0pt;
+	font-family:"Times New Roman";}
+p.MsoToc3, li.MsoToc3, div.MsoToc3
+	{margin-top:0cm;
+	margin-right:0cm;
+	margin-bottom:0cm;
+	margin-left:24.0pt;
+	margin-bottom:.0001pt;
+	font-size:12.0pt;
+	font-family:"Times New Roman";}
 p.MsoBodyTextIndent, li.MsoBodyTextIndent, div.MsoBodyTextIndent
 	{margin:0cm;
 	margin-bottom:.0001pt;
@@ -82,6 +103,12 @@ span.2
 	{font-family:Arial;
 	font-weight:bold;
 	font-style:italic;}
+p.1, li.1, div.1
+	{margin:0cm;
+	margin-bottom:.0001pt;
+	font-size:16.0pt;
+	font-family:Arial;
+	font-weight:bold;}
 @page Section1
 	{size:841.9pt 595.3pt;
 	margin:57.55pt 2.0cm 57.55pt 2.0cm;}
@@ -111,9 +138,8 @@ Friday, February 5, 1993</span></p>
 
 <p class=MsoPlainText><span lang=EN-US>&nbsp;</span></p>
 
-<h1>Введение в <span lang=EN-US>Common</span><span lang=EN-US> </span><span
-lang=EN-US>Lisp</span> для профессионалов <span lang=EN-US>Delphi</span>/<span
-lang=EN-US>SQL</span></h1>
+<p class=1><span lang=EN-US>Введение в Common Lisp для профессионалов
+Delphi/SQL</span></p>
 
 <p class=MsoNormal>Цель данного документа – дать направления поиска информации
 и указать эффективные подходы к работе для профессиональных разработчиков,
@@ -125,7 +151,175 @@ style='color:red'>Красным</span> цветом выделены понятия, которые обязательно
 знать наизусть. Данный документ написан в меру знаний и отражает личные
 предпочтения автора. </p>
 
-<h1>Справочные материалы и книги</h1>
+<p class=MsoNormal>&nbsp;</p>
+
+<p class=1><span lang=EN-US>Содержание</span></p>
+
+<p class=MsoToc1><span class=MsoHyperlink><a href="#_Toc345117706">Справочные
+материалы и книги</a></span></p>
+
+<p class=MsoToc1><span class=MsoHyperlink><a href="#_Toc345117707">Обозначения</a></span></p>
+
+<p class=MsoToc1><span class=MsoHyperlink><a href="#_Toc345117708">Отличительные
+особенности лиспа (по сравнению с Дельфи)</a></span></p>
+
+<p class=MsoToc2><span class=MsoHyperlink><a href="#_Toc345117709">Сборка
+мусора</a></span></p>
+
+<p class=MsoToc2><span class=MsoHyperlink><a href="#_Toc345117710">Динамическая
+разработка</a></span></p>
+
+<p class=MsoToc2><span class=MsoHyperlink><a href="#_Toc345117711">Читатель/писатель</a></span></p>
+
+<p class=MsoToc2><span class=MsoHyperlink><a href="#_Toc345117712">Макросы</a></span></p>
+
+<p class=MsoToc1><span class=MsoHyperlink><a href="#_Toc345117713">Скажите,
+девушка, где я?</a></span></p>
+
+<p class=MsoToc2><span class=MsoHyperlink><a href="#_Toc345117714">Отладчик
+очень близко</a></span></p>
+
+<p class=MsoToc2><span class=MsoHyperlink><a href="#_Toc345117715">Недопечатанные
+формы</a></span></p>
+
+<p class=MsoToc1><span class=MsoHyperlink><a href="#_Toc345117716">Списки.
+Квазицитирование</a></span></p>
+
+<p class=MsoToc2><span class=MsoHyperlink><a href="#_Toc345117717">Вид списка
+на печати и в памяти</a></span></p>
+
+<p class=MsoToc2><span class=MsoHyperlink><a href="#_Toc345117718">Исходный
+текст программы – это списки</a></span></p>
+
+<p class=MsoToc2><span class=MsoHyperlink><a href="#_Toc345117719">Как создать
+список</a></span></p>
+
+<p class=MsoToc1><span class=MsoHyperlink><a href="#_Toc345117720">Присваивание
+и переменные</a></span></p>
+
+<p class=MsoToc2><span class=MsoHyperlink><a href="#_Toc345117721"><span
+lang=EN-US>setf</span> и <span lang=EN-US>place</span></a></span></p>
+
+<p class=MsoToc2><span class=MsoHyperlink><a href="#_Toc345117722">Локальные
+переменные</a></span></p>
+
+<p class=MsoToc2><span class=MsoHyperlink><a href="#_Toc345117723">Глобальные
+(специальные) переменные</a></span></p>
+
+<p class=MsoToc2><span class=MsoHyperlink><a href="#_Toc345117724">Замыкания</a></span></p>
+
+<p class=MsoToc1><span class=MsoHyperlink><a href="#_Toc345117725">Управляющие
+конструкции</a></span></p>
+
+<p class=MsoToc1><span class=MsoHyperlink><a href="#_Toc345117726">Организация
+проекта. Файлы, пакеты, <span lang=EN-US>eval</span>-<span lang=EN-US>when</span>,
+#., <span lang=EN-US>asdf</span>-системы, динамическая разработка</a></span></p>
+
+<p class=MsoToc2><span class=MsoHyperlink><a href="#_Toc345117727">Определения
+понятий</a></span></p>
+
+<p class=MsoToc2><span class=MsoHyperlink><a href="#_Toc345117728">Таблица
+аналогий</a></span></p>
+
+<p class=MsoToc3><span class=MsoHyperlink><a href="#_Toc345117729">Что должно
+входить в файл *.<span lang=EN-US>lisp</span></a></span></p>
+
+<p class=MsoToc2><span class=MsoHyperlink><a href="#_Toc345117730">Динамическая
+разработка, основные сценарии</a></span></p>
+
+<p class=MsoToc3><span class=MsoHyperlink><a href="#_Toc345117731">Работа в<span
+lang=EN-US> listener (REPL)</span></a></span></p>
+
+<p class=MsoToc3><span class=MsoHyperlink><a href="#_Toc345117732">Разработка
+по одной форме в файле</a></span></p>
+
+<p class=MsoToc3><span class=MsoHyperlink><a href="#_Toc345117733">Перекомпиляция
+файла целиком</a></span></p>
+
+<p class=MsoToc3><span class=MsoHyperlink><a href="#_Toc345117734">Подводные
+камни динамической разработки и как их обойти</a></span></p>
+
+<p class=MsoToc1><span class=MsoHyperlink><a href="#_Toc345117735">Встроенные
+типы данных: символы, списки, массивы, хеш-таблицы</a></span></p>
+
+<p class=MsoToc1><span class=MsoHyperlink><a href="#_Toc345117736">Полиморфные
+(родовые) функции, структуры и классы</a></span></p>
+
+<p class=MsoToc2><span class=MsoHyperlink><a href="#_Toc345117737">Родовые
+функции</a></span></p>
+
+<p class=MsoToc3><span class=MsoHyperlink><a href="#_Toc345117738">Основные
+методы с одним типизированным параметром</a></span></p>
+
+<p class=MsoToc3><span class=MsoHyperlink><a href="#_Toc345117739">Методы со
+спецификатором <span lang=EN-US>eql</span></a></span></p>
+
+<p class=MsoToc3><span class=MsoHyperlink><a href="#_Toc345117740">Методы<span
+lang=EN-US> before, after, around</span></a></span></p>
+
+<p class=MsoToc3><span class=MsoHyperlink><a href="#_Toc345117741">Ложка дёгтя</a></span></p>
+
+<p class=MsoToc2><span class=MsoHyperlink><a href="#_Toc345117742">Структуры</a></span></p>
+
+<p class=MsoToc3><span class=MsoHyperlink><a href="#_Toc345117743">Конструктор</a></span></p>
+
+<p class=MsoToc3><span class=MsoHyperlink><a href="#_Toc345117744">Деструктор</a></span></p>
+
+<p class=MsoToc3><span class=MsoHyperlink><a href="#_Toc345117745">Ложка дёгтя</a></span></p>
+
+<p class=MsoToc2><span class=MsoHyperlink><a href="#_Toc345117746">Классы</a></span></p>
+
+<p class=MsoToc1><span class=MsoHyperlink><a href="#_Toc345117747">Отладка</a></span></p>
+
+<p class=MsoToc2><span class=MsoHyperlink><a href="#_Toc345117748">Виды
+интерактивных отладочных режимов</a></span></p>
+
+<p class=MsoToc2><span class=MsoHyperlink><a href="#_Toc345117749">Изучение
+состояния программы</a></span></p>
+
+<p class=MsoToc3><span class=MsoHyperlink><a href="#_Toc345117750">Настройка
+отображения кадров стека</a></span></p>
+
+<p class=MsoToc3><span class=MsoHyperlink><a href="#_Toc345117751">Инспектор</a></span></p>
+
+<p class=MsoToc2><span class=MsoHyperlink><a href="#_Toc345117752">Листенер во
+время отладки</a></span></p>
+
+<p class=MsoToc2><span class=MsoHyperlink><a href="#_Toc345117753">Разновидности
+ошибок и их локализация</a></span></p>
+
+<p class=MsoToc3><span class=MsoHyperlink><a href="#_Toc345117754">Ошибки
+чтения</a></span></p>
+
+<p class=MsoToc3><span class=MsoHyperlink><a href="#_Toc345117755">Ошибки
+компиляции</a></span></p>
+
+<p class=MsoToc3><span class=MsoHyperlink><a href="#_Toc345117756">Ошибки
+загрузки</a></span></p>
+
+<p class=MsoToc2><span class=MsoHyperlink><a href="#_Toc345117757">Трассировка</a></span></p>
+
+<p class=MsoToc2><span class=MsoHyperlink><a href="#_Toc345117758">Остановы и
+пошаговое исполнение</a></span></p>
+
+<p class=MsoToc2><span class=MsoHyperlink><a href="#_Toc345117759"><span
+lang=EN-US>Assert</span>, <span lang=EN-US>with</span>-<span lang=EN-US>the</span>1</a></span></p>
+
+<p class=MsoToc1><span class=MsoHyperlink><a href="#_Toc345117760"><span
+lang=EN-US>eval</span> и макросы</a></span></p>
+
+<p class=MsoToc2><span class=MsoHyperlink><a href="#_Toc345117761"><span
+lang=EN-US>Eval</span></a></span></p>
+
+<p class=MsoToc2><span class=MsoHyperlink><a href="#_Toc345117762">Макросы</a></span></p>
+
+<p class=MsoToc3><span class=MsoHyperlink><a href="#_Toc345117763">Преимущества</a></span></p>
+
+<p class=MsoToc3><span class=MsoHyperlink><a href="#_Toc345117764">Недостатки</a></span></p>
+
+<p class=MsoNormal>&nbsp;</p>
+
+<h1><a name="_Toc345117706">Справочные материалы и книги</a></h1>
 
 <p class=MsoPlainText><span lang=EN-US><a
 href="http://www.cs.cmu.edu/Groups/AI/html/cltl/cltl2.html">Guy L. Steele Jr. _<b>Common
@@ -155,14 +349,15 @@ lang=EN-US> </span></b><b><span lang=EN-US>Lisp</span></b>» в Русском переводе</
 
 <p class=MsoPlainText>Хорошее практическое введение (более 400 страниц)</p>
 
-<h1>Обозначения</h1>
+<h1><a name="_Toc345117707">Обозначения</a></h1>
 
 <p class=MsoNormal>Красным цветом обозначены понятия, смысл которых нужно знать
 наизусть. </p>
 
-<h1>Отличительные особенности лиспа (по сравнению с Дельфи)</h1>
+<h1><a name="_Toc345117708">Отличительные особенности лиспа (по сравнению с
+Дельфи)</a></h1>
 
-<h2>Сборка мусора</h2>
+<h2><a name="_Toc345117709">Сборка мусора</a></h2>
 
 <p class=MsoBodyTextIndent>В лиспе реализована сборка мусора. Любой объект, на
 который нет ссылок с других объектов, считается мусором (в т.ч. объект с
@@ -173,7 +368,7 @@ lang=EN-US> </span></b><b><span lang=EN-US>Lisp</span></b>» в Русском переводе</
 становятся пустыми), а также финализаторы (специальные функции, которые
 вызываются над объектом, который вот-вот будет уничтожен сборщиком мусора).</p>
 
-<h2>Динамическая разработка</h2>
+<h2><a name="_Toc345117710">Динамическая разработка</a></h2>
 
 <p class=MsoNormal style='text-indent:18.0pt'>Динамическая разработка –
 ключевое преимущество лиспа, которое очень помогает в разработке. Как правило,
@@ -194,12 +389,12 @@ lang=EN-US style='color:red'> </span>переопределяет структуру, но при этом уже
 lang=EN-US> <span style='color:red'>defgeneric </span></span><span
 style='color:red'>и</span><span lang=EN-US style='color:red'> defmethod </span>работают
 аналогично<span lang=EN-US> CREATE OR ALTER PROCEDURE, </span>причём можно менять
-набор параметров<span lang=EN-US>. </span>Если функция в данный момент
-выполняется, будет продолжать выполняться старое тело. Независимо от этого, все
-новые входы в данную функцию (в т.ч. рекурсивно из уже выполняющегося старого
-тела) будут использовать новое тело. В отладчике в некоторых случаях можно
-перезапустить уже выполняющуюся функцию, при этом будет вызвано новое тело с
-теми же параметрами. </p>
+набор параметров<span lang=EN-US>. </span>Если функция в данный момент выполняется,
+будет продолжать выполняться старое тело. Независимо от этого, все новые входы
+в данную функцию (в т.ч. рекурсивно из уже выполняющегося старого тела) будут
+использовать новое тело. В отладчике в некоторых случаях можно перезапустить
+уже выполняющуюся функцию, при этом будет вызвано новое тело с теми же
+параметрами. </p>
 
 <p class=MsoNormal style='text-indent:18.0pt'>Также можно динамически
 создавать/менять пространства имён (<span style='color:red'>пакеты</span>) <span
@@ -220,7 +415,7 @@ lang=EN-US style='color:red'>listener</span><span lang=EN-US style='color:red'>
 стека. Это очень удобно для разработки, тестирования и отладке программы –
 вместо запуска всей программы удобно запускать её отдельные функции. </p>
 
-<h2>Читатель/писатель</h2>
+<h2><a name="_Toc345117711">Читатель/писатель</a></h2>
 
 <p class=MsoNormal style='text-indent:18.0pt'>Читатель (начинка функции <span
 lang=EN-US style='color:red'>read</span>) – это парсер. Другие примеры парсеров
@@ -295,7 +490,7 @@ lang=EN-US> </span><span lang=EN-US>my</span>-<span lang=EN-US>obj</span>).</p>
 <p class=MsoNormal style='text-indent:18.0pt'>Возможен ввод-вывод данных с
 циклическими ссылками.</p>
 
-<h2>Макросы</h2>
+<h2><a name="_Toc345117712">Макросы</a></h2>
 
 <p class=MsoNormal style='text-indent:18.0pt'>В <span lang=EN-US>Delphi</span>
 существуют макросы {$define}, {$ifdef}, {$include}, которые позволяют проводить
@@ -314,19 +509,19 @@ lang=EN-US>someVariable</span>%) и тут же выполнять её. </p>
 <p class=MsoNormal style='text-indent:18.0pt'>После построения читателем
 дерева, во время его обработки компилятором, ищутся имена <span
 style='color:red'>макросов. </span>Макрос – специальная функция, работающая на
-этапе компиляции. Она получает на вход дерево грамматического разбора, выполняет
-над ним <i>произвольные</i> вычисления и возвращает другое дерево, которое
-подставляется вместо исходного. При этом обычно используется <span
+этапе компиляции. Она получает на вход дерево грамматического разбора,
+выполняет над ним <i>произвольные</i> вычисления и возвращает другое дерево,
+которое подставляется вместо исходного. При этом обычно используется <span
 style='color:red'>квазицитирование </span>– способ построения деревьев по
 шаблону. </p>
 
-<h1>Скажите, девушка, где я?</h1>
+<h1><a name="_Toc345117713">Скажите, девушка, где я?</a></h1>
 
 <p class=MsoNormal>При работе в <span lang=EN-US style='color:red'>listener</span>
-легко сбиться с толку. Чтобы это случалось не слишком часто, нужно понимать
-следующие вещи:</p>
+легко сбиться с толку. Чтобы это случалось не слишком часто, нужно понимать следующие
+вещи:</p>
 
-<h2>Отладчик очень близко</h2>
+<h2><a name="_Toc345117714">Отладчик очень близко</a></h2>
 
 <p class=MsoNormal>Обычно подсказка <span lang=EN-US>listener</span> выглядит
 как <span lang=EN-US>CL</span>-<span lang=EN-US>USER</span><span lang=EN-US> </span><span
@@ -370,10 +565,10 @@ lang=EN-US style='color:blue'>D</span>) - это примерно то же, что бросить
 исключение <span lang=EN-US>EAbort</span>. Выпадем обратно в первый уровень
 отладчика. Набрав :<span lang=EN-US>a</span> &lt;<span lang=EN-US>Enter</span>&gt;
 ещё раз, вернёмся в нормальное состояние интерпретатора. Во время :<span
-lang=EN-US>a</span> защитный код (аналог <span lang=EN-US>finally</span>) выполняется,
-как и при обычном выполнении программы. ПОэтому, если мы &quot;упали&quot; в
-отладчик в каком-то месте, выход из отладчика по :<span lang=EN-US>a</span>
-является безопасным. </p>
+lang=EN-US>a</span> защитный код (аналог <span lang=EN-US>finally</span>)
+выполняется, как и при обычном выполнении программы. ПОэтому, если мы
+&quot;упали&quot; в отладчик в каком-то месте, выход из отладчика по :<span
+lang=EN-US>a</span> является безопасным. </p>
 
 <p class=MsoNormal>Данный отладчик,  хоть и не даёт возможности пошагового
 исполнения (эта возможность предоставляется отдельным средством – степпером),
@@ -383,7 +578,7 @@ lang=EN-US>a</span> защитный код (аналог <span lang=EN-US>finally</span>) выполн
 новым определением функции, которая вызвана в этом кадре. Это возможно, когда
 функция имеет только обязательные параметры и не имеет необязательных. </p>
 
-<h2>Недопечатанные формы</h2>
+<h2><a name="_Toc345117715">Недопечатанные формы</a></h2>
 
 <p class=MsoNormal>В листенере можно вводить многострочные команды. Команда
 считается завершённой, когда вы ввели полную форму, в которой все скобки,
@@ -394,15 +589,18 @@ lang=EN-US>a</span> защитный код (аналог <span lang=EN-US>finally</span>) выполн
 вычисления? После запуска команды на выполнение её текст окрашивается в красный
 цвет. Если есть сомнения, всегда можно нажать <span lang=EN-US>Ctrl</span>-<span
 lang=EN-US>Break</span><span lang=EN-US> </span>(или на вот такой кирпич <img
-border=0 width=24 height=32 src="lisp-tutorial.files/image001.jpg">) и
+border=0 width=43 height=57 src="lisp-tutorial.files/image001.jpg">) и
 посмотреть на стек. Также есть диспетчер процессов, <span lang=EN-US>works</span>/<span
 lang=EN-US>tools</span>/<span lang=EN-US>process</span><span lang=EN-US> </span><span
 lang=EN-US>browser</span>, но не забудьте после открытия нажать <span
 lang=EN-US>F</span>5 для обновления состояния. </p>
 
-<h1>Списки. Квазицитирование</h1>
+<p class=MsoNormal>Другие сведения о локализации ошибок см. в разделе об
+отладке. </p>
 
-<h2>Вид списка на печати и в памяти</h2>
+<h1><a name="_Toc345117716">Списки. Квазицитирование</a></h1>
+
+<h2><a name="_Toc345117717">Вид списка на печати и в памяти</a></h2>
 
 <p class=MsoBodyTextIndent>Список выглядит в тексте так:</p>
 
@@ -420,7 +618,7 @@ src="lisp-tutorial.files/image002.jpg"></p>
 сложность <span lang=EN-US>O</span>(<span lang=EN-US>length</span>(<span
 lang=EN-US>x</span>)) Разные списки могут иметь общий хвост.</p>
 
-<h2>Исходный текст программы – это списки</h2>
+<h2><a name="_Toc345117718">Исходный текст программы – это списки</a></h2>
 
 <p class=MsoBodyTextIndent>Исходный текст по большей части представляет из себя
 списки, поэтому очень важно уметь работать с ними в редакторе. Над списками
@@ -459,7 +657,7 @@ style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&
 lang=EN-US> </span><span lang=EN-US>form</span>, которая выравнивает целое
 определение (нужно стоять в начале определения). </p>
 
-<h2>Как создать список</h2>
+<h2><a name="_Toc345117719">Как создать список</a></h2>
 
 <p class=MsoNormal style='text-indent:18.0pt'>Чтобы создать новый список в <span
 lang=EN-US style='color:red'>listener</span>-е, можно написать:</p>
@@ -519,9 +717,10 @@ lang=EN-US>b</span>&quot;, четвёртый – число 123. Лисп печатает результат нашей
 <p class=MsoNormal style='text-indent:18.0pt'>Шаблоны и обычные цитаты могут
 быть вложенными и могут быть вложены друг в друга.</p>
 
-<h1>Присваивание и переменные</h1>
+<h1><a name="_Toc345117720">Присваивание и переменные</a></h1>
 
-<h2><span lang=EN-US>setf</span> и <span lang=EN-US>place</span></h2>
+<h2><a name="_Toc345117721"><span lang=EN-US>setf</span></a> и <span
+lang=EN-US>place</span></h2>
 
 <p class=MsoNormal><span lang=EN-US>setf</span> – это присваивание, оно вполне
 аналогично := в <span lang=EN-US>Delphi</span>. То, чему можно присваивать,
@@ -540,7 +739,7 @@ style='font-family:"Courier New"'>N</span><span style='font-family:"Courier New"
 значение</span><span lang=EN-US style='font-family:"Courier New"'>N</span><span
 style='font-family:"Courier New"'>)</span></p>
 
-<h2>Локальные переменные</h2>
+<h2><a name="_Toc345117722">Локальные переменные</a></h2>
 
 <p class=MsoNormal style='text-indent:18.0pt'>Локальные переменные полностью
 аналогичны локальным переменным <span lang=EN-US>Delphi</span>, но есть
@@ -557,7 +756,7 @@ lang=EN-US style='color:blue'>bind</span><span style='color:blue'>)</span>, <spa
 lang=EN-US>with</span>-<span lang=EN-US>open</span>-<span lang=EN-US>file</span>
 и т.п.) и их область действия – до закрывающей скобки. </p>
 
-<h2>Глобальные (специальные) переменные</h2>
+<h2><a name="_Toc345117723">Глобальные (специальные) переменные</a></h2>
 
 <p class=MsoBodyTextIndent>В ООП учат, что глобальные переменные – это зло. В
 Лиспе глобальные переменные очень полезны. Ими надо пользоваться там, где это
@@ -674,7 +873,7 @@ lang=EN-US> </span><span lang=EN-US>process</span>), где переменная
 можно связать её при входе в нить, с помощью <span lang=EN-US style='color:
 red'>let</span>. Уже после этого можно читать и присваивать переменную. </p>
 
-<h2>Замыкания</h2>
+<h2><a name="_Toc345117724">Замыкания</a></h2>
 
 <p class=MsoNormal style='text-indent:18.0pt'>Можно продлить жизнь локальной
 переменной на неопределённое время, если &quot;замкнуть&quot; её с помощью
@@ -821,7 +1020,7 @@ red'>let</span>. Уже после этого можно читать и присваивать переменную. </p>
 
 <p class=MsoNormal>&nbsp;</p>
 
-<h1>Управляющие конструкции</h1>
+<h1><a name="_Toc345117725">Управляющие конструкции</a></h1>
 
 <table class=MsoNormalTable border=1 cellspacing=0 cellpadding=0
  style='border-collapse:collapse;border:none'>
@@ -1099,9 +1298,9 @@ red'>let</span>. Уже после этого можно читать и присваивать переменную. </p>
 
 <p class=MsoNormal>&nbsp;</p>
 
-<h1>Организация проекта. Файлы, пакеты, <span lang=EN-US>eval</span>-<span
-lang=EN-US>when</span>, #., <span lang=EN-US>asdf</span>-системы, динамическая
-разработка</h1>
+<h1><a name="_Toc345117726">Организация проекта. Файлы, пакеты, </a><span
+lang=EN-US>eval</span>-<span lang=EN-US>when</span>, #., <span lang=EN-US>asdf</span>-системы,
+динамическая разработка</h1>
 
 <p class=MsoBodyTextIndent>Структура проекта и процесс загрузки приложения на
 Лиспе гораздо сложнее, чем на Дельфи, поскольку:</p>
@@ -1115,7 +1314,7 @@ lang=EN-US>when</span>, #., <span lang=EN-US>asdf</span>-системы, динамическая
 <p class=MsoBodyTextIndent>- многое из того, что  в Дельфи делается автоматически,
 в Лиспе нужно делать руками. </p>
 
-<h2>Определения понятий</h2>
+<h2><a name="_Toc345117727">Определения понятий</a></h2>
 
 <p class=MsoBodyTextIndent>Файл *.<span lang=EN-US>lisp</span><span lang=EN-US>
 </span>– аналог *.<span lang=EN-US>pas</span></p>
@@ -1148,8 +1347,8 @@ lang=EN-US>dcu</span>. Могут размещаться в разных экзотических местах, см. эти
 <p class=MsoBodyTextIndent style='text-indent:0cm'><span class=2><span
 style='font-size:14.0pt'>&nbsp;</span></span></p>
 
-<p class=MsoBodyTextIndent style='text-indent:0cm'><span class=2><span
-style='font-size:14.0pt'>Таблица аналогий</span></span></p>
+<p class=MsoBodyTextIndent style='text-indent:0cm'><a name="_Toc345117728"><span
+class=2><span style='font-size:14.0pt'>Таблица аналогий</span></span></a></p>
 
 <table class=MsoNormalTable border=1 cellspacing=0 cellpadding=0
  style='border-collapse:collapse;border:none'>
@@ -1316,7 +1515,7 @@ style='font-size:14.0pt'>Таблица аналогий</span></span></p>
  </tr>
 </table>
 
-<h3>Что должно входить в файл *.<span lang=EN-US>lisp</span></h3>
+<h3><a name="_Toc345117729">Что должно входить в файл *.</a><span lang=EN-US>lisp</span></h3>
 
 <p class=MsoBodyTextIndent>В файле <b>*.</b><b><span lang=EN-US>lisp</span><span
 lang=EN-US> </span></b>обязательно должна быть (в начале) форма (<span
@@ -1354,7 +1553,7 @@ lang=EN-US style='color:blue'>. </span></p>
 <p class=MsoBodyTextIndent>Файл *.<span lang=EN-US>asd</span><span lang=EN-US> </span>здесь
 не описан, см. примеры. </p>
 
-<h2>Динамическая разработка, основные сценарии</h2>
+<h2><a name="_Toc345117730">Динамическая разработка, основные сценарии</a></h2>
 
 <p class=MsoBodyTextIndent>Динамическая разработка есть в <span lang=EN-US>SQL</span>
 (<span lang=EN-US>create</span>/<span lang=EN-US>alter</span>/<span lang=EN-US>drop</span><span
@@ -1362,7 +1561,7 @@ lang=EN-US> </span><span lang=EN-US>table</span>, <span lang=EN-US>procedure</sp
 lang=EN-US> </span>и т.п.). В Лиспе она по сути, такая же по смыслу – можно
 менять отдельные объекты. </p>
 
-<h3>Работа в <span lang=EN-US style='color:red'>listener</span><span
+<h3><a name="_Toc345117731">Работа</a> в <span lang=EN-US style='color:red'>listener</span><span
 lang=EN-US> (REPL)</span></h3>
 
 <p class=MsoBodyTextIndent>В <span lang=EN-US>listener</span><span lang=EN-US> </span>можно
@@ -1372,7 +1571,7 @@ lang=EN-US> (REPL)</span></h3>
 просмотреть внутреннюю структуру объекта, это особенно важно для классов,
 содержимое которых не видно на печати. </p>
 
-<h3>Разработка по одной форме в файле</h3>
+<h3><a name="_Toc345117732">Разработка по одной форме в файле</a></h3>
 
 <p class=MsoBodyTextIndent>В <span lang=EN-US>listener</span><span lang=EN-US> </span>хорошо
 отлаживать фрагменты программы и программировать факториалы. При
@@ -1384,8 +1583,8 @@ lang=EN-US>Compile</span><span lang=EN-US> </span><span lang=EN-US>defun</span>
 (<span lang=EN-US>f</span>7) компилируют их по одному. Смотрят на
 предупреждения. Каждое определение можно проверить в листенере, при этом
 желательно предварительно сделать в нём команду (<span lang=EN-US>in</span>-<span
-lang=EN-US>package</span><span lang=EN-US> </span>:тотЖеПакет), чтобы было
-меньше путаницы. При перекомпиляции сущности ведут себя так:</p>
+lang=EN-US>package</span><span lang=EN-US> </span>:тотЖеПакет), чтобы было меньше
+путаницы. При перекомпиляции сущности ведут себя так:</p>
 
 <table class=MsoTableGrid border=1 cellspacing=0 cellpadding=0
  style='border-collapse:collapse;border:none'>
@@ -1553,7 +1752,7 @@ lang=EN-US>package</span><span lang=EN-US> </span>:тотЖеПакет), чтобы было
 
 <p class=MsoBodyTextIndent>&nbsp;</p>
 
-<h3>Перекомпиляция файла целиком</h3>
+<h3><a name="_Toc345117733">Перекомпиляция файла целиком</a></h3>
 
 <p class=MsoBodyTextIndent>Тоже вполне допустимая практика, если меняли в
 нескольких местах. Она покажет такие ошибки, как неверно закрытые скобки и дважды
@@ -1564,7 +1763,7 @@ lang=EN-US style='color:blue'>Enter</span><span style='color:blue'>&gt;</span>,
 окрестности ошибки раскрасятся в разные цвета. Также можно щелкать на ворнинги
 какой-то кнопкой мыши и, если повезёт, получится увидеть исходник. </p>
 
-<h3>Подводные камни динамической разработки и как их обойти</h3>
+<h3><a name="_Toc345117734">Подводные камни динамической разработки и как их обойти</a></h3>
 
 <p class=MsoBodyTextIndent>Только один пример. Мы писали функци <span
 lang=EN-US>foo</span> и другую функцию <span lang=EN-US>bar</span>, которая
@@ -1581,8 +1780,8 @@ lang=EN-US>bar</span><span lang=EN-US> </span>никто нам не скажет, что она всё
 
 <p class=MsoBodyTextIndent>Не буду объяснять их все, но вот рекомендации: </p>
 
-<p class=MsoBodyTextIndent>1. Макросы, типы данных и глобальные переменные лучше
-выделить в отдельный файл, примерно так же, как это делается в <span
+<p class=MsoBodyTextIndent>1. Макросы, типы данных и глобальные переменные
+лучше выделить в отдельный файл, примерно так же, как это делается в <span
 lang=EN-US>C</span>. </p>
 
 <p class=MsoBodyTextIndent>2. Желательно дробить программу на как можно более
@@ -1618,11 +1817,12 @@ style='color:blue'>::</span><span lang=EN-US style='color:blue'>undefsystem</spa
 данной системы и который всегда лучше вызвать, если что-то серьёзно поменялось.
 </p>
 
-<h1>Встроенные типы данных: символы, списки, массивы, хеш-таблицы</h1>
+<h1><a name="_Toc345117735">Встроенные типы данных: символы, списки, массивы,
+хеш-таблицы</a></h1>
 
-<h1>Полиморфные (родовые) функции, структуры и классы</h1>
+<h1><a name="_Toc345117736">Полиморфные (родовые) функции, структуры и классы</a></h1>
 
-<h2>Родовые функции</h2>
+<h2><a name="_Toc345117737">Родовые функции</a></h2>
 
 <p class=MsoNormal>В Дельфи есть виртуальные функции. Такая функция объявляется
 в одном (базовом) классе и может перекрываться для его наследников. </p>
@@ -1661,24 +1861,25 @@ lang=EN-US>(<span style='color:red'>call-next-method</span>). </span></p>
 href="http://lisper.ru/pcl/object-reorientation-generic-functions">Practical Common
 Lisp</a></span>. Мы рассмотрим только простые частные случаи. </p>
 
-<h3>Основные методы с одним типизированным параметром</h3>
+<h3><a name="_Toc345117738">Основные методы с одним типизированным параметром</a></h3>
 
 <p class=MsoNormal>У методов может быть квалификатор, <span style='color:red'>основной
 метод</span> – это метод, у которого нет квалификатора. Будем для простоты
 считать, что для каждого метода функции задан тип только одного аргумента –
 первого. Этот случай соответствует не перегруженному виртуальному методу в
-Дельфи. Всё работает совершенно аналогично: вызывается метод самого класса или
-метод ближайшего предка, а <span lang=EN-US>call</span>-<span lang=EN-US>next</span>-<span
+Дельфи. Всё работает совершенно аналогично: вызывается метод самого класса или метод
+ближайшего предка, а <span lang=EN-US>call</span>-<span lang=EN-US>next</span>-<span
 lang=EN-US>metod</span> работает так же, как <span lang=EN-US>inherited</span>.
 </p>
 
-<h3>Методы со спецификатором <span lang=EN-US>eql</span> </h3>
+<h3><a name="_Toc345117739">Методы со спецификатором </a><span lang=EN-US>eql</span>
+</h3>
 
 <p class=MsoNormal>Вместо спецификации типа может быть задан спецификатор <span
 lang=EN-US>sql</span>. Это позволяет определять метод не для типов, а для
 индивидуальных объектов. </p>
 
-<h3>Методы<span lang=EN-US> before, after, around</span></h3>
+<h3><a name="_Toc345117740">Методы</a><span lang=EN-US> before, after, around</span></h3>
 
 <p class=MsoNormal>В Дельфи есть события <span lang=EN-US>beforeOpen</span>, <span
 lang=EN-US>afterOpen</span> и т.п. В Лиспе эта возможность реализована на
@@ -1701,7 +1902,7 @@ lang=EN-US>method</span> вызывать не нужно. Методы :<span lang=EN-US>after</span
 выполняются после основных, внутри <span lang=EN-US>around</span>, в порядке от
 частного к общему. </p>
 
-<h3>Ложка дёгтя</h3>
+<h3><a name="_Toc345117741">Ложка дёгтя</a></h3>
 
 <p class=MsoNormal>В родовой функции, все методы должны иметь одинаковую
 сигнатуру (лямбда-лист). Это означает, что мы не можем завести одну родовую
@@ -1709,7 +1910,7 @@ lang=EN-US>method</span> вызывать не нужно. Методы :<span lang=EN-US>after</span
 размещать функции <span lang=EN-US>add</span> с разными сигнатурами в разных
 пакетах и вызывать их с префиксами, либо называть их по-разному. </p>
 
-<h2>Структуры</h2>
+<h2><a name="_Toc345117742">Структуры</a></h2>
 
 <p class=MsoNormal>Структура по своим возможностям примерно соответствует
 классу в <span lang=EN-US>Delphi</span>, если не считать свойств и ограничения
@@ -1729,13 +1930,13 @@ lang=EN-US>мояСтруктура поле1 поле2 поле3) </span></p>
 определять родовые функции, можно сделать вывод, что структуры+родовые функции
 примерно соответствуют классам Дельфи. </p>
 
-<h3>Конструктор</h3>
+<h3><a name="_Toc345117743">Конструктор</a></h3>
 
 <p class=MsoNormal>Структура пассивна, это - просто набор данных. У неё нет
 конструктора, его нужно эмулировать вызовом какой-то функции, написанной
 пользователем. </p>
 
-<h3>Деструктор</h3>
+<h3><a name="_Toc345117744">Деструктор</a></h3>
 
 <p class=MsoNormal>Деструкторы в лиспе вообще не водятся. Хотя можно назначить
 действие на сборку мусора, (<span lang=EN-US>hcl</span>:add<a
@@ -1745,14 +1946,16 @@ name=marker-1038990></a>-special-free-action), но неизвестно, когда это
 быть явно «удалён», например, закрыт поток, нужно добавить в объект поле,
 характеризующее его состояние, в деструкторе закрывать то, что надо, затем
 ставить в поле состояния признак, что объект «убит» и особым образом
-обрабатывать такие «убитые» объекты. </p>
+обрабатывать такие «убитые» объекты. Действие при сборке мусора, по хорошему,
+должно лишь проверять, что объект при сборке мусора был закрыт должным образом,
+и сообщать об ошибочной ситуации, если что-то не так.</p>
 
-<h3>Ложка дёгтя</h3>
+<h3><a name="_Toc345117745">Ложка дёгтя</a></h3>
 
 <p class=MsoNormal>При переопределении структуры все её экземпляры становятся
 инвалидными. </p>
 
-<h2>Классы</h2>
+<h2><a name="_Toc345117746">Классы</a></h2>
 
 <p class=MsoNormal>Классами автор пользуется мало. Основное их преимущество
 перед структурами – их можно переопределять «на лету», так, что все экземпляры
@@ -1760,26 +1963,248 @@ name=marker-1038990></a>-special-free-action), но неизвестно, когда это
 определены конструкторы. Для классов функция  печати по умолчанию очень убогая,
 нужно пользоваться инспектором или писать нужную функцию. Недостатком классов
 можно считать то, что в них все функции – родовые, что сказывается на
-производительности. Синтаксис определения класса могуч и многословен.
-Повторюсь, родовые функции можно определять не только над классами, но и над структурами
-и встроенными типами, так что без классов можно обходиться в большом количестве
+производительности. Синтаксис определения класса могуч и многословен. Повторюсь,
+родовые функции можно определять не только над классами, но и над структурами и
+встроенными типами, так что без классов можно обходиться в большом количестве
 случаев. </p>
 
-<h1>Трассировка, отладка, интроспекция, пошаговое исполнение</h1>
+<h1><a name="_Toc345117747">Изучение исходного текста</a></h1>
 
-<p class=MsoNormal>&nbsp;</p>
+<p class=MsoNormal>В загруженной программе, <span lang=EN-US>Alt</span>-. показывает
+определение переменной, ф-ии, класса, родовой ф-ии, макроса и многих других
+объектов. <span lang=EN-US>Works/Tools/System browser </span>показывает системы<span
+lang=EN-US> (</span>в т<span lang=EN-US>.</span>ч<span lang=EN-US>. asdf).
+Works</span>/<span lang=EN-US>Tools</span>/<span lang=EN-US>Symbol</span><span
+lang=EN-US> </span><span lang=EN-US>browser</span><span lang=EN-US> </span>позволяет
+искать символы по части названия (то же делает и <span lang=EN-US>apropos</span>).
+</p>
 
-<p class=MsoNormal>&nbsp;</p>
+<h1>Отладка</h1>
 
-<h1>Макросы</h1>
+<h2><a name="_Toc345117748">Виды интерактивных отладочных режимов</a></h2>
 
-<p class=MsoNormal>&nbsp;</p>
+<p class=MsoNormal style='text-indent:18.0pt'>Их три: консольный отладчик,
+графический отладчик (жук) и степпер. Консольный и графический отладчик
+работают координированно над одним и тем же стеком, эта пара является основным
+средством интерактивной отладки. Но никто не отменял логгирование как полезное
+средство отладки. </p>
 
-<p class=MsoNormal>&nbsp;</p>
+<h2><a name="_Toc345117749">Изучение состояния программы</a></h2>
 
-<p class=MsoNormal>&nbsp;</p>
+<h3><a name="_Toc345117750">Настройка отображения кадров стека</a></h3>
 
-<p class=MsoNormal style='text-indent:18.0pt'>&nbsp;</p>
+<p class=MsoBodyTextIndent>В меню &quot;<span lang=EN-US>view</span>&quot; жука
+можно выбрать отображение тех или иных кадров стека. По умолчанию отладчик
+показывает лишь небольшую часть из них.</p>
+
+<h3><a name="_Toc345117751">Инспектор</a></h3>
+
+<p class=MsoBodyTextIndent>Инспектор аналогичен инспектору в <span lang=EN-US>Delphi</span>
+- он позволяет ходить по внутренней структуре объекта. </p>
+
+<p class=MsoBodyTextIndent>В нормальных условиях инспектор вызывается нажатием
+иконки с микроскопом в листенере. В этом случае он показывает содержимое
+последнего результата вычисления. В графическом отладчике - &quot;жуке&quot;
+инспектор вызывается при двойном щелчке нажатии на любую переменную стека. Для
+возврата на предыдущий уровень структуры есть кнопка &quot;назад&quot;, как в
+веб-браузере. </p>
+
+<h2><a name="_Toc345117752">Листенер во время отладки</a></h2>
+
+<p class=MsoBodyTextIndent>Если Вы находитесь в отладчике (см. &quot;Отладчик
+очень близко&quot;), то листенер позволяет делать вычисления в контексте
+текущего кадра стека. Это аналогично окну <span lang=EN-US>Evaluate</span>/<span
+lang=EN-US>Modify</span><span lang=EN-US> </span>в отладчике <span lang=EN-US>Delphi</span>,
+но без присущих <span lang=EN-US>Delphi</span><span lang=EN-US> </span>ограничений.
+Например, можно в отладчике определить новую функцию. Если в графическом
+отладчике (&quot;жуке&quot;) Вы выделили одинарным щелчком другой кадр стека,
+то будут видны переменные этого кадра и над ними можно будет делать вычисления.
+Но пространство имён при этом не переключается, поэтому может понадобиться
+писать префикс пространства имён перед пакетом. </p>
+
+<p class=MsoBodyTextIndent>При пошаговом исполнении листенер тоже доступен, но
+он какой-то странный и автор им почти не пользуется. Например, неясно, каков
+текущий пакет. Научите. </p>
+
+<h2><a name="_Toc345117753">Разновидности ошибок и их локализация</a></h2>
+
+<p class=MsoBodyTextIndent>В Дельфи бывает два вида ошибок по времени их
+возникновения - ошибки компиляции и ошибки исполнения. В <span lang=EN-US>CL</span>
+жизненный цикл программы устроен гораздо сложнее, поэтому перечислим эти виды и
+способы их локализации. Напомним порядок обработки каждого файла программы:
+чтение-компиляция-загрузка компилированного кода-выполнение, причём эти фазы
+могут происходить в разных образах Лисп-системы. </p>
+
+<h3><a name="_Toc345117754">Ошибки чтения</a></h3>
+
+<p class=MsoBodyTextIndent>Они возникают в функции <span lang=EN-US>read</span>.
+Соответственно, если среда говорит об ошибке и неглубоко по стеку Вы видите
+функцию <span lang=EN-US>read</span>, то это - ошибка чтения. В кадре стека
+ошибки есть переменная <span lang=EN-US>system</span>::<span lang=EN-US>eargs</span>,
+и в ней есть поток. Инспектируя поток, можно понять имя файла. Делая <span
+lang=EN-US>read</span>-<span lang=EN-US>line</span> этому потоку, можно
+попробовать прочитать продолжение файла после места ошибки. <span lang=EN-US
+style='color:blue'>editor</span><span style='color:blue'>-</span><span
+lang=EN-US style='color:blue'>budden</span><span style='color:blue'>-</span><span
+lang=EN-US style='color:blue'>tools</span><span style='color:blue'>::</span><span
+lang=EN-US style='color:blue'>edit</span><span style='color:blue'>-</span><span
+lang=EN-US style='color:blue'>stream</span><span style='color:blue'>-</span><span
+lang=EN-US style='color:blue'>position</span><span lang=EN-US style='color:
+blue'> </span><span style='color:blue'>открывает файл в том месте, где чтение
+прервалось. С таблицей чтения </span><span lang=EN-US style='color:blue'>buddens</span><span
+style='color:blue'>-</span><span lang=EN-US style='color:blue'>readtable</span><span
+style='color:blue'>-</span><span lang=EN-US style='color:blue'>a</span><span
+lang=EN-US style='color:blue'> </span><span style='color:blue'>можно
+использовать в отладчике команду :</span><span lang=EN-US style='color:blue'>e</span><span
+lang=EN-US style='color:blue'> </span><span style='color:blue'>для вызова
+специального просмотровщика ошибок чтения, к-рый раскрасит файл в цвета по
+уровням вложенности. </span>Также можно заполнить файл отладочным выводом: #.(<span
+lang=EN-US>print</span> &quot;уникальная метка&quot;) и методом половинного
+деления найти место, в котором случилась ошибка. </p>
+
+<h3><a name="_Toc345117755">Ошибки компиляции</a></h3>
+
+<p class=MsoNormal>Во многих случаях среда (в консоли) предлагает <span
+lang=EN-US>edit</span><span lang=EN-US> </span><span lang=EN-US>source</span><span
+lang=EN-US> </span><span lang=EN-US>where</span><span lang=EN-US> </span><span
+lang=EN-US>error</span><span lang=EN-US> </span><span lang=EN-US>occured</span>.
+Также можно установить переменную *<span lang=EN-US>compile</span>-<span
+lang=EN-US>print</span>* в <span lang=EN-US>t</span>,но это не поможет, если в
+файле много форм, являющихся макросами, определёнными пользователем. В этом
+случае, вместо имени функции, среда напечатает &quot;(<span lang=EN-US>top</span>-<span
+lang=EN-US>level</span>-<span lang=EN-US>form</span><span lang=EN-US> </span><span
+lang=EN-US>NNN</span>)&quot;. Можно попробовать установить трассировку на <span
+lang=EN-US>compiler</span>::<span lang=EN-US>process</span>-<span lang=EN-US>form</span>.
+Самый общий способ основан на отладочном выводе: локализуйте ошибку, расставляя
+в файле формы верхнего уровня (eval-when (:compile-toplevel) (print &quot;уникальная
+метка&quot;)).</p>
+
+<h3><a name="_Toc345117756">Ошибки загрузки</a></h3>
+
+<p class=MsoNormal>Аналогичным образом, можно искать ошибку с помощью расстановки
+форм (eval-when (:<span lang=EN-US>load</span>-toplevel) (print &quot;уникальная
+метка&quot;))</p>
+
+<h2><a name="_Toc345117757">Трассировка</a></h2>
+
+<p class=MsoNormal>Трассировка очень удобна, т.к. она показывает параметры и
+возвращающие значения любого множества функций, отображая глубину вложенности
+стека отступами. Можно трассировать обычную функцию, родовую функцию или её отдельные
+методы, а также <span style='color:red'>макросы</span>. Для трассировки обычной
+ф-ии пишем (<span lang=EN-US style='color:red'>trace</span><span lang=EN-US> </span>имя),
+нажимаем <span lang=EN-US>ctrl</span>-<span lang=EN-US>alt</span>-<span
+lang=EN-US>t</span><span lang=EN-US> </span>на её имени или выбираем
+трассировку в контектном меню. Перекомпилировать функцию не нужно. Можно
+делать  трассировку с (<span lang=EN-US style='color:red'>break</span>)  - в
+этом случае исполнение прервётся при входе. Трассировку методов можно делать
+через <span lang=EN-US>Works</span>/<span lang=EN-US>Tools</span>/<span
+lang=EN-US>Generic</span><span lang=EN-US> </span><span lang=EN-US>function</span><span
+lang=EN-US> </span><span lang=EN-US>browser</span>, выбирая методы и вызывая
+для каждого из них контекстное меню. Для выключения трассировки всех функций выполняем
+(<span lang=EN-US>untrace</span>). Аналогичным трассировке методом является
+отладочная печать. <span lang=EN-US style='color:blue'>Show</span><span
+style='color:blue'>-</span><span lang=EN-US style='color:blue'>expr</span><span
+lang=EN-US style='color:blue'> </span>позволяет выводить само выражение и его
+значение. </p>
+
+<h2><a name="_Toc345117758">Остановы и пошаговое исполнение</a></h2>
+
+<p class=MsoNormal>В коде можно ставить точки останова, нажав на красную кнопку
+с кружком в начале формы, где хотим остановиться. Эта возможность запускает
+пошаговый отладчик. Всё бы хорошо, но <span lang=EN-US>iterate</span> и <span
+lang=EN-US style='color:blue'>proga</span><span lang=EN-US> </span>так меняют
+код, что эта возможность становится почти везде недоступной - среда не умеет
+ставить точки останова в коде, подвеграющемся макрорасширению. Поэтому основным
+способом установки точки прерывания является вставка в нужное место кода вызова
+(<span lang=EN-US style='color:red'>break</span>) <span lang=EN-US>c</span><span
+lang=EN-US> </span>последующей перекомпиляцией функции. При таком способе
+останова нельзя из режима останова перейти в режим пошагового исполнения.
+Негусто, но радуемся тому, что не нужно перекомпилировать всё приложение
+целиком. </p>
+
+<h2><a name="_Toc345117759"><span lang=EN-US>Assert</span></a>, <span
+lang=EN-US style='color:blue'>with</span><span style='color:blue'>-</span><span
+lang=EN-US style='color:blue'>the</span><span style='color:blue'>1</span></h2>
+
+<p class=MsoNormal><span lang=EN-US style='color:red'>Assert</span><span
+lang=EN-US> </span>означает то же, что в <span lang=EN-US>Delphi</span><span
+lang=EN-US> </span>и им нужно пользоваться как можно более интенсивно. <span
+lang=EN-US style='color:blue'>With</span><span style='color:blue'>-</span><span
+lang=EN-US style='color:blue'>the</span><span style='color:blue'>1</span> сочетает
+в себе связывание локальной переменной, декларацию типа и его проверку. </p>
+
+<h2><span lang=EN-US>Unit</span>-тестирование</h2>
+
+<p class=MsoNormal><span lang=EN-US>Unit</span>-тестирование в лиспе не
+составляет затруднений благодаря его устройству. Автор пользуется собственным
+(очень легковесным) средством определения тестов, <span lang=EN-US
+style='color:blue'>def</span><span style='color:blue'>-</span><span lang=EN-US
+style='color:blue'>trivial</span><span style='color:blue'>-</span><span
+lang=EN-US style='color:blue'>test</span><span style='color:blue'>::! </span>В
+серьёзных системах тесты размещаются в отдельных <span lang=EN-US>asdf</span>-системах,
+но автор обычно разрабатывает код стремительно и для экономии сил помещает
+тесты прямо в исходные тексты; тесты выполняются во время загрузки. Заодно
+тесты служат примерами использования кода.</p>
+
+<h2>Профайлер</h2>
+
+<p class=MsoNormal>Он есть в <span lang=EN-US>Lispworks</span>.</p>
+
+<h1><a name="_Toc345117760"><span lang=EN-US>eval</span><span lang=EN-US> </span>и
+макросы</a></h1>
+
+<h2><a name="_Toc345117761"><span lang=EN-US>Eval</span></a></h2>
+
+<p class=MsoNormal><span lang=EN-US>Eval</span><span lang=EN-US> </span>предназначен
+для динамической генерации и выполнения кода во время выполнения программы. Он
+аналогичен командам <span lang=EN-US>SQL</span>: <span lang=EN-US>execute</span><span
+lang=EN-US> </span><span lang=EN-US>statement</span>, <span lang=EN-US>exec</span>,
+<span lang=EN-US>sp</span>_<span lang=EN-US>execute</span>_<span lang=EN-US>sql</span><span
+lang=EN-US> </span>и т.п. Общий смысл - код составляется и выполнятся во время
+выполнения. Разница между <span lang=EN-US>SQL</span><span lang=EN-US> </span>и
+Лиспом состоит в том, что в <span lang=EN-US>SQL</span><span lang=EN-US> </span>складывются
+строки, а в <span lang=EN-US>Lisp</span> происходит обработка деревьев. При
+этом часто используется <span style='color:red'>квазицитирование</span>. </p>
+
+<p class=MsoNormal><span lang=EN-US>Eval</span><span lang=EN-US> </span>снижает
+производительность и делает программу менее надёжной, поэтому его можно
+использовать только там, где это необходимо.</p>
+
+<h2><a name="_Toc345117762">Макросы</a></h2>
+
+<p class=MsoNormal><span style='color:red'>Макросы</span> аналогичны <span
+lang=EN-US>Eval</span>, но генерация кода происходит не во время выполнения, а
+во время компиляции. Соответственно, при расширении макроса доступна та
+инфраструктура, которая имеется во время компиляции. В частности, неизвестны
+конкретные значения переменных. Сгенерированный код (дерево) подставляется
+вместо &quot;вызова&quot; макроса в код и далее полученный результат
+компилируется. Также макросы в чём-то аналогичны #<span lang=EN-US>define</span><span
+lang=EN-US> </span>из С, но их возможности несравнимо шире, т.к. при расширении
+макроса можно делать произвольные вычисления, они могут быть рекурсивными,
+обращаться к внешнему миру и т.п. При определении макросов обычно используется <span
+style='color:red'>квазицитирование</span>. </p>
+
+<h3><a name="_Toc345117763">Преимущества</a></h3>
+
+<p class=MsoNormal>Фактически, макросы делают компилятор расширяемым, что
+является уникальным свойством <span lang=EN-US>Common</span><span lang=EN-US> </span><span
+lang=EN-US>Lisp</span>. Проекты типа <span lang=EN-US>opencxx</span><span
+lang=EN-US> </span>или <span lang=EN-US>Nemerle</span><span lang=EN-US> </span>являются
+лишь приближением к этому идеалу, который реализован в Лиспе просто и
+элегантно. Макросы совместимы с компиляцией и не наносят ущерба
+производительности, в отличие от <span lang=EN-US>eval</span>.</p>
+
+<h3><a name="_Toc345117764">Недостатки</a></h3>
+
+<p class=MsoNormal>Макросы затрудняют или делают невозможной пошаговую отладку.
+Иногда нелегко найти и ошибку в исходном тексте, полученном в резлультате
+макрорасширения (для этого нужно использовать <span lang=EN-US
+style='color:red'>macroexpand</span><span lang=EN-US style='color:red'> </span>или
+трассировать макрос). При изменении определения макроса, функции, в которых он
+используется, не меняются. Чтобы изменение макроса подействовало на функцию, где
+он вызывается, нужно перекомпилировать </p>
+
+<p class=MsoNormal>эту функцию.</p>
 
 <p class=MsoPlainText>&nbsp;</p>
 
