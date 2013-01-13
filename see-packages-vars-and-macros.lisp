@@ -10,7 +10,7 @@
 (defparameter *cached-preserve-case-readtable* (copy-readtable nil))
 (setf (readtable-case *cached-preserve-case-readtable*) :preserve)
 (defparameter *cached-downcase-readtable* (copy-readtable nil))
-(setf (readtable-case *cached-preserve-case-readtable*) :downcase)
+(setf (readtable-case *cached-downcase-readtable*) :downcase)
 
 (defvar *keyword-package* (find-package :keyword))
 

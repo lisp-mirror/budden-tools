@@ -134,18 +134,23 @@ is already an altered readtable, simply returns it"
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; Change printer if needed ;;;;;;;;;;;;;;;;;;;;;;;;
 #+lispworks6 
 (cl-user::PORTABLY-WITHOUT-PACKAGE-LOCKS
-  (defmethod print-object :around ((o symbol) s)
-    "Lispworks6 prints '|ASDF| as \\A\\S\\D\\F in our readtables. As a quick fix,
-     we just set up 'good' readtable around printing"
+
+; non-toplevel
+(defmethod print-object :around ((o symbol) s)
     (cond
+     (*print-readably*
+      (let ((*readtable* *cached-default-readtable*)
+            (system:*print-symbols-using-bars* t)
+            (*print-case* :upcase))
+        (call-next-method)))
      ((eq (readtable-case-advanced *readtable*) :upcase-if-uniform)
       (case (all-ascii-chars-in-same-case-p (string o))
-        (:uppercase
-         (let ((*print-case* :downcase)
-               (*readtable* *cached-downcase-readtable*))
-           (call-next-method)))
         (:lowercase
          (let ((*print-case* :upcase)
+               (*readtable* *cached-default-readtable*))
+           (call-next-method)))
+        (:uppercase
+         (let ((*print-case* :downcase)
                (*readtable* *cached-default-readtable*))
            (call-next-method)))
         (t
