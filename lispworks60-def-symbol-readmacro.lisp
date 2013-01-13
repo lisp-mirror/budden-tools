@@ -63,17 +63,18 @@
    (t pack)))
 
 (defun symbol-is-in-package (symbol package external-only)
-  "¬озвращает t, если данный символ доступен в данном пакете. ≈сли external-only, то возвращает t, только если он внешний в данном пакете"
+  "¬озвращает два значени€: 1. t, если данный символ доступен в данном пакете. ≈сли external-only, то возвращает t, только если он внешний в данном пакете
+   2. статус из find-symbol, если символ доступен"
   (proga
     (multiple-value-bind (other-symbol status) (find-symbol (symbol-name symbol) package))
     (cond
      ((null symbol)
-      (cond ((null other-symbol) t)
+      (cond ((null other-symbol) (values t status))
             (t nil)))
      ((null other-symbol) nil)
      ((not (eq symbol other-symbol)) nil)
-     ((eq status :EXTERNAL) t)
-     ((not external-only) t)
+     ((eq status :EXTERNAL) (values t status))
+     ((not external-only) (values t status))
      (t nil))))
 
 (defun may-symbol-complete-symbol (symbol default-package partial-name external-only all-chars-in-same-case-p)
@@ -299,6 +300,7 @@ NIL
 ;(undecorate-function 'editor:parse-symbol #'decorated-parse-symbol)
 
 (defun print-symbol-string-with-advanced-readtable-case (string &key (readtable *readtable*) (package *package*))
+  "see also print-symbol-string-with-advanced-readtable-case-2"
   (let1 str string
     (when
         (and 

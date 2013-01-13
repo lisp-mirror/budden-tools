@@ -115,19 +115,72 @@ is already an altered readtable, simply returns it"
   )
 )
 
+
+(defun my-print-symbol (o s)
+  "see also print-symbol-string-with-advanced-readtable-case"
+  (proga
+    ;(let str (string o))
+    ;(mlvl-bind (found status)
+    ;    (symbol-is-in-package o *package* nil))
+    ;(cond
+    ; (found
+    ;  (
+    (let *print-escape* nil)
+    (let *print-readably* nil)
+    (let *readtable* *xrt*)
+    (print o s)))
+
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; Change printer if needed ;;;;;;;;;;;;;;;;;;;;;;;;
 #+lispworks6 
 (cl-user::PORTABLY-WITHOUT-PACKAGE-LOCKS
   (defmethod print-object :around ((o symbol) s)
     "Lispworks6 prints '|ASDF| as \\A\\S\\D\\F in our readtables. As a quick fix,
      we just set up 'good' readtable around printing"
+    (cond
+     ((eq (readtable-case-advanced *readtable*) :upcase-if-uniform)
+      (case (all-ascii-chars-in-same-case-p (string o))
+        (:uppercase
+         (let ((*print-case* :downcase)
+               (*readtable* *cached-downcase-readtable*))
+           (call-next-method)))
+        (:lowercase
+         (let ((*print-case* :upcase)
+               (*readtable* *cached-default-readtable*))
+           (call-next-method)))
+        (t
+         (let1 *readtable* *cached-preserve-case-readtable*
+           (call-next-method))
+         )
+        ))
+     (t
+      (call-next-method)))))
+
+
+
+
+
+#|    (let1 cases (all-ascii-chars-in-same-case-p (string o))
+      (case cases
+        (:uppercase 
+         (let ((*print-case* :upcase)
+               (*readtable* *cached-default-readtable*))
+           (call-next-method)))
+        ((:lowercase :ignore-case)
+         (let ((*print-case* :downcase))
+           (call-next-method)))
+        (t 
+         (call-next-method)
+         ))))) |#
+
+#|
     (let1 *readtable* *cached-default-readtable* 
     ; #+nil (if 
     ;                      (eq (symbol-package o) *keyword-package*) 
     ;                      *cached-default-readtable*
     ;                    (gethash *readtable* *my-readtable-to-good-readtable* *readtable*))
     ;(with-good-readtable-2 (:ensure-this-is-a-bad-one nil)
-      (call-next-method))))
+      (call-next-method)))) |#
 
 #+lispworks6
 (cl-user::PORTABLY-WITHOUT-PACKAGE-LOCKS
