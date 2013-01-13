@@ -2,8 +2,8 @@
 
 (defsystem :decorate-function
   :serial t
-  :doc "Decorate function"
+  ;:documentation "Decorate function"
   :components ( 
-   (:file "decorate-function" :doc "Uniform API for substituting previously defined functions by their new versions")
-   )
-  ) 
+   (:file "decorate-function" 
+    ;:doc "Uniform API for substituting previously defined functions by their new versions"
+    ))) 

@@ -10,7 +10,7 @@
 
 (defsystem russian-budden-tools
   :serial t
-  :doc "Some utilities by Budden, public domain"
+  ;:documentation "Some utilities by Budden, public domain"
   :depends-on 
   (:budden-tools)
   :components ( 

@@ -10,7 +10,7 @@
 
 (defsystem budden-tools
   :serial t
-  :doc "Some utilities by Budden, public domain"
+  ;:documentation "Some utilities by Budden, public domain"
   :depends-on 
   (:alexandria :split-sequence :cl-utilities :named-readtables
    :buddens-readtable :cl-ppcre		
@@ -20,7 +20,7 @@
     ; :doc "port of Allergo's hierarchical packages to some more implementations by Tim Bradshaw with some changes by Budden"
     ; )
    (:file "def-merge-packages"
-    :doc "defpackage with some new clauses which are useful in conjunction with this library. See def-merge-packages::!"
+    ;:documentation "defpackage with some new clauses which are useful in conjunction with this library. See def-merge-packages::!"
     )
    #+budden (:file "let1")
    
@@ -35,9 +35,11 @@
    (:file "proga-test")
    (:file "iterate-extensions")
    (#.russian-file "defun-to-file")
-   (:file "decorate-function" :doc "Smart API for substituting previously defined functions by their new versions")
-   (#.russian-file "variable-type" :doc "Some environment related stuff")
-   (:file "pass-by-ref" :doc "Pass place to a function by reference")
-   (:file "print-hash-table" :doc "Print hashtable readably")
+   (:file "decorate-function" ;:documentation "Smart API for substituting previously defined functions by their new versions"
    )
-  ) 
+   (#.russian-file "variable-type" ;:documentation "Some environment related stuff"
+   )
+   (:file "pass-by-ref" ;:documentation "Pass place to a function by reference"
+   )
+   (:file "print-hash-table" ;:documentation "Print hashtable readably"
+))) 

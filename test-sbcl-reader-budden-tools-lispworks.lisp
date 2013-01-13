@@ -12,9 +12,9 @@
 (ignore-errors (budden-tools::unregister-readtable :tsrbtl-rt-a))
 
 (with-output-to-string (*error-output*)                                
-  (budden-tools::defreadtable :tsrbtl-rt (:merge))
+  (budden-tools::defreadtable :tsrbtl-rt (:merge :standard))
   (budden-tools::enable-buddens-readtable-extensions :tsrbtl-rt)
-  (budden-tools::defreadtable :tsrbtl-rt-a (:merge))
+  (budden-tools::defreadtable :tsrbtl-rt-a (:merge :standard))
   (budden-tools::enable-buddens-readtable-extensions :tsrbtl-rt-a)
   )
 
