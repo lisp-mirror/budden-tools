@@ -28,7 +28,7 @@
 (eval-when (:compile-toplevel)
   (error "load this file as a source, don't compile it!"))
 
-(defmacro of-system (keywordized-system-name)
+#|(defmacro of-system (keywordized-system-name)
   "Asserts that file belongs to system"
   `(eval-when (:compile-toplevel :load-toplevel)
      (when (boundp '*current-system*)
@@ -36,7 +36,18 @@
            (eq (asdf-keywordize (component-name *current-system*))
                ,keywordized-system-name)
            ()
+         "current file must be loaded through ~S system" ,keywordized-system-name))))|#
+
+(defmacro of-system (keywordized-system-name)
+  "Asserts that file belongs to system"
+  `(eval-when (:compile-toplevel :load-toplevel)
+     (when (boundp '*current-component*)
+       (assert
+           (member ,keywordized-system-name
+                   (asdf::dump-component-asdf-path asdf::*current-component*) :test 'string-equal)
+           ()
          "current file must be loaded through ~S system" ,keywordized-system-name))))
+
                          
 
 (defun ! (&rest args) "One more shortcut for (asdf:oos 'asdf:load-op ,@args)"
