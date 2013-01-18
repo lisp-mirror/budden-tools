@@ -129,10 +129,11 @@
     ))
 
 (defmacro common-carat-implementation (object field-name &rest args)
-  "One more level of indirection due to presence of compiler-macro"
+  "See also def-compiler-macro common-carat-implementation"
   `(runtime^ ,object ',field-name ,@args))
 
 (define-compiler-macro common-carat-implementation (object field-name &rest args &environment env)
+  "See also defmacro common-carat-implementation"
   (let1 variable-type-or-class (variable-type-or-class object env)
     (case variable-type-or-class
       ((t nil) `(runtime^ ,object ',field-name ,@args))
