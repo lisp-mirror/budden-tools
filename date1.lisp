@@ -4,7 +4,7 @@
 (in-package :date1-implementation)
 
 (defreadtable :date1-readtable 
-  (:merge)
+  (:merge :standard)
   )
 
 (see-packages-on :date1-readtable)
