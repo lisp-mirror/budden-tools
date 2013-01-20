@@ -38,6 +38,14 @@
   (error "You lose"))
 
 
+(defmacro kind-of-variable-via-augmented-environment (VAR &ENVIRONMENT ENV)
+  "Из http://www.lispworks.com/documentation/lw50/CLHS/Issues/iss342_w.htm, пока не используется, не возвращает
+декларацию типа"
+  (MULTIPLE-VALUE-BIND (KIND BINDINGP DECLS)
+      (HCL:VARIABLE-INFORMATION VAR ENV)
+    `(LIST ',VAR ',KIND ',BINDINGP ',DECLS)))
+
+
 (defmacro print-variable-type-or-class (var &environment env)
   (print (variable-type-or-class var env))
   var)
