@@ -3,7 +3,7 @@
 <head>
 <meta http-equiv=Content-Type content="text/html; charset=windows-1251">
 <meta name=Generator content="Microsoft Word 11 (filtered)">
-<title>Использованные материалы:</title>
+<title>Введение в Common Lisp для профессионалов Delphi/SQL</title>
 
 <style>
 <!--
@@ -356,12 +356,13 @@ style='page-break-before:always'>
 <h1><a name="_Toc346479844"></a><a name="_Toc346328119">Справочные материалы и
 книги</a></h1>
 
-<p class=MsoPlainText><span lang=EN-US><a
-href="http://www.cs.cmu.edu/Groups/AI/html/cltl/cltl2.html">Guy L. Steele Jr. _<b>Common
-LISP: the Language</b>_. Digital Press<span lang=RU>. 1984.</span></a></span></p>
+<p class=MsoPlainText><b><span lang=EN-US><a
+href="http://filonenko-mikhail.github.com/cltl2-doc/"><span lang=RU>Язык Common
+Lisp Второе издание</span></a></span></b><b>  </b></p>
 
-<p class=MsoPlainText>Устаревший стандарт <span lang=EN-US>Common</span><span
-lang=EN-US> </span><span lang=EN-US>Lisp</span>, но в удобочитаемой форме.</p>
+<p class=MsoPlainText>Стандарт <span lang=EN-US>Common</span><span lang=EN-US> </span><span
+lang=EN-US>Lisp</span>, в удобочитаемой форме, около половины страниц
+переведена на Русский</p>
 
 <p class=MsoPlainText>&nbsp;</p>
 
@@ -371,9 +372,8 @@ Hyperspec<span style='font-weight:normal'> – </span><span lang=RU
 style='font-weight:normal'>стандарт</span><span style='font-weight:normal'>
 Common Lisp</span></a></span></b><span lang=EN-US> </span></p>
 
-<p class=MsoPlainText>Обычно статьи из <span lang=EN-US>Hyperspec</span>
-доступны в <span lang=EN-US>IDE</span> по нажатию горячей клавиши на имени
-функции</p>
+<p class=MsoPlainText>Обычно статьи из <span lang=EN-US>Hyperspec</span> доступны
+в <span lang=EN-US>IDE</span> по нажатию горячей клавиши на имени функции</p>
 
 <p class=MsoPlainText>&nbsp;</p>
 
@@ -408,7 +408,7 @@ lang=EN-US>The Common Lisp Cookbook</span></a></b></p>
 память освобождается. Возможны слабые ссылки, которые не препятствуют
 уничтожению объекта, на который ссылаются (после сборки мусора эти ссылки
 становятся пустыми), а также финализаторы (специальные функции, которые
-вызываются над объектом, который вот-вот будет уничтожен сборщиком мусора).</p>
+вызываются над объектом, который вот-вот будет уничтожен сборщиком мусора). </p>
 
 <h2><a name="_Toc346479848"></a><a name="_Toc346328123">Динамическая разработка</a></h2>
 
@@ -438,11 +438,11 @@ style='color:red'>и</span><span lang=EN-US style='color:red'> defmethod </span>р
 перезапустить уже выполняющуюся функцию, при этом будет вызвано новое тело с
 теми же параметрами. </p>
 
-<p class=MsoNormal style='text-indent:18.0pt'>Также можно динамически
-создавать/менять пространства имён (<span style='color:red'>пакеты</span>) <span
-lang=EN-US>defpackage</span>, уничтожать их (<span lang=EN-US>delete</span>-<span
-lang=EN-US>package</span>), включать и исключать идентификатор (<span
-style='color:red'>символ</span>) в/из пространства имён. </p>
+<p class=MsoNormal style='text-indent:18.0pt'>Также можно динамически создавать/менять
+пространства имён (<span style='color:red'>пакеты</span>) <span lang=EN-US>defpackage</span>,
+уничтожать их (<span lang=EN-US>delete</span>-<span lang=EN-US>package</span>),
+включать и исключать идентификатор (<span style='color:red'>символ</span>) в/из
+пространства имён. </p>
 
 <p class=MsoNormal style='text-indent:18.0pt'>Возможности динамического
 изменения программы могут быть ограничены при сборке с оптимизациями.</p>
@@ -493,8 +493,8 @@ style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&
 <p class=MsoNormal style='text-indent:18.0pt'>Читатель может использоваться как
 для ввода исходного текста программы, так и для ввода произвольных данных из
 текстового формата. Разница – не в структуре этих данных, а в том, что с ними в
-дальнейшем делается. Поэтому говорят, что в Лиспе код=данные, что также
-обозначается словом <i><span lang=EN-US>homoiconicity</span></i>.</p>
+дальнейшем делается. Поэтому говорят, что в Лиспе код=данные, что также обозначается
+словом <i><span lang=EN-US>homoiconicity</span></i>.</p>
 
 <p class=MsoNormal>&nbsp;</p>
 
@@ -508,8 +508,8 @@ style='color:blue'>хеш-таблицы</span> имеют формат вывода по умолчанию, при
 котором выводится содержимое этих объектов. Для классов метод печати по
 умолчанию не печатает содержимое объекта.</p>
 
-<p class=MsoNormal style='text-indent:18.0pt'>Читатель и писатель согласованы.
-Во многих случаях, если писатель что-то написал, то читатель может прочитать
+<p class=MsoNormal style='text-indent:18.0pt'>Читатель и писатель согласованы. Во
+многих случаях, если писатель что-то написал, то читатель может прочитать
 написанное и построить &quot;такой же&quot; объект, либо вернуть ссылку на тот
 же самый объект, который ранее был напечатан. Те объекты, которые нельзя
 прочитать, по соглашению должны печататься так: #&lt;какой-то текст&gt;. При
@@ -720,8 +720,8 @@ style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&
 <p class=MsoNormal style='text-indent:18.0pt'>Для изучения этих команд можно
 открыть любой файл с исходным текстом в редакторе.   </p>
 
-<p class=MsoNormal style='text-indent:18.0pt'>Также можно отметить, что редактор
-подсвечивает парную скобку и раскрашивает скобки в разные цвета. </p>
+<p class=MsoNormal style='text-indent:18.0pt'>Также можно отметить, что
+редактор подсвечивает парную скобку и раскрашивает скобки в разные цвета. </p>
 
 <p class=MsoNormal style='text-indent:18.0pt'>Поскольку синтаксис лиспа
 неудобный, при работе важную роль играют отступы. <span lang=EN-US>IDE</span>
@@ -1052,9 +1052,9 @@ lang=EN-US>t</span>, что означает &quot;любой объект&quot;), хотя можно сделать
 их типизированными с помощью <span lang=EN-US>declare</span><span lang=EN-US> </span>или
 <span lang=EN-US style='color:blue'>with</span><span style='color:blue'>-</span><span
 lang=EN-US style='color:blue'>the</span><span style='color:blue'>1. </span>В
-этом случае тип значения будет проверяться на соответствие, если только
-проверка не отключена в компиляторе. Автоматическое преобразование типов в
-лиспе не применяется. Узнать тип объекта можно с помощью (<span lang=EN-US>type</span>-<span
+этом случае тип значения будет проверяться на соответствие, если только проверка
+не отключена в компиляторе. Автоматическое преобразование типов в лиспе не
+применяется. Узнать тип объекта можно с помощью (<span lang=EN-US>type</span>-<span
 lang=EN-US>of</span><span lang=EN-US> </span>объект). Узнать тип переменной
 стандарт не позволяет, автор пользуется <span lang=EN-US style='color:blue'>budden</span><span
 style='color:blue'>-</span><span lang=EN-US style='color:blue'>tools</span><span
@@ -1119,8 +1119,8 @@ lang=EN-US>try</span>..<span lang=EN-US>except</span></h2>
   <p class=a style='text-indent:0cm'><span lang=EN-US style='font-size:10.0pt'>(defun
   f (s o)</span></p>
   <p class=a style='text-indent:0cm'><span style='font-size:10.0pt'>&nbsp;</span></p>
-  <p class=a style='text-indent:0cm'><span style='font-size:10.0pt'> <span
-  lang=EN-US> (setf s (<span style='color:blue'>str+</span> 'string s s))</span></span></p>
+  <p class=a style='text-indent:0cm'><span lang=EN-US style='font-size:10.0pt'> 
+  (setf s (<span style='color:blue'>str+</span> 'string s s))</span></p>
   <p class=a style='text-indent:0cm'><span lang=EN-US style='font-size:10.0pt'> 
   (<span style='color:blue'>str++</span> 'string local-s (type-of o))</span></p>
   <p class=a style='text-indent:0cm'><span lang=EN-US style='font-size:10.0pt'> 
@@ -1220,7 +1220,7 @@ lang=EN-US>try</span>..<span lang=EN-US>except</span></h2>
   <p class=MsoNormal style='text-indent:0cm'><span lang=EN-US style='font-size:
   10.0pt;font-family:"Courier New"'>else </span></p>
   <p class=MsoNormal style='text-indent:0cm'><span lang=EN-US style='font-size:
-  10.0pt;font-family:"Courier New"'>  writeln('</span><span style='font-size:
+  10.0pt;font-family:"Courier New"'>  writeln('</span><span style='font-size:
   10.0pt;font-family:"Courier New"'>много</span><span lang=EN-US
   style='font-size:10.0pt;font-family:"Courier New"'>');</span></p>
   <p class=MsoNormal style='text-indent:0cm'><span style='font-size:10.0pt;
@@ -1506,18 +1506,6 @@ lang=EN-US>try</span>..<span lang=EN-US>except</span></h2>
   'myfunc 1 2))</span></p>
   </td>
  </tr>
- <tr>
-  <td width=493 valign=top style='width:369.65pt;border:solid windowtext 1.0pt;
-  border-top:none;padding:0cm 5.4pt 0cm 5.4pt'>
-  <p class=MsoNormal style='text-indent:0cm'><span lang=EN-US style='font-size:
-  10.0pt;font-family:"Courier New"'>&nbsp;</span></p>
-  </td>
-  <td width=493 valign=top style='width:369.65pt;border-top:none;border-left:
-  none;border-bottom:solid windowtext 1.0pt;border-right:solid windowtext 1.0pt;
-  padding:0cm 5.4pt 0cm 5.4pt'>
-  <p class=a style='text-indent:0cm'><span lang=EN-US style='font-size:10.0pt'>&nbsp;</span></p>
-  </td>
- </tr>
 </table>
 
 <h2><a name="_Toc346479869"></a><a name="_Toc346328141"></a><a
@@ -1573,29 +1561,32 @@ style='font-family:"Courier New"'>&nbsp;</span></p>
  <tr>
   <td width=493 valign=top style='width:369.65pt;border:solid windowtext 1.0pt;
   padding:0cm 5.4pt 0cm 5.4pt'>
-  <p class=a><span lang=EN-US>&nbsp;</span></p>
-  <p class=a><span lang=EN-US>&nbsp;</span></p>
-  <p class=a><span lang=EN-US>(let ((a (create-x arg1 arg2)))</span></p>
-  <p class=a><span lang=EN-US>  (unwind-protect</span></p>
-  <p class=a><span lang=EN-US>     (progn </span></p>
-  <p class=a>       <span lang=EN-US>(do-somehing-1) </span></p>
-  <p class=a><span lang=EN-US>     </span>  (<span lang=EN-US>do-something-2)</span></p>
-  <p class=a><span lang=EN-US>       )</span></p>
-  <p class=a><span lang=EN-US>    (clear-x a)))</span></p>
-  <p class=a><span lang=EN-US>&nbsp;</span></p>
+  <p class=a><span lang=EN-US style='font-size:9.0pt'>&nbsp;</span></p>
+  <p class=a><span lang=EN-US style='font-size:9.0pt'>&nbsp;</span></p>
+  <p class=a><span lang=EN-US style='font-size:9.0pt'>(let ((a (create-x arg1
+  arg2)))</span></p>
+  <p class=a><span lang=EN-US style='font-size:9.0pt'>  (unwind-protect</span></p>
+  <p class=a><span lang=EN-US style='font-size:9.0pt'>     (progn </span></p>
+  <p class=a><span style='font-size:9.0pt'>       </span><span lang=EN-US
+  style='font-size:9.0pt'>(do-somehing-1) </span></p>
+  <p class=a><span lang=EN-US style='font-size:9.0pt'>     </span><span
+  style='font-size:9.0pt'>  (</span><span lang=EN-US style='font-size:9.0pt'>do-something-2)</span></p>
+  <p class=a><span lang=EN-US style='font-size:9.0pt'>       )</span></p>
+  <p class=a><span lang=EN-US style='font-size:9.0pt'>    (clear-x a)</span></p>
+  <p class=a><span lang=EN-US style='font-size:9.0pt'>   ))</span></p>
   </td>
   <td width=493 valign=top style='width:369.65pt;border:solid windowtext 1.0pt;
   border-left:none;padding:0cm 5.4pt 0cm 5.4pt'>
-  <p class=a><span lang=EN-US>var a:x;</span></p>
-  <p class=a><span lang=EN-US>begin</span></p>
-  <p class=a><span lang=EN-US>a:=x.create(arg1,arg2);</span></p>
-  <p class=a><span lang=EN-US>try</span></p>
-  <p class=a><span lang=EN-US>&nbsp;</span></p>
-  <p class=a><span lang=EN-US>  doSomething1;</span></p>
-  <p class=a><span lang=EN-US>  doSomething2;</span></p>
-  <p class=a><span lang=EN-US>finally</span></p>
-  <p class=a><span lang=EN-US>  freeAndNil(a);</span></p>
-  <p class=a><span lang=EN-US>  end;</span></p>
+  <p class=a><span lang=EN-US style='font-size:9.0pt'>var a:x;</span></p>
+  <p class=a><span lang=EN-US style='font-size:9.0pt'>begin</span></p>
+  <p class=a><span lang=EN-US style='font-size:9.0pt'>a:=x.create(arg1,arg2);</span></p>
+  <p class=a><span lang=EN-US style='font-size:9.0pt'>try</span></p>
+  <p class=a><span lang=EN-US style='font-size:9.0pt'>&nbsp;</span></p>
+  <p class=a><span lang=EN-US style='font-size:9.0pt'>  doSomething1;</span></p>
+  <p class=a><span lang=EN-US style='font-size:9.0pt'>  doSomething2;</span></p>
+  <p class=a><span lang=EN-US style='font-size:9.0pt'>finally</span></p>
+  <p class=a><span lang=EN-US style='font-size:9.0pt'>  freeAndNil(a);</span></p>
+  <p class=a><span lang=EN-US style='font-size:9.0pt'>  end;</span></p>
   </td>
  </tr>
 </table>
@@ -1941,9 +1932,10 @@ lang=EN-US>package</span><span lang=EN-US> </span>:тотЖеПакет), чтобы было
   none;border-bottom:solid windowtext 1.0pt;border-right:solid windowtext 1.0pt;
   padding:0cm 5.4pt 0cm 5.4pt'>
   <p class=MsoBodyTextIndent style='text-indent:0cm'>сразу вступает в действие.
-  Все другие функции будут вызывать её. Если функция находится на стеке, продолжит
-  выполняться старое тело до выхода. Рекурсивные вызовы будут вызывать новое
-  тело. Но! Всё это может не работать при включенных оптимизациях. </p>
+  Все другие функции будут вызывать её. Если функция находится на стеке,
+  продолжит выполняться старое тело до выхода. Рекурсивные вызовы будут
+  вызывать новое тело. Но! Всё это может не работать при включенных
+  оптимизациях. </p>
   </td>
  </tr>
  <tr>
@@ -2101,13 +2093,13 @@ lang=EN-US style='color:blue'>Enter</span><span style='color:blue'>&gt;</span>,
 Только один пример. Мы создали функцию <span lang=EN-US>bar</span>, к-рая вызывает
 функцию <span lang=EN-US>foo</span>. Потом решили переименовать функцию <span
 lang=EN-US>foo</span>, взяли её определение, поменяли в ней имя <span
-lang=EN-US>foo</span><span lang=EN-US> </span>на нормальноеИмя и
-перекомпилировали, а в функции <span lang=EN-US>bar</span> - забыли поменять.
-Всё хорошо, но функция <span lang=EN-US>foo</span><span lang=EN-US> </span>тоже
-существует в пространстве имён, и при перекомпиляции функции <span lang=EN-US>bar</span><span
+lang=EN-US>foo</span><span lang=EN-US> </span>на нормальноеИмя и перекомпилировали,
+а в функции <span lang=EN-US>bar</span> - забыли поменять. Всё хорошо, но
+функция <span lang=EN-US>foo</span><span lang=EN-US> </span>тоже существует в
+пространстве имён, и при перекомпиляции функции <span lang=EN-US>bar</span><span
 lang=EN-US> </span>никто нам не скажет, что она всё ещё ссылается на <span
-lang=EN-US>foo</span>, а не на нормальноеИмя. Проблема всплывёт только при
-полной пересборке (а это может быть и через неделю). </p>
+lang=EN-US>foo</span>, а не на нормальноеИмя. Проблема всплывёт только при полной
+пересборке (а это может быть и через неделю). </p>
 
 <p class=MsoBodyTextIndent>Существует множество других подводных камней
 подобного рода, связанных с динамической природой лиспа. </p>
@@ -2129,9 +2121,9 @@ lang=EN-US> </span>хватает граблей, связанных с одноимёнными экспортируемыми
 
 <p class=MsoBodyTextIndent>3. Нужно стараться удалять сущности, которые больше
 не нужны. Любая сущность, имя которой есть хотя бы в одном пространстве имён,
-пребудет во веки веков (до выхода из программы), даже если на неё нет других
-ссылок. Поэтому, для удаления сущности нужно удалить её имя из пространства
-имён. В целом удаление символа из пространства имён делается с помощью <span
+пребудет во веки веков (до выхода из программы), даже если на неё нет других ссылок.
+Поэтому, для удаления сущности нужно удалить её имя из пространства имён. В
+целом удаление символа из пространства имён делается с помощью <span
 lang=EN-US>unintern</span>, но это не сработает, если имя содержится в
 нескольких пространствах имён или если оно пришло через наследование
 пространств имён (:<span lang=EN-US>use</span>). Проверяйте результат <span
@@ -2307,14 +2299,14 @@ lang=EN-US>car</span><span lang=EN-US> </span>указывает на элемент списка,<span
 lang=EN-US>cdr</span> - на хвост. У последнего элемента <span lang=EN-US>cdr</span>
 = <span lang=EN-US>nil</span>. Несмотря на то, что односвязный список далеко не
 всегда оптимален по быстродействию, его часто используют для хранения
-последовательностей объектов, множеств, отображений (словарей). Список можно примерно
-считать аналогичным <span lang=EN-US>TList</span>, но он гибче, поскольку два
-списка могут иметь общий &quot;хвост&quot;. Одинаковый код обработки списков на
-Лиспе оказывается гораздо лаконичнее соответствующего кода на Дельфи,
-поскольку:</p>
+последовательностей объектов, множеств, отображений (словарей). Список можно
+примерно считать аналогичным <span lang=EN-US>TList</span>, но он гибче,
+поскольку два списка могут иметь общий &quot;хвост&quot;. Одинаковый код
+обработки списков на Лиспе оказывается гораздо лаконичнее соответствующего кода
+на Дельфи, поскольку:</p>
 
-<p class=MsoNormal>1. В лиспе можно одним оператором создать и заполнить
-вложенный список произвольных значений. </p>
+<p class=MsoNormal>1. В лиспе можно одним оператором создать и заполнить вложенный
+список произвольных значений. </p>
 
 <p class=MsoNormal>2. Легко складывать (конкатенировать) списки, сортировать,
 искать по произвольному ключу, удалять сразу много значений, делать выборки, осуществлять
@@ -2326,8 +2318,8 @@ lang=EN-US>cdr</span> - на хвост. У последнего элемента <span lang=EN-US>cdr</sp
 значений  - можно использовать вложенные списки. </p>
 
 <p class=MsoNormal>5. Список объектов, которые имеют внешние текстовое
-представление, за одно действие может быть введён/выведен в/из поток(а). В частности,
-список всегда легко напечатать и обозреть его содержимое. </p>
+представление, за одно действие может быть введён/выведен в/из поток(а). В
+частности, список всегда легко напечатать и обозреть его содержимое. </p>
 
 <p class=MsoNormal>Как правило, списки всё же используются для относительно
 небольших объёмов данных. </p>
@@ -2338,10 +2330,10 @@ lang=EN-US>cdr</span> - на хвост. У последнего элемента <span lang=EN-US>cdr</sp
 одномерные и многомерные массивы. Многие функции, работающие для списков,
 работают и для одномерных массивов. Массивы могут быть изменяемого размера.
 Принципиальное отличие от списков - в том, что операция добавления и вырезания
-элемента в массивах могут быть медленнее, а операция доступа по номеру -
-быстрее. Массивы могут быть слабыми, т.е. не мешать объекту подвергнуться
-сборке мусора, если на него нет других, &quot;сильных&quot; ссылок. Массивы,как
-и списки, могут быть напечатаны или прочитаны из потока за одно действие. </p>
+элемента в массивах могут быть медленнее, а операция доступа по номеру - быстрее.
+Массивы могут быть слабыми, т.е. не мешать объекту подвергнуться сборке мусора,
+если на него нет других, &quot;сильных&quot; ссылок. Массивы,как и списки,
+могут быть напечатаны или прочитаны из потока за одно действие. </p>
 
 <h2><a name="_Toc346479879"></a><a name="_Toc346328157">Хеш-таблицы</a></h2>
 
@@ -2359,9 +2351,9 @@ lang=EN-US>cdr</span> - на хвост. У последнего элемента <span lang=EN-US>cdr</sp
 
 <h2><a name="_Toc346479880"></a><a name="_Toc346328158">Числа</a></h2>
 
-<p class=MsoNormal>Числа бывают целые с произвольной точностью, дроби и с плавающей
-точкой. Результат операций над целыми числами является целым или дробью, для
-приведения к плавающей точке нужно использовать (<span lang=EN-US>coerce</span>
+<p class=MsoNormal>Числа бывают целые с произвольной точностью, дроби и с
+плавающей точкой. Результат операций над целыми числами является целым или
+дробью, для приведения к плавающей точке нужно использовать (<span lang=EN-US>coerce</span>
 1 '<span lang=EN-US>double</span>-<span lang=EN-US>float</span>). Отличаются <span
 lang=EN-US>single</span>-<span lang=EN-US>float</span><span lang=EN-US> </span>и
 <span lang=EN-US>double</span>-<span lang=EN-US>float</span>, это может вызвать
@@ -2544,9 +2536,9 @@ lang=EN-US>b</span>(<span lang=EN-US>args</span>).<span lang=EN-US>c</span>.
 определяет пространство имён. Если два класса отличны, то, <span lang=EN-US>T</span>1.<span
 lang=EN-US>func</span>() и <span lang=EN-US>T</span>2.<span lang=EN-US>func</span>()
 - тоже отличны. В лиспе это - не так. Пространства имён ортогональны иерархии
-классов. Отсюда возникает вопрос, как назвать <span lang=EN-US>func</span> в
-Лиспе? Её можно назвать <span lang=EN-US>T</span>1-<span lang=EN-US>func</span>,
-но тогда при доступе всегда нужно будет писать имя типа - это неудобно. Кроме
+классов. Отсюда возникает вопрос, как назвать <span lang=EN-US>func</span> в Лиспе?
+Её можно назвать <span lang=EN-US>T</span>1-<span lang=EN-US>func</span>, но
+тогда при доступе всегда нужно будет писать имя типа - это неудобно. Кроме
 того, если у <span lang=EN-US>T</span>1 появится потомок <span lang=EN-US>T</span>1<span
 lang=EN-US>Child</span>, нужно будет либо писать новую функцию <span
 lang=EN-US>T</span>1<span lang=EN-US>Child</span>-<span lang=EN-US>member</span>,
@@ -2560,23 +2552,15 @@ lang=EN-US>add</span>,<span lang=EN-US>push</span><span lang=EN-US> </span>и
 с иерархиями классов. В любом случае, в среднем, получается более многословно,
 чем в <span lang=EN-US>Delphi</span> и с этим надо смириться. </p>
 
-<p class=MsoNormal><span style='color:blue'>В случае структур ситуация
-упрощается, (только для полей). Если в стурктуре </span><span lang=EN-US
-style='color:blue'>T</span><span style='color:blue'>1 есть поле </span><span
-lang=EN-US style='color:blue'>fld</span><span style='color:blue'>,
-автоматически создаётся функция доступа </span><span lang=EN-US
-style='color:blue'>T</span><span style='color:blue'>1-</span><span lang=EN-US
-style='color:blue'>fld</span><span style='color:blue'>. Если создаётся наследник
-</span><span lang=EN-US style='color:blue'>T</span><span style='color:blue'>1</span><span
-lang=EN-US style='color:blue'>Child</span><span style='color:blue'>, то к полю </span><span
-lang=EN-US style='color:blue'>fld</span><span lang=EN-US style='color:blue'> </span><span
-style='color:blue'>наследника можно обращаться и через </span><span lang=EN-US
-style='color:blue'>T</span><span style='color:blue'>1-</span><span lang=EN-US
-style='color:blue'>fld</span><span style='color:blue'>, и через </span><span
-lang=EN-US style='color:blue'>T</span><span style='color:blue'>1</span><span
-lang=EN-US style='color:blue'>Child</span><span style='color:blue'>-</span><span
-lang=EN-US style='color:blue'>fld</span><span style='color:blue'>. Крышечный
-синтаксис позволяет обращаться к полям структур почти так же лаконично, как в </span><span
+<p class=MsoNormal>В случае структур ситуация упрощается, (только для полей).
+Если в стурктуре <span lang=EN-US>T</span>1 есть поле <span lang=EN-US>fld</span>,
+автоматически создаётся функция доступа <span lang=EN-US>T</span>1-<span
+lang=EN-US>fld</span>. Если создаётся наследник <span lang=EN-US>T</span>1<span
+lang=EN-US>Child</span>, то к полю <span lang=EN-US>fld</span><span lang=EN-US>
+</span>наследника можно обращаться и через <span lang=EN-US>T</span>1-<span
+lang=EN-US>fld</span>, и через <span lang=EN-US>T</span>1<span lang=EN-US>Child</span>-<span
+lang=EN-US>fld</span>. <span style='color:blue'>Крышечный синтаксис позволяет
+обращаться к полям структур почти так же лаконично, как в </span><span
 lang=EN-US style='color:blue'>Delphi</span><span style='color:blue'>: </span><span
 lang=EN-US style='color:blue'>instance</span><span style='color:blue'>^</span><span
 lang=EN-US style='color:blue'>fld</span><span style='color:blue'>, где </span><span
@@ -3062,8 +3046,8 @@ lang=EN-US> </span><span lang=EN-US>load</span>). Если в процессе отладки в код
 функцию, в которой произошёл останов, с помощью пункта <span lang=EN-US>inspect</span><span
 lang=EN-US> </span><span lang=EN-US>function</span>, в т.ч. её ассемблерный
 листинг. В меню &quot;<span lang=EN-US>view</span>&quot; жука можно выбрать
-отображение тех или иных кадров стека. По умолчанию отладчик показывает лишь
-небольшую часть из них. </p>
+отображение тех или иных кадров стека. По умолчанию отладчик показывает лишь небольшую
+часть из них. </p>
 
 <h3><a name="_Toc346328182">Инспектор</a></h3>
 
@@ -3071,10 +3055,10 @@ lang=EN-US> </span><span lang=EN-US>function</span>, в т.ч. её ассемблерный
 - он позволяет ходить по внутренней структуре объекта. </p>
 
 <p class=MsoBodyTextIndent>В нормальных условиях инспектор вызывается нажатием
-иконки с микроскопом в листенере. В этом случае он показывает содержимое
-последнего результата вычисления. В графическом отладчике - &quot;жуке&quot;
-инспектор вызывается при двойном щелчке нажатии на любую переменную стека. Для
-возврата на предыдущий уровень структуры есть кнопка &quot;назад&quot;, как в
+иконки с микроскопом в листенере. В этом случае он показывает содержимое последнего
+результата вычисления. В графическом отладчике - &quot;жуке&quot; инспектор
+вызывается при двойном щелчке нажатии на любую переменную стека. Для возврата
+на предыдущий уровень структуры есть кнопка &quot;назад&quot;, как в
 веб-браузере. </p>
 
 <h2><a name="_Toc346479892"></a><a name="_Toc346328183">Листенер во время
@@ -3277,13 +3261,22 @@ lang=EN-US>prin</span>1-<span lang=EN-US>to</span>-<span lang=EN-US>string</span
 <span lang=EN-US>read</span>-<span lang=EN-US>from</span>-<span lang=EN-US>string</span>,
 <span lang=EN-US>parse</span>-<span lang=EN-US>integer</span>, <span
 lang=EN-US>string</span>, <span lang=EN-US>format</span> - знать определения
-всех понятий и зачем это нужно. Про каждое понятие указать 1-2 источника, где
-оно описано (письменно). </p>
+всех понятий и зачем это нужно. Про каждое понятие указать 1-2 прочитанных Вами
+источника, где оно описано (письменно) и быть готовым ответить на вопросы по
+этим источникам.</p>
 
 <p class=MsoNormal><span style='color:red'>&nbsp;</span></p>
 
 <p class=MsoNormal style='text-indent:0cm'>2. Каким типом обозначается
 &quot;любой объект&quot;. </p>
+
+<p class=MsoNormal style='text-indent:0cm'>3. Продемонстрировать через <span
+lang=EN-US>TeamViewer</span><span lang=EN-US> </span>процесс поиска
+документации на слово <span lang=EN-US>eql</span><span lang=EN-US> </span>в <span
+lang=EN-US>IDE</span><span lang=EN-US> </span><span lang=EN-US>Lispworks</span>,
+а также в <b><span lang=EN-US><a
+href="http://filonenko-mikhail.github.com/cltl2-doc-ru/"><span lang=RU>Язык
+Common Lisp Второе издание</span></a></span></b></p>
 
 <p class=MsoNormal style='text-indent:0cm'>3. Создать <span lang=EN-US>asdf</span>-систему
 <span lang=EN-US>test</span>3, с пакетом :<span lang=EN-US>test</span>3,
@@ -3342,7 +3335,7 @@ lang=EN-US>disassemble</span>, <span lang=EN-US>find</span>-<span lang=EN-US>met
 
 <p class=MsoNormal style='text-indent:0cm'><span lang=EN-US>6. </span>Трассировать
 функцию <span lang=EN-US>lispworks-tools::directory-search-internal-search </span>с
-прерыванием <span lang=EN-US>(trace with break). </span></p>
+прерыванием<span lang=EN-US> (trace with break). </span></p>
 
 <p class=MsoNormal style='text-indent:0cm'>Вызвать средство поиска в файлах,
 задать способ поиска &quot;<span lang=EN-US>Root</span><span lang=EN-US> </span><span
@@ -3372,9 +3365,135 @@ style='color:blue'>russian-budden-tools::char-equal-cyr</span>)</p>
 </p>
 
 <p class=MsoNormal style='text-indent:0cm'>С использованием &amp;<span
-lang=EN-US>rest</span>. ВНимание! Никакая функция с &amp;<span lang=EN-US>rest</span><span
+lang=EN-US>rest</span>. Внимание! Никакая функция с &amp;<span lang=EN-US>rest</span><span
 lang=EN-US> </span>не должна разрушать свой список параметров - это приводить к
 непредсказуемым последствиям. </p>
+
+<p class=MsoNormal style='text-indent:0cm'>&nbsp;</p>
+
+<p class=MsoNormal style='text-indent:0cm'>9. Реализовать перечислимый тип.
+Должно получиться так<span lang=EN-US>:</span></p>
+
+<p class=a style='text-indent:0cm'><span lang=EN-US style='font-size:10.0pt'>&gt;(def-enum-type
+TWeekDays (Monday Tuesday Wednesday Thursday Friday Saturday Sunday))</span></p>
+
+<p class=a style='text-indent:0cm'><span lang=EN-US style='font-size:10.0pt'>TWeekDays</span></p>
+
+<p class=a style='text-indent:0cm'><span lang=EN-US style='font-size:10.0pt'>&gt;(typep
+'Monday 'TWeekDays)</span></p>
+
+<p class=a style='text-indent:0cm'><span lang=EN-US style='font-size:10.0pt'>t</span></p>
+
+<p class=a style='text-indent:0cm'><span lang=EN-US style='font-size:10.0pt'>&gt;(ord
+'Monday)</span></p>
+
+<p class=a style='text-indent:0cm'><span lang=EN-US style='font-size:10.0pt'>0</span></p>
+
+<p class=a style='text-indent:0cm'><span lang=EN-US style='font-size:10.0pt'>&gt;(succ
+'Monday)</span></p>
+
+<p class=a style='text-indent:0cm'><span lang=EN-US style='font-size:10.0pt'>Tuesday</span></p>
+
+<p class=a style='text-indent:0cm'><span lang=EN-US style='font-size:10.0pt'>&gt;(GetEnumName
+'TWeekDays 0)</span></p>
+
+<p class=a style='text-indent:0cm'><span lang=EN-US style='font-size:10.0pt'>Monday</span></p>
+
+<pre>&nbsp;</pre>
+
+<p class=MsoNormal style='text-indent:0cm'>Также должна быть конструкция <span
+lang=EN-US>enum</span>-<span lang=EN-US>case</span>, аналогичная <span
+lang=EN-US>case</span>, которая допускает в качестве ключей и своего аргумента
+только символы из перечисления, </p>
+
+<p class=a style='text-indent:0cm'><span style='font-size:10.0pt'>&nbsp;</span></p>
+
+<p class=a style='text-indent:0cm'><span lang=EN-US style='font-size:10.0pt'>&gt;(enum-case
+('Monday TWeekDays)</span></p>
+
+<p class=a style='text-indent:0cm'><span lang=EN-US style='font-size:10.0pt'>   
+(Monday &quot;</span><span style='font-size:10.0pt'>Понедельник</span><span
+lang=EN-US style='font-size:10.0pt'>&quot;)</span></p>
+
+<p class=a style='text-indent:0cm'><span style='font-size:10.0pt'>    </span><span
+lang=EN-US style='font-size:10.0pt'>(t </span><span style='font-size:10.0pt'>&quot;Другой
+день&quot;))</span></p>
+
+<p class=a style='text-indent:0cm'><span style='font-size:10.0pt'>&quot;Понедельник&quot;</span></p>
+
+<p class=a style='text-indent:0cm'><span lang=EN-US style='font-size:10.0pt'>&nbsp;</span></p>
+
+<p class=a style='text-indent:0cm'><span lang=EN-US style='font-size:10.0pt'>&gt;(enum-case
+('Monday TWeekDays)</span></p>
+
+<p class=a style='text-indent:0cm'><span lang=EN-US style='font-size:10.0pt'>  
+(0 &quot;</span><span style='font-size:10.0pt'>Понедельник</span><span
+lang=EN-US style='font-size:10.0pt'>&quot;)</span></p>
+
+<p class=a style='text-indent:0cm'><span style='font-size:10.0pt'>   (</span><span
+lang=EN-US style='font-size:10.0pt'>t</span><span lang=EN-US style='font-size:
+10.0pt'> </span><span style='font-size:10.0pt'>&quot;Другой день&quot;))</span></p>
+
+<p class=a style='text-indent:0cm'><span style='font-size:10.0pt'>; ошибка во
+время макрорасширения</span></p>
+
+<p class=a style='text-indent:0cm'><span style='font-size:10.0pt'>&nbsp;</span></p>
+
+<p class=a style='text-indent:0cm'><span lang=EN-US style='font-size:10.0pt'>&gt;(enum-case
+('cons TWeekDays) </span></p>
+
+<p class=a style='text-indent:0cm'><span lang=EN-US style='font-size:10.0pt'>   
+(Monday &quot;</span><span style='font-size:10.0pt'>Понедельник</span><span
+lang=EN-US style='font-size:10.0pt'>&quot;)</span></p>
+
+<p class=a style='text-indent:0cm'><span lang=EN-US style='font-size:10.0pt'>   
+</span><span style='font-size:10.0pt'>(</span><span lang=EN-US
+style='font-size:10.0pt'>t</span><span lang=EN-US style='font-size:10.0pt'> </span><span
+style='font-size:10.0pt'>&quot;Другой день&quot;))</span></p>
+
+<p class=a style='text-indent:0cm'><span style='font-size:10.0pt'>; ошибка во
+время выполнения </span></p>
+
+<p class=a style='text-indent:0cm'><span style='font-size:10.0pt'>&nbsp;</span></p>
+
+<p class=MsoNormal style='text-indent:0cm'>Особенности реализации:</p>
+
+<p class=MsoNormal style='text-indent:0cm'>Числовое значение перечисления хранится
+в <span lang=EN-US>property</span><span lang=EN-US> </span><span lang=EN-US>list</span><span
+lang=EN-US> </span>(списке свойств, <a
+href="http://filonenko-mikhail.github.com/cltl2-doc-ru/clmse54.html#x69-94200010.1">http://filonenko-mikhail.github.com/cltl2-doc-ru/clmse54.html#x69-94200010.1</a>)
+символа, имя свойства - это имя типа перечисления.</p>
+
+<p class=MsoNormal style='text-indent:0cm'>&nbsp;</p>
+
+<p class=MsoNormal style='text-indent:0cm'><span lang=EN-US>def</span>-<span
+lang=EN-US>enum</span>-<span lang=EN-US>type</span><span lang=EN-US> </span>должно
+разворачиваться в <span lang=EN-US>progn</span>, который:</p>
+
+<p class=MsoNormal style='text-indent:0cm'><span lang=EN-US>1. </span>делает <span
+lang=EN-US>(deftype TWeekDays () '(member Monday Tuesday ...))</span></p>
+
+<p class=MsoNormal style='text-indent:0cm'>2. для каждого символа проверяет,
+что он ещё не является элементом другого перечисления (через перебор списка
+свойств)</p>
+
+<p class=MsoNormal style='text-indent:0cm'>3. назначает в <span lang=EN-US>property</span><span
+lang=EN-US> </span><span lang=EN-US>list</span><span lang=EN-US> </span>числовое
+значение. </p>
+
+<p class=MsoNormal style='text-indent:0cm'>&nbsp;</p>
+
+<p class=MsoNormal style='text-indent:0cm'>Функция <span lang=EN-US>Ord</span><span
+lang=EN-US> </span>должна быть обычной (не родовой) функцией. </p>
+
+<p class=MsoNormal style='text-indent:0cm'>&nbsp;</p>
+
+<p class=MsoNormal style='text-indent:0cm'><span lang=EN-US>enum</span>-<span
+lang=EN-US>case</span><span lang=EN-US> </span>должно делать <span lang=EN-US>check</span>-<span
+lang=EN-US>type</span><span lang=EN-US> </span>во время компиляции для каждого
+ключа. Она должна расширяться в конструкцию, которая делает <span lang=EN-US>check</span>-<span
+lang=EN-US>type</span><span lang=EN-US> </span>для аргумента и расширяется в <span
+lang=EN-US>case</span>.</p>
 
 <p class=MsoNormal style='text-indent:0cm'>&nbsp;</p>
 
