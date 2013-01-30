@@ -528,7 +528,7 @@ tests:
   forbidden-symbol-names ; FIXME rename to forbidden-symbols. This is a list of forbidden symbols. Forbidden symbols are internal (and in shadowing-import list) in the package 
                        ; and, if buddens readtable extensions are on,  you can't read them with reader 
   allow-qualified-intern ; with buddens readtable extensions, by default, if package::symbol is being read for non-existent symbol, this is cerror. To return to default cl behaviour, set 
-                         ; this variable to t. E.g. (setf budden-tools::package-metadata-allow-qualified-intern (budden-tools::ensure-package-metadata :my-package))
+                         ; this variable to t. E.g. (setf (budden-tools::package-metadata-allow-qualified-intern (budden-tools::ensure-package-metadata :my-package)) t)
   interning-is-forbidden ; when this is true, interning via reading is prohibited for the package (in our readtable)
   )
 
