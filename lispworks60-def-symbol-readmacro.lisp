@@ -166,8 +166,8 @@ NIL
        (sort rlist 'editor::symbol-string-<)
        rlength rstring rpackage))))
 
-(decorate-function 'editor::complete-symbol
-                   #'decorated-complete-symbol)
+#-lispworks6.1 (decorate-function 'editor::complete-symbol
+                                  #'decorated-complete-symbol)
 
 
 ;(decorate-function 'editor::i-find-package-name-for-point 'decorated-i-find-package-name-for-point)
@@ -380,7 +380,7 @@ NIL
   
 ;(editor::bind-key "Fix Case of Symbol at Point" "f12")
 
-(decorate-function 'editor::DO-COMPLETE-SYMBOL 'DECORATED-DO-COMPLETE-SYMBOL)
+#-lispworks6.1 (decorate-function 'editor::DO-COMPLETE-SYMBOL 'DECORATED-DO-COMPLETE-SYMBOL)
 
 ;(decorate-function 'editor:complete-symbol-command #'decorated-complete-symbol-command)
 ;(decorate-function 'editor::indent-or-complete-symbol-command #'decorated-complete-symbol-command)
