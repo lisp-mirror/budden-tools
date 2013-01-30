@@ -1040,7 +1040,7 @@ variables to allow for nested and thread safe reading."
                     *keyword-package*)))
       (reset-read-buffer)
       ; brt - если назначен специальный ридер для этого пакета, используем его
-      (let ((found (find-package package-designator)))
+      (let ((found (hp-find-package package-designator)))
         (unless found
           (error "package ~S not found" package-designator
                  ))
@@ -1082,7 +1082,7 @@ variables to allow for nested and thread safe reading."
       RETURN-SYMBOL
       (casify-read-buffer escapes)
       (let ((found (if package-designator
-                       (find-package package-designator)
+                       (hp-find-package package-designator)
                        (sane-package))))
         (unless found
           (error "package ~S not found" package-designator
