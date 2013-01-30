@@ -107,7 +107,7 @@ but it is unfinished. Also it seem to violate GNU. So it is likely to be removed
 ;; evaluation and general shortcuts
 ;  budden-tools:let1 is interned to CL as it is very necessary :) 
    #:let1 ; but we would better reexport it 
-   budden-tools:iter ; reexported from iterate
+   ; budden-tools:iter ; reexported from iterate
    budden-tools:with-gensyms ; reexported from alexandria
    budden-tools:once-only ; reexported from alexandria
    budden-tools:ignored 
@@ -115,7 +115,7 @@ but it is unfinished. Also it seem to violate GNU. So it is likely to be removed
    budden-tools:print-if 
    budden-tools:proga ; macro to get rid of some extra parens and nesting levels. Changes lisp syntax significantly. 
                       ; currently it needs to be redesigned. 
-   budden-tools:dsetq ; reexported from iterate
+   ;budden-tools:dsetq ; reexported from iterate
    budden-tools:pllet1 ; 'bind' place
    budden-tools:smlet ; another name for symbol-macrolet
    budden-tools:defun-to-file ; to see source of your generated function. TODO: package name->file name, gensyms vs `,
