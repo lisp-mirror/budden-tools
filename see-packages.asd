@@ -22,7 +22,7 @@
         (:file "sbcl-reader-budden-tools-lispworks")
 	(:russian-file "redirect-reader")
 	(:russian-file "see-packages-applications")
-        #+(and lispworks6.0 win32)
+        #+(and lispworks6 win32)
         (:russian-file "lispworks60-def-symbol-readmacro")
         (:file "package-aliases")	
 	(:russian-file "locations")
