@@ -42,8 +42,11 @@ progn
 
 (asdf::! :decorate-function)
 (asdf::! :iterate-keywords)
-(import 'iter:iter)
-(export 'iter)
+
+(defpackage :iterk
+  (:nicknames :iterate-keywords-tiny-export)
+  (:use #:cl #:iterate-keywords)
+  (:export #:iter #:dsetq))
 
 (asdf::! :see-packages)
 (asdf::! :budden-tools)
