@@ -208,7 +208,7 @@ but it is unfinished. Also it seem to violate GNU. So it is likely to be removed
    budden-tools:it-is-a-car-symbol-readmacro ; put this at the first line of your symbol-readmacro definition
    budden-tools:*print-normalize-seen-symbols*
 
-   budden-tools:defpackage-autoimport
+   ; budden-tools:defpackage-autoimport ; obsolete
    budden-tools:export-clause
    budden-tools:find-symbol-in-packages
    budden-tools:package-doctor
