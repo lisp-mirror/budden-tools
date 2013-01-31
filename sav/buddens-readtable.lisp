@@ -1,3 +1,4 @@
+;;; -*- Encoding: utf-8; -*-
 (in-package :buddens-readtable)
 (defreadtable :buddens-readtable
   (:merge)

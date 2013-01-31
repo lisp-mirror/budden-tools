@@ -1,3 +1,4 @@
+;;; -*- Encoding: utf-8; -*-
 (in-package :trivial-deftest)
 
 ;;; Trivial test suite. Define tests in the
@@ -9,7 +10,7 @@
       (unintern function-name)
       (when *run-tests*
         `(eval-when (:load-toplevel :execute) 
-           (eval ; иначе макросы начнут раскрываться во время компиляции
+           (eval ; РёРЅР°С‡Рµ РјР°РєСЂРѕСЃС‹ РЅР°С‡РЅСѓС‚ СЂР°СЃРєСЂС‹РІР°С‚СЊСЃСЏ РІРѕ РІСЂРµРјСЏ РєРѕРјРїРёР»СЏС†РёРё
             `(progn
                (defun ,',function-name ()
                  (unless (funcall ',',test ,',expr1 ,',expr2)

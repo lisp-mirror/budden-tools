@@ -1,7 +1,8 @@
+;;; -*- Encoding: utf-8; -*-
 (in-package :budden-tools)
-; TODO убей меня
+; TODO СѓР±РµР№ РјРµРЅСЏ
 
 (defmacro uuuuu () (print compiler:*function-name*))
 (defun foo () 
   (uuuuu)
-  (documentation-tags "офигенно"))
+  (documentation-tags "РѕС„РёРіРµРЅРЅРѕ"))

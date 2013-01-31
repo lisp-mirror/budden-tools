@@ -1,3 +1,4 @@
+;;; -*- Encoding: utf-8; -*-
 (in-package :proga-implementation)
 
 (defmacro def-p-t (name x y)
@@ -34,7 +35,7 @@
                        (bar))
                      '2)
 
-;(def-trivial-test::! proga.9 так больше не делаем
+;(def-trivial-test::! proga.9 С‚Р°Рє Р±РѕР»СЊС€Рµ РЅРµ РґРµР»Р°РµРј
 ;         (macroexpand-1 
 ;          '(proga (block foo) bar))
 ;         '(block foo bar))
@@ -49,7 +50,7 @@
           '(proga (let (a b)) c))
          '(progn (let (a b)) c))
 
-(def-trivial-test::! proga.11 ; не можем сделать, т.к. нужно смотреть вперёд
+(def-trivial-test::! proga.11 ; РЅРµ РјРѕР¶РµРј СЃРґРµР»Р°С‚СЊ, С‚.Рє. РЅСѓР¶РЅРѕ СЃРјРѕС‚СЂРµС‚СЊ РІРїРµСЂС‘Рґ
          (macroexpand-1
           '(proga (let ((a b)) c) d))
          '(progn (let ((a b)) c) d))
@@ -124,7 +125,7 @@
          '(cond (q (let ((a 6))))
                 (t (let ((b 7)) b))))
 
-; не работает, т.к. расширение содержит gensym-ы
+; РЅРµ СЂР°Р±РѕС‚Р°РµС‚, С‚.Рє. СЂР°СЃС€РёСЂРµРЅРёРµ СЃРѕРґРµСЂР¶РёС‚ gensym-С‹
 ;(def-p-t proga.18.case
 ;         '(proga (case 4 (1 (let a 6)) (t (let b 7) b)))
 ;         '(case 4 (1 (let ((a 6))))

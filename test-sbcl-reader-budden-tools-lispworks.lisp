@@ -1,3 +1,4 @@
+;;; -*- Encoding: utf-8; -*-
 ; -*- coding: windows-1251-dos; -*-
 
 (defpackage :test-sbcl-reader-budden-tools-lispworks 

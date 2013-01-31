@@ -1,3 +1,4 @@
+;;; -*- Encoding: utf-8; -*-
 ;;;; READ and friends
 
 ;;;; This software is ported from SBCL to Lispworks by Budden. See the README file for
@@ -38,8 +39,8 @@
 ;;; DIGIT-OR-EXPT is for characters being both exponent markers and
 ;;; digits in base *READ-BASE* (which is therefore perforce larger
 ;;; than 10).  -- CSR, 2004-03-16
-(defparameter +char-attr-constituent-decimal-digit+ 15 #|10|#) ; потому что 10 занят
-(defparameter +char-attr-constituent-digit-or-expt+ 12 #|11|#) ; потому что 11 стало 12
+(defparameter +char-attr-constituent-decimal-digit+ 15 #|10|#) ; РїРѕС‚РѕРјСѓ С‡С‚Рѕ 10 Р·Р°РЅСЏС‚
+(defparameter +char-attr-constituent-digit-or-expt+ 12 #|11|#) ; РїРѕС‚РѕРјСѓ С‡С‚Рѕ 11 СЃС‚Р°Р»Рѕ 12
 
 (defparameter +char-attr-package-delimiter+ 11 #|12|#)
 (defparameter +char-attr-invalid+ 13)

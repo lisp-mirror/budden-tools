@@ -1,6 +1,7 @@
+;;; -*- Encoding: utf-8; -*-
 ; -*- coding: windows-1251-dos; -*- 
-; работа с Русскими буквами
-; при ручной компиляции этого файла в sbcl нужно делать (setf sb-impl::*default-external-format* :windows-1251) 
+; СЂР°Р±РѕС‚Р° СЃ Р СѓСЃСЃРєРёРјРё Р±СѓРєРІР°РјРё
+; РїСЂРё СЂСѓС‡РЅРѕР№ РєРѕРјРїРёР»СЏС†РёРё СЌС‚РѕРіРѕ С„Р°Р№Р»Р° РІ sbcl РЅСѓР¶РЅРѕ РґРµР»Р°С‚СЊ (setf sb-impl::*default-external-format* :windows-1251) 
 
 (in-package :russian-budden-tools)
 
@@ -10,7 +11,7 @@
     (setf *readtable* (copy-readtable nil))
     nil)
 
-(defparameter *cyrillic-characters* '(#\а #\б #\в #\г #\д #\е #\ё #\ж #\з #\и #\й #\к #\л #\м #\н #\о #\п #\р #\с #\т #\у #\ф #\х #\ц #\ч #\ш #\щ #\ъ #\ы #\ь #\э #\ю #\я #\А #\Б #\В #\Г #\Д #\Е #\Ё #\Ж #\З #\И #\Й #\К #\Л #\М #\Н #\О #\П #\Р #\С #\Т #\У #\Ф #\Х #\Ц #\Ч #\Ш #\Щ #\Ъ #\Ы #\Ь #\Э #\Ю #\Я)
+(defparameter *cyrillic-characters* '(#\Р° #\Р± #\РІ #\Рі #\Рґ #\Рµ #\С‘ #\Р¶ #\Р· #\Рё #\Р№ #\Рє #\Р» #\Рј #\РЅ #\Рѕ #\Рї #\СЂ #\СЃ #\С‚ #\Сѓ #\С„ #\С… #\С† #\С‡ #\С€ #\С‰ #\СЉ #\С‹ #\СЊ #\СЌ #\СЋ #\СЏ #\Рђ #\Р‘ #\Р’ #\Р“ #\Р” #\Р• #\РЃ #\Р– #\Р— #\Р #\Р™ #\Рљ #\Р› #\Рњ #\Рќ #\Рћ #\Рџ #\Р  #\РЎ #\Рў #\РЈ #\Р¤ #\РҐ #\Р¦ #\Р§ #\РЁ #\Р© #\РЄ #\Р« #\Р¬ #\Р­ #\Р® #\РЇ)
 )
 
 (defparameter *reversible-cyrillic-translit-table* (make-hash-table :test 'eql))
@@ -20,16 +21,16 @@
    (list-to-alist 
     (split-sequence:split-sequence-if 
      'cl-ppcre::whitespacep
-     "а a б b в v г g д d е e ё jo ж zh з z и i й jj к k л l м m н n о o п p р r с s т t у u 
-ф f х kh ц c ч ch ш sh щ shh ъ w ы y ь q э eh ю ju я ja 
-А A Б B В V Г G Д D Е E Ё JO Ж ZH З Z И I Й JJ К K Л L М M Н N О O П P Р R С S Т T У U 
-Ф F Х KH Ц C Ч CH Ш SH Щ SHH Ъ W Ы Y Ь Q Э EH Ю YU Я YA" :remove-empty-subseqs t)))
+     "Р° a Р± b РІ v Рі g Рґ d Рµ e С‘ jo Р¶ zh Р· z Рё i Р№ jj Рє k Р» l Рј m РЅ n Рѕ o Рї p СЂ r СЃ s С‚ t Сѓ u 
+С„ f С… kh С† c С‡ ch С€ sh С‰ shh СЉ w С‹ y СЊ q СЌ eh СЋ ju СЏ ja 
+Рђ A Р‘ B Р’ V Р“ G Р” D Р• E РЃ JO Р– ZH Р— Z Р I Р™ JJ Рљ K Р› L Рњ M Рќ N Рћ O Рџ P Р  R РЎ S Рў T РЈ U 
+Р¤ F РҐ KH Р¦ C Р§ CH РЁ SH Р© SHH РЄ W Р« Y Р¬ Q Р­ EH Р® YU РЇ YA" :remove-empty-subseqs t)))
   (setf (gethash (elt from 0) *reversible-cyrillic-translit-table*) to))
 
 
-;;; FIXME сделать обратное преобразование
+;;; FIXME СЃРґРµР»Р°С‚СЊ РѕР±СЂР°С‚РЅРѕРµ РїСЂРµРѕР±СЂР°Р·РѕРІР°РЅРёРµ
 (defun translit-reversibly (string-designator)
-  "Берёт string-designator и возвращает транслитерированную строку"
+  "Р‘РµСЂС‘С‚ string-designator Рё РІРѕР·РІСЂР°С‰Р°РµС‚ С‚СЂР°РЅСЃР»РёС‚РµСЂРёСЂРѕРІР°РЅРЅСѓСЋ СЃС‚СЂРѕРєСѓ"
   (declare (optimize speed))
   (let* 
       ((s (typecase (the* string-designator string-designator)
@@ -37,7 +38,7 @@
             (t (string string-designator))))
        (l (length s))
        (res (make-string (* 3 l))))
-;    (declare (dynamic-extent res)) не работает. Почему? 
+;    (declare (dynamic-extent res)) РЅРµ СЂР°Р±РѕС‚Р°РµС‚. РџРѕС‡РµРјСѓ? 
     (iter 
       (:with i = 0)
       (:for c in-string s)
@@ -66,15 +67,15 @@
     (setf (gethash hichar down) lochar))
 
 ; non-toplevel
-(defun char-upcase-cyr (char) "поднимает регистр по Русски"
+(defun char-upcase-cyr (char) "РїРѕРґРЅРёРјР°РµС‚ СЂРµРіРёСЃС‚СЂ РїРѕ Р СѓСЃСЃРєРё"
     (or (gethash char up) (char-upcase char)))
 
 ; non-toplevel
-(defun char-downcase-cyr (char) "опускает регистр по-Русски"
+(defun char-downcase-cyr (char) "РѕРїСѓСЃРєР°РµС‚ СЂРµРіРёСЃС‚СЂ РїРѕ-Р СѓСЃСЃРєРё"
     (or (gethash char down) (char-downcase char)))
 
 ; non-toplevel
-(defun char-equal-cyr (c1 c2) "сравнивает символы с учётом кириллицы"
+(defun char-equal-cyr (c1 c2) "СЃСЂР°РІРЅРёРІР°РµС‚ СЃРёРјРІРѕР»С‹ СЃ СѓС‡С‘С‚РѕРј РєРёСЂРёР»Р»РёС†С‹"
     (or (char-equal c1 c2)
         (char-equal (char-upcase-cyr c1) (char-upcase-cyr c2))))
 
@@ -95,7 +96,7 @@
 
 ; non-toplevel
 (defun textual-equal-cyr (s1 s2)
-  "Мы не можем определить equal-cyr, т.к. не умеем ходить по всем типам данных. Но хоть так."
+  "РњС‹ РЅРµ РјРѕР¶РµРј РѕРїСЂРµРґРµР»РёС‚СЊ equal-cyr, С‚.Рє. РЅРµ СѓРјРµРµРј С…РѕРґРёС‚СЊ РїРѕ РІСЃРµРј С‚РёРїР°Рј РґР°РЅРЅС‹С…. РќРѕ С…РѕС‚СЊ С‚Р°Рє."
   (flet ((stringify (x)
            (typecase x
              (string x)
@@ -107,12 +108,12 @@
 (defun cyrillic-char-p (x) 
   (and (characterp x) 
        #+(and nil lispworks win32) 
-       ; вряд ли имеет смысл из-за Ё
+       ; РІСЂСЏРґ Р»Рё РёРјРµРµС‚ СЃРјС‹СЃР» РёР·-Р·Р° РЃ
        (let1 c (char-code x)
          (or 
-          (<= #.(char-code #\А) c #.(char-code #\я))
-          (eq x #\ё)
-          (eq x #\Ё)))
+          (<= #.(char-code #\Рђ) c #.(char-code #\СЏ))
+          (eq x #\С‘)
+          (eq x #\РЃ)))
        #-(and nil lispworks win32)
        (or (gethash x up) (gethash x down))
        t
@@ -120,13 +121,13 @@
 
 )
 
-;; преобразование русских символов для чтения-записи в open-pipe
+;; РїСЂРµРѕР±СЂР°Р·РѕРІР°РЅРёРµ СЂСѓСЃСЃРєРёС… СЃРёРјРІРѕР»РѕРІ РґР»СЏ С‡С‚РµРЅРёСЏ-Р·Р°РїРёСЃРё РІ open-pipe
 #+(and lispworks (or windows win32))
 (defmacro define-open-pipe-character-translators ()
   (let ((lisp->dos (make-hash-table :test #'eql :size 256))
         (dos->lisp (make-hash-table :test #'eql :size 256)))
     (iter 
-      (:for c in (append *cyrillic-characters* '(#\№)))
+      (:for c in (append *cyrillic-characters* '(#\в„–)))
       (:for sou = 
        (with-output-to-string (ou) 
          (system:call-system-showing-output
@@ -160,13 +161,13 @@
        )))
 
 (defmacro define-open-pipe-character-translators-by-sample (sample x-to-lisp lisp-to-x)
-  "Получили из источника представление строки, понятное этому источнику (concatenate 'string (append bu::*cyrillic-characters* '(#\№))). 
-   Определим ф-ю x-to-lisp, чтобы прочитать строку из этого источника и lisp-to-x, чтобы записать в источник"
+  "РџРѕР»СѓС‡РёР»Рё РёР· РёСЃС‚РѕС‡РЅРёРєР° РїСЂРµРґСЃС‚Р°РІР»РµРЅРёРµ СЃС‚СЂРѕРєРё, РїРѕРЅСЏС‚РЅРѕРµ СЌС‚РѕРјСѓ РёСЃС‚РѕС‡РЅРёРєСѓ (concatenate 'string (append bu::*cyrillic-characters* '(#\в„–))). 
+   РћРїСЂРµРґРµР»РёРј С„-СЋ x-to-lisp, С‡С‚РѕР±С‹ РїСЂРѕС‡РёС‚Р°С‚СЊ СЃС‚СЂРѕРєСѓ РёР· СЌС‚РѕРіРѕ РёСЃС‚РѕС‡РЅРёРєР° Рё lisp-to-x, С‡С‚РѕР±С‹ Р·Р°РїРёСЃР°С‚СЊ РІ РёСЃС‚РѕС‡РЅРёРє"
   (let ((lisp->x (make-hash-table :test #'eql :size 256))
         (x->lisp (make-hash-table :test #'eql :size 256))
-        (character-list (append *cyrillic-characters* '(#\№))))
+        (character-list (append *cyrillic-characters* '(#\в„–))))
     (assert (= (length sample) (length (concatenate 'string character-list))))
-    (assert (= (length sample) (length (remove-duplicates (concatenate 'list sample) :test '= :key 'char-code))) () "Образец должен содержать все различные буквы")
+    (assert (= (length sample) (length (remove-duplicates (concatenate 'list sample) :test '= :key 'char-code))) () "РћР±СЂР°Р·РµС† РґРѕР»Р¶РµРЅ СЃРѕРґРµСЂР¶Р°С‚СЊ РІСЃРµ СЂР°Р·Р»РёС‡РЅС‹Рµ Р±СѓРєРІС‹")
     (iter 
       (:for c :in character-list)
       (:for ou :in-sequence sample)
@@ -199,9 +200,9 @@
 
 
 (def-trivial-test::! all-ascii-chars-in-same-case-p 
-                     (list (budden-tools::all-ascii-chars-in-same-case-p "аУреки")
-                           (budden-tools::all-ascii-chars-in-same-case-p "АУРЕКИ")
-                           (budden-tools::all-ascii-chars-in-same-case-p "ауреки")
+                     (list (budden-tools::all-ascii-chars-in-same-case-p "Р°РЈСЂРµРєРё")
+                           (budden-tools::all-ascii-chars-in-same-case-p "РђРЈР Р•РљР")
+                           (budden-tools::all-ascii-chars-in-same-case-p "Р°СѓСЂРµРєРё")
                            (budden-tools::all-ascii-chars-in-same-case-p "aureki")
                            (budden-tools::all-ascii-chars-in-same-case-p "AUReki")
                            (budden-tools::all-ascii-chars-in-same-case-p "AUREKI")

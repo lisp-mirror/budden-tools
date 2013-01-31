@@ -1,10 +1,11 @@
+;;; -*- Encoding: utf-8; -*-
 ; -*- coding: windows-1251-dos; -*-
  
 (in-package :budden-tools)
 
 
 (defun test-does-not-terminate-token (c) 
-  "Экспериментально выясняем, не завершает ли cимвол чтение токена?"
+  "Р­РєСЃРїРµСЂРёРјРµРЅС‚Р°Р»СЊРЅРѕ РІС‹СЏСЃРЅСЏРµРј, РЅРµ Р·Р°РІРµСЂС€Р°РµС‚ Р»Рё cРёРјРІРѕР» С‡С‚РµРЅРёРµ С‚РѕРєРµРЅР°?"
   (ignore-errors
     (return-from test-does-not-terminate-token
       (let* ((s (format nil "the-~A-symbol" c))
@@ -16,7 +17,7 @@
   nil)
 
 (defun test-whitespace[2]p (c)
-  "Экспериментально выясняем, что это - whitespace 2. Не знаю, правильно ли?"
+  "Р­РєСЃРїРµСЂРёРјРµРЅС‚Р°Р»СЊРЅРѕ РІС‹СЏСЃРЅСЏРµРј, С‡С‚Рѕ СЌС‚Рѕ - whitespace 2. РќРµ Р·РЅР°СЋ, РїСЂР°РІРёР»СЊРЅРѕ Р»Рё?"
   (ignore-errors 
     (return-from test-whitespace[2]p 
       (equalp '(a b)
@@ -24,7 +25,7 @@
   nil)
 
 (defun test-multiple-escape-p (c)
-  "Экспериментально выясняем, что это - multiple escape"
+  "Р­РєСЃРїРµСЂРёРјРµРЅС‚Р°Р»СЊРЅРѕ РІС‹СЏСЃРЅСЏРµРј, С‡С‚Рѕ СЌС‚Рѕ - multiple escape"
   (ignore-errors 
     (let1 good-symbol 
         (with-good-readtable-0
@@ -38,7 +39,7 @@
 
 
 (defun test-single-escape-p (c)
-  "Экспериментально выясняем, что это - single escape"
+  "Р­РєСЃРїРµСЂРёРјРµРЅС‚Р°Р»СЊРЅРѕ РІС‹СЏСЃРЅСЏРµРј, С‡С‚Рѕ СЌС‚Рѕ - single escape"
   (ignore-errors 
     (let1 good-symbol 
         (with-good-readtable-0
@@ -50,8 +51,8 @@
 
 
 (defun test-macro-char-p (c)
-  "Проверяем, что тут есть macro-char. Возвращаем values из macro-char. 
-В Аллегро делаем исключение для read-token"
+  "РџСЂРѕРІРµСЂСЏРµРј, С‡С‚Рѕ С‚СѓС‚ РµСЃС‚СЊ macro-char. Р’РѕР·РІСЂР°С‰Р°РµРј values РёР· macro-char. 
+Р’ РђР»Р»РµРіСЂРѕ РґРµР»Р°РµРј РёСЃРєР»СЋС‡РµРЅРёРµ РґР»СЏ read-token"
   #+allegro (unless 
                 (eql (get-macro-character c) #'excl::read-token)
               (get-macro-character c))
@@ -61,7 +62,7 @@
 
 (defun fill-char-table ()
   (with-good-readtable-0
-    (iter:iter ; какие символы у нас составляют токен? 
+    (iter:iter ; РєР°РєРёРµ СЃРёРјРІРѕР»С‹ Сѓ РЅР°СЃ СЃРѕСЃС‚Р°РІР»СЏСЋС‚ С‚РѕРєРµРЅ? 
       (:for i :from 0 to 255) 
       (:for c := (code-char i))
       (setf (elt *char-table* i)
@@ -69,8 +70,8 @@
              ((test-macro-char-p c)
                 (multiple-value-list (test-macro-char-p c)))
              #-pascal-reader ((eql c #\.) :dot)
-             ((eql c #\:) :colon)           ; здесь тоже неплохо написать тест
-             ; ((eql c #\() :open-brace)    ; для него есть readmacro 
+             ((eql c #\:) :colon)           ; Р·РґРµСЃСЊ С‚РѕР¶Рµ РЅРµРїР»РѕС…Рѕ РЅР°РїРёСЃР°С‚СЊ С‚РµСЃС‚
+             ; ((eql c #\() :open-brace)    ; РґР»СЏ РЅРµРіРѕ РµСЃС‚СЊ readmacro 
              ((test-does-not-terminate-token c) :does-not-terminate-token)
              ((test-whitespace[2]p c) :whitespace[2])
              ((test-multiple-escape-p c) :multiple-escape)

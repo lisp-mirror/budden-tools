@@ -1,14 +1,15 @@
+;;; -*- Encoding: utf-8; -*-
 ; -*- coding: windows-1251-dos; -*- 
-; для компиляции вне asdf нужно сделать (setf/let1 sb-impl::*default-external-format* :windows-1251)
+; РґР»СЏ РєРѕРјРїРёР»СЏС†РёРё РІРЅРµ asdf РЅСѓР¶РЅРѕ СЃРґРµР»Р°С‚СЊ (setf/let1 sb-impl::*default-external-format* :windows-1251)
 ;;; proga macro 
 
 
 (in-package :proga-implementation)
 
 (defun progify-body (body &key documentation)
-  "На входе имеем тело определения типа defun, но без головы, 
-например, (\"DOC\" (declare (special x)) (g x)). Нужно окружить тело конструкцией proga. 
-Возвращает преобразованное тело. Documentation - признак разбора докстринга"
+  "РќР° РІС…РѕРґРµ РёРјРµРµРј С‚РµР»Рѕ РѕРїСЂРµРґРµР»РµРЅРёСЏ С‚РёРїР° defun, РЅРѕ Р±РµР· РіРѕР»РѕРІС‹, 
+РЅР°РїСЂРёРјРµСЂ, (\"DOC\" (declare (special x)) (g x)). РќСѓР¶РЅРѕ РѕРєСЂСѓР¶РёС‚СЊ С‚РµР»Рѕ РєРѕРЅСЃС‚СЂСѓРєС†РёРµР№ proga. 
+Р’РѕР·РІСЂР°С‰Р°РµС‚ РїСЂРµРѕР±СЂР°Р·РѕРІР°РЅРЅРѕРµ С‚РµР»Рѕ. Documentation - РїСЂРёР·РЅР°Рє СЂР°Р·Р±РѕСЂР° РґРѕРєСЃС‚СЂРёРЅРіР°"
   (multiple-value-bind 
       (forms decls doc)
       (ignore-errors (apply 'alexandria::parse-body body (dispatch-keyarg-simple documentation)))
@@ -28,15 +29,15 @@
         `(,clause ,@(proga-body-expander forms-after-clause)))
        (t 
         (let1 (head . tail) clause
-          (flet ((dont-process () ; форму мы не поняли, считаем, что это вычисление
+          (flet ((dont-process () ; С„РѕСЂРјСѓ РјС‹ РЅРµ РїРѕРЅСЏР»Рё, СЃС‡РёС‚Р°РµРј, С‡С‚Рѕ СЌС‚Рѕ РІС‹С‡РёСЃР»РµРЅРёРµ
                    `(,clause ,@(proga-body-expander forms-after-clause)))
-                 (open-up () ; всё, что за формой, нужно внести в скобки формы после формы. Например, 
+                 (open-up () ; РІСЃС‘, С‡С‚Рѕ Р·Р° С„РѕСЂРјРѕР№, РЅСѓР¶РЅРѕ РІРЅРµСЃС‚Рё РІ СЃРєРѕР±РєРё С„РѕСЂРјС‹ РїРѕСЃР»Рµ С„РѕСЂРјС‹. РќР°РїСЂРёРјРµСЂ, 
                              ; (block u) x y => (block u x y)
                    `((,@clause ,@(proga-body-expander forms-after-clause))))
-                 (wind-up (processed-clause-body) ; тело преобразуется в список, к-рый 
-                                                ; становится вторым аргументом. 
-                                                ; Всё, что за формой - вносится внутрь скобок
-                                                ; Например, (symbol-macrolet x y) a b => 
+                 (wind-up (processed-clause-body) ; С‚РµР»Рѕ РїСЂРµРѕР±СЂР°Р·СѓРµС‚СЃСЏ РІ СЃРїРёСЃРѕРє, Рє-СЂС‹Р№ 
+                                                ; СЃС‚Р°РЅРѕРІРёС‚СЃСЏ РІС‚РѕСЂС‹Рј Р°СЂРіСѓРјРµРЅС‚РѕРј. 
+                                                ; Р’СЃС‘, С‡С‚Рѕ Р·Р° С„РѕСЂРјРѕР№ - РІРЅРѕСЃРёС‚СЃСЏ РІРЅСѓС‚СЂСЊ СЃРєРѕР±РѕРє
+                                                ; РќР°РїСЂРёРјРµСЂ, (symbol-macrolet x y) a b => 
                                                 ; (symbol-macrolet ((x y)) a b)
                    `((,head ,processed-clause-body ,@(proga-body-expander forms-after-clause))))
                  )
@@ -66,7 +67,7 @@
               ((block)
                (cond 
                 ((= (length clause) 2) 
-                 (break "дурная идея писать (block name)") 
+                 (break "РґСѓСЂРЅР°СЏ РёРґРµСЏ РїРёСЃР°С‚СЊ (block name)") 
                  (open-up))
                 (t
                  `((,head ,@(proga-body-expander tail)) 
@@ -111,19 +112,19 @@
 
 
 (defun open-up (head tail body) 
-  "Всё, что за формой, нужно внести в скобки формы после формы"
+  "Р’СЃС‘, С‡С‚Рѕ Р·Р° С„РѕСЂРјРѕР№, РЅСѓР¶РЅРѕ РІРЅРµСЃС‚Рё РІ СЃРєРѕР±РєРё С„РѕСЂРјС‹ РїРѕСЃР»Рµ С„РѕСЂРјС‹"
   (values t `((,head ,@tail ,@body))))
 
 (defun wind-up (head tail body)
-  "То, чем заканчивается clause, вносим в скобки, а за ними пишем body"
+  "РўРѕ, С‡РµРј Р·Р°РєР°РЅС‡РёРІР°РµС‚СЃСЏ clause, РІРЅРѕСЃРёРј РІ СЃРєРѕР±РєРё, Р° Р·Р° РЅРёРјРё РїРёС€РµРј body"
   (values t `((,head ,tail ,@body))))
 
 (defun open-up-if-3 (head tail body)
-  "Если форма `(,head ,@tail) состоит из трёх элементов, то внести в скобки формы после формы. Пример - mlvl-bind.
+  "Р•СЃР»Рё С„РѕСЂРјР° `(,head ,@tail) СЃРѕСЃС‚РѕРёС‚ РёР· С‚СЂС‘С… СЌР»РµРјРµРЅС‚РѕРІ, С‚Рѕ РІРЅРµСЃС‚Рё РІ СЃРєРѕР±РєРё С„РѕСЂРјС‹ РїРѕСЃР»Рµ С„РѕСЂРјС‹. РџСЂРёРјРµСЂ - mlvl-bind.
    (setf (get 'mlvl-bind 'proga-implementation::proga-transformer) 
       'proga-implementation::open-up-if-3
       ) 
-   и далее 
+   Рё РґР°Р»РµРµ 
    (macroexpand-1 '(proga (mlvl-bind (a b) (values 1 2)) (list a b)))
    ==>
    (MLVL-BIND (A B) (VALUES 1 2) (LIST A B))
@@ -132,15 +133,15 @@
     (open-up head tail body)))
 
 (defun open-up-if-4 (head tail body)
-  "Аналогично open-up-if-3"
+  "РђРЅР°Р»РѕРіРёС‡РЅРѕ open-up-if-3"
   (when (= 3 (length tail))
     (open-up head tail body)))
     
 (defun wind-up-tail-if-second-is-atom (head tail body)
-  "Head - ключевое слово, с которого начинается clause.
-tail - всё остальное в clause
-body - уже обработанные формы после clause. 
-Если второй элемент clause - символ, то tail становится вторым аргументом, остальное вносится внутрь формы. Если второй элемент - константа, то это - ошибка. Если он список - то не преобразуем"
+  "Head - РєР»СЋС‡РµРІРѕРµ СЃР»РѕРІРѕ, СЃ РєРѕС‚РѕСЂРѕРіРѕ РЅР°С‡РёРЅР°РµС‚СЃСЏ clause.
+tail - РІСЃС‘ РѕСЃС‚Р°Р»СЊРЅРѕРµ РІ clause
+body - СѓР¶Рµ РѕР±СЂР°Р±РѕС‚Р°РЅРЅС‹Рµ С„РѕСЂРјС‹ РїРѕСЃР»Рµ clause. 
+Р•СЃР»Рё РІС‚РѕСЂРѕР№ СЌР»РµРјРµРЅС‚ clause - СЃРёРјРІРѕР», С‚Рѕ tail СЃС‚Р°РЅРѕРІРёС‚СЃСЏ РІС‚РѕСЂС‹Рј Р°СЂРіСѓРјРµРЅС‚РѕРј, РѕСЃС‚Р°Р»СЊРЅРѕРµ РІРЅРѕСЃРёС‚СЃСЏ РІРЅСѓС‚СЂСЊ С„РѕСЂРјС‹. Р•СЃР»Рё РІС‚РѕСЂРѕР№ СЌР»РµРјРµРЅС‚ - РєРѕРЅСЃС‚Р°РЅС‚Р°, С‚Рѕ СЌС‚Рѕ - РѕС€РёР±РєР°. Р•СЃР»Рё РѕРЅ СЃРїРёСЃРѕРє - С‚Рѕ РЅРµ РїСЂРµРѕР±СЂР°Р·СѓРµРј"
   (assert (not (constantp head)) () "Only symbol or list is allowed at second place in ~S" 
     `(,head ,tail))
   (typecase (car tail)
@@ -152,7 +153,7 @@ body - уже обработанные формы после clause.
 
 
 (defun wind-up-tail-if-3 (head tail body)
-  "Если форма `(,head ,@tail) состоит из трёх элементов, то tail заключается в скобки, а остальное вносится внутрь"
+  "Р•СЃР»Рё С„РѕСЂРјР° `(,head ,@tail) СЃРѕСЃС‚РѕРёС‚ РёР· С‚СЂС‘С… СЌР»РµРјРµРЅС‚РѕРІ, С‚Рѕ tail Р·Р°РєР»СЋС‡Р°РµС‚СЃСЏ РІ СЃРєРѕР±РєРё, Р° РѕСЃС‚Р°Р»СЊРЅРѕРµ РІРЅРѕСЃРёС‚СЃСЏ РІРЅСѓС‚СЂСЊ"
   (assert (not (constantp head)) () "Only symbol or list is allowed at second place in ~S" 
     `(,head ,tail))
   (cond 
@@ -180,7 +181,7 @@ body - уже обработанные формы после clause.
              (expanded-body (proga-body-expander real-body)))
         (cond
          (it-is-a-block `(block ,maybe-block-name ,@expanded-body))
-         ((cdr expanded-body) ; более одного выражения - это progn
+         ((cdr expanded-body) ; Р±РѕР»РµРµ РѕРґРЅРѕРіРѕ РІС‹СЂР°Р¶РµРЅРёСЏ - СЌС‚Рѕ progn
           `(progn ,@expanded-body))
          (t (first expanded-body))))))))
 

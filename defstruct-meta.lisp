@@ -1,3 +1,4 @@
+;;; -*- Encoding: utf-8; -*-
 
 ;;;
 ;;;   Copyright (C) 1994-2001 Digitool, Inc

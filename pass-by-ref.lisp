@@ -1,3 +1,4 @@
+;;; -*- Encoding: utf-8; -*-
 (in-package :budden-tools)
 
 (defstruct reference-box "Box to pass place to a function by reference"
@@ -13,7 +14,7 @@
 
 (defmacro with-byref-params (symbols &body body)
   "Handles parameter passed by reference. See test"
-  (assert (listp symbols) () "with-byref-params: ~S должно было быть символом" symbols)
+  (assert (listp symbols) () "with-byref-params: ~S РґРѕР»Р¶РЅРѕ Р±С‹Р»Рѕ Р±С‹С‚СЊ СЃРёРјРІРѕР»РѕРј" symbols)
   (iter 
     (:for symbol in symbols)
     (:for setter-new-name = (make-symbol (str+ symbol "-setter")))

@@ -1,3 +1,4 @@
+;;; -*- Encoding: utf-8; -*-
 ;;; printing hashtables readably. Tested on lispworks 6.0
 
 (in-package :budden-tools)

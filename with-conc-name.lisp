@@ -1,3 +1,4 @@
+;;; -*- Encoding: utf-8; -*-
 ;; DO NOT USE, USE ^ EXPANDER INSTEAD
 
 (in-package :budden-tools)
@@ -13,7 +14,7 @@
 
 
 #+new-no-success (defmacro with-conc-name (var conc-name &body body)
-  ; iterate не понимает macrolet и symbol-macrolet
+  ; iterate РЅРµ РїРѕРЅРёРјР°РµС‚ macrolet Рё symbol-macrolet
   (let* ((svar (string var))
          (len (length svar))
          (string-concname (string conc-name))
@@ -72,7 +73,7 @@
   )
 
 (defmacro with-conc-name (var conc-name &body body)
-  "Теперь оно пытается игнорировать регистр символов "
+  "РўРµРїРµСЂСЊ РѕРЅРѕ РїС‹С‚Р°РµС‚СЃСЏ РёРіРЅРѕСЂРёСЂРѕРІР°С‚СЊ СЂРµРіРёСЃС‚СЂ СЃРёРјРІРѕР»РѕРІ "
   (let* ((svar (string var))
          (len (length svar))
          (string-concname (string conc-name)))
@@ -97,7 +98,7 @@
                                       (subseq sname (1+ len))))
                         *package*
                         *readtable*
-                        nil ; хм? FIXME разобраться, что значит этот nil. 
+                        nil ; С…Рј? FIXME СЂР°Р·РѕР±СЂР°С‚СЊСЃСЏ, С‡С‚Рѕ Р·РЅР°С‡РёС‚ СЌС‚РѕС‚ nil. 
                         )))
                   (when accessor-name                                                       
                     (values accessor-name var))
@@ -140,10 +141,10 @@
        )))
 
 
-; TODO вспомнить про null object pattern
+; TODO РІСЃРїРѕРјРЅРёС‚СЊ РїСЂРѕ null object pattern
 (defmacro let-with-conc-type (var type value &body body)
   "type must be an atom"
-  (assert (typep type 'symbol) () "let-with-conc-type: ожидали имя типа, получили ~S" type)
+  (assert (typep type 'symbol) () "let-with-conc-type: РѕР¶РёРґР°Р»Рё РёРјСЏ С‚РёРїР°, РїРѕР»СѓС‡РёР»Рё ~S" type)
   `(let ((,var ,value))
      (declare (type ,type ,var))
      (with-conc-name ,var ,(symbol+ type '-)
@@ -157,4 +158,4 @@
 ;                      )
 ;                    '(T "ASDF" T))
 
-; FIXME - тест требует see-packages, но они ещё не загружены
+; FIXME - С‚РµСЃС‚ С‚СЂРµР±СѓРµС‚ see-packages, РЅРѕ РѕРЅРё РµС‰С‘ РЅРµ Р·Р°РіСЂСѓР¶РµРЅС‹

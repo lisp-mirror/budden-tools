@@ -1,3 +1,4 @@
+;;; -*- Encoding: utf-8; -*-
 ; patching lispworks tools for def-symbol-readmacro reader extensions
 
 (in-package :budden-tools)
@@ -17,8 +18,8 @@
                        editor::intern-symbol-from-string))|#
                        
 
-;;; ÂÍÈÌÀÍÈÅ! Ýòî èçìåíåíèå íåîáõîäèìî äëÿ íîðìàëüíîé ðàáîòû èåðàðõè÷åñêèõ ïàêåòîâ, 
-;;; ò.ê. ìû íå ìîæåì íàçíà÷èòü íàø ðèäìàêðîñ íà #\. 
+;;; Ð’ÐÐ˜ÐœÐÐÐ˜Ð•! Ð­Ñ‚Ð¾ Ð¸Ð·Ð¼ÐµÐ½ÐµÐ½Ð¸Ðµ Ð½ÐµÐ¾Ð±Ñ…Ð¾Ð´Ð¸Ð¼Ð¾ Ð´Ð»Ñ Ð½Ð¾Ñ€Ð¼Ð°Ð»ÑŒÐ½Ð¾Ð¹ Ñ€Ð°Ð±Ð¾Ñ‚Ñ‹ Ð¸ÐµÑ€Ð°Ñ€Ñ…Ð¸Ñ‡ÐµÑÐºÐ¸Ñ… Ð¿Ð°ÐºÐµÑ‚Ð¾Ð², 
+;;; Ñ‚.Ðº. Ð¼Ñ‹ Ð½Ðµ Ð¼Ð¾Ð¶ÐµÐ¼ Ð½Ð°Ð·Ð½Ð°Ñ‡Ð¸Ñ‚ÑŒ Ð½Ð°Ñˆ Ñ€Ð¸Ð´Ð¼Ð°ÐºÑ€Ð¾Ñ Ð½Ð° #\. 
 (defun decorated-find-package (fn name)
   (budden-tools::hp-find-package (if (stringp name) (string-upcase name) name)
                        (if (and 
@@ -63,8 +64,8 @@
    (t pack)))
 
 (defun symbol-is-in-package (symbol package external-only)
-  "Âîçâðàùàåò äâà çíà÷åíèÿ: 1. t, åñëè äàííûé ñèìâîë äîñòóïåí â äàííîì ïàêåòå. Åñëè external-only, òî âîçâðàùàåò t, òîëüêî åñëè îí âíåøíèé â äàííîì ïàêåòå
-   2. ñòàòóñ èç find-symbol, åñëè ñèìâîë äîñòóïåí"
+  "Ð’Ð¾Ð·Ð²Ñ€Ð°Ñ‰Ð°ÐµÑ‚ Ð´Ð²Ð° Ð·Ð½Ð°Ñ‡ÐµÐ½Ð¸Ñ: 1. t, ÐµÑÐ»Ð¸ Ð´Ð°Ð½Ð½Ñ‹Ð¹ ÑÐ¸Ð¼Ð²Ð¾Ð» Ð´Ð¾ÑÑ‚ÑƒÐ¿ÐµÐ½ Ð² Ð´Ð°Ð½Ð½Ð¾Ð¼ Ð¿Ð°ÐºÐµÑ‚Ðµ. Ð•ÑÐ»Ð¸ external-only, Ñ‚Ð¾ Ð²Ð¾Ð·Ð²Ñ€Ð°Ñ‰Ð°ÐµÑ‚ t, Ñ‚Ð¾Ð»ÑŒÐºÐ¾ ÐµÑÐ»Ð¸ Ð¾Ð½ Ð²Ð½ÐµÑˆÐ½Ð¸Ð¹ Ð² Ð´Ð°Ð½Ð½Ð¾Ð¼ Ð¿Ð°ÐºÐµÑ‚Ðµ
+   2. ÑÑ‚Ð°Ñ‚ÑƒÑ Ð¸Ð· find-symbol, ÐµÑÐ»Ð¸ ÑÐ¸Ð¼Ð²Ð¾Ð» Ð´Ð¾ÑÑ‚ÑƒÐ¿ÐµÐ½"
   (proga
     (multiple-value-bind (other-symbol status) (find-symbol (symbol-name symbol) package))
     (cond
@@ -98,12 +99,12 @@ NIL
 |#
 
 (defun my-complete-symbol (partial-name &key predicate symbols default-package return-common-string)
-  "Íóæíî ýòî íàïèñàòü, ò.ê. lw íå ïîíèìàåò ðåãèñòðà è èùåò òîëüêî ñèìâîëû â âåðõíåì ðåãèñòðå"
+  "ÐÑƒÐ¶Ð½Ð¾ ÑÑ‚Ð¾ Ð½Ð°Ð¿Ð¸ÑÐ°Ñ‚ÑŒ, Ñ‚.Ðº. lw Ð½Ðµ Ð¿Ð¾Ð½Ð¸Ð¼Ð°ÐµÑ‚ Ñ€ÐµÐ³Ð¸ÑÑ‚Ñ€Ð° Ð¸ Ð¸Ñ‰ÐµÑ‚ Ñ‚Ð¾Ð»ÑŒÐºÐ¾ ÑÐ¸Ð¼Ð²Ð¾Ð»Ñ‹ Ð² Ð²ÐµÑ€Ñ…Ð½ÐµÐ¼ Ñ€ÐµÐ³Ð¸ÑÑ‚Ñ€Ðµ"
   (proga
     (when (or predicate symbols)
-      (break "ïðèøëè íåâåäîìûå àðãóìåíòû predicate,symbols"))
+      (break "Ð¿Ñ€Ð¸ÑˆÐ»Ð¸ Ð½ÐµÐ²ÐµÐ´Ð¾Ð¼Ñ‹Ðµ Ð°Ñ€Ð³ÑƒÐ¼ÐµÐ½Ñ‚Ñ‹ predicate,symbols"))
     (unless default-package
-      (break "íåò default-package"))
+      (break "Ð½ÐµÑ‚ default-package"))
     (unless return-common-string
       ;(break "not return-common-string")
       )
@@ -112,7 +113,7 @@ NIL
     (let partial-name-length (length partial-name))
     (when prefix-length (setf partial-name sym-str))
     (let all-chars-in-same-case-p (all-ascii-chars-in-same-case-p partial-name))
-    ; òîãäà èù¸ì âñ¸, ÷òî ïîäõîäèò. Íî òîëüêî â default-package
+    ; Ñ‚Ð¾Ð³Ð´Ð° Ð¸Ñ‰Ñ‘Ð¼ Ð²ÑÑ‘, Ñ‡Ñ‚Ð¾ Ð¿Ð¾Ð´Ñ…Ð¾Ð´Ð¸Ñ‚. ÐÐ¾ Ñ‚Ð¾Ð»ÑŒÐºÐ¾ Ð² default-package
     ;(break)
     (let list
       (iter:iter
@@ -178,7 +179,7 @@ NIL
       (let* ((found-package (apply fn args)))
         found-package ;(minimal-fix-xlam-package found-package)
         )
-    (cond ; çäåñü çàäà¸ì ïî óìîë÷àíèþ ïàêåò budden âìåñòî cl-user äëÿ Help è Background Output
+    (cond ; Ð·Ð´ÐµÑÑŒ Ð·Ð°Ð´Ð°Ñ‘Ð¼ Ð¿Ð¾ ÑƒÐ¼Ð¾Ð»Ñ‡Ð°Ð½Ð¸ÑŽ Ð¿Ð°ÐºÐµÑ‚ budden Ð²Ð¼ÐµÑÑ‚Ð¾ cl-user Ð´Ð»Ñ Help Ð¸ Background Output
      ((not (eq res #.(find-package :common-lisp-user))) res)
      (t
       (let* 
@@ -193,7 +194,7 @@ NIL
         (cond 
          ((or (alexandria.0.dev::STARTS-WITH-SUBSEQ "Background Output" buffer-name)
               (alexandria.0.dev::STARTS-WITH-SUBSEQ "Help" buffer-name)
-              (warn "Ñòðàííûé ïàêåò ~S â decorated-buffer-package-to-use" res))
+              (warn "Ð¡Ñ‚Ñ€Ð°Ð½Ð½Ñ‹Ð¹ Ð¿Ð°ÐºÐµÑ‚ ~S Ð² decorated-buffer-package-to-use" res))
           (or (find-package :budden) res))
          (t res)))
       )
@@ -269,10 +270,10 @@ NIL
 
 #|(defun decorated-intern-symbol-from-string (fn string default-package)
     2 EDITOR::INTERN-SYMBOL-FROM-STRING > ...
-      >> STRING                  : "êàçÿ-áàçÿ"
+      >> STRING                  : "ÐºÐ°Ð·Ñ-Ð±Ð°Ð·Ñ"
       >> EDITOR::DEFAULT-PACKAGE : #<PACKAGE TST>
     2 EDITOR::INTERN-SYMBOL-FROM-STRING < ...
-      << VALUE-0 : êàçÿ-áàçÿ
+      << VALUE-0 : ÐºÐ°Ð·Ñ-Ð±Ð°Ð·Ñ
       << VALUE-1 : NIL
 
 |#
@@ -282,7 +283,7 @@ NIL
         (out-package name found-p prefix-length)
         (apply fn string (dispatch-keyarg-simple package))
       (cond
-       (prefix-length ; ñèìâîë ñ êâàëèôèêàòîðîì íå òðîãàåì
+       (prefix-length ; ÑÐ¸Ð¼Ð²Ð¾Ð» Ñ ÐºÐ²Ð°Ð»Ð¸Ñ„Ð¸ÐºÐ°Ñ‚Ð¾Ñ€Ð¾Ð¼ Ð½Ðµ Ñ‚Ñ€Ð¾Ð³Ð°ÐµÐ¼
         (values out-package name found-p prefix-length))
        (t 
         (multiple-value-bind
@@ -313,7 +314,7 @@ NIL
            ;(show-expr `("returned from p-p-s to d-c-s-1" ,name-only-str))
            (all-ascii-chars-in-same-case-p (sequence-last str (length name-only-str)))
            )
-         ;(eq (all-ascii-chars-in-same-case-p string) :lowercase) ; åñëè íàáèðàëè â âåðõíåì èëè ñìåøàííîì ðåãèñòðå, è îñòàíåìñÿ â âåðõíåì
+         ;(eq (all-ascii-chars-in-same-case-p string) :lowercase) ; ÐµÑÐ»Ð¸ Ð½Ð°Ð±Ð¸Ñ€Ð°Ð»Ð¸ Ð² Ð²ÐµÑ€Ñ…Ð½ÐµÐ¼ Ð¸Ð»Ð¸ ÑÐ¼ÐµÑˆÐ°Ð½Ð½Ð¾Ð¼ Ñ€ÐµÐ³Ð¸ÑÑ‚Ñ€Ðµ, Ð¸ Ð¾ÑÑ‚Ð°Ð½ÐµÐ¼ÑÑ Ð² Ð²ÐµÑ€Ñ…Ð½ÐµÐ¼
          )
       ; (print "ura!")
       (setf str (string-downcase-ascii str))
@@ -357,14 +358,14 @@ NIL
            ; (print `("returned from p-p-s to d-c-s-1" ,name-only-str))
            (all-ascii-chars-in-same-case-p (sequence-last str (length name-only-str)))
            )
-         (eq (all-ascii-chars-in-same-case-p string) :lowercase) ; åñëè íàáèðàëè â âåðõíåì èëè ñìåøàííîì ðåãèñòðå, è îñòàíåìñÿ â âåðõíåì
+         (eq (all-ascii-chars-in-same-case-p string) :lowercase) ; ÐµÑÐ»Ð¸ Ð½Ð°Ð±Ð¸Ñ€Ð°Ð»Ð¸ Ð² Ð²ÐµÑ€Ñ…Ð½ÐµÐ¼ Ð¸Ð»Ð¸ ÑÐ¼ÐµÑˆÐ°Ð½Ð½Ð¾Ð¼ Ñ€ÐµÐ³Ð¸ÑÑ‚Ñ€Ðµ, Ð¸ Ð¾ÑÑ‚Ð°Ð½ÐµÐ¼ÑÑ Ð² Ð²ÐµÑ€Ñ…Ð½ÐµÐ¼
          )
       ; (print "ura!")
       (setf str (string-downcase str))
       )
     ; (print `(,str ,len ,complete))
     (values str len complete)
-    )  ; FIXME - îòêëþ÷èòü êèðèëëèöó â íàøåì ìóõëÿæå ñ RT - êèðèëëèöû íåò â CL è ïóñòü äëÿ íå¸ áóäåò âñ¸ preserve
+    )  ; FIXME - Ð¾Ñ‚ÐºÐ»ÑŽÑ‡Ð¸Ñ‚ÑŒ ÐºÐ¸Ñ€Ð¸Ð»Ð»Ð¸Ñ†Ñƒ Ð² Ð½Ð°ÑˆÐµÐ¼ Ð¼ÑƒÑ…Ð»ÑÐ¶Ðµ Ñ RT - ÐºÐ¸Ñ€Ð¸Ð»Ð»Ð¸Ñ†Ñ‹ Ð½ÐµÑ‚ Ð² CL Ð¸ Ð¿ÑƒÑÑ‚ÑŒ Ð´Ð»Ñ Ð½ÐµÑ‘ Ð±ÑƒÐ´ÐµÑ‚ Ð²ÑÑ‘ preserve
   )
     
 
@@ -389,8 +390,8 @@ NIL
 
 ; string-capitalize
 (defun decorated-string-capitalize (fn string &rest keyargs)
-  (if ; editor::*editor-state* ; îïûòû ïîêàçàëè, ÷òî ýòà ïåðåìåííàÿ - èñòèíà âíóòðè îêíà ðåäàêòîðà è íåò - èíà÷å
-      ; íî îíà â äàííîì ñëó÷àå íå ãîäèòñÿ, ò.ê. îíà èñòèíà åù¸ ãäå-òî è îò ýòîãî íà÷èíàþòñÿ ãëþêè.
+  (if ; editor::*editor-state* ; Ð¾Ð¿Ñ‹Ñ‚Ñ‹ Ð¿Ð¾ÐºÐ°Ð·Ð°Ð»Ð¸, Ñ‡Ñ‚Ð¾ ÑÑ‚Ð° Ð¿ÐµÑ€ÐµÐ¼ÐµÐ½Ð½Ð°Ñ - Ð¸ÑÑ‚Ð¸Ð½Ð° Ð²Ð½ÑƒÑ‚Ñ€Ð¸ Ð¾ÐºÐ½Ð° Ñ€ÐµÐ´Ð°ÐºÑ‚Ð¾Ñ€Ð° Ð¸ Ð½ÐµÑ‚ - Ð¸Ð½Ð°Ñ‡Ðµ
+      ; Ð½Ð¾ Ð¾Ð½Ð° Ð² Ð´Ð°Ð½Ð½Ð¾Ð¼ ÑÐ»ÑƒÑ‡Ð°Ðµ Ð½Ðµ Ð³Ð¾Ð´Ð¸Ñ‚ÑÑ, Ñ‚.Ðº. Ð¾Ð½Ð° Ð¸ÑÑ‚Ð¸Ð½Ð° ÐµÑ‰Ñ‘ Ð³Ð´Ðµ-Ñ‚Ð¾ Ð¸ Ð¾Ñ‚ ÑÑ‚Ð¾Ð³Ð¾ Ð½Ð°Ñ‡Ð¸Ð½Ð°ÑŽÑ‚ÑÑ Ð³Ð»ÑŽÐºÐ¸.
       *in-complete-symbol-command*
       string
     (apply fn string keyargs)))
@@ -497,16 +498,16 @@ NIL
 
 bu
 
-×òî òåñòèðîâàòü?
-1. Completion ñèìâîëà áåç êâàëèôèêàòîðà ïàêåòà
-2. Òî æå, ñ êâàëèôèêàòîðîì
-3. Òî æå, ñ ëîêàëüíî-ïñåâäîíèìíûì êâàëèôèêàòîðîì
-3. Òî æå, áåç êâàëèôèêàòîðà, ñ îêíîì ïðîäîëæåíèÿ
-4. Òî æå, ñ êâàëèôèêàòîðîì è îêíîì ïðîäîëæåíèÿ. 
-5. Ïîèñê îïðåäåëåíèÿ
-6. Ïîêàç àðãóìåíòîâ
+Ð§Ñ‚Ð¾ Ñ‚ÐµÑÑ‚Ð¸Ñ€Ð¾Ð²Ð°Ñ‚ÑŒ?
+1. Completion ÑÐ¸Ð¼Ð²Ð¾Ð»Ð° Ð±ÐµÐ· ÐºÐ²Ð°Ð»Ð¸Ñ„Ð¸ÐºÐ°Ñ‚Ð¾Ñ€Ð° Ð¿Ð°ÐºÐµÑ‚Ð°
+2. Ð¢Ð¾ Ð¶Ðµ, Ñ ÐºÐ²Ð°Ð»Ð¸Ñ„Ð¸ÐºÐ°Ñ‚Ð¾Ñ€Ð¾Ð¼
+3. Ð¢Ð¾ Ð¶Ðµ, Ñ Ð»Ð¾ÐºÐ°Ð»ÑŒÐ½Ð¾-Ð¿ÑÐµÐ²Ð´Ð¾Ð½Ð¸Ð¼Ð½Ñ‹Ð¼ ÐºÐ²Ð°Ð»Ð¸Ñ„Ð¸ÐºÐ°Ñ‚Ð¾Ñ€Ð¾Ð¼
+3. Ð¢Ð¾ Ð¶Ðµ, Ð±ÐµÐ· ÐºÐ²Ð°Ð»Ð¸Ñ„Ð¸ÐºÐ°Ñ‚Ð¾Ñ€Ð°, Ñ Ð¾ÐºÐ½Ð¾Ð¼ Ð¿Ñ€Ð¾Ð´Ð¾Ð»Ð¶ÐµÐ½Ð¸Ñ
+4. Ð¢Ð¾ Ð¶Ðµ, Ñ ÐºÐ²Ð°Ð»Ð¸Ñ„Ð¸ÐºÐ°Ñ‚Ð¾Ñ€Ð¾Ð¼ Ð¸ Ð¾ÐºÐ½Ð¾Ð¼ Ð¿Ñ€Ð¾Ð´Ð¾Ð»Ð¶ÐµÐ½Ð¸Ñ. 
+5. ÐŸÐ¾Ð¸ÑÐº Ð¾Ð¿Ñ€ÐµÐ´ÐµÐ»ÐµÐ½Ð¸Ñ
+6. ÐŸÐ¾ÐºÐ°Ð· Ð°Ñ€Ð³ÑƒÐ¼ÐµÐ½Ñ‚Ð¾Ð²
 
-Íà äàííûé ìîìåíò completion íå ïîêàçûâàåò ñèìâîëû, êîòîûðûå ìû 
-âèäèì ñ ïîìîùüþ "see" 
+ÐÐ° Ð´Ð°Ð½Ð½Ñ‹Ð¹ Ð¼Ð¾Ð¼ÐµÐ½Ñ‚ completion Ð½Ðµ Ð¿Ð¾ÐºÐ°Ð·Ñ‹Ð²Ð°ÐµÑ‚ ÑÐ¸Ð¼Ð²Ð¾Ð»Ñ‹, ÐºÐ¾Ñ‚Ð¾Ñ‹Ñ€Ñ‹Ðµ Ð¼Ñ‹ 
+Ð²Ð¸Ð´Ð¸Ð¼ Ñ Ð¿Ð¾Ð¼Ð¾Ñ‰ÑŒÑŽ "see" 
 |#
 

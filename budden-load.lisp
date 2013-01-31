@@ -1,4 +1,5 @@
 ;;; -*- Encoding: utf-8; -*-
+;;; -*- Encoding: utf-8; -*-
 
 #+(and (not quicklisp) win32) (load "c:/lisp/quicklisp/setup.lisp")
 (ql:quickload '("cl-fad" "cl-ppcre" "md5" "alexandria" "cl-utilities" "named-readtables" "swank" "split-sequence"))
@@ -26,7 +27,7 @@
           (make-pathname :directory '(:relative "def-symbol-readmacro")) 
           (car quicklisp:*local-project-directories*))))
 (defun at-lisp-root (path)
-  #+russian "Путь, смещённый относительно корня конфигурации"
+  #+russian "РџСѓС‚СЊ, СЃРјРµС‰С‘РЅРЅС‹Р№ РѕС‚РЅРѕСЃРёС‚РµР»СЊРЅРѕ РєРѕСЂРЅСЏ РєРѕРЅС„РёРіСѓСЂР°С†РёРё"
   #-russian "Path merged with *lisp-root*"
   (declare (type string path))
   (concatenate 'string *lisp-root* path))

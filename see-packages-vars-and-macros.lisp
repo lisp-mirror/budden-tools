@@ -1,3 +1,4 @@
+;;; -*- Encoding: utf-8; -*-
 ; -*- coding: windows-1251-dos; -*- 
 
 (in-package :budden-tools)
@@ -28,7 +29,7 @@
   "Readtable implements reader extensions via SBCL reader")
 
 (defvar *readtable-case-is-upcase-if-uniform* (make-weak-key-hash-table :test 'eq)
-  "Если readtable - в этой таблице, то для него действуют особые правила поиска имён. При этом readtable-case нужно поставить в preserve"
+  "Р•СЃР»Рё readtable - РІ СЌС‚РѕР№ С‚Р°Р±Р»РёС†Рµ, С‚Рѕ РґР»СЏ РЅРµРіРѕ РґРµР№СЃС‚РІСѓСЋС‚ РѕСЃРѕР±С‹Рµ РїСЂР°РІРёР»Р° РїРѕРёСЃРєР° РёРјС‘РЅ. РџСЂРё СЌС‚РѕРј readtable-case РЅСѓР¶РЅРѕ РїРѕСЃС‚Р°РІРёС‚СЊ РІ preserve"
   )
 
 (defvar *record-paren-locations* nil
@@ -49,11 +50,11 @@ reading would be broken.")
      ,@body))
 
 (defmacro with-good-readtable-0 (&body body) 
-  "Использовать только для тестирования!"
+  "РСЃРїРѕР»СЊР·РѕРІР°С‚СЊ С‚РѕР»СЊРєРѕ РґР»СЏ С‚РµСЃС‚РёСЂРѕРІР°РЅРёСЏ!"
   `(let1 *readtable* *good-readtable* ,@body))
 
 (defmacro with-good-readtable-2 ((&key (ensure-this-is-a-bad-one t)) &body body)
-  "переданная readtable должна быть получена с помощью see-packages-on"
+  "РїРµСЂРµРґР°РЅРЅР°СЏ readtable РґРѕР»Р¶РЅР° Р±С‹С‚СЊ РїРѕР»СѓС‡РµРЅР° СЃ РїРѕРјРѕС‰СЊСЋ see-packages-on"
   (with-gensyms (good)
     `(proga
        (let ,good (gethash *readtable* *my-readtable-to-good-readtable*))
@@ -67,16 +68,16 @@ reading would be broken.")
 (defvar *print-normalize-seen-symbols* t "Print seen symbols with package
 prefix even if they can be read without the prefix")
 
-(defmacro with-xlam-package (&body body) "Заменить на with-xlam-package-2"
+(defmacro with-xlam-package (&body body) "Р—Р°РјРµРЅРёС‚СЊ РЅР° with-xlam-package-2"
   `(let ((*real-package* *package*)
          (*package* *xlam-package*)) 
-     (break "with-xlam-package не должен вызываться")
+     (break "with-xlam-package РЅРµ РґРѕР»Р¶РµРЅ РІС‹Р·С‹РІР°С‚СЊСЃСЏ")
      (setf *last-used-real-package* *real-package*)
      ,@body))
 
 (defmacro with-xlam-package-2 (temp-rt &body pbody)
   `(proga
-     (break "with-xlam-package-2 не должен вызываться")
+     (break "with-xlam-package-2 РЅРµ РґРѕР»Р¶РµРЅ РІС‹Р·С‹РІР°С‚СЊСЃСЏ")
      (let real-rt *readtable* *real-package* *package*)
      (let *readtable* ,temp-rt)
      (let *package* *xlam-package*)

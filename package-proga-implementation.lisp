@@ -1,3 +1,4 @@
+;;; -*- Encoding: utf-8; -*-
 (def-merge-packages::!
  :proga-implementation
  (:documentation "proga is an extensible macro which helps to get rid of some unnecessary parens and nesting levels 

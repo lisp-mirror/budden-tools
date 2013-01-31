@@ -1,3 +1,4 @@
+;;; -*- Encoding: utf-8; -*-
 ;;; Budden, 2008-12-09
 ;;; Adding a clause to iterate to find the best element in an iteration using not simply
 ;;; minizing or maximizing, but using any predicate of two arguments. See also iterate-keywords:

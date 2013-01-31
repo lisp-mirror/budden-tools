@@ -1,3 +1,4 @@
+;;; -*- Encoding: utf-8; -*-
 (in-package :budden-tools)
 
 ;; Extract name of a function being compiled. 
@@ -63,11 +64,11 @@ CL-USER> *functions-i-know*
 
 
 
-(defvar *tags* (make-hash-table :test 'equalp) "для каждого тега - список его функций") 
+(defvar *tags* (make-hash-table :test 'equalp) "РґР»СЏ РєР°Р¶РґРѕРіРѕ С‚РµРіР° - СЃРїРёСЃРѕРє РµРіРѕ С„СѓРЅРєС†РёР№") 
 
 
 (defmacro documentation-tags (&rest tags)
-  "Определяет теги для ф-ии, которую мы сейчас компилируем"
+  "РћРїСЂРµРґРµР»СЏРµС‚ С‚РµРіРё РґР»СЏ С„-РёРё, РєРѕС‚РѕСЂСѓСЋ РјС‹ СЃРµР№С‡Р°СЃ РєРѕРјРїРёР»РёСЂСѓРµРј"
   (mapcar 
    (lambda (tag)
      (let ((tags-cell (gethash tag *tags*))

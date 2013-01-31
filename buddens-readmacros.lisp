@@ -1,3 +1,4 @@
+;;; -*- Encoding: utf-8; -*-
 ;;; Loading of the file sets up #L readmacro 
 
 (in-package :buddens-readtable)
