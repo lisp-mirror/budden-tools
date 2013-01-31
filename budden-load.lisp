@@ -46,7 +46,8 @@ progn
 (defpackage :iterk
   (:nicknames :iterate-keywords-tiny-export)
   (:use #:cl #:iterate-keywords)
-  (:export #:iter #:dsetq))
+  (:import-from #:iterate-keywords #:keywordize)
+  (:export #:iter #:dsetq #:keywordize))
 
 (asdf::! :see-packages)
 (asdf::! :budden-tools)
