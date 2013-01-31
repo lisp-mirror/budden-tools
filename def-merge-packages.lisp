@@ -7,12 +7,6 @@
 ;; символ отовсюду, удалить символ вообще. 
 ;; Добавить никнейм пакету
 
-;; Что сделать? 
-;;
-;; импорт всех символов из (одного) определённого пакета, а не только внешних. Итого, три взаимоисключающих clauses
-;; :use :auto-import-from :auto-import-all-from 
-;; нечитаемые символы (API для одного символа, а также декларативно)
-;; 
 
 (eval-when (:execute)
   (error "Do not execute the file, use compile/load sequence"))
@@ -23,7 +17,7 @@
 
 (cl:defpackage :def-merge-packages
   (:documentation "
-See merge-packages-simple:! for docs. !4 is unexported to avoid any symbol clashes, but this is the
+See ! docstring for docs. ! is unexported to avoid any symbol clashes, but this is the
 function you most likely want to use. 
 
 defpackage-autoimport (obsolete) makes new package. It  
@@ -35,7 +29,7 @@ defpackage-autoimport-2 (obsolete) prefers to use packages and shadowing-import 
   (:nicknames :merge-packages-simple)
   (:use :cl ;:org.tfeb.hax.hierarchical-packages
    )
-  (:import-from :iter #:iter #:keywordize)
+  (:import-from :iterate-keywords #:iter #:keywordize)
   (:export 
    #:def-merge-packages ; exported name for !. ! itself is unexported
    ; #:export2 ; smart export clause
@@ -214,11 +208,6 @@ defpackage-autoimport-2 (obsolete) prefers to use packages and shadowing-import 
   (warn "set-package-lock-portably not implemented for your lisp")
   )
 
-; (cl-user::set-package-lock-portably :merge-packages-simple.forbidden-symbols t)
-
-
-; (defvar *forbidden-symbols-package* (find-package :merge-packages-simple.forbidden-symbols))
-
 (defun collect-duplicates-into-sublists (list &rest key-args &key key test test-not)
   "Select duplicates from the list and collect them into sublists. Returns list of such sublists. E.g.,
 \'(#\a c #\A #\B #\b) :test 'equalp -> ((#\A #\a) (#\b #\B))
@@ -250,7 +239,7 @@ from to-package too"
 
 (defun extract-clause (rest-arglist clause-name)
   "Extract a clause from &rest list. Returns (shared with the rest-arglist) tail of clause extracted and a fresh list of other clauses"
-  (iter:iter 
+  (iter 
     (:with clause-extracted = nil)
     (:with clause-extracted-p = nil)
     (:for elt in rest-arglist)
@@ -267,7 +256,7 @@ from to-package too"
 
 (defun extract-several-clauses (rest-arglist clause-name)
   "Is like extract-clauase. Extracts several clauses from &rest list and returns list of them"
-  (iter:iter 
+  (iter 
     (:for elt in rest-arglist)
     (check-type elt list)
     (if (eq (car elt) clause-name)
@@ -280,7 +269,7 @@ from to-package too"
 
 (defun force-find-package (package-designator)
   "If package is not found, signal a cerror"
-  (iter:iter 
+  (iter 
     (:for package = (find-package package-designator))
     (when package (return package))
     (cerror "Retry" "Required non-existent package ~A" package-designator)
@@ -290,7 +279,7 @@ from to-package too"
   #+russian "Недеструктивно группирует (в смысле key-args) значения списка в подсписки"
   #-russian "Given a list of items, groups similar (in sence of key-args) items into sublists"
   (declare (ignorable key test test-not))
-  (iter:iter 
+  (iter 
     (:for item in list)
     (:for group = (apply 'assoc (funcall key item) groups key-args))
     (if group 
@@ -314,199 +303,6 @@ from to-package too"
     )
   )
 
-
-;; FIXME - произошло смешение понятий между use и auto-import-from, подорвались на этом в defpackage-autoimport-2. Надо бы не передавать в auto-import-from, 
-;; но тогда не будет произведён анализ конфликтов. Надо что-то менять, сейчас непонятно, что
-; не использовать напрямую!
-(defmacro !33 (name &rest clauses) ; todo: err on non-existing packages
-  "See docs for defpackage-autoimport"
-  (let (auto-import-from auto-import-dont-warn-clashes 
-                         print-defpackage-form
-                         auto-import-first-clashing
-                         ; non-symbols non-hosted-symbols 
-                         auto-import-shadowing
-                         auto-reexport-from
-                         local-nicknames
-                         always
-                         export-s
-                         custom-token-parsers
-                         (clauses clauses))
-    (multiple-value-setq (auto-import-from clauses) (extract-clause clauses :auto-import-from))
-    (multiple-value-setq (auto-import-dont-warn-clashes clauses) (extract-clause clauses :auto-import-dont-warn-clashes))
-    (multiple-value-setq (auto-import-first-clashing clauses) (extract-clause clauses :auto-import-first-clashing))
-    (multiple-value-setq (auto-import-dont-warn-clashes clauses) (extract-clause clauses :auto-import-dont-warn-clashes))
-    (multiple-value-setq (print-defpackage-form clauses) (extract-clause clauses :print-defpackage-form))
-    (multiple-value-setq (auto-import-shadowing clauses) (extract-clause clauses :auto-import-shadowing))
-    (multiple-value-setq (auto-reexport-from clauses) (extract-clause clauses :auto-reexport-from))
-    (multiple-value-setq (export-s clauses) (extract-several-clauses clauses :export))
-    (multiple-value-setq (local-nicknames clauses) (extract-clause clauses :local-nicknames))
-    (multiple-value-setq (always clauses) (extract-clause clauses :always))
-    (assert (subsetp auto-reexport-from auto-import-from :test 'string-equal)
-        () "In an defpackage-autoimport, auto-reexport-from should be a subset of auto-import-from")
-  
-;    (multiple-value-setq (non-symbols clauses) (extract-clause clauses :non-symbols))
-;    (multiple-value-setq (non-hosted-symbols clauses) (extract-clause clauses :non-hosted-symbols))    
-    (setf auto-import-first-clashing (first auto-import-first-clashing)
-          print-defpackage-form (first print-defpackage-form))
-    (let* (; (dest (keywordize name))
-           (sources (mapcar #'keywordize auto-import-from))
-           (srcs (mapcar 'force-find-package sources))
-           all-symbols
-           duplicates
-           reported-duplicates
-           package-definition
-           symbols-not-to-import
-           process-local-nicknames-form
-           processed-export-s
-           )
-      (setf processed-export-s
-            (iter
-              (:for clause in export-s)
-              (cond
-               ((and (= (length clause) 1)
-                     (stringp (car clause)))
-                (:collect (export-clause name (car clause))))
-               (t 
-                (:collect `(:export ,@clause))))))      
-      (dolist (p srcs)
-        (do-external-symbols (s p)
-          (pushnew s all-symbols)))
-      (setf duplicates (collect-duplicates-into-sublists all-symbols :test 'string=))
-      (setf reported-duplicates 
-            (iter 
-              (:for bucket :in duplicates)
-              (unless (find (car bucket) auto-import-dont-warn-clashes :test 'string=)
-                (:collect bucket))))
-      (when reported-duplicates
-        (warn (if auto-import-first-clashing 
-                  "merge-packages-simple ~A first of every group of clashing symbols(s): ~S"
-                "merge-packages-simple declines to ~A clashing symbol(s): ~S")
-              (if auto-import-shadowing "shadowing-import" "import")
-              reported-duplicates))
-      (setf symbols-not-to-import
-            (apply 'append 
-                   (mapcar 
-                    (if auto-import-first-clashing 'cdr 'identity) 
-                    duplicates)))
-      (setf package-definition 
-            `(defpackage ,name
-               ,@(iter 
-                   (:for p-name :in sources)
-                   (:for p :in srcs)
-                   (:for maybe-import = 
-                    (iter
-                      (:for s :in-package p :external-only t)
-                      (unless 
-                          (find s symbols-not-to-import)
-                        (:collect (make-symbol (string s))))))
-                   (when maybe-import
-                     (:collect `(,(if auto-import-shadowing :shadowing-import-from :import-from)
-                                 ,p-name
-                                 ,@(sort maybe-import 'string<)) 
-                      :into import-clauses)
-                     (when (member p-name auto-reexport-from :test 'string-equal)
-                       (:appending maybe-import :into exports)
-                       ))
-                   (:finally 
-                    (setf exports
-                          (iter 
-                            (:for s :in (remove-duplicates exports :test 'string-equal))
-                            (:collect (make-symbol (string s)))))
-                    (return-from nil `(,@import-clauses
-                                       ,@(when exports `((:export ,@(sort exports 'string<))))
-                                       ))))
-               ,@processed-export-s
-               ,@clauses))
-      (when print-defpackage-form
-        (let (*print-length* *print-level*) (print package-definition)))
-      (setf process-local-nicknames-form 
-            (if local-nicknames
-                `(setf (gethash (find-package ,name) *per-package-alias-table*) 
-                       ',(process-local-nicknames name local-nicknames :to-alist t))
-              `(remhash (find-package ,name) *per-package-alias-table*)))
-      (if always 
-          `(eval-when (:compile-toplevel :load-toplevel :execute)
-             (prog1
-                 ,package-definition
-               ,process-local-nicknames-form))
-        `(prog1
-             ,package-definition
-           (eval-when (:load-toplevel :execute)
-             ,process-local-nicknames-form)))
-      )))
-  
-(cl-user::portably-without-package-locks
-; non-toplevel. Используется только один раз. Отказаться? 
-; насколько помню,возникли проблемы с auto-import-shadowing. Проблема возникает в момент пересоздания пакета.
-(defmacro defpackage-autoimport (&rest body)
-    "It is like defpackage. It also allows for additional clauses. Currently every additional clause can only occur once. 
-\(:auto-import-from . package-designator-list) - import all non-clashing external symbols + first of every set of clashing symbols. 
-\(:auto-import-dont-warn-clashes . symbol-designator-list) - inhibit warning on auto-import clashes. 
-\(:auto-import-first-clashing [t | nil]) - if t (the default), then, in auto-import-from, take leftmost of any set of the 
-   clashing symbols and import it too. Only one such clause is allowed.
-\(:auto-reexport-from . package-designator-list) - reexport all symbols which were imported from package listed in auto-import-from clause. 
-   Packages listed must be a subset of auto-import packages. Only one such clause is allowed.
-\(:auto-import-shadowing [t | nil]) - if t, use shadowing-import instead of import for clash resolution
-\(:print-defpackage-form [t | nil]) - if t, print defpackage form
-\(:local-nicknames :nick1 :package1 :nick2 :package2 ...) - Refer to package1 as nick1, package2 as nick2 from package being defined. 
-\(:non-symbols . symbol-designator-list) - if the symbols with that name is interned to the package, it is a error. NOT IMPLEMENTED
-\(:non-hosted-symbols . symbol-designator-list) - if symbols with that name are interned and have their home package = 
-                                                                     (find-package :name), it is a error. NOT IMPLEMENTED
-\(:always [t | nil]) - if always, everything is wrapped into (eval-when (:compile-toplevel :load-toplevel :execute))
-"
-    `(!33 ,@body))
-  #+lispworks 
-; non-toplevel
-(dspec:define-dspec-alias defpackage-autoimport (name &rest args)
-  (setf args args)
-  `(defpackage ,name))
-; non-toplevel
-(import '(defpackage-autoimport defpackage-autoimport-2) :cl)
-; non-toplevel
-(export '(defpackage-autoimport defpackage-autoimport-2) :cl)
-
-; non-toplevel - используется мало. 3 использовния. Но много полезных фич (напримр, "не символы"). Перенести в !4 и/или отказаться.
-(defmacro defpackage-autoimport-2 (name &rest clauses) 
-  "particular case of defpackage-autoimport. Uses all listed packages, shadowing-imports first of clashes. Exported to CL"
-  (let (use auto-import-shadowing auto-import-first-clashing auto-import-from (clauses clauses))
-    (multiple-value-setq (use clauses) (extract-clause clauses :use))
-    (multiple-value-setq (auto-import-shadowing clauses) (extract-clause clauses :auto-import-shadowing))
-    (assert (null auto-import-shadowing) () 
-      ":auto-import-shadowing is always t at defpackage-autoimport-2, you can't pass it")
-    (multiple-value-setq (auto-import-first-clashing clauses) (extract-clause clauses :auto-import-first-clashing))
-    (assert (null auto-import-first-clashing) () 
-      ":auto-import-first-clashing is always t at defpackage-autoimport-2, you can't pass it")
-    (multiple-value-setq (auto-import-from clauses) (extract-clause clauses :auto-import-from))
-    (assert (null auto-import-from) () 
-      ":auto-import-shadowing is assigned from :use at defpackage-autoimport-2, you can't pass it")
-    `(defpackage-autoimport ,name
-                            (:use ,@use)
-                            (:auto-import-from ,@use)
-                            (:auto-import-shadowing t) 
-                            (:auto-import-first-clashing t)
-                            ,@clauses)))
-
-; non-toplevel
-#+lispworks 
-(dspec:define-dspec-alias defpackage-autoimport-2 (name &rest args)
-  (setf args args)
-  `(defpackage ,name))
-)
-
-
-#|
-tests:
-(defpackage-autoimport-2 :p4 (:use :cl) (:local-nicknames :mpar :merge-packages-simple))
-
-(let ((*package* (find-package :p4))) (assert (eq 'defpackage-autoimport (read-from-string "mpar:defpackage-autoimport-2"))))
-
-(assert 
-    (nth-value 1 
-               (ignore-errors (eval '(defpackage-autoimport-2 :p4 (:use :cl) (:local-nicknames :p :p4))))))
-
-
-
-|#
 
 (defun 1-to-list (x) (if (atom x) `(,x) x))
 
@@ -546,14 +342,6 @@ tests:
 #+LispWorks
 ;;; Try and let entries go away when packages go away
 (hcl:set-hash-table-weak *per-package-alias-table* :key) 
-
-#|
-В принципе, есть два варианта - либо парсер токенов, который вернул нам лисп. Это хорошо
-для парсеров, принимающих строку, но плохо для парсеров, принимающих поток. Пример
-парсера, принимающего токен - парсер выражений a.b.c пример второго типа - парсер дат. 
-Сейчас, custom-reader-for-package должен учитывать, что его могут вызвать изнутри read, поэтому
-просто вызов read скорее всего, вызовет безконечную рекурсию
-|#
 
 (defun get-custom-reader-for-package (package-designator)
   "custom-reader, если он назначен (с помощью setf), имеет те же параметры, что и read. Вызывается для чтения во временном контексте пакета, т.е., после custom-reader-for-package должен учитывать, что его могут вызвать изнутри read, поэтому просто вызов read скорее всего, вызовет безконечную рекурсию"
@@ -654,7 +442,6 @@ as 'forbidden'. Error occurs on an attempt to read these symbols unqualified in 
 
 It also allows for additional clauses. Currently every additional clause can only occur once. 
 \(:forbid . string-designators) - explicitly forbid some symbol names with addition to clashes
-\(:auto-import-from . package-designator-list) - import all non-clashing external symbols + first of every set of clashing symbols. 
 \(:print-defpackage-form [ t | nil ]) - if t, print defpackage form
 \(:local-nicknames :nick1 :package1 :nick2 :package2 ...) - Refer to package1 as nick1, package2 as nick2 from package being defined.
 \(:always [ t | nil ]) - if always, everything is wrapped into (eval-when (:compile-toplevel :load-toplevel :execute))
@@ -679,7 +466,6 @@ With buddens readtable extensions enabled, when reader finds \"that-package:\" i
                )
              )
     (let (
-          auto-import-from 
           use
           forbid
           print-defpackage-form
@@ -693,7 +479,6 @@ With buddens readtable extensions enabled, when reader finds \"that-package:\" i
           custom-reader
           (clauses clauses))
       (get-clause use)
-      (get-clause auto-import-from)
       (get-clause print-defpackage-form)
       (get-clause local-nicknames)
       (get-clause always)
@@ -703,17 +488,13 @@ With buddens readtable extensions enabled, when reader finds \"that-package:\" i
       (get-clause custom-reader)
       (multiple-value-setq (shadowing-import-from-s clauses) (extract-several-clauses clauses :shadowing-import-from))
       (multiple-value-setq (export-s clauses) (extract-several-clauses clauses :export))
-;    (multiple-value-setq (non-symbols clauses) (extract-clause clauses :non-symbols))
-;    (multiple-value-setq (non-hosted-symbols clauses) (extract-clause clauses :non-hosted-symbols))    
       (length-is-1 print-defpackage-form)
       (length-is-1 always)
       (length-is-1 allow-qualified-intern)
       (length-is-1 custom-reader)
-      (assert (null (intersection use auto-import-from))
-          () ":use and :auto-import-from clauses must be disjoint")
       (let* (; (dest (keywordize name))
-             (sources-for-clashes (mapcar #'force-find-package (append auto-import-from use)))
-             (sources-for-import (mapcar #'force-find-package auto-import-from))
+             (sources-for-clashes (mapcar #'force-find-package use))
+             (sources-for-import nil)
              all-symbols-for-clashes
              all-symbols-for-import
              duplicates
@@ -742,7 +523,7 @@ With buddens readtable extensions enabled, when reader finds \"that-package:\" i
                     (:collect dup)))))
 
         (when duplicates
-          (warn "!4 forbids clashing symbols ~S" duplicates))
+          (warn "def-merge-packages:! forbids clashing symbols ~S" duplicates))
         (dolist (p sources-for-import)
           (do-external-symbols (s p)
             (unless (member s duplicates :key 'car :test 'string=)
@@ -858,20 +639,16 @@ With buddens readtable extensions enabled, when reader finds \"that-package:\" i
   )
 
 (setf (documentation 'def-merge-packages 'function)
-      (concatenate 'string "This form is identical to def-merge-packages::!. I recommend use def-merge-packages::! whenewer possible,
+      (concatenate 'string "This form is identical to def-merge-packages::! . I recommend use def-merge-packages::! whenewer possible,
 as it is less verbose. But def-merge-packages is exported so that one could find it easily.
 "
                  +!docstring+))
 
 
+#+lispworks 
 (dspec:define-dspec-alias ! (name &rest args)
   (setf args args)
   `(defpackage ,name))
-
-(defmacro !4 (name &rest clauses)
-  "Backward compatibility alias for !"
-  `(! ,name ,@clauses))
-
 
 (defun delete-symbols-from-package (pack &rest symbols)
   "Each element of symbols may be a string-designator, or a list. 
