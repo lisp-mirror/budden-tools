@@ -8,7 +8,7 @@
 
 (pushnew :building-see-packages *features*)
 
-(defsystem budden-tools
+(defsystem :budden-tools
   :serial t
   ;:documentation "Some utilities by Budden, public domain"
   :depends-on 
