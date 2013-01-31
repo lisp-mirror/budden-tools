@@ -1,5 +1,4 @@
 ;;; -*- Encoding: utf-8; -*-
-; -*- coding: windows-1251-dos; -*- для компиляции вне asdf нужно сделать (setf/let1 sb-impl::*default-external-format* :windows-1251)
 ;;; proga macro 
 
 

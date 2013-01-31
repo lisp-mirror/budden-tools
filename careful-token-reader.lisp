@@ -1,5 +1,4 @@
 ;;; -*- Encoding: utf-8; -*-
-; -*- coding: windows-1251-dos; -*-
 
 (in-package :budden-tools)
 (setf *readtable* (copy-readtable nil))

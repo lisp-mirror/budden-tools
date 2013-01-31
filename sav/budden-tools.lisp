@@ -1,6 +1,4 @@
 ;;; -*- Encoding: utf-8; -*-
-; -*- coding: windows-1251-dos; -*- 
-; при ручной компиляции этого файла в sbcl нужно делать (setf sb-impl::*default-external-format* :windows-1251) 
 
 (in-package :budden-tools)
 

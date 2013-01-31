@@ -1,7 +1,5 @@
 ;;; -*- Encoding: utf-8; -*-
-; -*- coding: windows-1251-dos; -*- 
 ; работа с Русскими буквами
-; при ручной компиляции этого файла в sbcl нужно делать (setf sb-impl::*default-external-format* :windows-1251) 
 
 (in-package :russian-budden-tools)
 
