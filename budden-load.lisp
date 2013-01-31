@@ -1,8 +1,10 @@
-(load "c:/lisp/quicklisp/setup.lisp")
+;;; -*- Encoding: utf-8; -*-
+
+#+(and (not quicklisp) win32) (load "c:/lisp/quicklisp/setup.lisp")
 (ql:quickload '("cl-fad" "cl-ppcre" "md5" "alexandria" "cl-utilities" "named-readtables" "swank" "split-sequence"))
 
 
-(defun the-listener () 
+#+lispworks (defun the-listener () 
   (loop :for pop :in capi-win32-lib::*top-level-windows* 
         :for identity = (slot-value pop 'win32::element) 
         :when (= 0 (search "Listener " (slot-value identity 'capi::title)))
@@ -17,9 +19,19 @@
 (pushnew :russian *features*)
 (pushnew :forbidden-symbol-names *features*) 
 
-(load "c:/lisp/def-symbol-readmacro/config.lisp")
-(defun at-lisp-root (path) "Путь, смещённый относительно корня конфигурации"
+(defvar *lisp-root* #+win32 "c:/lisp/def-symbol-readmacro" 
+        #-win32 
+        (namestring 
+         (merge-pathnames 
+          (make-pathname :directory '(:relative "def-symbol-readmacro")) 
+          (car quicklisp:*local-project-directories*))))
+(defun at-lisp-root (path)
+  #+russian "РџСѓС‚СЊ, СЃРјРµС‰С‘РЅРЅС‹Р№ РѕС‚РЅРѕСЃРёС‚РµР»СЊРЅРѕ РєРѕСЂРЅСЏ РєРѕРЅС„РёРіСѓСЂР°С†РёРё"
+  #-russian "Path merged with *lisp-root*"
+  (declare (type string path))
   (concatenate 'string *lisp-root* path))
+
+; (load (at-lisp-root "config.lisp"))
 
 (defmacro portably-without-package-locks (&body body)
 `(#+sbcl sb-ext:without-package-locks
@@ -35,9 +47,9 @@ progn
 ,@body))
 
 ;(defun asdf::! (&rest args) (apply 'asdf:load-system args))
-(push "c:/lisp/def-symbol-readmacro/" asdf:*central-registry*)
+;(push "c:/lisp/def-symbol-readmacro/" asdf:*central-registry*)
 
-(load "c:/lisp/def-symbol-readmacro/asdf2-tools.lisp")
+(load (at-lisp-root "asdf2-tools.lisp"))
 (export 'asdf::load-system-by-asd-file :asdf)
 
 (asdf::! :decorate-function)
