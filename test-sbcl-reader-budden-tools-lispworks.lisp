@@ -48,7 +48,7 @@
 
 (with-output-to-string (*error-output*) ; suppress warnings
   (eval 
-   '(def-merge-packages::!4 :p1+p2 (:use :p1 :p2)) ; sym is forbidden
+   '(def-merge-packages::! :p1+p2 (:use :p1 :p2)) ; sym is forbidden
    ))
 
 
@@ -161,7 +161,7 @@
 
 (with-output-to-string (*error-output*)
   (eval
-   '(def-merge-packages::!4 :tst2 
+   '(def-merge-packages::! :tst2 
                             (:use)
                             (:custom-token-parsers parser1)
                             )))
