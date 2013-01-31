@@ -11,8 +11,7 @@
   (:documentation "case transformation and comparison of Russian characters")
   (:use :budden-tools :cl :named-readtables :buddens-readtable 
    :defstruct-meta ; :org.tfeb.hax.hierarchical-packages
-   :merge-packages-simple)
-  (:import-from :iterate-keywords #:iter #:keywordize #:dsetq)
+   :merge-packages-simple :iterk)
   (:import-from :alexandria #:with-gensyms #:once-only #:string-designator #:eswitch)
   (:import-from :split-sequence #:split-sequence)
   (:import-from :swank #:*readtable-alist*)
