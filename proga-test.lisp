@@ -1,4 +1,4 @@
-﻿;;; -*- Encoding: utf-8; -*-
+;;; -*- Encoding: utf-8; -*-
 (in-package :proga-implementation)
 
 (defmacro def-p-t (name x y)
@@ -110,11 +110,13 @@
          (proga (flet f (x) "Doc" (let y x) y) (f 4))
          4)
 
+
 (def-trivial-test::! proga.15.empty-tail
-         (let1 x 1 
-           (proga (let y (incf x))) 
-           x)
-         2)
+                     (let1 x 1 
+                       (proga (let y (incf x))) 
+                       x)
+                     2
+                     )
 
 (def-trivial-test::! proga.16.when
          (proga (when t (let a 5) a)) 
