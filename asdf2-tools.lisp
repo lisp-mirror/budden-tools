@@ -480,7 +480,7 @@ Copy-paste from predecessor's perform method"
        (dolist (f (input-files o c)) (load f :external-format ,external-format))
        )))
 
-(def-cl-file-with-external-format-class :windows-1251 asdf::windows-1251-file)
+; (def-cl-file-with-external-format-class :windows-1251 asdf::windows-1251-file)
 
 (defun dump-all-md5-and-write-dates-in-system (system-name) 
   "Run this to get md5 sum and write date of all files that are required by your system. Required

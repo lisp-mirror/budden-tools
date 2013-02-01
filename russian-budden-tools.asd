@@ -2,11 +2,7 @@
 
 (in-package #:asdf)
 
-#.(defparameter russian-file
-  #-(and sbcl russian) :file 
-  #+(and sbcl russian) :windows-1251-file)
-
-; needs asdf2-tools
+; needs asdf2-tools.lisp 
 
 (defsystem russian-budden-tools
   :serial t
@@ -15,6 +11,6 @@
   (:budden-tools)
   :components ( 
                (:package-file "pkg-russian-budden-tools")
-               (#.russian-file "russian-budden-tools")
+               (:file "russian-budden-tools")
                ) 
   )
