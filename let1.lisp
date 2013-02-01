@@ -1,10 +1,11 @@
 ;;; -*- Encoding: utf-8; -*-
-(in-package :cl-user)
+(in-package :budden-tools)
 
 ;; For me (budden), let1 is in cl package. For the rest, it is in 
 ;; budden-tools package
 
 (defmacro portably-without-package-locks (&body body)
+  "An attempt to override package locks in a cross-implementation manner. Misplaced and maybe erroneous"
 `(#+sbcl sb-ext:without-package-locks
 #+allegro excl::without-package-locks
 #+cmu ext:without-package-locks
@@ -20,18 +21,9 @@
 progn
 ,@body))
 
-;; reusing cl symbols to avoid interning to cl-user
-(cl-user::portably-without-package-locks
-  #+budden (intern (symbol-name '#:let1) :cl)
-  #+budden (export 'cl::let1 :cl)
-  (defmacro 
-      #+budden cl::let1 
-    #-budden budden-tools::let1
-    (variable + &body progn) 
-    "Shortcut for (let ((a b)) . c) or (destructuring-bind a b . c)"
-    (if (atom variable)
-        `(let ((,variable ,+)) ,@progn)
-      `(destructuring-bind ,variable ,+ ,@progn)))
-
-  )
+(defmacro let1 (variable + &body progn) 
+  "Shortcut for (let ((a b)) . c) or (destructuring-bind a b . c)"
+  (if (atom variable)
+      `(let ((,variable ,+)) ,@progn)
+    `(destructuring-bind ,variable ,+ ,@progn)))
 
