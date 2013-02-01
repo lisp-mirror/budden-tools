@@ -2,10 +2,6 @@
 
 (in-package #:asdf)
 
-#.(defparameter russian-file
-  #-(and sbcl russian) :file 
-  #+(and sbcl russian) :windows-1251-file)
-
 (pushnew :building-see-packages *features*)
 
 (defsystem :budden-tools
@@ -22,24 +18,22 @@
    (:file "def-merge-packages"
     ;:documentation "defpackage with some new clauses which are useful in conjunction with this library. See def-merge-packages::!"
     )
-   #+budden (:file "let1")
-   
    (:package-file "package") ; might need 
    (:package-file "package-proga-implementation")
-   #-budden (:file "let1")
-   (#.russian-file "def-trivial-test")
-   (#.russian-file "budden-tools")
-   (:file "with-conc-name")
-   (:file "defstruct-meta")
-   (#.russian-file "proga")
-   (:file "proga-test")
-   (:file "iterate-extensions")
-   (#.russian-file "defun-to-file")
-   (:file "decorate-function" ;:documentation "Smart API for substituting previously defined functions by their new versions"
+   (:file "let1")
+   (:file "def-trivial-test") ; yet another test suite
+   (:file "budden-tools")   ; some useful functions
+   (:file "with-conc-name") ; obsolete
+   (:file "defstruct-meta") ; obsolete
+   (:file "proga")          ; portable, semi-obsolete
+   (:file "proga-test") 
+   (:file "iterate-extensions") ; some iterate drivers
+   (:file "defun-to-file")      ; not very useful, deprecating is considered
+  ; (:file "decorate-function" ;:documentation "Smart API for substituting previously defined functions by their new versions"
+  ; )
+   (:file "variable-type" ;:documentation "Compilation environment related stuff (implementation-dependent)"
    )
-   (#.russian-file "variable-type" ;:documentation "Some environment related stuff"
+   (:file "pass-by-ref" ;:documentation "Pass place to a function by reference (portable)"
    )
-   (:file "pass-by-ref" ;:documentation "Pass place to a function by reference"
-   )
-   (:file "print-hash-table" ;:documentation "Print hashtable readably"
+   (:file "print-hash-table" ;:documentation "Print hashtable readably "
 ))) 
