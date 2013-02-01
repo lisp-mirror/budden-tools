@@ -13,46 +13,42 @@
         :do (return (slot-value identity 'capi:editor-pane))))
 
 
-(EVAL-WHEN (:EXECUTE :LOAD-TOPLEVEL :COMPILE-TOPLEVEL) 
-  (SETQ *READTABLE* (COPY-READTABLE *READTABLE*))
-  (SETF (READTABLE-CASE *READTABLE*) :UPCASE))
-
-(pushnew :russian *features*)
-(pushnew :forbidden-symbol-names *features*) 
+(pushnew :russian *features*) ; докстринги будут по-Русски 
 
 (defvar *lisp-root* #+win32 "c:/lisp/def-symbol-readmacro/" 
         #-win32 
         (namestring 
          (merge-pathnames 
           (make-pathname :directory '(:relative "def-symbol-readmacro")) 
-          (car quicklisp:*local-project-directories*))))
-(defun at-lisp-root (path)
-  #+russian "Путь, смещённый относительно корня конфигурации"
-  #-russian "Path merged with *lisp-root*"
-  (declare (type string path))
-  (concatenate 'string *lisp-root* path))
+          (car quicklisp:*local-project-directories*)))
+        "Название переменной весьма одиозное, но не можем сразу поменять, т.к. оно используется в defun-to-file. FIXME
+Нормальное название этой переменной должно быть *def-symbol-readmacro-dir*, хотя она вообще не нужна, а каталог для
+defun-to-file надо настраивть отдельно"
+        )
 
 (pushnew *lisp-root* asdf:*central-registry*)
-
-(load (at-lisp-root "asdf2-tools.lisp"))
+(load (concatenate 'string *lisp-root* "asdf2-tools.lisp"))
 (export 'asdf::load-system-by-asd-file :asdf) ; это и правда нужно? 
 
-(asdf::! :decorate-function)
-(asdf::! :iterate-keywords)
-(asdf::! :budden-tools)
-(asdf::! :see-packages)
-(asdf::! :russian-budden-tools)
+(asdf::! :decorate-function) ; приспособление для переопределения уже существующих функций
+(asdf::! :iterate-keywords) ; версия :iterate с keyword-ами
+(asdf::! :budden-tools)  ; def-merge-packages::! и разные полезные функции
+(asdf::! :see-packages)  ; таблица чтения с local-nicknames,symbol-readmacros,custom token parsers
+(asdf::! :russian-budden-tools) ; поддержка Русских букв (upcase, downcase, =)
 
 
-; устанавливаем, что symbol-readmacros могут начинаться с кириллических букв
+; устанавливаем, что symbol-readmacros могут начинаться с Русских букв
 (setf budden-tools::*def-symbol-reamacro-additional-name-starting-characters*
       (append budden-tools::*def-symbol-reamacro-additional-name-starting-characters*
               russian-budden-tools::*cyrillic-characters*))
 
 ; добавляем расширения к экспериментальной таблице чтения
 (budden-tools::ENABLE-BUDDENS-READTABLE-EXTENSIONS :buddens-readtable)
+
 ; включаем чтение CamelCase 
 (setf (budden-tools::readtable-case-advanced :buddens-readtable) :upcase-if-uniform)
+
 (budden-tools::in-readtable :buddens-readtable)
+
 (setf *print-case* :downcase)
 #+lispworks6 (setf SYSTEM:*PRINT-SYMBOLS-USING-BARS* t)
