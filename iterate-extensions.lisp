@@ -5,7 +5,7 @@
 ;;; (iter (:for (runner time) in '((ivan 10.0) (maria 9.9) (kolya 11.2)))
 ;;;	  (:finding runner :yielding-best-of time by #'>)) ==> MARIA
 
-(in-package :iterate)
+(in-package :iterate-keywords)
 
 (defun return-find-extremum-code-with-test (expr m-expr var test)
   "Just the same as return-find-extremum-code, but accepts an arbitrary test"

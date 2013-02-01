@@ -374,7 +374,7 @@ not found (unless :key is specified, which is a error) and returns value"
   #+russian "Работает только для списка. Надо сделать, чтобы работало для sequence (использовать find-if-not)"
   #-russian "Collect only a single duplicate of all duplicated entries"
   (declare (ignore key test test-not))          
-  (iter:iter 
+  (iter 
     (:with known-values) (:with old-known-values)
     (:for x in list)
     (setf old-known-values known-values known-values 

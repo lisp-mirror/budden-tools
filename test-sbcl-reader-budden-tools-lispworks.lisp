@@ -2,9 +2,8 @@
 
 (defpackage :test-sbcl-reader-budden-tools-lispworks 
   (:use :cl :budden-tools :named-readtables)
-  (:shadowing-import-from :iterate #:ITER)
-  ; (:shadowing-import-from :trivial-deftest #:DEFTEST)
-  #+nil (:shadowing-import-from :budden-tools))
+  (:shadowing-import-from :iterate-keywords #:ITER)
+  )
 
 (in-package :test-sbcl-reader-budden-tools-lispworks)
 

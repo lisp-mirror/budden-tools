@@ -115,7 +115,7 @@ NIL
     ; тогда ищём всё, что подходит. Но только в default-package
     ;(break)
     (let list
-      (iter:iter
+      (iter
         (:for sym :in-package pckg)
         (when (may-symbol-complete-symbol sym pckg partial-name external-only all-chars-in-same-case-p)
           (:collect sym))))

@@ -46,7 +46,7 @@ is already an altered readtable, simply returns it"
 
     (let good-readtable (copy-readtable rt))
 
-    (iter:iter 
+    (iter 
       (:for i :from 0 to 255)
       (:for b := (elt *char-table* i))
       (:for c := (code-char i))
@@ -71,7 +71,7 @@ is already an altered readtable, simply returns it"
        )
       )
 
-    (iter:iter
+    (iter
       (:for c in *def-symbol-reamacro-additional-name-starting-characters*)
       (set-macro-character c #'sbcl-reader-budden-tools-lispworks::read-token t rt))
 
