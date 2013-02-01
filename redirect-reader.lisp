@@ -1,4 +1,4 @@
-; -*- coding: windows-1251-dos; -*- 
+;;; -*- Encoding: utf-8; -*-
 
 ; (defmacro let1 (var val &body body) `(let ((,var ,val)) ,@body))
 

@@ -1,3 +1,4 @@
+;;; -*- Encoding: utf-8; -*-
 (defpackage :budden-tools
   (:use :cl :named-readtables :buddens-readtable)
   (:import-from :iterate-keywords #:iter #:keywordize #:dsetq)

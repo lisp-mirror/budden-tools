@@ -1,3 +1,4 @@
+;;; -*- Encoding: utf-8; -*-
 ;; Written by Denis Budyak. 
 ;; Code is in public domain
 

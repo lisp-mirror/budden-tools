@@ -1,3 +1,4 @@
+;;; -*- Encoding: utf-8; -*-
 (defpackage :date1)
 (defpackage :date1-implementation (:use :cl :budden-tools :local-time))
 

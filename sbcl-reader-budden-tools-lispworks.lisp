@@ -1,3 +1,4 @@
+;;; -*- Encoding: utf-8; -*-
 ;;;; READ and friends
 
 ;;;; This software is ported from SBCL to Lispworks by Budden. See the README file for
@@ -50,7 +51,7 @@
 
 ;;;; reader errors
 
-; предположительно, ридер lispworks взят из SBCL
+; РїСЂРµРґРїРѕР»РѕР¶РёС‚РµР»СЊРЅРѕ, СЂРёРґРµСЂ lispworks РІР·СЏС‚ РёР· SBCL
 (defun reader-eof-error (stream context)
   (#+lispworks6 system::reader-eof-error-function stream context)
   #+nil (error 'reader-eof-error
@@ -632,7 +633,7 @@ variables to allow for nested and thread safe reading."
   (let ((case (readtable-case *readtable*))
         (acase (budden-tools::readtable-case-advanced *readtable*))
         )
-    ;brt если в имени нет #\\, #\| и все латинские буквы в нём - в в одинаковом регистре, приводим к верхнему
+    ;brt РµСЃР»Рё РІ РёРјРµРЅРё РЅРµС‚ #\\, #\| Рё РІСЃРµ Р»Р°С‚РёРЅСЃРєРёРµ Р±СѓРєРІС‹ РІ РЅС‘Рј - РІ РІ РѕРґРёРЅР°РєРѕРІРѕРј СЂРµРіРёСЃС‚СЂРµ, РїСЂРёРІРѕРґРёРј Рє РІРµСЂС…РЅРµРјСѓ
     (when (and (null escapes) (eq acase :upcase-if-uniform))
       (setf case :preserve)
       (when (budden-tools::all-ascii-chars-in-same-case-p (subseq *read-buffer* 0 *ouch-ptr*))
@@ -1039,7 +1040,7 @@ variables to allow for nested and thread safe reading."
                     (read-buffer-to-string)
                     *keyword-package*)))
       (reset-read-buffer)
-      ; brt - если назначен специальный ридер для этого пакета, используем его
+      ; brt - РµСЃР»Рё РЅР°Р·РЅР°С‡РµРЅ СЃРїРµС†РёР°Р»СЊРЅС‹Р№ СЂРёРґРµСЂ РґР»СЏ СЌС‚РѕРіРѕ РїР°РєРµС‚Р°, РёСЃРїРѕР»СЊР·СѓРµРј РµРіРѕ
       (let ((found (hp-find-package package-designator)))
         (unless found
           (error "package ~S not found" package-designator

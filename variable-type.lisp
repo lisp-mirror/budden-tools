@@ -1,3 +1,4 @@
+;;; -*- Encoding: utf-8; -*-
 (in-package :budden-tools)
 
 ; (defmacro pvi (var &ENVIRONMENT env) (break) (print (list (hcl:variable-information var env) (hcl:declaration-information 'type))) `',var)
@@ -5,7 +6,7 @@
 (defmacro print-environment (&optional break &ENVIRONMENT env) (print env) (if break (break)))
 
 (defun variable-type-or-class (VAR ENV) 
-  "Возвращает тип ИЛИ класс значения"
+  "Р’РѕР·РІСЂР°С‰Р°РµС‚ С‚РёРї РР›Р РєР»Р°СЃСЃ Р·РЅР°С‡РµРЅРёСЏ"
   #+:LISPWORKS4.4
   (cond
    ((constantp VAR ENV)
@@ -39,8 +40,8 @@
 
 
 (defmacro kind-of-variable-via-augmented-environment (VAR &ENVIRONMENT ENV)
-  "Из http://www.lispworks.com/documentation/lw50/CLHS/Issues/iss342_w.htm, пока не используется, не возвращает
-декларацию типа"
+  "РР· http://www.lispworks.com/documentation/lw50/CLHS/Issues/iss342_w.htm, РїРѕРєР° РЅРµ РёСЃРїРѕР»СЊР·СѓРµС‚СЃСЏ, РЅРµ РІРѕР·РІСЂР°С‰Р°РµС‚
+РґРµРєР»Р°СЂР°С†РёСЋ С‚РёРїР°"
   (MULTIPLE-VALUE-BIND (KIND BINDINGP DECLS)
       (HCL:VARIABLE-INFORMATION VAR ENV)
     `(LIST ',VAR ',KIND ',BINDINGP ',DECLS)))
@@ -68,7 +69,7 @@
           (let1 mc-metadata (defstruct-meta:defstruct*m-slot-names-and-accessors class-name :NO-ERROR t)
             (cond 
              (mc-metadata
-              (error "напиши меня"))
+              (error "РЅР°РїРёС€Рё РјРµРЅСЏ"))
              (t (values (str+ class-name "-") type-package)))))
          ((subtypep class (find-class 'string))
           (values (str+ 'string "-") (find-package :common-lisp)))
@@ -84,14 +85,14 @@
          ))))))
 
 (defun conc-prefix-by-type-or-class (type-or-class)
-  "Возвращает два значения: префикс и пакет, в котором надо искать символ с таким префиксом"
+  "Р’РѕР·РІСЂР°С‰Р°РµС‚ РґРІР° Р·РЅР°С‡РµРЅРёСЏ: РїСЂРµС„РёРєСЃ Рё РїР°РєРµС‚, РІ РєРѕС‚РѕСЂРѕРј РЅР°РґРѕ РёСЃРєР°С‚СЊ СЃРёРјРІРѕР» СЃ С‚Р°РєРёРј РїСЂРµС„РёРєСЃРѕРј"
   (multiple-value-bind (type class)
       (typecase type-or-class
-        (symbol ; это - тип
+        (symbol ; СЌС‚Рѕ - С‚РёРї
          (values type-or-class nil))
-        (class ; это - класс
+        (class ; СЌС‚Рѕ - РєР»Р°СЃСЃ
          (values (class-name type-or-class) type-or-class))
-        (t ; хм. 
+        (t ; С…Рј. 
          (error "can't derive conc-prefix for type ~S" type-or-class)))
     (conc-prefix-by-type-or-class-name type class)))
   
@@ -115,7 +116,7 @@
 ; ---------------------------------------------------------------- runtime^ --------------------------------------------------------------
 
 (defun function-symbol-for-^ (type-or-class field-name)
-  "возвращает функцию для выполнения ^"
+  "РІРѕР·РІСЂР°С‰Р°РµС‚ С„СѓРЅРєС†РёСЋ РґР»СЏ РІС‹РїРѕР»РЅРµРЅРёСЏ ^"
   (multiple-value-bind (prefix package) (conc-prefix-by-type-or-class type-or-class)
     (let* ((target-symbol-name (str+ prefix field-name))
            (target-symbol (find-symbol target-symbol-name package)))
@@ -123,13 +124,13 @@
         type-or-class field-name target-symbol-name package)
       (unless (fboundp target-symbol) (warn "(runtime^ ~S ~S): ~S should be a function" 
                                             type-or-class field-name target-symbol))
-        ; а если это макрос? (assert (null (macro-function target-symbol)))?
+        ; Р° РµСЃР»Рё СЌС‚Рѕ РјР°РєСЂРѕСЃ? (assert (null (macro-function target-symbol)))?
       target-symbol
       )))
                             
 ; we need this as we attach symbol-readmacro on ^ so that it can't be 
 (defun runtime^ (object field-name &rest args)
-  "Вызывается, если на этапе компиляции не удалось определить тип объекта"
+  "Р’С‹Р·С‹РІР°РµС‚СЃСЏ, РµСЃР»Рё РЅР° СЌС‚Р°РїРµ РєРѕРјРїРёР»СЏС†РёРё РЅРµ СѓРґР°Р»РѕСЃСЊ РѕРїСЂРµРґРµР»РёС‚СЊ С‚РёРї РѕР±СЉРµРєС‚Р°"
   (assert object () "(runtime^ nil ~S): Sorry, object can't be null!" field-name)
   (let* ((class (class-of object))
          (target-function-symbol (function-symbol-for-^ class field-name)))
@@ -154,15 +155,15 @@
   `(common-carat-implementation ,object ,field-name ,@args))
 
 (defun setf-apply (new-value function-name args)
-  "Позволяет присвоить значение, имея на входе известное в момент исполнения имя функции для получения места, например, 
+  "РџРѕР·РІРѕР»СЏРµС‚ РїСЂРёСЃРІРѕРёС‚СЊ Р·РЅР°С‡РµРЅРёРµ, РёРјРµСЏ РЅР° РІС…РѕРґРµ РёР·РІРµСЃС‚РЅРѕРµ РІ РјРѕРјРµРЅС‚ РёСЃРїРѕР»РЅРµРЅРёСЏ РёРјСЏ С„СѓРЅРєС†РёРё РґР»СЏ РїРѕР»СѓС‡РµРЅРёСЏ РјРµСЃС‚Р°, РЅР°РїСЂРёРјРµСЂ, 
   (let1 v '(1 3 4)
              (bu::setf-apply 0 'car v)
              v) => (0 3 4).
-  Вызывает eval!!!"
+  Р’С‹Р·С‹РІР°РµС‚ eval!!!"
   (eval `(setf (,function-name ,@args) ',new-value)))
 
 (defsetf runtime^ (object field-name &rest args &environment env) (new-value)
-  "Вызывает eval в runtime!"
+  "Р’С‹Р·С‹РІР°РµС‚ eval РІ runtime!"
   ;(assert (constantp object env))
   (with-gensyms (o target-function-symbol class)
     (once-only (object)
@@ -174,7 +175,7 @@
            (setf-apply ,new-value ,target-function-symbol (cons ,o ,args))
            )))))
 
-#| Скорость:
+#| РЎРєРѕСЂРѕСЃС‚СЊ:
 (progn
   (defstruct qq Aa)
   (defparameter -v- (make-qq))
@@ -194,8 +195,8 @@
 
 
 
-;--------------------------------------------------------------      Читалка   ^ -----------------------------------------------------------
-(defparameter ^-reader nil "Этот параметр нужен только для тогО, чтобы было возможно с помощью Alt-. Alt-, найти определение функции ^,которую невозможно прочитать")
+;--------------------------------------------------------------      Р§РёС‚Р°Р»РєР°   ^ -----------------------------------------------------------
+(defparameter ^-reader nil "Р­С‚РѕС‚ РїР°СЂР°РјРµС‚СЂ РЅСѓР¶РµРЅ С‚РѕР»СЊРєРѕ РґР»СЏ С‚РѕРіРћ, С‡С‚РѕР±С‹ Р±С‹Р»Рѕ РІРѕР·РјРѕР¶РЅРѕ СЃ РїРѕРјРѕС‰СЊСЋ Alt-. Alt-, РЅР°Р№С‚Рё РѕРїСЂРµРґРµР»РµРЅРёРµ С„СѓРЅРєС†РёРё ^,РєРѕС‚РѕСЂСѓСЋ РЅРµРІРѕР·РјРѕР¶РЅРѕ РїСЂРѕС‡РёС‚Р°С‚СЊ")
 
 (defmacro |^| (object field-name &rest args)
   "See also ^-READER"
@@ -212,8 +213,8 @@
      
 
 (defmacro with-freezed-env (&environment env &body body) 
-  "Благодаря наличию именованного символа с замороженным env, можно сослаться на 
-затенённый экземпляр макросов"
+  "Р‘Р»Р°РіРѕРґР°СЂСЏ РЅР°Р»РёС‡РёСЋ РёРјРµРЅРѕРІР°РЅРЅРѕРіРѕ СЃРёРјРІРѕР»Р° СЃ Р·Р°РјРѕСЂРѕР¶РµРЅРЅС‹Рј env, РјРѕР¶РЅРѕ СЃРѕСЃР»Р°С‚СЊСЃСЏ РЅР° 
+Р·Р°С‚РµРЅС‘РЅРЅС‹Р№ СЌРєР·РµРјРїР»СЏСЂ РјР°РєСЂРѕСЃРѕРІ"
   `(symbol-macrolet 
        ((the-freezed-env ,env)) 
      ,@body))
@@ -241,7 +242,7 @@
 
 
 (defmacro with-conc-namec (var conc-name &body body)
-  "var^something превращается в conc-name-something var"
+  "var^something РїСЂРµРІСЂР°С‰Р°РµС‚СЃСЏ РІ conc-name-something var"
   `(with-custom-carat-implementation
     (,var (o f &rest mo)
           (let* ((target-name (str+ ',conc-name "-" f))

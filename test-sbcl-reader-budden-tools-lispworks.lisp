@@ -1,4 +1,4 @@
-; -*- coding: windows-1251-dos; -*-
+;;; -*- Encoding: utf-8; -*-
 
 (defpackage :test-sbcl-reader-budden-tools-lispworks 
   (:use :cl :budden-tools :named-readtables)

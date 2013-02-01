@@ -1,3 +1,4 @@
+;;; -*- Encoding: utf-8; -*-
 (in-package :cl-user) 
 
 
@@ -7,7 +8,7 @@
     (setf *readtable* (copy-readtable nil))
     nil)
 
-; deprecate it? вряд ли, потому что struct-to-alist
+; deprecate it? РІСЂСЏРґ Р»Рё, РїРѕС‚РѕРјСѓ С‡С‚Рѕ struct-to-alist
 (defpackage :defstruct-meta (:use :cl)
   (:documentation "defstruct does not record names of accessors. defstruct*m was intended to address this, 
 but it is unfinished. Also it seem to violate GNU. So it is likely to be removed some time")

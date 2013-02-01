@@ -1,3 +1,4 @@
+;;; -*- Encoding: utf-8; -*-
 (in-package :cl-user) 
 
 (eval-when (:execute)

@@ -1,3 +1,4 @@
+;;; -*- Encoding: utf-8; -*-
 (in-package :cl-user)
 
 ;; For me (budden), let1 is in cl package. For the rest, it is in 

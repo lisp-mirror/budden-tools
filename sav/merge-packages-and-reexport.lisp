@@ -1,3 +1,4 @@
+;;; -*- Encoding: utf-8; -*-
 ;;; Written by Denis Budyak, 2009. This code is in public domain
 ;; requires iterate. 
 

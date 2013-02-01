@@ -1,3 +1,4 @@
+;;; -*- Encoding: utf-8; -*-
 ;; read-eval-stream
 (in-package :buddens-readtable)
 (in-readtable :buddens-readtable)

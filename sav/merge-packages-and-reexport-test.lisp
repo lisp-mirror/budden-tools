@@ -1,3 +1,4 @@
+;;; -*- Encoding: utf-8; -*-
 (defpackage :p1 (:use :cl) (:export :sym :s1 :nth))
 (defpackage :p2 (:use :cl) (:export :sym :s2 :nth))
 

@@ -1,3 +1,4 @@
+;;; -*- Encoding: utf-8; -*-
 #+clisp (setf *default-file-encoding* 
       (ext:make-encoding :charset 'charset:windows-1251 :line-terminator :dos))
 

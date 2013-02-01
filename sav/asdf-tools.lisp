@@ -1,3 +1,4 @@
+;;; -*- Encoding: utf-8; -*-
 ;;; Written by Denis Budyak 2008-2009. This file is in public domain or maybe 
 ;;; under some other license. It conatains modified parts of asdf so I don't know. 
 ;;; Load this file (w/o compilation)

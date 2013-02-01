@@ -1,9 +1,9 @@
-; -*- coding: windows-1251-dos; -*-
+;;; -*- Encoding: utf-8; -*-
 
 (in-package :budden-tools)
 (setf *readtable* (copy-readtable nil))
 
-(defun unread-char* (char stream) "Раньше возвращал новый stream, а теперь - просто unread-char"
+(defun unread-char* (char stream) "Р Р°РЅСЊС€Рµ РІРѕР·РІСЂР°С‰Р°Р» РЅРѕРІС‹Р№ stream, Р° С‚РµРїРµСЂСЊ - РїСЂРѕСЃС‚Рѕ unread-char"
   (progn 
     (unread-char char stream)
     stream
@@ -47,7 +47,7 @@
 
 
 (defmacro with-good-readtable-2 ((&key (ensure-this-is-a-bad-one t)) &body body)
-  "переданная readtable должна быть получена с помощью see-packages-on"
+  "РїРµСЂРµРґР°РЅРЅР°СЏ readtable РґРѕР»Р¶РЅР° Р±С‹С‚СЊ РїРѕР»СѓС‡РµРЅР° СЃ РїРѕРјРѕС‰СЊСЋ see-packages-on"
   (with-gensyms (good)
     `(proga
        (let ,good (gethash *readtable* *my-readtable-to-good-readtable*))
@@ -62,9 +62,9 @@
 
 
 ;;;; open-paren for symbol-readmacro
-(defvar *reading-parens* nil "Если истина, то мы находимся внутри чтения скобок")  
+(defvar *reading-parens* nil "Р•СЃР»Рё РёСЃС‚РёРЅР°, С‚Рѕ РјС‹ РЅР°С…РѕРґРёРјСЃСЏ РІРЅСѓС‚СЂРё С‡С‚РµРЅРёСЏ СЃРєРѕР±РѕРє")  
 (defvar *functions-to-call-when-paren-is-closing* nil
-       "Здесь может быть функция от аргументов (считанный-список поток), к-рую мы вызовем на закрытии скобки")
+       "Р—РґРµСЃСЊ РјРѕР¶РµС‚ Р±С‹С‚СЊ С„СѓРЅРєС†РёСЏ РѕС‚ Р°СЂРіСѓРјРµРЅС‚РѕРІ (СЃС‡РёС‚Р°РЅРЅС‹Р№-СЃРїРёСЃРѕРє РїРѕС‚РѕРє), Рє-СЂСѓСЋ РјС‹ РІС‹Р·РѕРІРµРј РЅР° Р·Р°РєСЂС‹С‚РёРё СЃРєРѕР±РєРё")
 
 
 ; factored out (defvar *package-designator-starts-from-vertical-line* nil)  
@@ -74,8 +74,8 @@
 
 (let ((default-open-paren-reader (get-macro-character #\( (copy-readtable nil))))
   (defun paren-reader-with-closing-paren-notification (stream char)
-    "Если внутри readera кто-то заполнил ф-ями в *functions-to-call-when-paren-is-closing*,
-то эти ф-и будут вызвана над результатом чтения (...) и потоком с первой по последнюю, преобразуя результат" 
+    "Р•СЃР»Рё РІРЅСѓС‚СЂРё readera РєС‚Рѕ-С‚Рѕ Р·Р°РїРѕР»РЅРёР» С„-СЏРјРё РІ *functions-to-call-when-paren-is-closing*,
+С‚Рѕ СЌС‚Рё С„-Рё Р±СѓРґСѓС‚ РІС‹Р·РІР°РЅР° РЅР°Рґ СЂРµР·СѓР»СЊС‚Р°С‚РѕРј С‡С‚РµРЅРёСЏ (...) Рё РїРѕС‚РѕРєРѕРј СЃ РїРµСЂРІРѕР№ РїРѕ РїРѕСЃР»РµРґРЅСЋСЋ, РїСЂРµРѕР±СЂР°Р·СѓСЏ СЂРµР·СѓР»СЊС‚Р°С‚" 
     (let* ((position (extract-file-position stream))
            (*reading-parens* (cons position *reading-parens*))
            (*reading-parens-stream* stream)
@@ -91,7 +91,7 @@
 (defun push-function-to-call-when-paren-is-closing (f)
   (if *reading-parens* 
       (push f *functions-to-call-when-paren-is-closing*)
-    (warn "Попытка назначить действие на чтение закрывающей скобки вне чтения скобок")))
+    (warn "РџРѕРїС‹С‚РєР° РЅР°Р·РЅР°С‡РёС‚СЊ РґРµР№СЃС‚РІРёРµ РЅР° С‡С‚РµРЅРёРµ Р·Р°РєСЂС‹РІР°СЋС‰РµР№ СЃРєРѕР±РєРё РІРЅРµ С‡С‚РµРЅРёСЏ СЃРєРѕР±РѕРє")))
 
 (defun check-correct-use-of-a-car-symbol-readmacro (object)
   (when *reading-parens*
@@ -107,13 +107,13 @@
     object)
 
 (defun it-is-a-car-symbol-readmacro (object-read)
-  "Если определение symbol-readmacro-reader, то имеет место следующее:
-Если readmacro находится внутри круглых скобок, то функция должна прочитать всё до 
-закрывающей круглой скобки (не включая её) и вернуть одно значение. 
-В противном случае, случится ошибка. 
-Результатом чтения охватывающих данный symbol-readmacro скобок является не список, 
-а значение, возвращённое symbol-readmacro-reader.
-Если readmacro находится вне круглых скобок, то ничего особенного не происходит. 
+  "Р•СЃР»Рё РѕРїСЂРµРґРµР»РµРЅРёРµ symbol-readmacro-reader, С‚Рѕ РёРјРµРµС‚ РјРµСЃС‚Рѕ СЃР»РµРґСѓСЋС‰РµРµ:
+Р•СЃР»Рё readmacro РЅР°С…РѕРґРёС‚СЃСЏ РІРЅСѓС‚СЂРё РєСЂСѓРіР»С‹С… СЃРєРѕР±РѕРє, С‚Рѕ С„СѓРЅРєС†РёСЏ РґРѕР»Р¶РЅР° РїСЂРѕС‡РёС‚Р°С‚СЊ РІСЃС‘ РґРѕ 
+Р·Р°РєСЂС‹РІР°СЋС‰РµР№ РєСЂСѓРіР»РѕР№ СЃРєРѕР±РєРё (РЅРµ РІРєР»СЋС‡Р°СЏ РµС‘) Рё РІРµСЂРЅСѓС‚СЊ РѕРґРЅРѕ Р·РЅР°С‡РµРЅРёРµ. 
+Р’ РїСЂРѕС‚РёРІРЅРѕРј СЃР»СѓС‡Р°Рµ, СЃР»СѓС‡РёС‚СЃСЏ РѕС€РёР±РєР°. 
+Р РµР·СѓР»СЊС‚Р°С‚РѕРј С‡С‚РµРЅРёСЏ РѕС…РІР°С‚С‹РІР°СЋС‰РёС… РґР°РЅРЅС‹Р№ symbol-readmacro СЃРєРѕР±РѕРє СЏРІР»СЏРµС‚СЃСЏ РЅРµ СЃРїРёСЃРѕРє, 
+Р° Р·РЅР°С‡РµРЅРёРµ, РІРѕР·РІСЂР°С‰С‘РЅРЅРѕРµ symbol-readmacro-reader.
+Р•СЃР»Рё readmacro РЅР°С…РѕРґРёС‚СЃСЏ РІРЅРµ РєСЂСѓРіР»С‹С… СЃРєРѕР±РѕРє, С‚Рѕ РЅРёС‡РµРіРѕ РѕСЃРѕР±РµРЅРЅРѕРіРѕ РЅРµ РїСЂРѕРёСЃС…РѕРґРёС‚. 
 "
   (check-correct-use-of-a-car-symbol-readmacro object-read))
 
@@ -209,12 +209,12 @@ iii) if symbol is found more than once then first-symbol-found,list of packages,
       (:for p :initially package :then (pop seen-package-list))
       (:while p)
       (:for (values p-sym storage-type) = (find-symbol name p))
-      (when (and p-sym  ; символ 
-                 (or (eq storage-type :external) ; должен быть внешним 
-                     real-first-time-p  ; или мы смотрим в *package* и тогда он может быть внутренним тоже
+      (when (and p-sym  ; СЃРёРјРІРѕР» 
+                 (or (eq storage-type :external) ; РґРѕР»Р¶РµРЅ Р±С‹С‚СЊ РІРЅРµС€РЅРёРј 
+                     real-first-time-p  ; РёР»Рё РјС‹ СЃРјРѕС‚СЂРёРј РІ *package* Рё С‚РѕРіРґР° РѕРЅ РјРѕР¶РµС‚ Р±С‹С‚СЊ РІРЅСѓС‚СЂРµРЅРЅРёРј С‚РѕР¶Рµ
                      ))
-          ; если у нас несколько символов, то они могут совпадать. 
-        (unless (eq p-sym first-sym-found) ; если не совпадают, то это сыграет более одного раза.
+          ; РµСЃР»Рё Сѓ РЅР°СЃ РЅРµСЃРєРѕР»СЊРєРѕ СЃРёРјРІРѕР»РѕРІ, С‚Рѕ РѕРЅРё РјРѕРіСѓС‚ СЃРѕРІРїР°РґР°С‚СЊ. 
+        (unless (eq p-sym first-sym-found) ; РµСЃР»Рё РЅРµ СЃРѕРІРїР°РґР°СЋС‚, С‚Рѕ СЌС‚Рѕ СЃС‹РіСЂР°РµС‚ Р±РѕР»РµРµ РѕРґРЅРѕРіРѕ СЂР°Р·Р°.
           (:count 1 :into cnt))
         (unless first-sym-found
           (setf first-sym-found p-sym first-package p first-status storage-type))
@@ -242,13 +242,13 @@ iii) if symbol is found more than once then first-symbol-found,list of packages,
                    default-package
                  (cons default-package nil #|2012-08-27 (package-seen-packages-list default-package)|#)))
     (:for (values p-sym storage-type) = (find-symbol name p))
-    (when (and p-sym  ; символ 
-               (or (eq storage-type :external) ; должен быть внешним 
-                   real-first-time-p  ; или мы смотрим в *package* и тогда он может быть внутренним тоже
+    (when (and p-sym  ; СЃРёРјРІРѕР» 
+               (or (eq storage-type :external) ; РґРѕР»Р¶РµРЅ Р±С‹С‚СЊ РІРЅРµС€РЅРёРј 
+                   real-first-time-p  ; РёР»Рё РјС‹ СЃРјРѕС‚СЂРёРј РІ *package* Рё С‚РѕРіРґР° РѕРЅ РјРѕР¶РµС‚ Р±С‹С‚СЊ РІРЅСѓС‚СЂРµРЅРЅРёРј С‚РѕР¶Рµ
                    ))
-          ; если у нас несколько символов, то они могут совпадать. 
+          ; РµСЃР»Рё Сѓ РЅР°СЃ РЅРµСЃРєРѕР»СЊРєРѕ СЃРёРјРІРѕР»РѕРІ, С‚Рѕ РѕРЅРё РјРѕРіСѓС‚ СЃРѕРІРїР°РґР°С‚СЊ. 
       (when real-first-time-p (setf found-in-package-itself t))
-      (unless (eq p-sym sym-found) ; если не совпадают, то это сыграет более одного раза.
+      (unless (eq p-sym sym-found) ; РµСЃР»Рё РЅРµ СЃРѕРІРїР°РґР°СЋС‚, С‚Рѕ СЌС‚Рѕ СЃС‹РіСЂР°РµС‚ Р±РѕР»РµРµ РѕРґРЅРѕРіРѕ СЂР°Р·Р°.
         (setf sym-found p-sym)
         (:count 1 :into cnt)
         (:collect (cons p-sym p) :into syms-found))
@@ -285,9 +285,9 @@ iii) if symbol is found more than once then first-symbol-found,list of packages,
 
 (defsetf readtable-case-advanced set-readtable-case-advanced)
 
-; новшества: 1. символы со всеми ascii в нижнем регистре ищутся только в верхнем регистре
-; Все остальные - только "как есть"
-; 2. ЭТО ЗАКОММЕНТИРОВАНО все keywords преобразуются к верхнему регистру в момент чтения
+; РЅРѕРІС€РµСЃС‚РІР°: 1. СЃРёРјРІРѕР»С‹ СЃРѕ РІСЃРµРјРё ascii РІ РЅРёР¶РЅРµРј СЂРµРіРёСЃС‚СЂРµ РёС‰СѓС‚СЃСЏ С‚РѕР»СЊРєРѕ РІ РІРµСЂС…РЅРµРј СЂРµРіРёСЃС‚СЂРµ
+; Р’СЃРµ РѕСЃС‚Р°Р»СЊРЅС‹Рµ - С‚РѕР»СЊРєРѕ "РєР°Рє РµСЃС‚СЊ"
+; 2. Р­РўРћ Р—РђРљРћРњРњР•РќРўРР РћР’РђРќРћ РІСЃРµ keywords РїСЂРµРѕР±СЂР°Р·СѓСЋС‚СЃСЏ Рє РІРµСЂС…РЅРµРјСѓ СЂРµРіРёСЃС‚СЂСѓ РІ РјРѕРјРµРЅС‚ С‡С‚РµРЅРёСЏ
 (defun find-symbol-with-advanced-readtable-case (name p rt starts-with-vertical-line)
   (let ((p-sym nil) (storage-type nil))
     (case (readtable-case-advanced rt)
@@ -296,9 +296,9 @@ iii) if symbol is found more than once then first-symbol-found,list of packages,
          (ecase same-case-p
            (:lowercase
             (setf (values p-sym storage-type) (find-symbol (string-upcase-ascii name) p))
-            ; убираем неоднозначность. Теперь всё, что введено в одинаковом регистре, апкейсится. 
+            ; СѓР±РёСЂР°РµРј РЅРµРѕРґРЅРѕР·РЅР°С‡РЅРѕСЃС‚СЊ. РўРµРїРµСЂСЊ РІСЃС‘, С‡С‚Рѕ РІРІРµРґРµРЅРѕ РІ РѕРґРёРЅР°РєРѕРІРѕРј СЂРµРіРёСЃС‚СЂРµ, Р°РїРєРµР№СЃРёС‚СЃСЏ. 
             ; (when (and (not storage-type) 
-            ;           (not (eq p *keyword-package*)) ; константы - только в верхнем регистре
+            ;           (not (eq p *keyword-package*)) ; РєРѕРЅСЃС‚Р°РЅС‚С‹ - С‚РѕР»СЊРєРѕ РІ РІРµСЂС…РЅРµРј СЂРµРіРёСЃС‚СЂРµ
             ;           )
             ;  (setf (values p-sym storage-type) (find-symbol name p)))
             )
@@ -326,8 +326,8 @@ FIXME shadow find-symbol? FIXME rename"
 (proclaim '(ftype (function (string package readtable symbol) symbol)
                   fix-symbol-name-for-advanced-readtable-case))
 (defun fix-symbol-name-for-advanced-readtable-case (name package rt starts-with-vertical-line same-case-p)
-  ;"Хотим заинтёрнить имя name в пакет package. Преобразуем его к верхнему регистру, если он - в пакет keyword"
-  "Хотим заинтёрнить имя name в пакет package. Преобразуем его к верхнему регистру, если он набран в нижнем регистре без ||"
+  ;"РҐРѕС‚РёРј Р·Р°РёРЅС‚С‘СЂРЅРёС‚СЊ РёРјСЏ name РІ РїР°РєРµС‚ package. РџСЂРµРѕР±СЂР°Р·СѓРµРј РµРіРѕ Рє РІРµСЂС…РЅРµРјСѓ СЂРµРіРёСЃС‚СЂСѓ, РµСЃР»Рё РѕРЅ - РІ РїР°РєРµС‚ keyword"
+  "РҐРѕС‚РёРј Р·Р°РёРЅС‚С‘СЂРЅРёС‚СЊ РёРјСЏ name РІ РїР°РєРµС‚ package. РџСЂРµРѕР±СЂР°Р·СѓРµРј РµРіРѕ Рє РІРµСЂС…РЅРµРјСѓ СЂРµРіРёСЃС‚СЂСѓ, РµСЃР»Рё РѕРЅ РЅР°Р±СЂР°РЅ РІ РЅРёР¶РЅРµРј СЂРµРіРёСЃС‚СЂРµ Р±РµР· ||"
   (declare (ignore package))
   (cond
    ((and ;(eq package *keyword-package*) 

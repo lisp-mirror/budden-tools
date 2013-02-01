@@ -1,11 +1,12 @@
+;;; -*- Encoding: utf-8; -*-
 ;;; Written by Denis Budyak, 2009. This code is in public domain
 ;; requires iterate-keywords. 
 
 (cl:require :iterate-keywords)
 
-;; разобраться с удалением символа. Например, написать ещё функции: разэкспортировать 
-;; символ отовсюду, удалить символ вообще. 
-;; Добавить никнейм пакету
+;; СЂР°Р·РѕР±СЂР°С‚СЊСЃСЏ СЃ СѓРґР°Р»РµРЅРёРµРј СЃРёРјРІРѕР»Р°. РќР°РїСЂРёРјРµСЂ, РЅР°РїРёСЃР°С‚СЊ РµС‰С‘ С„СѓРЅРєС†РёРё: СЂР°Р·СЌРєСЃРїРѕСЂС‚РёСЂРѕРІР°С‚СЊ 
+;; СЃРёРјРІРѕР» РѕС‚РѕРІСЃСЋРґСѓ, СѓРґР°Р»РёС‚СЊ СЃРёРјРІРѕР» РІРѕРѕР±С‰Рµ. 
+;; Р”РѕР±Р°РІРёС‚СЊ РЅРёРєРЅРµР№Рј РїР°РєРµС‚Сѓ
 
 
 (eval-when (:execute)
@@ -46,9 +47,9 @@ defpackage-autoimport-2 (obsolete) prefers to use packages and shadowing-import 
    #:package-forbidden-symbol-names ; place of package designator
    #:ensure-package-metadata ; makes sure that *per-package-metadata* entry for package exists
    #:keywordize-package-designator
-   ; #:defpackage-autoimport ; УСТАРЕЛ, не пользоваться. See package docstring. Note this symbol is exported to CL
-   ; #:defpackage-autoimport-2 ; ПОД ВОПРОСОМ.particular case of defpackage-autoimport. Uses all listed packages, shadowing-imports first of clashes. Exported to CL
-   ; пользоваться !4 .
+   ; #:defpackage-autoimport ; РЈРЎРўРђР Р•Р›, РЅРµ РїРѕР»СЊР·РѕРІР°С‚СЊСЃСЏ. See package docstring. Note this symbol is exported to CL
+   ; #:defpackage-autoimport-2 ; РџРћР” Р’РћРџР РћРЎРћРњ.particular case of defpackage-autoimport. Uses all listed packages, shadowing-imports first of clashes. Exported to CL
+   ; РїРѕР»СЊР·РѕРІР°С‚СЊСЃСЏ !4 .
    #:extract-clause ; extract one clause of def... form (e.g. defpackage) by its head
    ;#:reexport ; For every symbol in to-package2 which is external in 
    ;           ; package1, export it from to-package2
@@ -276,7 +277,7 @@ from to-package too"
     ))
 
 (defun group-similar-items (list &rest key-args &key (key 'identity) test test-not)
-  #+russian "Недеструктивно группирует (в смысле key-args) значения списка в подсписки"
+  #+russian "РќРµРґРµСЃС‚СЂСѓРєС‚РёРІРЅРѕ РіСЂСѓРїРїРёСЂСѓРµС‚ (РІ СЃРјС‹СЃР»Рµ key-args) Р·РЅР°С‡РµРЅРёСЏ СЃРїРёСЃРєР° РІ РїРѕРґСЃРїРёСЃРєРё"
   #-russian "Given a list of items, groups similar (in sence of key-args) items into sublists"
   (declare (ignorable key test test-not))
   (iter 
@@ -344,13 +345,13 @@ from to-package too"
 (hcl:set-hash-table-weak *per-package-alias-table* :key) 
 
 (defun get-custom-reader-for-package (package-designator)
-  "custom-reader, если он назначен (с помощью setf), имеет те же параметры, что и read. Вызывается для чтения во временном контексте пакета, т.е., после custom-reader-for-package должен учитывать, что его могут вызвать изнутри read, поэтому просто вызов read скорее всего, вызовет безконечную рекурсию"
+  "custom-reader, РµСЃР»Рё РѕРЅ РЅР°Р·РЅР°С‡РµРЅ (СЃ РїРѕРјРѕС‰СЊСЋ setf), РёРјРµРµС‚ С‚Рµ Р¶Рµ РїР°СЂР°РјРµС‚СЂС‹, С‡С‚Рѕ Рё read. Р’С‹Р·С‹РІР°РµС‚СЃСЏ РґР»СЏ С‡С‚РµРЅРёСЏ РІРѕ РІСЂРµРјРµРЅРЅРѕРј РєРѕРЅС‚РµРєСЃС‚Рµ РїР°РєРµС‚Р°, С‚.Рµ., РїРѕСЃР»Рµ custom-reader-for-package РґРѕР»Р¶РµРЅ СѓС‡РёС‚С‹РІР°С‚СЊ, С‡С‚Рѕ РµРіРѕ РјРѕРіСѓС‚ РІС‹Р·РІР°С‚СЊ РёР·РЅСѓС‚СЂРё read, РїРѕСЌС‚РѕРјСѓ РїСЂРѕСЃС‚Рѕ РІС‹Р·РѕРІ read СЃРєРѕСЂРµРµ РІСЃРµРіРѕ, РІС‹Р·РѕРІРµС‚ Р±РµР·РєРѕРЅРµС‡РЅСѓСЋ СЂРµРєСѓСЂСЃРёСЋ"
   (let ((pm (gethash (keywordize-package-designator package-designator) 
                     *per-package-metadata*)))
     (and pm (package-metadata-custom-reader pm))))
 
 (defun get-custom-token-parsers-for-package (package-designator)
-  "custom-token-parsers, если назначены (с помощью setf) - это список function designators (для funcall), которые вызываются слева направо над каждым токеном. Они получают на вход: поток, строку и пакет. Возвращают два значения. Первое значение - считанный объект. Второе - t, если объект считан, иначе - nil"
+  "custom-token-parsers, РµСЃР»Рё РЅР°Р·РЅР°С‡РµРЅС‹ (СЃ РїРѕРјРѕС‰СЊСЋ setf) - СЌС‚Рѕ СЃРїРёСЃРѕРє function designators (РґР»СЏ funcall), РєРѕС‚РѕСЂС‹Рµ РІС‹Р·С‹РІР°СЋС‚СЃСЏ СЃР»РµРІР° РЅР°РїСЂР°РІРѕ РЅР°Рґ РєР°Р¶РґС‹Рј С‚РѕРєРµРЅРѕРј. РћРЅРё РїРѕР»СѓС‡Р°СЋС‚ РЅР° РІС…РѕРґ: РїРѕС‚РѕРє, СЃС‚СЂРѕРєСѓ Рё РїР°РєРµС‚. Р’РѕР·РІСЂР°С‰Р°СЋС‚ РґРІР° Р·РЅР°С‡РµРЅРёСЏ. РџРµСЂРІРѕРµ Р·РЅР°С‡РµРЅРёРµ - СЃС‡РёС‚Р°РЅРЅС‹Р№ РѕР±СЉРµРєС‚. Р’С‚РѕСЂРѕРµ - t, РµСЃР»Рё РѕР±СЉРµРєС‚ СЃС‡РёС‚Р°РЅ, РёРЅР°С‡Рµ - nil"
   (let ((pm (gethash (keywordize-package-designator package-designator) 
                      *per-package-metadata*)))
     (and pm (package-metadata-custom-token-parsers pm))))
@@ -373,8 +374,8 @@ from to-package too"
        (let ((,md (ensure-package-metadata ,package-designator)))
          (setf (package-metadata-custom-token-parsers ,md) ,new-value-v)))))
 
-; FIXME - иногда при удалении текущего пакета пакет становится NIL. 
-; тогда наша хитрая читалка ломается
+; FIXME - РёРЅРѕРіРґР° РїСЂРё СѓРґР°Р»РµРЅРёРё С‚РµРєСѓС‰РµРіРѕ РїР°РєРµС‚Р° РїР°РєРµС‚ СЃС‚Р°РЅРѕРІРёС‚СЃСЏ NIL. 
+; С‚РѕРіРґР° РЅР°С€Р° С…РёС‚СЂР°СЏ С‡РёС‚Р°Р»РєР° Р»РѕРјР°РµС‚СЃСЏ
 (defun keywordize-package-designator (package-designator)
   (etypecase package-designator
     (keyword package-designator)
@@ -663,15 +664,15 @@ and explain if we can't"
     (:for str = (string sname))
     (multiple-value-bind (sym status) (find-symbol str pack)
       (unless sym
-        (warn "Хотели удалить символ ~S из ~A, но он не найден" str pack)
+        (warn "РҐРѕС‚РµР»Рё СѓРґР°Р»РёС‚СЊ СЃРёРјРІРѕР» ~S РёР· ~A, РЅРѕ РѕРЅ РЅРµ РЅР°Р№РґРµРЅ" str pack)
         (:next-iteration))
       (when (eq status :external)
-        (format *error-output* "Пытаемся разэкспортировать ~S из ~A" sym pack)
+        (format *error-output* "РџС‹С‚Р°РµРјСЃСЏ СЂР°Р·СЌРєСЃРїРѕСЂС‚РёСЂРѕРІР°С‚СЊ ~S РёР· ~A" sym pack)
         (unexport sym pack))
       (multiple-value-bind (sym0 status0) (find-symbol str pack)
         (assert (eq sym sym0))
         (ecase status0
-          (:inherited (warn "Не получится удалить ~S из ~A, т.к. он унаследован через use-package от ~A" sym0 pack (symbol-package sym0)))
+          (:inherited (warn "РќРµ РїРѕР»СѓС‡РёС‚СЃСЏ СѓРґР°Р»РёС‚СЊ ~S РёР· ~A, С‚.Рє. РѕРЅ СѓРЅР°СЃР»РµРґРѕРІР°РЅ С‡РµСЂРµР· use-package РѕС‚ ~A" sym0 pack (symbol-package sym0)))
           (:internal
            (unintern sym0 pack)
            (assert (not (find-symbol str pack))))

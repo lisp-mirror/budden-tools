@@ -1,5 +1,4 @@
-; -*- coding: windows-1251-dos; -*- 
-; при ручной компиляции этого файла в sbcl нужно делать (setf sb-impl::*default-external-format* :windows-1251) 
+;;; -*- Encoding: utf-8; -*-
 
 (in-package :budden-tools)
 
@@ -35,9 +34,9 @@
 
 (defun show-hash (z) (maphash (lambda (x y) (print (list x y))) z))
 
-(defun maptree (fun tree)  ; в d:/lisp/interp/ut.lsp называлась subst-2
-   #+russian "Проходит рекурсивно по дереву. К каждому атому дерева применяет функцию fun.
-    Получается такое дерево."
+(defun maptree (fun tree)  ; РІ d:/lisp/interp/ut.lsp РЅР°Р·С‹РІР°Р»Р°СЃСЊ subst-2
+   #+russian "РџСЂРѕС…РѕРґРёС‚ СЂРµРєСѓСЂСЃРёРІРЅРѕ РїРѕ РґРµСЂРµРІСѓ. Рљ РєР°Р¶РґРѕРјСѓ Р°С‚РѕРјСѓ РґРµСЂРµРІР° РїСЂРёРјРµРЅСЏРµС‚ С„СѓРЅРєС†РёСЋ fun.
+    РџРѕР»СѓС‡Р°РµС‚СЃСЏ С‚Р°РєРѕРµ РґРµСЂРµРІРѕ."
    #-russian "Walks tree, applying fun to any atom of it and collects results to the fresh isomorphic tree"
   (map 'list (lambda (x) (cond 
 			  ((consp x) (maptree fun x)) 
@@ -48,7 +47,7 @@
 
 
 (defun rmsubseq (seq &rest args &key from-end start end count)
-  #+russian "Удаляет из последовательности указанные элементы"
+  #+russian "РЈРґР°Р»СЏРµС‚ РёР· РїРѕСЃР»РµРґРѕРІР°С‚РµР»СЊРЅРѕСЃС‚Рё СѓРєР°Р·Р°РЅРЅС‹Рµ СЌР»РµРјРµРЅС‚С‹"
   #-russian "Removes subsequence from sequence"
   (declare (ignore from-end start end count))
   (apply #'remove nil seq :test (constantly t) args))
@@ -59,8 +58,8 @@
     (subseq seq (min l start) (when end (min l end)))))
 
 (defun direct-sum (items errmsg &key (test #'eql))
-  #+russian "Проверяет, что списки являются непересекающимися. Возвращает их сумму либо выдает сообщение об ошибке, 
-   которое принимает два параметра"
+  #+russian "РџСЂРѕРІРµСЂСЏРµС‚, С‡С‚Рѕ СЃРїРёСЃРєРё СЏРІР»СЏСЋС‚СЃСЏ РЅРµРїРµСЂРµСЃРµРєР°СЋС‰РёРјРёСЃСЏ. Р’РѕР·РІСЂР°С‰Р°РµС‚ РёС… СЃСѓРјРјСѓ Р»РёР±Рѕ РІС‹РґР°РµС‚ СЃРѕРѕР±С‰РµРЅРёРµ РѕР± РѕС€РёР±РєРµ, 
+   РєРѕС‚РѕСЂРѕРµ РїСЂРёРЅРёРјР°РµС‚ РґРІР° РїР°СЂР°РјРµС‚СЂР°"
   #-russian "Checks that items are non-intersecting sets in terms of test. If they are, returns their sum. Otherwise, shows error message"
   (let1 res nil
     (dolist (item items)
@@ -112,14 +111,14 @@
     (nreverse result))) 
 
 (defun replace-subseq (seq new-subseq &key (start 0) end (type 'list))
-  #+russian "Заменяет подпоследовательность, определяемую start и end, другой
-подпоследовательностью. Длины могут не совпадать, при этом получается результат другой длины, чем sequence.
-Работает очень медленно (concatenate). Нужно переделать"
+  #+russian "Р—Р°РјРµРЅСЏРµС‚ РїРѕРґРїРѕСЃР»РµРґРѕРІР°С‚РµР»СЊРЅРѕСЃС‚СЊ, РѕРїСЂРµРґРµР»СЏРµРјСѓСЋ start Рё end, РґСЂСѓРіРѕР№
+РїРѕРґРїРѕСЃР»РµРґРѕРІР°С‚РµР»СЊРЅРѕСЃС‚СЊСЋ. Р”Р»РёРЅС‹ РјРѕРіСѓС‚ РЅРµ СЃРѕРІРїР°РґР°С‚СЊ, РїСЂРё СЌС‚РѕРј РїРѕР»СѓС‡Р°РµС‚СЃСЏ СЂРµР·СѓР»СЊС‚Р°С‚ РґСЂСѓРіРѕР№ РґР»РёРЅС‹, С‡РµРј sequence.
+Р Р°Р±РѕС‚Р°РµС‚ РѕС‡РµРЅСЊ РјРµРґР»РµРЅРЅРѕ (concatenate). РќСѓР¶РЅРѕ РїРµСЂРµРґРµР»Р°С‚СЊ"
   #-russian "Replaces subsequence by other subsequence (maybe of another length. Uses concatenate and hence is slow"
   (concatenate type (subseq seq 0 start) new-subseq (when end (subseq seq end))))
 
 
-(defun struct-to-alist (s) "сохраняет тип и данные из структуры в alist"
+(defun struct-to-alist (s) "СЃРѕС…СЂР°РЅСЏРµС‚ С‚РёРї Рё РґР°РЅРЅС‹Рµ РёР· СЃС‚СЂСѓРєС‚СѓСЂС‹ РІ alist"
   (assert (typep (class-of s) 'structure-class))
   #+lispworks (multiple-value-bind (names values) (structure:structure-names-and-values s)
                 `((:type . ,(type-of s))
@@ -150,7 +149,7 @@
 (defun str++ (&rest args) (format nil "~{~A~}" args)) (export 'str++) :budden-tools
 
 (defun non-empty-string-p (x) 
-  #+russian "Возвращает x, если x - не nil и не пустая строка"
+  #+russian "Р’РѕР·РІСЂР°С‰Р°РµС‚ x, РµСЃР»Рё x - РЅРµ nil Рё РЅРµ РїСѓСЃС‚Р°СЏ СЃС‚СЂРѕРєР°"
   (cond ((null x) nil) ((equal x "") nil) (t x)))
 
 (defun string-or (&rest args)
@@ -163,7 +162,7 @@
 
 
 (defun careful-keywordize (symbol-or-string) 
-  "Keywordize, пригодный для advanced-readtable-case"
+  "Keywordize, РїСЂРёРіРѕРґРЅС‹Р№ РґР»СЏ advanced-readtable-case"
   (let1 symbol-name 
       (etypecase symbol-or-string
         (symbol (symbol-name symbol-or-string))
@@ -173,21 +172,21 @@
         (intern symbol-name *keyword-package*))))
 
 (defmacro dispatch-keyarg-simple (keyarg)
-  #+russian "Для передачи похожих аргументов в apply. Подразумевается, что вызывающая сторона не даёт
-ключам значения по умолчанию. Если параметр равен nil, он не передаётся, в этом случае значение по умолчанию
-будет взято из вызываемой функции"
+  #+russian "Р”Р»СЏ РїРµСЂРµРґР°С‡Рё РїРѕС…РѕР¶РёС… Р°СЂРіСѓРјРµРЅС‚РѕРІ РІ apply. РџРѕРґСЂР°Р·СѓРјРµРІР°РµС‚СЃСЏ, С‡С‚Рѕ РІС‹Р·С‹РІР°СЋС‰Р°СЏ СЃС‚РѕСЂРѕРЅР° РЅРµ РґР°С‘С‚
+РєР»СЋС‡Р°Рј Р·РЅР°С‡РµРЅРёСЏ РїРѕ СѓРјРѕР»С‡Р°РЅРёСЋ. Р•СЃР»Рё РїР°СЂР°РјРµС‚СЂ СЂР°РІРµРЅ nil, РѕРЅ РЅРµ РїРµСЂРµРґР°С‘С‚СЃСЏ, РІ СЌС‚РѕРј СЃР»СѓС‡Р°Рµ Р·РЅР°С‡РµРЅРёРµ РїРѕ СѓРјРѕР»С‡Р°РЅРёСЋ
+Р±СѓРґРµС‚ РІР·СЏС‚Рѕ РёР· РІС‹Р·С‹РІР°РµРјРѕР№ С„СѓРЅРєС†РёРё"
   `(when ,keyarg `(,(careful-keywordize ',keyarg) ,,keyarg)))
 
 (defmacro dispatch-keyargs-simple (&rest keyargs)
-  #+russian "То же, что и dispatch-keyarg-simple, но для нескольких аргументов сразу"
+  #+russian "РўРѕ Р¶Рµ, С‡С‚Рѕ Рё dispatch-keyarg-simple, РЅРѕ РґР»СЏ РЅРµСЃРєРѕР»СЊРєРёС… Р°СЂРіСѓРјРµРЅС‚РѕРІ СЃСЂР°Р·Сѓ"
   `(append ,@(iter (:for keyarg :in keyargs) 
                (:collecting `(dispatch-keyarg-simple ,keyarg)))))
 
 
 
 (defun careful-add-suffix-to-a-symbol (symbol &rest suffixes)
-  "пробует добавить к символу суффиксы в том или ином (одинаковом) регистре. Если такой символ находится 
-в пакете символа symbol, то возвращает. Если нет - ругается. Если символ бездомный - просто добавляет"
+  "РїСЂРѕР±СѓРµС‚ РґРѕР±Р°РІРёС‚СЊ Рє СЃРёРјРІРѕР»Сѓ СЃСѓС„С„РёРєСЃС‹ РІ С‚РѕРј РёР»Рё РёРЅРѕРј (РѕРґРёРЅР°РєРѕРІРѕРј) СЂРµРіРёСЃС‚СЂРµ. Р•СЃР»Рё С‚Р°РєРѕР№ СЃРёРјРІРѕР» РЅР°С…РѕРґРёС‚СЃСЏ 
+РІ РїР°РєРµС‚Рµ СЃРёРјРІРѕР»Р° symbol, С‚Рѕ РІРѕР·РІСЂР°С‰Р°РµС‚. Р•СЃР»Рё РЅРµС‚ - СЂСѓРіР°РµС‚СЃСЏ. Р•СЃР»Рё СЃРёРјРІРѕР» Р±РµР·РґРѕРјРЅС‹Р№ - РїСЂРѕСЃС‚Рѕ РґРѕР±Р°РІР»СЏРµС‚"
   (let* ((ssuffixes (apply 'str+ suffixes))
          (package (symbol-package symbol))
          (sname (symbol-name symbol)))
@@ -205,22 +204,22 @@
 
 
 (defmacro dispatch-keyarg-full (keyarg) 
-  #+russian "Пусть есть вызываемая функция с &key параметром, и вызывающай с таким же &key параметром.
-Мы хотим передать параметры так, чтобы умолчание было взято от вызываемой функции. Нужно в вызывающей функции задать параметр в виде
-&key (param-name nil param-name-supplied-p), а в вызваемой - в виде &key (param-name default [supplied-p])" 
+  #+russian "РџСѓСЃС‚СЊ РµСЃС‚СЊ РІС‹Р·С‹РІР°РµРјР°СЏ С„СѓРЅРєС†РёСЏ СЃ &key РїР°СЂР°РјРµС‚СЂРѕРј, Рё РІС‹Р·С‹РІР°СЋС‰Р°Р№ СЃ С‚Р°РєРёРј Р¶Рµ &key РїР°СЂР°РјРµС‚СЂРѕРј.
+РњС‹ С…РѕС‚РёРј РїРµСЂРµРґР°С‚СЊ РїР°СЂР°РјРµС‚СЂС‹ С‚Р°Рє, С‡С‚РѕР±С‹ СѓРјРѕР»С‡Р°РЅРёРµ Р±С‹Р»Рѕ РІР·СЏС‚Рѕ РѕС‚ РІС‹Р·С‹РІР°РµРјРѕР№ С„СѓРЅРєС†РёРё. РќСѓР¶РЅРѕ РІ РІС‹Р·С‹РІР°СЋС‰РµР№ С„СѓРЅРєС†РёРё Р·Р°РґР°С‚СЊ РїР°СЂР°РјРµС‚СЂ РІ РІРёРґРµ
+&key (param-name nil param-name-supplied-p), Р° РІ РІС‹Р·РІР°РµРјРѕР№ - РІ РІРёРґРµ &key (param-name default [supplied-p])" 
   (let1 package (symbol-package keyarg)
     (assert (not (eq package *keyword-package*)))
     (let1 supplied-p-symbol (careful-add-suffix-to-a-symbol keyarg '-supplied-p)
       `(when ,supplied-p-symbol `(,(careful-keywordize ',keyarg) ,,keyarg)))))
-; FIXME похоже, понадобится careful-keywordize
+; FIXME РїРѕС…РѕР¶Рµ, РїРѕРЅР°РґРѕР±РёС‚СЃСЏ careful-keywordize
 
 (defmacro dispatch-keyargs-full (&rest keyargs)
   `(append ,@(iter (:for keyarg :in keyargs) 
                (:collecting `(dispatch-keyarg-full ,keyarg)))))  
 
 (defmacro pass-keyarg (keyarg)
-  "Имеется вызывающая функция и вызываемая, у них одинаковый &key arg. Хотим передать из вызывающей в вызываемую. Можно написать так:
- (apply 'вызываемая (pass-keyarg arg)), имя аргумента пишется в виде символа, а не в виде keyword-а"
+  "РРјРµРµС‚СЃСЏ РІС‹Р·С‹РІР°СЋС‰Р°СЏ С„СѓРЅРєС†РёСЏ Рё РІС‹Р·С‹РІР°РµРјР°СЏ, Сѓ РЅРёС… РѕРґРёРЅР°РєРѕРІС‹Р№ &key arg. РҐРѕС‚РёРј РїРµСЂРµРґР°С‚СЊ РёР· РІС‹Р·С‹РІР°СЋС‰РµР№ РІ РІС‹Р·С‹РІР°РµРјСѓСЋ. РњРѕР¶РЅРѕ РЅР°РїРёСЃР°С‚СЊ С‚Р°Рє:
+ (apply 'РІС‹Р·С‹РІР°РµРјР°СЏ (pass-keyarg arg)), РёРјСЏ Р°СЂРіСѓРјРµРЅС‚Р° РїРёС€РµС‚СЃСЏ РІ РІРёРґРµ СЃРёРјРІРѕР»Р°, Р° РЅРµ РІ РІРёРґРµ keyword-Р°"
   ``(,(careful-keywordize ',keyarg) ,,keyarg)
   )
 
@@ -275,13 +274,13 @@
 
   
 (defun assert-unique-symbols (list) 
-  #+russian "Дан список строк или символов. Убежадемся, что он уникален. Если нет, то выдаём ошибку, выводя список и неуникальынй символ"
+  #+russian "Р”Р°РЅ СЃРїРёСЃРѕРє СЃС‚СЂРѕРє РёР»Рё СЃРёРјРІРѕР»РѕРІ. РЈР±РµР¶Р°РґРµРјСЃСЏ, С‡С‚Рѕ РѕРЅ СѓРЅРёРєР°Р»РµРЅ. Р•СЃР»Рё РЅРµС‚, С‚Рѕ РІС‹РґР°С‘Рј РѕС€РёР±РєСѓ, РІС‹РІРѕРґСЏ СЃРїРёСЃРѕРє Рё РЅРµСѓРЅРёРєР°Р»СЊС‹РЅР№ СЃРёРјРІРѕР»"
   #-russian "Assert that there are no duplicates in list of strings or symbols, in terms of string<"
   (reduce (lambda (x y) (when (string-equal x y) 
                           (cerror "continue" "~A is not unique in ~A" x list)) y) 
           (sort list 'string<) :initial-value nil))          
 
-(defun list-to-alist (x) "Превращает '(:a 1 :b 2) в '((:a . 1) (:b . 2)). Устарела. Используй splice-list"
+(defun list-to-alist (x) "РџСЂРµРІСЂР°С‰Р°РµС‚ '(:a 1 :b 2) РІ '((:a . 1) (:b . 2)). РЈСЃС‚Р°СЂРµР»Р°. РСЃРїРѕР»СЊР·СѓР№ splice-list"
   (let1 res nil
     (loop
      (push (cons (pop x) (pop x)) res)
@@ -313,18 +312,18 @@ if to-alist is true, to ((a . b) (c . d) ...)"
     (:collect value)))
        
 
-(defun alist-to-list (x) "Превращает alist в список ((a . b) (c . d)) -> (a b c d)"
+(defun alist-to-list (x) "РџСЂРµРІСЂР°С‰Р°РµС‚ alist РІ СЃРїРёСЃРѕРє ((a . b) (c . d)) -> (a b c d)"
   (loop for (key . value) in x append (list key value)))
 
 (defun unsplice-list (list &key from-alist)
-  "Обратный к splice-list"
+  "РћР±СЂР°С‚РЅС‹Р№ Рє splice-list"
   (if from-alist
     (alist-to-list list)
     (iter (:for (a . b) in list)
       (assert b)
       (:appending `(,a ,@b)))))
 
-(defun flat-assoc (thing list &key test key) "Возвращает assoc из плоского списка типа (:a 1 :b 2), как будто он был a-списком ((:a . 1) (:b . 2))"
+(defun flat-assoc (thing list &key test key) "Р’РѕР·РІСЂР°С‰Р°РµС‚ assoc РёР· РїР»РѕСЃРєРѕРіРѕ СЃРїРёСЃРєР° С‚РёРїР° (:a 1 :b 2), РєР°Рє Р±СѓРґС‚Рѕ РѕРЅ Р±С‹Р» a-СЃРїРёСЃРєРѕРј ((:a . 1) (:b . 2))"
   (apply 'assoc thing (list-to-alist list) `(,@(if test `(:test ,test)) 
                                              ,@(if key `(:key ,key)))))
 (unexport 'flat-assoc) ; deprecate it. 
@@ -371,7 +370,7 @@ not found (unless :key is specified, which is a error) and returns value"
 
 
 (defun collect-duplicates (list &rest key-args &key key test test-not)
-  #+russian "Работает только для списка. Надо сделать, чтобы работало для sequence (использовать find-if-not)"
+  #+russian "Р Р°Р±РѕС‚Р°РµС‚ С‚РѕР»СЊРєРѕ РґР»СЏ СЃРїРёСЃРєР°. РќР°РґРѕ СЃРґРµР»Р°С‚СЊ, С‡С‚РѕР±С‹ СЂР°Р±РѕС‚Р°Р»Рѕ РґР»СЏ sequence (РёСЃРїРѕР»СЊР·РѕРІР°С‚СЊ find-if-not)"
   #-russian "Collect only a single duplicate of all duplicated entries"
   (declare (ignore key test test-not))          
   (iter 
@@ -383,7 +382,7 @@ not found (unless :key is specified, which is a error) and returns value"
       (:collect x))))
 
 
-;; FIXME добавить proga-expander
+;; FIXME РґРѕР±Р°РІРёС‚СЊ proga-expander
 (defmacro mlvl-bind (vars values-form &body body) `(multiple-value-bind ,vars ,values-form ,@body))
 (defmacro mlvl-call (function &rest forms) `(multiple-value-call ,function ,@forms))
 (defmacro mlvl-list (form) `(multiple-value-list ,form))
@@ -410,9 +409,9 @@ not found (unless :key is specified, which is a error) and returns value"
         (setf ,place-form ,saved-value)))))
 
 (defmacro pllet1 (place-form value &body body)
-  #+russian "вычисляем place-form и запоминаем его значение.
-Присваиваем ему value. Выполянем body как progn, на выходе 
-вычисляем place-form и записываем value, которое мы запомнили"
+  #+russian "РІС‹С‡РёСЃР»СЏРµРј place-form Рё Р·Р°РїРѕРјРёРЅР°РµРј РµРіРѕ Р·РЅР°С‡РµРЅРёРµ.
+РџСЂРёСЃРІР°РёРІР°РµРј РµРјСѓ value. Р’С‹РїРѕР»СЏРЅРµРј body РєР°Рє progn, РЅР° РІС‹С…РѕРґРµ 
+РІС‹С‡РёСЃР»СЏРµРј place-form Рё Р·Р°РїРёСЃС‹РІР°РµРј value, РєРѕС‚РѕСЂРѕРµ РјС‹ Р·Р°РїРѕРјРЅРёР»Рё"
   (cl-utilities::with-gensyms 
    (saved-value)
    `(let1 ,saved-value ,place-form
@@ -432,7 +431,7 @@ not found (unless :key is specified, which is a error) and returns value"
        (assert (typep ,value ',typespec))
        (the ,typespec ,value))))
 
-(defun tree-weight (tree) #+russian "Общее количество консов в дереве"
+(defun tree-weight (tree) #+russian "РћР±С‰РµРµ РєРѕР»РёС‡РµСЃС‚РІРѕ РєРѕРЅСЃРѕРІ РІ РґРµСЂРµРІРµ"
   #-russian "number of conses in a tree (or smth like this :)"
   (cond 
    ((atom tree) 0)
@@ -507,7 +506,7 @@ modifying form, e.g. @code{(_f + a b) @equiv{} (incf a b)}."
 
 
 (defmacro __f (op arg1 place &rest args)
-  "Неудачное имя"
+  "РќРµСѓРґР°С‡РЅРѕРµ РёРјСЏ"
   (multiple-value-bind (vars forms var set access)
       (get-setf-expansion place)
     `(let* (,@(mapcar #'list vars forms)
@@ -549,7 +548,7 @@ modifying form, e.g. @code{(_f + a b) @equiv{} (incf a b)}."
                              ,@body)))))
 
 (defun princ-to-string-delimited-list (delimiter list)
-  "Печатает список с разделителем между каждыми двумя элементами"
+  "РџРµС‡Р°С‚Р°РµС‚ СЃРїРёСЃРѕРє СЃ СЂР°Р·РґРµР»РёС‚РµР»РµРј РјРµР¶РґСѓ РєР°Р¶РґС‹РјРё РґРІСѓРјСЏ СЌР»РµРјРµРЅС‚Р°РјРё"
   (with-output-to-string (s)
     (let1 firsttime t
       (dolist (x list) 

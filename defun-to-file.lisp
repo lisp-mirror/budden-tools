@@ -1,21 +1,21 @@
-; -*- coding: windows-1251-dos; -*-
+;;; -*- Encoding: utf-8; -*-
 (in-package :budden-tools)
 (in-readtable :buddens-readtable)
 
 (defparameter *defun-to-file-directory* #+win32 (str+ cl-user::*lisp-root* "sw/defun-to-file") #-win32 "/home/denis/sw/defun-to-file")
 
 (defun maybe-add-slash (string)
-  #+russian "Добавляет / в конец имени папки, если его там ещё нет"
+  #+russian "Р”РѕР±Р°РІР»СЏРµС‚ / РІ РєРѕРЅРµС† РёРјРµРЅРё РїР°РїРєРё, РµСЃР»Рё РµРіРѕ С‚Р°Рј РµС‰С‘ РЅРµС‚"
   (cond
    ((string= string "") string)
    ((string= (sequence-last string) "/") string)
    (t (str+ string "/"))))
 
 (defmacro defun-to-file (name &rest more)
-  #+russian "Определяет функцию с таким исходником в файле с именем *defun-to-file-directory*/имя-функции.
-Имя функции должно быть допустимым именем файла и не должно содержать всяких мерзких символов. 
-Нужно бы добавить сюда ещё имя пакета, но пока не сделано. Для лиспворкс 4 в функции не могут быть gensyms, т.к. они криво
-печатаются (что, в общем-то сводит всю идею на нет). Возвращает два значения - имя функции и имя файла"
+  #+russian "РћРїСЂРµРґРµР»СЏРµС‚ С„СѓРЅРєС†РёСЋ СЃ С‚Р°РєРёРј РёСЃС…РѕРґРЅРёРєРѕРј РІ С„Р°Р№Р»Рµ СЃ РёРјРµРЅРµРј *defun-to-file-directory*/РёРјСЏ-С„СѓРЅРєС†РёРё.
+РРјСЏ С„СѓРЅРєС†РёРё РґРѕР»Р¶РЅРѕ Р±С‹С‚СЊ РґРѕРїСѓСЃС‚РёРјС‹Рј РёРјРµРЅРµРј С„Р°Р№Р»Р° Рё РЅРµ РґРѕР»Р¶РЅРѕ СЃРѕРґРµСЂР¶Р°С‚СЊ РІСЃСЏРєРёС… РјРµСЂР·РєРёС… СЃРёРјРІРѕР»РѕРІ. 
+РќСѓР¶РЅРѕ Р±С‹ РґРѕР±Р°РІРёС‚СЊ СЃСЋРґР° РµС‰С‘ РёРјСЏ РїР°РєРµС‚Р°, РЅРѕ РїРѕРєР° РЅРµ СЃРґРµР»Р°РЅРѕ. Р”Р»СЏ Р»РёСЃРїРІРѕСЂРєСЃ 4 РІ С„СѓРЅРєС†РёРё РЅРµ РјРѕРіСѓС‚ Р±С‹С‚СЊ gensyms, С‚.Рє. РѕРЅРё РєСЂРёРІРѕ
+РїРµС‡Р°С‚Р°СЋС‚СЃСЏ (С‡С‚Рѕ, РІ РѕР±С‰РµРј-С‚Рѕ СЃРІРѕРґРёС‚ РІСЃСЋ РёРґРµСЋ РЅР° РЅРµС‚). Р’РѕР·РІСЂР°С‰Р°РµС‚ РґРІР° Р·РЅР°С‡РµРЅРёСЏ - РёРјСЏ С„СѓРЅРєС†РёРё Рё РёРјСЏ С„Р°Р№Р»Р°"
   (proga 
     (assert (every #L(not (find !1 "\\/.?* ")) (string name)))
     (let filename (str+ (maybe-add-slash *defun-to-file-directory*) name))
@@ -34,14 +34,14 @@
 
 
 (defun eval-with-file (code) 
-  "Создаёт временную функцию в файле и выполняет её"
+  "РЎРѕР·РґР°С‘С‚ РІСЂРµРјРµРЅРЅСѓСЋ С„СѓРЅРєС†РёСЋ РІ С„Р°Р№Р»Рµ Рё РІС‹РїРѕР»РЅСЏРµС‚ РµС‘"
   (proga 
     (let func-name (gentemp "eval-with-file-fn"))
     (multiple-value-bind (success filename) 
         (eval `(defun-to-file ,func-name () ,code))
       (unwind-protect
           (progn 
-            (assert success nil "Код ~S не загрузился" code)
+            (assert success nil "РљРѕРґ ~S РЅРµ Р·Р°РіСЂСѓР·РёР»СЃСЏ" code)
             (funcall func-name))
         (delete-file filename)
         (unintern func-name)
