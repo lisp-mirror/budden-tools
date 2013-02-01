@@ -61,7 +61,7 @@
 
 (defun fill-char-table ()
   (with-good-readtable-0
-    (iter:iter ; какие символы у нас составляют токен? 
+    (iter ; какие символы у нас составляют токен? 
       (:for i :from 0 to 255) 
       (:for c := (code-char i))
       (setf (elt *char-table* i)
