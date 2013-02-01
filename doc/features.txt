@@ -2,9 +2,8 @@
 *Features* used in the library
 ------------------------------
 
-:budden - add this if you're budden
 :building-see-packages - installed temporarily when
-the library is being build to localize changes I have
+the library is being built to identify changes I have
 made to third-party libraries I've included in :buddens-tools
 library. 
 :ORG.TFEB.HAX.HIERARCHICAL-PACKAGES,:ORG.TFEB.HAX.RELATIVE-PACKAGE-NAMES
