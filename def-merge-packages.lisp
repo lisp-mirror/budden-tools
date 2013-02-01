@@ -424,7 +424,7 @@ Returns list of symbols.
             )))
     (iter (:for s in symbols-to-forbid)
       (unexport s package)
-      (cl-user::portably-without-package-locks
+      (decorate-function:portably-without-package-locks
         (eval 
          `(progn
             #+lispworks4.4 

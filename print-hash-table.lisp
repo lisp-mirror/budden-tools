@@ -6,7 +6,7 @@
 (defvar *print-hashtable-readably* t
   "when *print-hashtable-readably* is t, hashtables are printed readably with their contents.")
 
-(cl-user::portably-without-package-locks
+(decorate-function:portably-without-package-locks
 ; non-toplevel
 (defmethod print-object ((o hash-table) stream)
   (cond (*print-hashtable-readably*  

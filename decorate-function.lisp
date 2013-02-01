@@ -12,6 +12,7 @@
      #:decorate-function
      #:undecorate-function
      #:apply-undecorated
+     #:portably-without-package-locks
      #:get-undecorated)
     (:use :cl)))
 
@@ -25,6 +26,23 @@
 ; symbol is an uninterned symbol to which original macro definition is copied while
 ; macro is being decorated
 (defvar *undecorated-macros* (make-hash-table :test 'eq))
+
+(defmacro portably-without-package-locks (&body body)
+  "An attempt to override package locks in a cross-implementation manner. Misplaced and maybe erroneous"
+`(#+sbcl sb-ext:without-package-locks
+#+allegro excl::without-package-locks
+#+cmu ext:without-package-locks
+#+lispworks let 
+#+lispworks 
+((lw:*handle-warn-on-redefinition* :warn)
+ ; (dspec:*redefinition-action* :warn)
+ (hcl:*packages-for-warn-on-redefinition* nil))
+#+clisp ext:without-package-lock #+clisp ()
+#+ccl let
+#+ccl ((ccl:*warn-if-redefine-kernel* nil)) 
+#-(or allegro lispworks sbcl clisp cmu ccl) 
+progn
+,@body))
 
 (defun decorate-function (symbol decorator-fn)
   "See example"
@@ -116,3 +134,6 @@
   (print (original 'asdf))
   (|undecorateMacro| 'original)
   )
+
+
+

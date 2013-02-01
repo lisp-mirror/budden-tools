@@ -4,23 +4,6 @@
 ;; For me (budden), let1 is in cl package. For the rest, it is in 
 ;; budden-tools package
 
-(defmacro portably-without-package-locks (&body body)
-  "An attempt to override package locks in a cross-implementation manner. Misplaced and maybe erroneous"
-`(#+sbcl sb-ext:without-package-locks
-#+allegro excl::without-package-locks
-#+cmu ext:without-package-locks
-#+lispworks let 
-#+lispworks 
-((lw:*handle-warn-on-redefinition* :warn)
- ; (dspec:*redefinition-action* :warn)
- (hcl:*packages-for-warn-on-redefinition* nil))
-#+clisp ext:without-package-lock #+clisp ()
-#+ccl let
-#+ccl ((ccl:*warn-if-redefine-kernel* nil)) 
-#-(or allegro lispworks sbcl clisp cmu ccl) 
-progn
-,@body))
-
 (defmacro let1 (variable + &body progn) 
   "Shortcut for (let ((a b)) . c) or (destructuring-bind a b . c)"
   (if (atom variable)

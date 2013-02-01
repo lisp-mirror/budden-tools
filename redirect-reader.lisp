@@ -81,7 +81,7 @@ is already an altered readtable, simply returns it"
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; Change a readtable end ;;;;;;;;;;;;;
 
-(cl-user::portably-without-package-locks
+(decorate-function:portably-without-package-locks
 ; non-toplevel 
 (defmethod print-object ((obj readtable) stream)
     "Print readtable with its name"
@@ -107,7 +107,7 @@ is already an altered readtable, simply returns it"
 
 (defun rd (s) (with-my-readtable-0 (read-from-string s)))
 
-(cl-user::portably-without-package-locks
+(decorate-function::portably-without-package-locks
 
 ;non-toplevel
 (defun keywordize (symbol-or-string) ; altering keywordize from iterate
@@ -133,7 +133,7 @@ is already an altered readtable, simply returns it"
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; Change printer if needed ;;;;;;;;;;;;;;;;;;;;;;;;
 #+lispworks6 
-(cl-user::PORTABLY-WITHOUT-PACKAGE-LOCKS
+(decorate-function::PORTABLY-WITHOUT-PACKAGE-LOCKS
 
 ; non-toplevel
 (defmethod print-object :around ((o symbol) s)
@@ -188,7 +188,7 @@ is already an altered readtable, simply returns it"
       (call-next-method)))) |#
 
 #+lispworks6
-(cl-user::PORTABLY-WITHOUT-PACKAGE-LOCKS
+(decorate-function::PORTABLY-WITHOUT-PACKAGE-LOCKS
   (defmethod print-object :around ((o structure-object) s)
     "Lispworks6 prints '|ASDF| as \\A\\S\\D\\F in our readtables. As a quick fix,
      we just set up 'good' readtable around printing"
