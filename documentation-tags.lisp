@@ -1,4 +1,4 @@
-﻿;;; -*- Encoding: utf-8; -*-
+;;; -*- Encoding: utf-8; -*-
 (in-package :budden-tools)
 
 ;; Extract name of a function being compiled. 
