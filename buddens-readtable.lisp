@@ -5,7 +5,7 @@
 ;(defun :buddens-readtable-a () "Dummy function to be able to navigate to readtable definition with M-." (error "this is not a function"))
 ;)
 
-(defreadtable :buddens-readtable  ; то же, что и buddens-readtable-a
+(defreadtable :buddens-readtable  
   (:merge :standard)
   (:dispatch-macro-char #\# #\L #'sharpl-reader)
   (:dispatch-macro-char #\# #\. #'sbcl-sharp-dot)
@@ -13,7 +13,7 @@
   )
 
 
-(defreadtable :buddens-readtable-a
+(defreadtable :buddens-readtable-a ; deprecated, remove it!
   (:merge :standard)
   (:dispatch-macro-char #\# #\L #'sharpl-reader)
   (:dispatch-macro-char #\# #\. #'sbcl-sharp-dot)

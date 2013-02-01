@@ -9,7 +9,7 @@
         (
          (:file "buddens-readtable-package")
          (:file "buddens-readmacros")
-         (:file "buddens-readtable")
+         (:file "buddens-readtable") ; here readtables are defined
 ;	 (:file "buddens-sharpdot")
 ))	
 ; asdf
