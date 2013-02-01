@@ -1,4 +1,4 @@
-;;; -*- Encoding: utf-8; -*-
+﻿;;; -*- Encoding: utf-8; -*-
 ;; DO NOT USE, USE ^ EXPANDER INSTEAD
 
 (in-package :budden-tools)

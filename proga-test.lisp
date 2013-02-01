@@ -1,4 +1,4 @@
-;;; -*- Encoding: utf-8; -*-
+﻿;;; -*- Encoding: utf-8; -*-
 (in-package :proga-implementation)
 
 (defmacro def-p-t (name x y)

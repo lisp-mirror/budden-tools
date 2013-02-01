@@ -1,4 +1,4 @@
-;;; -*- Encoding: utf-8; -*-
+﻿;;; -*- Encoding: utf-8; -*-
 (in-package :budden-tools)
 
 ; (defmacro pvi (var &ENVIRONMENT env) (break) (print (list (hcl:variable-information var env) (hcl:declaration-information 'type))) `',var)

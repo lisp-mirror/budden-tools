@@ -1,4 +1,4 @@
-;;; -*- Encoding: utf-8; -*-
+﻿;;; -*- Encoding: utf-8; -*-
 ; интегрировать
 (defmacro let1 (a b &body body) `(let ((,a ,b)) ,@body))
 (defmacro sm-let1 (a b &body body) `(symbol-macrolet ((,a ,b)) ,@body))

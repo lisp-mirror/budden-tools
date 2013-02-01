@@ -1,5 +1,5 @@
-;;; -*- Encoding: utf-8; -*-
-; работа с Русскими буквами
+﻿;;; -*- Encoding: utf-8; -*-;
+ работа с Русскими буквами
 
 (in-package :russian-budden-tools)
 
