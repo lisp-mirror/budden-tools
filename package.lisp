@@ -11,7 +11,7 @@
 (def-merge-packages::! :BUDDEN-TOOLS
   (:nicknames "budden-tools")
   (:documentation "Some tools by budden. See packages definition to find a list of symbols")
-  (:use :cl :named-readtables :buddens-readtable :defstruct-meta ; :org.tfeb.hax.hierarchical-packages
+  (:use :cl :named-readtables :buddens-readtable ; :org.tfeb.hax.hierarchical-packages
    :def-merge-packages :decorate-function :iterk)
   (:import-from :alexandria #:with-gensyms #:once-only #:string-designator #:eswitch)
   (:import-from :split-sequence #:split-sequence)

@@ -22,7 +22,7 @@ Currently proga is in need for redesign, so use with caution. let, flet forms wi
 some other might change. Look at proga-transformer usage in proga.lisp file for examples of extending 
 proga but beware this way of extending is likely to be broken in the near future.
 ")
- (:use :cl :iterk :budden-tools :defstruct-meta)
+ (:use :cl :iterk :budden-tools)
  (:export 
   #:proga ; Macro to get rid of some unnecessary parens and nesting levels which are present in lisp syntax 
   #:proga-transformer ; assign it to a property list to expand proga. See proga.lisp for examples
