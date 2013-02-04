@@ -24,6 +24,7 @@
 
 ;b(defvar *read-default-float-format* 'single-float)
 
+#+lispworks
 (declaim (type (member short-float single-float double-float long-float)
                *read-default-float-format*))
 
@@ -53,7 +54,7 @@
 
 ; предположительно, ридер lispworks взят из SBCL
 (defun reader-eof-error (stream context)
-  (#+lispworks6 system::reader-eof-error-function stream context)
+  #+lispworks6 (system::reader-eof-error-function stream context)
   #+nil (error 'reader-eof-error
          :stream stream
          :context context))
@@ -131,6 +132,11 @@
 #+lispworks6
 (defun get-cat-entry (char tbl)
   (extended-char-table-get-value (system::readtable-attributes tbl) char))
+
+#+sbcl
+(defun get-cat-entry (char tbl)
+  (sb-impl::get-cat-entry char tbl))
+
 
 
 (defmacro test-attribute (char whichclass rt)
@@ -225,10 +231,10 @@
     (do ((char (read-char stream nil :eof) (read-char stream nil :eof)))
         ((or (eq char :eof)
              (/= (get-cat-entry char *readtable*)
-                 +char-attr-whitespace+)
+                 +char-attr-whitespace+))
          (if (eq char :eof)
              (error 'end-of-file :stream stream)
-           char))))))
+           char)))))
 
 ;;;; temporary initialization hack
 
@@ -329,6 +335,7 @@ variables to allow for nested and thread safe reading."
 ;;; as an alist, so maybe we should. -- WHN 19991202
 (defvar *sharp-equal-alist* ())
 
+#+lispworks
 (declaim (special *standard-input*))
 
 ;;; READ-PRESERVING-WHITESPACE behaves just like READ, only it makes
@@ -1397,8 +1404,9 @@ variables to allow for nested and thread safe reading."
 
 (defun read-dispatch-char (stream char)
   ;; Read some digits.
-  (system::read-dispatch-char stream char)
-  #|(let ((numargp nil)
+  #+lispworks (system::read-dispatch-char stream char)
+  #+sbcl (sb-impl::read-dispatch-char stream char)
+  #-(or lispworks sbcl) (let ((numargp nil)
         (numarg 0)
         (sub-char ()))
     (do* ((ch (read-char stream nil *eof-object*)
@@ -1420,7 +1428,7 @@ variables to allow for nested and thread safe reading."
                      (gethash sub-char (cdr dpair) #'dispatch-char-error))
                    stream sub-char (if numargp numarg nil))
           (simple-reader-error stream
-                               "no dispatch table for dispatch char"))))|#
+                               "no dispatch table for dispatch char"))))
   )
 
 ;;;; READ-FROM-STRING

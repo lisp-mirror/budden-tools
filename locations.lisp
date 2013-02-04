@@ -1,4 +1,4 @@
-﻿;;; -*- Encoding: utf-8; -*-
+;;; -*- Encoding: utf-8; -*-
 ;;; Universal location recorder
 
 #|
@@ -339,7 +339,7 @@ srcpl - symbol-readmacro. Прочитать объект и запрограм�
 (defun simplify-location-map (map)
 ;  (declare (optimize speed))
   (etypecase map
-    ((null) nil)
+    (null nil)
     (ses (simplify-ses map))
     (slo map)
     (olm (simplify-olm map))))
@@ -390,7 +390,7 @@ srcpl - symbol-readmacro. Прочитать объект и запрограм�
  
 (defun get-stream-location-map-delegate (stream &key if-not-exists)
 ;  (declare (optimize speed))
-  (etypecase stream
+  #+lispworks (etypecase stream
     (editor::editor-region-stream stream)
     (stream::file-stream stream)
     (stream::ef-file-stream stream)
@@ -415,7 +415,7 @@ srcpl - symbol-readmacro. Прочитать объект и запрограм�
 
 (defun real-point-offset (point) 
   "Дубль аналогичной функции из editor-budden-tools"
-  (+ (editor::point-offset point) (slot-value (editor::point-bigline point) 'editor::start-char)))
+  #+lispworks(+ (editor::point-offset point) (slot-value (editor::point-bigline point) 'editor::start-char)))
 
 (defvar *stream-line-count* 
   (make-weak-key-hash-table :test 'eq)

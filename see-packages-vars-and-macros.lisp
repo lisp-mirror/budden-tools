@@ -1,4 +1,4 @@
-﻿;;; -*- Encoding: utf-8; -*-
+;;; -*- Encoding: utf-8; -*-
 (in-package :budden-tools)
 (setf *readtable* (copy-readtable nil))
 

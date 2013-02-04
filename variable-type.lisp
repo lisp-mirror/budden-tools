@@ -36,13 +36,13 @@
           (cadr (assoc var variable-types))))))
    );cond
   #-(or :LISPWORKS4.4 :lispworks6)
-  (error "You lose"))
+  (when (constantp var env) (class-of var)))
 
 
 (defmacro kind-of-variable-via-augmented-environment (VAR &ENVIRONMENT ENV)
   "Из http://www.lispworks.com/documentation/lw50/CLHS/Issues/iss342_w.htm, пока не используется, не возвращает
 декларацию типа"
-  (MULTIPLE-VALUE-BIND (KIND BINDINGP DECLS)
+  #+lispworks (MULTIPLE-VALUE-BIND (KIND BINDINGP DECLS)
       (HCL:VARIABLE-INFORMATION VAR ENV)
     `(LIST ',VAR ',KIND ',BINDINGP ',DECLS)))
 
@@ -52,7 +52,7 @@
   var)
 
 (defmacro print-variable-information (var &environment env)
-  (print (hcl:variable-information var env)))
+  #+lispworks (print (hcl:variable-information var env)))
 
 
 ; (defun foo (x) (declare (integer x)) (print-variable-type-or-class x))

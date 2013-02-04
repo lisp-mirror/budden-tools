@@ -185,7 +185,7 @@
            s))
        (defun ,x-to-lisp (s)
          (declare (optimize (speed 3) (safety 0) (debug 0)))
-         (let1 dest (make-string (length s) :element-type 'lispworks:simple-char)
+         (let1 dest (make-string (length s) :element-type #+lispworks 'lispworks:simple-char #-lispworks 'base-char)
            (iter 
              (:for i from 0)
              (:for c in-string s)
