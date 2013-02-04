@@ -1,4 +1,4 @@
 ;;; -*- Encoding: utf-8; -*-
 This code is licensed accordingly to the licenses
 or the code it originates from. Originates from 
-asdf, sbcl, and CCL.
+asdf and sbcl. Otherwise it is in public domain. 

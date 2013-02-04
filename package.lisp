@@ -1,4 +1,4 @@
-﻿;;; -*- Encoding: utf-8; -*-
+;;; -*- Encoding: utf-8; -*-
 (in-package :cl-user) 
 
 
@@ -7,17 +7,6 @@
 (eval-when (:load-toplevel :compile-toplevel)
     (setf *readtable* (copy-readtable nil))
     nil)
-
-; deprecate it? вряд ли, потому что struct-to-alist
-(defpackage :defstruct-meta (:use :cl)
-  (:documentation "defstruct does not record names of accessors. defstruct*m was intended to address this, 
-but it is unfinished. Also it seem to violate GNU. So it is likely to be removed some time")
-   (:export #:defstruct*m-slot-names-and-accessors
-    #:defstruct*m
-    #:defstruct*mc
-    #:with-struct)
-   )
-
 
 (def-merge-packages::! :BUDDEN-TOOLS
   (:nicknames "budden-tools")

@@ -24,13 +24,10 @@
    (:file "def-trivial-test") ; yet another test suite
    (:file "budden-tools")   ; some useful functions
    (:file "with-conc-name") ; obsolete
-   (:file "defstruct-meta") ; obsolete
    (:file "proga")          ; portable, semi-obsolete
    (:file "proga-test") 
    (:file "iterate-extensions") ; some iterate drivers
    (:file "defun-to-file")      ; not very useful, deprecating is considered
-  ; (:file "decorate-function" ;:documentation "Smart API for substituting previously defined functions by their new versions"
-  ; )
    (:file "variable-type" ;:documentation "Compilation environment related stuff (implementation-dependent)"
    )
    (:file "pass-by-ref" ;:documentation "Pass place to a function by reference (portable)"

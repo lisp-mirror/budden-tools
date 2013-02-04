@@ -1,4 +1,4 @@
-﻿;;; -*- Encoding: utf-8; -*-
+;;; -*- Encoding: utf-8; -*-
 (in-package :budden-tools)
 
 ; (defmacro pvi (var &ENVIRONMENT env) (break) (print (list (hcl:variable-information var env) (hcl:declaration-information 'type))) `',var)
@@ -66,11 +66,7 @@
       (let1 class-name (class-name class)
         (cond
          ((typep class 'structure-class)
-          (let1 mc-metadata (defstruct-meta:defstruct*m-slot-names-and-accessors class-name :NO-ERROR t)
-            (cond 
-             (mc-metadata
-              (error "напиши меня"))
-             (t (values (str+ class-name "-") type-package)))))
+          (values (str+ class-name "-") type-package))
          ((subtypep class (find-class 'string))
           (values (str+ 'string "-") (find-package :common-lisp)))
          ((subtypep class (find-class 'character))
