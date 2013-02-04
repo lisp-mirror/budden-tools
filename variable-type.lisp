@@ -41,18 +41,25 @@
 
 (defmacro kind-of-variable-via-augmented-environment (VAR &ENVIRONMENT ENV)
   "Из http://www.lispworks.com/documentation/lw50/CLHS/Issues/iss342_w.htm, пока не используется, не возвращает
-декларацию типа"
+декларацию типа. Вроде заработало в 6.1"
   #+lispworks (MULTIPLE-VALUE-BIND (KIND BINDINGP DECLS)
       (HCL:VARIABLE-INFORMATION VAR ENV)
     `(LIST ',VAR ',KIND ',BINDINGP ',DECLS)))
+#|test 
 
+ (progn (defun foo (x) (declare (integer x)) (print (budden-tools::kind-of-variable-via-augmented-environment x)) x)
+  (compile 'foo) (foo 45))
+
+|#
 
 (defmacro print-variable-type-or-class (var &environment env)
   (print (variable-type-or-class var env))
   var)
 
 (defmacro print-variable-information (var &environment env)
-  #+lispworks (print (hcl:variable-information var env)))
+  #+lispworks (print (hcl:variable-information var env))
+  #-lispworks (warn "print-variable-information not implemented in this CL implementation")
+  )
 
 
 ; (defun foo (x) (declare (integer x)) (print-variable-type-or-class x))
