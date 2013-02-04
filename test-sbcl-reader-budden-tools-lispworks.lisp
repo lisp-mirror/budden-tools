@@ -1,9 +1,11 @@
 ;;; -*- Encoding: utf-8; -*-
 
+(eval-when (:compile-toplevel :load-toplevel :execute)
+;non-toplevel form
 (defpackage :test-sbcl-reader-budden-tools-lispworks 
   (:use :cl :budden-tools :named-readtables)
   (:shadowing-import-from :iterate-keywords #:ITER)
-  )
+  ))
 
 (in-package :test-sbcl-reader-budden-tools-lispworks)
 
@@ -138,8 +140,8 @@
 (def-rd-test conditional.1 "(#-(or common-lisp) t)")
 (def-rd-test conditional.2 "(#+foo asdf::oos #+(or common-lisp) asdf::oos)")
 
-(def-rd-test intern.1 "(def-rd-eval-test cl-user::let1)") ; intern of existing symbol
-(def-rd-ignore-error-test intern.2 "cl-user:let1") ; non-external-symbol
+(def-rd-test intern.1 "(def-rd-eval-test cl-user::cons)") ; intern of existing symbol
+(def-rd-ignore-error-test intern.2 "cl-user:&key") ; non-external-symbol
 (def-rd-ignore-error-test intern.3 "ducker:duck")  ; non-existing-package
 
 (def-trivial-test::! clash.4 ; sym is forbidden due to clash so error must occur
