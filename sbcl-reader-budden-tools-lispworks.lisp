@@ -232,10 +232,11 @@
     (do ((char (read-char stream nil :eof) (read-char stream nil :eof)))
         ((or (eq char :eof)
              (/= (get-cat-entry char *readtable*)
-                 +char-attr-whitespace+)))
-      (if (eq char :eof)
-          (error 'end-of-file :stream stream)
-        char))))
+                 +char-attr-whitespace+))
+         (if (eq char :eof)
+             (error 'end-of-file :stream stream)
+           char)))))
+
 
 ;;;; temporary initialization hack
 
