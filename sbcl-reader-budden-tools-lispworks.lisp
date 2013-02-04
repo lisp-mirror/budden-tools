@@ -24,10 +24,6 @@
 
 ;b(defvar *read-default-float-format* 'single-float)
 
-#+lispworks
-(declaim (type (member short-float single-float double-float long-float)
-               *read-default-float-format*))
-
 ;b(defvar *readtable*)
 ;b(declaim (type readtable *readtable*))
 #-no-sb-doc
@@ -55,6 +51,7 @@
 ; предположительно, ридер lispworks взят из SBCL
 (defun reader-eof-error (stream context)
   #+lispworks6 (system::reader-eof-error-function stream context)
+  #-lispworks6 (error "Unexpected eof in a stream ~S, context ~S" stream context)
   #+nil (error 'reader-eof-error
          :stream stream
          :context context))
@@ -137,6 +134,10 @@
 (defun get-cat-entry (char tbl)
   (sb-impl::get-cat-entry char tbl))
 
+#-(or sbcl lispworks6)
+(defun get-cat-entry (char tbl)
+  (declare (ignore char tbl))
+  (error "get-cat-entry is not ported to this CL implementation"))
 
 
 (defmacro test-attribute (char whichclass rt)
@@ -231,10 +232,10 @@
     (do ((char (read-char stream nil :eof) (read-char stream nil :eof)))
         ((or (eq char :eof)
              (/= (get-cat-entry char *readtable*)
-                 +char-attr-whitespace+))
-         (if (eq char :eof)
-             (error 'end-of-file :stream stream)
-           char)))))
+                 +char-attr-whitespace+)))
+      (if (eq char :eof)
+          (error 'end-of-file :stream stream)
+        char))))
 
 ;;;; temporary initialization hack
 
@@ -334,9 +335,6 @@ variables to allow for nested and thread safe reading."
 ;;; On the third hand, it might be just as easy to use a hash table
 ;;; as an alist, so maybe we should. -- WHN 19991202
 (defvar *sharp-equal-alist* ())
-
-#+lispworks
-(declaim (special *standard-input*))
 
 ;;; READ-PRESERVING-WHITESPACE behaves just like READ, only it makes
 ;;; sure to leave terminating whitespace in the stream. (This is a
@@ -1406,7 +1404,9 @@ variables to allow for nested and thread safe reading."
   ;; Read some digits.
   #+lispworks (system::read-dispatch-char stream char)
   #+sbcl (sb-impl::read-dispatch-char stream char)
-  #-(or lispworks sbcl) (let ((numargp nil)
+  #-(or lispworks sbcl) 
+  (error "read-dispatch-char not implemented")
+  #|(let ((numargp nil)
         (numarg 0)
         (sub-char ()))
     (do* ((ch (read-char stream nil *eof-object*)
@@ -1428,7 +1428,7 @@ variables to allow for nested and thread safe reading."
                      (gethash sub-char (cdr dpair) #'dispatch-char-error))
                    stream sub-char (if numargp numarg nil))
           (simple-reader-error stream
-                               "no dispatch table for dispatch char"))))
+                               "no dispatch table for dispatch char"))))|#
   )
 
 ;;;; READ-FROM-STRING
