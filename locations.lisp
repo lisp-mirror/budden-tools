@@ -390,15 +390,17 @@ srcpl - symbol-readmacro. Прочитать объект и запрограм�
  
 (defun get-stream-location-map-delegate (stream &key if-not-exists)
 ;  (declare (optimize speed))
-  #+lispworks (etypecase stream
-    (editor::editor-region-stream stream)
+   
+  (etypecase stream
+    #+lispworks (editor::editor-region-stream stream)
     (stream::file-stream stream)
-    (stream::ef-file-stream stream)
+    #+lispworks (stream::ef-file-stream stream)
     (stream 
      (ecase if-not-exists
        (:create (nth-value 0 (ensure-gethash-2 stream *slmd (gensym "LOCATION-DELEGATE"))))
        ((nil) (gethash stream *slmd))
-       ))))
+       )))
+  )
 
 (defun extract-source-filename-from-stream (stream)
   "Посмотреть в SLIME. ДУБЛИРОВАНО ГДЕ_ТО ЕЩЁ, дубль убрать"
@@ -415,7 +417,10 @@ srcpl - symbol-readmacro. Прочитать объект и запрограм�
 
 (defun real-point-offset (point) 
   "Дубль аналогичной функции из editor-budden-tools"
-  #+lispworks(+ (editor::point-offset point) (slot-value (editor::point-bigline point) 'editor::start-char)))
+  #+lispworks
+  (+ (editor::point-offset point) (slot-value (editor::point-bigline point) 'editor::start-char))
+  #-lispworks 
+  (error "Not implemented"))
 
 (defvar *stream-line-count* 
   (make-weak-key-hash-table :test 'eq)
