@@ -12,21 +12,38 @@
 (defparameter *cyrillic-characters* '(#\а #\б #\в #\г #\д #\е #\ё #\ж #\з #\и #\й #\к #\л #\м #\н #\о #\п #\р #\с #\т #\у #\ф #\х #\ц #\ч #\ш #\щ #\ъ #\ы #\ь #\э #\ю #\я #\А #\Б #\В #\Г #\Д #\Е #\Ё #\Ж #\З #\И #\Й #\К #\Л #\М #\Н #\О #\П #\Р #\С #\Т #\У #\Ф #\Х #\Ц #\Ч #\Ш #\Щ #\Ъ #\Ы #\Ь #\Э #\Ю #\Я)
 )
 
-(defparameter *reversible-cyrillic-translit-table* (make-hash-table :test 'eql))
+(defparameter *reversible-cyrillic-translit-table* (make-hash-table :test 'eql) "таблица преобразования из кириллицы в латиницу")
+(defparameter *reversible-cyrillic-translit-table-back* (make-hash-table :test 'eql) "Дерево преобразования из латиницы в кириллицу. Ключ - текущая буква разбора, значение - таблица следующего уровня, в которой лист обозначается буквой #\0")
 
-(iter 
-  (:for (from . to) :in
-   (list-to-alist 
-    (split-sequence:split-sequence-if 
-     'cl-ppcre::whitespacep
-     "а a б b в v г g д d е e ё jo ж zh з z и i й jj к k л l м m н n о o п p р r с s т t у u 
+(defun fill-reversible-cyrillic-translit-tables ()
+  (proga
+    (clrhash *reversible-cyrillic-translit-table-back*)
+    (clrhash *reversible-cyrillic-translit-table*)
+    (labels размазатьПоДереву (cyr lat-tail root)
+      (case (length lat-tail)
+        (0 (setf (gethash #\0 root) cyr))
+        (t
+         (let подДерево (ensure-gethash-2 (elt lat-tail 0) root (make-hash-table :test 'eql)))
+         (размазатьПоДереву cyr (subseq lat-tail 1) подДерево))
+        ))
+    (iter 
+      (:for (from . to) :in
+       (list-to-alist 
+        (split-sequence:split-sequence-if 
+         'cl-ppcre::whitespacep
+         "а a б b в v г g д d е e ё jo ж zh з z и i й jj к k л l м m н n о o п p р r с s т t у u 
 ф f х kh ц c ч ch ш sh щ shh ъ w ы y ь q э eh ю ju я ja 
 А A Б B В V Г G Д D Е E Ё JO Ж ZH З Z И I Й JJ К K Л L М M Н N О O П P Р R С S Т T У U 
 Ф F Х KH Ц C Ч CH Ш SH Щ SHH Ъ W Ы Y Ь Q Э EH Ю YU Я YA" :remove-empty-subseqs t)))
-  (setf (gethash (elt from 0) *reversible-cyrillic-translit-table*) to))
+      (setf (gethash (elt from 0) *reversible-cyrillic-translit-table*) to)
+      (assert (= 1 (length from)))
+      (размазатьПоДереву (elt from 0) to *reversible-cyrillic-translit-table-back*)
+      )
+    ))
+
+(fill-reversible-cyrillic-translit-tables)
 
 
-;;; FIXME сделать обратное преобразование
 (defun translit-reversibly (string-designator)
   "Берёт string-designator и возвращает транслитерированную строку"
   (declare (optimize speed))
@@ -50,6 +67,95 @@
          (setf (elt res i) out)
          (incf i)))
       (:finally (return (subseq res 0 i))))))
+
+
+(defun translit-reversibly-back (string-designator)
+  "Берёт string-designator и возвращает из транслитерированной строки обычную"
+  (declare (optimize speed))
+  (proga function 
+    (let s (typecase (the* string-designator string-designator)
+             (string string-designator)
+             (t (string string-designator))))
+    (let l (length s))
+    (let res (make-string l))
+    (let res-length 0)
+;    (declare (dynamic-extent res)) не работает. Почему? 
+    (let i 0 c #\0)
+    (labels 
+        ((ungetch ()
+           (incf i -1)
+           (setf c (elt s i))
+           )
+         (find-leaf (root) ; имеем поддерево для ранее считанной буквы c, известно, что в нём нет поддерева для текущей буквы. Либо 
+            ; нужно найти лист, либо эту букву оставляем без изменений
+           (proga
+             (let ires (gethash #\0 root))
+             (cond
+              (ires ires)
+              (t c)
+              )))
+         (parse (root) ; Имеем root, отвечающий ранее считанной букве, и последнюю букву c. i указывает на c. Должны считать остаток сочетания и вернуть в то же положение. Если recursive-читаем последовательность.
+           (identity (proga
+                    ;(show-expr `(parse ,c ,(if (eq root *reversible-cyrillic-translit-table-back*) 'all root)))
+                    (let new-root (gethash c root))
+                    (cond
+                     (new-root 
+                      (incf i)
+                      ;(show-expr `(recurse ,i ,new-root))
+                      (cond 
+                       ((= i l)
+                        (let maybe-leaf 
+                          (gethash #\0 new-root))
+                        (or maybe-leaf
+                                                    ; ранее найденная последовательность закончилась ничем
+                            c)
+                        )
+                       (t
+                        (setf c (elt s i))
+                        (parse new-root))))
+                     (t ; c не продолжает последовательность - возвращаем то, что накопилось 
+                      ;(print "c не продолжает последовательность - возвращаем то, что накопилось ")
+                      (let maybe-leaf
+                        (gethash #\0 root))
+                      (cond
+                       (maybe-leaf ; ранее найденная последовательность заканчивается листом
+                        ;(print "ранее найденная последовательность заканчивается листом")
+                        maybe-leaf)
+                       (t
+                        ; ранее найденная последовательность закончилась ничем
+                        ;(error "не ожидал '~A' в ~S, позиция ~A" c s i)
+                        (let old-c c)
+                        (incf i) ; 
+                        (unless (= i l) 
+                          (setf c (elt s i)))
+                        old-c))
+                ; ранее найденная последовательность закончилась
+                 ;(error "не ожидал '~A' в ~S, позиция ~A" c s i)
+                      ))))))
+      (proga
+        (loop
+         (when (= i l) (return-from function (subseq res 0 res-length)))
+         (setf c (elt s i))
+         (let the-char (parse *reversible-cyrillic-translit-table-back*))
+         (setf (elt res res-length) the-char)
+         (incf res-length))
+        ))))
+
+
+(def-trivial-test::! translit-rev-test
+                     (let ((str "ФЫВВМавыжЖжЩ щщ;%;ЬБЬ  ЬЫФЬУЦКШ  ГЗЦУЫВОЮБ Г ШЙЦУДЛВЫФО")
+                           r1 r2 sub)
+                       (dotimes (i (+ 1 (length str)))
+                         (dotimes (j i)
+                           (setf sub (subseq str j i))
+                           (push (translit-reversibly sub) r1)
+                           (push (translit-reversibly (translit-reversibly-back (translit-reversibly sub)))
+                                 r2)
+                           ))
+                       (list (set-difference r1 r2 :test 'string=)
+                             (set-difference r2 r1 :test 'string=)))
+                     (list nil nil))
+                           
 
 
 (let* ((numchars (/ (length *cyrillic-characters*) 2))
