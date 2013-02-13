@@ -22,46 +22,19 @@
 ;;; т.к. мы не можем назначить наш ридмакрос на #\. 
 (defun decorated-find-package (fn name)
   (budden-tools::hp-find-package (if (stringp name) (string-upcase name) name)
-                       (if (and 
-                            nil ;2012-12-19
-                            *use-decorated-package-system-fns*)
-                           (minimal-fix-xlam-package *package* :stack :find-package)
-                         *package*) fn)
-  )
+                                 *package* fn))
 
 (decorate-function 'find-package #'decorated-find-package)
 
 (defun decorated-find-symbol 
        (fn string &optional (package nil package-supplied-p))
   (cond
-   #+not-2012-12-19 (*use-decorated-package-system-fns*
-    (let1 *use-decorated-package-system-fns* nil
-      (unless package 
-        (setf package (minimal-fix-xlam-package *package*)))
-      (funcall fn string package)))
    (package-supplied-p
     (funcall fn string package))
    (t 
     (funcall fn string))))
 
 ;2012-12-19 (decorate-function 'find-symbol #'decorated-find-symbol)
-
-
-(defun minimal-fix-xlam-package (pack &key stack)
-  "Stack is passed for trace purposes only"
-  (declare (ignore stack))
-  (cerror "minimal-fix-xlam-package must not be called" ())
-  (cond
-   ((null pack) pack)
-   (*editors-real-package* *editors-real-package*)
-   ((eq pack *xlam-package*)
-    (or *real-package* *last-used-real-package* 
-        (progn 
-          (trace-into-text-file "minimal-fix-xlam-package :ouch!") 
-          nil)
-        (break)
-        *keyword-package*))
-   (t pack)))
 
 (defun symbol-is-in-package (symbol package external-only)
   "Возвращает два значения: 1. t, если данный символ доступен в данном пакете. Если external-only, то возвращает t, только если он внешний в данном пакете
@@ -98,87 +71,11 @@ NIL
 8
 |#
 
-(defun my-complete-symbol (partial-name &key predicate symbols default-package return-common-string)
-  "Нужно это написать, т.к. lw не понимает регистра и ищет только символы в верхнем регистре"
-  (proga
-    (when (or predicate symbols)
-      (break "пришли неведомые аргументы predicate,symbols"))
-    (unless default-package
-      (break "нет default-package"))
-    (unless return-common-string
-      ;(break "not return-common-string")
-      )
-    (multiple-value-bind (pckg sym-str external-only prefix-length)
-        (editor::pathetic-parse-symbol partial-name default-package))
-    (let partial-name-length (length partial-name))
-    (when prefix-length (setf partial-name sym-str))
-    (let all-chars-in-same-case-p (all-ascii-chars-in-same-case-p partial-name))
-    ; тогда ищём всё, что подходит. Но только в default-package
-    ;(break)
-    (let list
-      (iter
-        (:for sym :in-package pckg)
-        (when (may-symbol-complete-symbol sym pckg partial-name external-only all-chars-in-same-case-p)
-          (:collect sym))))
-    (cond
-     (list 
-      (values list partial-name-length (string (first list)) (symbol-package (first list))))
-     (t 
-      (values nil 0 nil nil)))
-    ))
-    
-  
-
-(defun decorated-complete-symbol 
-       (fn partial-name &key abbreviated predicate symbols default-package return-common-string)
-  (declare (ignore abbreviated))
-  (declare (ignorable predicate symbols return-common-string))
-  (setf fn 'my-complete-symbol)
-  (proga function
-    (let *use-decorated-package-system-fns* t)
-;    (let id (new-show-package-system-vars-id))
-    (when (hp-relative-package-name-p partial-name)
-      (let1 pos (position #\: partial-name :test 'char=)
-        (when pos
-          (let*
-              ((pos1 (if (and (< (1+ pos) (length partial-name))
-                              (eql (elt partial-name (1+ pos)) #\:))
-                         (+ 2 pos)
-                       (+ 1 pos)))
-               (new-default-package (budden-tools::hp-find-package (subseq partial-name 0 pos) default-package)))
-            (return-from function
-              (multiple-value-bind (symbols length some-symbol some-package)
-                  (apply 'decorated-complete-symbol               
-                         fn 
-                         (str+ (package-name new-default-package)
-                               ":"
-                               (subseq partial-name pos1))
-                         `(,@(dispatch-keyarg-simple predicate)
-                           ,@(dispatch-keyarg-simple symbols)
-                           :default-package ,new-default-package
-                           ,@(dispatch-keyarg-simple return-common-string)))
-                (ignored length)
-                (values symbols pos1 some-symbol some-package)))))))
-    (mlvl-bind (rlist rlength rstring rpackage) 
-        (let1 *editors-real-package* default-package
-          (apply fn partial-name (dispatch-keyargs-simple predicate symbols default-package return-common-string))))
-    (return-from function 
-      (values 
-       (sort rlist 'editor::symbol-string-<)
-       rlength rstring rpackage))))
-
-#-lispworks6.1 (decorate-function 'editor::complete-symbol
-                                  #'decorated-complete-symbol)
-
-
 ;(decorate-function 'editor::i-find-package-name-for-point 'decorated-i-find-package-name-for-point)
 
 
 (defun decorated-buffer-package-to-use (fn &rest args)
-  (let1 res 
-      (let* ((found-package (apply fn args)))
-        found-package ;(minimal-fix-xlam-package found-package)
-        )
+  (let1 res (apply fn args)
     (cond ; здесь задаём по умолчанию пакет budden вместо cl-user для Help и Background Output
      ((not (eq res #.(find-package :common-lisp-user))) res)
      (t
@@ -216,7 +113,7 @@ NIL
       (multiple-value-prog1 
           (funcall fn 
                    symbol 
-                   default-package ;2012-12-19 (minimal-fix-xlam-package default-package :stack :parse-symbol)
+                   default-package 
                    errorp)
        ; (print "decorated-pathetic-parse-symbol OUT")
         ))))
@@ -233,7 +130,7 @@ NIL
       (SHOW-EXPR `(symbol-string-at-point returned ,string ,package))
       (values
        string
-       package ;2012-20-19(minimal-fix-xlam-package package)
+       package 
        ))))
 
 (decorate-function 'editor::symbol-string-at-point #'decorated-symbol-string-at-point)
@@ -266,6 +163,295 @@ NIL
 (editor::defcommand "Fix Case of Symbol at Point" (p) "" ""
   (declare (ignorable p))
   (do-fix-case-of-symbol-at-point (editor:current-point)))
+
+
+#|
+(defun my-complete-symbol (partial-name &key predicate symbols default-package return-common-string) 
+  "Нужно это написать, т.к. lw не понимает регистра и ищет только символы в верхнем регистре" 
+  (proga 
+    (when (or predicate symbols) 
+      (break "пришли неведомые аргументы predicate,symbols")) 
+    (unless default-package 
+      (break "нет default-package")) 
+    (unless return-common-string 
+      ;(break "not return-common-string") 
+      ) 
+    (multiple-value-bind (pckg sym-str external-only prefix-length) 
+        (editor::pathetic-parse-symbol partial-name default-package)) 
+    (let partial-name-length (length partial-name)) 
+    (when prefix-length (setf partial-name sym-str)) 
+    (let all-chars-in-same-case-p (all-ascii-chars-in-same-case-p partial-name)) 
+    ; тогда ищём всё, что подходит. Но только в default-package 
+    ;(break) 
+    (let list 
+      (iter 
+        (:for sym :in-package pckg) 
+        (when (may-symbol-complete-symbol sym pckg partial-name external-only all-chars-in-same-case-p) 
+          (:collect sym)))) 
+    (cond 
+     (list  
+      (values list partial-name-length (string (first list)) (symbol-package (first list)))) 
+     (t  
+      (values nil 0 nil nil))) 
+    )) 
+     
+   
+ 
+(defun decorated-complete-symbol  
+       (fn partial-name &key abbreviated predicate symbols default-package return-common-string) 
+  (declare (ignore abbreviated)) 
+  (declare (ignorable predicate symbols return-common-string)) 
+  (setf fn 'my-complete-symbol) 
+  (proga function 
+    (let *use-decorated-package-system-fns* t) 
+;    (let id (new-show-package-system-vars-id)) 
+    (when (hp-relative-package-name-p partial-name) 
+      (let1 pos (position #\: partial-name :test 'char=) 
+        (when pos 
+          (let* 
+              ((pos1 (if (and (< (1+ pos) (length partial-name)) 
+                              (eql (elt partial-name (1+ pos)) #\:)) 
+                         (+ 2 pos) 
+                       (+ 1 pos))) 
+               (new-default-package (budden-tools::hp-find-package (subseq partial-name 0 pos) default-package))) 
+            (return-from function 
+              (multiple-value-bind (symbols length some-symbol some-package) 
+                  (apply 'decorated-complete-symbol                
+                         fn  
+                         (str+ (package-name new-default-package) 
+                               ":" 
+                               (subseq partial-name pos1)) 
+                         `(,@(dispatch-keyarg-simple predicate) 
+                           ,@(dispatch-keyarg-simple symbols) 
+                           :default-package ,new-default-package 
+                           ,@(dispatch-keyarg-simple return-common-string))) 
+                (ignored length) 
+                (values symbols pos1 some-symbol some-package))))))) 
+    (mlvl-bind (rlist rlength rstring rpackage)  
+        (let1 *editors-real-package* default-package 
+          (apply fn partial-name (dispatch-keyargs-simple predicate symbols default-package return-common-string)))) 
+    (return-from function  
+      (values  
+       (sort rlist 'editor::symbol-string-<) 
+       rlength rstring rpackage))))
+|#
+
+(defun do-complete-symbol-with-budden-tools (str)
+  "Функция, позволяющая сделать завершение символа.
+Str - входная строка, для которой необходимо завершение.
+
+На выходе строка с завершенным символом или nil, если пользователь
+отказался от выбора (в случае неоднозначности).
+
+Функция учитывает наличие local-nickname пакетов.
+
+Таким образом, на вход может подаваться следующая информация:
+
+1) Часть имени без указания пакета: symb
+2) Часть имени внешнего символа, с указанием префикса пакета: package:symb
+3) Часть имени внутреннего символа с указанием префикса пакета: package::symb
+4,5) Повтор пп. 2 и 3, где в качестве префикса указывается local-nickname пакет.
+6) Пакет указан, но в имени пакета есть ошибка, т.е. нельзя найти пакет по префиксу.
+   Действуем по п.1, исключив префикс.
+"  
+  (let* ((partial-name str)
+         ;; Позиция первого двоеточия
+         (colon-pos (position #\: 
+                              partial-name))
+         ;; Позиция второго двоеточия
+         (2colon-pos (when colon-pos
+                       (position #\: 
+                                 partial-name 
+                                 :start (1+ colon-pos))))
+         ;; Текст до двоеточий, может отсутствовать
+         (prefix (and colon-pos 
+                      (> colon-pos 0)
+                      (subseq partial-name 0 colon-pos)))
+
+         (casified-prefix (and prefix
+                               (string (read-from-string (concatenate 'string "#:" prefix)))))
+
+         ;; Текст после двоеточий, может отсутствовать
+         (suffix (if colon-pos
+                     (subseq partial-name 
+                             (1+ 
+                              (max (if (null colon-pos)
+                                       0 colon-pos)
+                                   (if (null 2colon-pos)
+                                       0 2colon-pos))))
+                   partial-name))
+
+         ;; Завершаемый символ внутренний?
+         (external? (and colon-pos (not 2colon-pos)))
+
+         ;; Пакет, в котором находится редактор (есть всегда)
+         (editor-package (editor::buffer-package-to-use
+                          (editor::current-point)))
+
+         ;; Имя пакета, в котором находится редактор (есть всегда)
+         ;(editor-package-name (when editor-package
+         ;                       (package-name editor-package)))
+
+         ;; Пакет, полученный из префикса
+         (found-package (cond
+                         (casified-prefix
+                          (or 
+                           (budden-tools:hp-find-package casified-prefix editor-package)
+                           (error "Package or local-nickname ~S not found" casified-prefix)))
+                         ((and
+                           (null casified-prefix)
+                           (eql colon-pos 0)
+                           (not 2colon-pos))
+                          *keyword-package*)))
+
+         ;; Имя пакета из префикса, если удалось найти.
+         (found-package-name (when found-package
+                               (package-name found-package)))
+
+         ;; Пакет является 
+         (fake-package? (and found-package-name 
+                             prefix
+                             (not (string-equal 
+                                   found-package-name 
+                                   prefix))))
+         (camel-case-suffix?
+          (not (def-merge-packages::all-ascii-chars-in-same-case-p suffix))))
+
+    (let ((raw-list ())
+          (list-of-completes ())
+          (show-list ())
+          (ext (if found-package external? nil))
+          (pkg (if found-package 
+                   found-package 
+                 editor-package)))
+
+      (setf raw-list
+            (remove-duplicates 
+             (append
+              
+              (iter
+                (:for sym 
+                 :in-package pkg
+                 :external-only t)
+                (:collect 
+                 (let* ((name (subseq (prin1-to-string (make-symbol (symbol-name sym))) 2))
+                        (pkg (symbol-package sym)))
+                   (list name (package-name pkg) :external sym))))
+              (if (not ext)
+                  (iter
+                    (:for sym 
+                     :in-package pkg
+                     :external-only nil)
+                    (:collect 
+                     (let* ((name (subseq (prin1-to-string (make-symbol (symbol-name sym))) 2))
+                            (pkg (symbol-package sym)))
+                       (list name (package-name pkg) :internal sym)))))) 
+             :from-end t :key #'first :test #'string-equal))
+
+      (labels ((casify-name (nm) 
+                            ; если пользователь набрал имя в верхнем регистре, а имя может быть прочитано в обоих, 
+                            ; приводим продолженный символ к верхнему регистру
+                 (if 
+                     (and suffix
+                          (eq (all-ascii-chars-in-same-case-p suffix) :uppercase)
+                          (all-ascii-chars-in-same-case-p nm)
+                          (not (find #\| nm :test 'char=))
+                          (not (find #\\ nm :test 'char=))
+                          (member (readtable-case-advanced *readtable*) '(:upcase :upcase-if-uniform)))
+                     (string-upcase-ascii nm)
+                   nm))
+               (do-format-item (x rem-prefix home-package)
+                 (let* ((name (first x)) ; имя для печати
+                        (p-name (second x))
+                        (status (third x))
+                        (symbol (fourth x))
+                        (colons "")
+                        (package-name "")
+                        (do-delete-prefix
+                         (cond
+                          ((null prefix)
+                           t)
+                          ((eq rem-prefix :prompt)
+                           (yes-or-no-p "Символ доступен в текущем пакете. Убрать префикс?"))
+                          (t rem-prefix))))
+                
+                   (setf package-name
+                         (if (and (string-equal p-name 
+                                                found-package-name)
+                                  fake-package?)
+                             prefix
+                           p-name))
+                   (setf colons
+                         (if (and (string-equal p-name 
+                                                found-package-name)
+                                  (eq :internal status))
+                             "::"
+                         
+                           ":"))
+                   (format nil "~A~A~A" 
+                           (if do-delete-prefix "" (if home-package (if fake-package? prefix home-package) package-name))
+                           (cond
+                            ((eq (symbol-package symbol) *keyword-package*)
+                             ":")
+                            (do-delete-prefix "")
+                            (home-package (if (eq status :internal) "::" ":"))
+                            (t colons))
+                           (casify-name name))))
+               (format-item (x)
+                 (do-format-item x nil nil)))
+
+        (setf list-of-completes
+              (sort
+               (remove-if #'null
+                          (mapcar #'(lambda (x)
+                                      (if (alexandria:starts-with-subseq 
+                                           suffix
+                                           (first x)
+                                           :test (if camel-case-suffix?
+                                                     #'char= 
+                                                   #'char-equal))
+                                          x nil))
+                                  raw-list))
+               #'string-lessp :key #'first))
+
+        (setf show-list 
+              (mapcar #'format-item list-of-completes))
+          
+        (let* ((s (if (= 1 (length show-list)) 
+                      (first show-list) 
+                    (editor::call-scrollable-menu show-list nil)))
+               (pos (position s show-list :test #'string-equal))
+               (delete-prefix? nil)
+               (src (when pos (nth pos list-of-completes)))
+               ;(name (first src)) ; имя для печати
+               ;(p-name (second src))
+               ;(status (third src))
+               (symbol (fourth src))
+              )
+          (when (and
+                 ;; указан префикс
+                 prefix 
+                 ;; символ доступен в текущем пакете 
+                 (symbol-is-in-package symbol editor-package nil)
+                 )
+            (setf delete-prefix? :prompt))
+          (when src
+            (do-format-item src delete-prefix? found-package-name)))))))
+
+
+(editor::defcommand "Complete Symbol With Budden Tools"
+     (p) "Complete Symbol With Local Package Nicknames and advanced readtable-case"
+         "Complete Symbol With Local Package Nicknames and advanced readtable-case"
+  (declare (ignorable p))
+  ;; получаем исходный текст, который нужно завершить
+  (let* ((str (editor::symbol-string-at-point (editor:current-point)))
+         (str-len (length str))
+         (res (do-complete-symbol-with-budden-tools str)))
+    (when res
+      (editor:delete-previous-character-command str-len)
+      (editor:insert-string (editor:current-point) res))))
+
+
 
 
 #|(defun decorated-intern-symbol-from-string (fn string default-package)
@@ -338,7 +524,7 @@ NIL
   (lambda (symbol) (print-symbol-string-with-advanced-readtable-case (string symbol) :package package)))
 
 
-(defun decorated-complete-symbol-1 (fn string &key 
+#|(defun decorated-complete-symbol-1 (fn string &key 
                                        (package nil package-supplied-p)
                                        (print-function nil print-function-supplied-p)
                                        (predicate nil predicate-supplied-p)
@@ -369,19 +555,9 @@ NIL
   )
     
 
-(decorate-function 'editor::complete-symbol-1 #'decorated-complete-symbol-1)
+(decorate-function 'editor::complete-symbol-1 #'decorated-complete-symbol-1)|#
 
 (defvar *in-complete-symbol-command* nil)
-(defun decorated-do-complete-symbol (fn p abbreviated)
-  (proga
-    (let *in-complete-symbol-command* t)
-    (funcall fn p abbreviated)
-    (do-fix-case-of-symbol-at-point (editor::current-point))
-    ))
-  
-;(editor::bind-key "Fix Case of Symbol at Point" "f12")
-
-#-lispworks6.1 (decorate-function 'editor::DO-COMPLETE-SYMBOL 'DECORATED-DO-COMPLETE-SYMBOL)
 
 ;(decorate-function 'editor:complete-symbol-command #'decorated-complete-symbol-command)
 ;(decorate-function 'editor::indent-or-complete-symbol-command #'decorated-complete-symbol-command)
@@ -397,6 +573,7 @@ NIL
     (apply fn string keyargs)))
 
 (decorate-function 'string-capitalize #'decorated-string-capitalize)
+
 
 ; (undecorate-function 'editor::complete-symbol-1) 
 
