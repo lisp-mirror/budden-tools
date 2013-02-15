@@ -327,17 +327,19 @@ Str - входная строка, для которой необходимо з
 
       (setf raw-list
             (remove-duplicates 
-             (append
-              
+            ; (identity ; append
               (iter
                 (:for sym 
                  :in-package pkg
-                 :external-only t)
+                 :external-only nil)
+                (:for storage = (nth-value 1 (find-symbol (string sym) pkg)))
+                (when (and ext (not (eq storage :external)))
+                  (:next-iteration))
+                (:for name = (subseq (prin1-to-string (make-symbol (symbol-name sym))) 2))
+                (:for pkg2 = (symbol-package sym))
                 (:collect 
-                 (let* ((name (subseq (prin1-to-string (make-symbol (symbol-name sym))) 2))
-                        (pkg (symbol-package sym)))
-                   (list name (package-name pkg) :external sym))))
-              (if (not ext)
+                   (list name (package-name pkg2) storage sym)))
+              #|(if (not ext)
                   (iter
                     (:for sym 
                      :in-package pkg
@@ -345,8 +347,9 @@ Str - входная строка, для которой необходимо з
                     (:collect 
                      (let* ((name (subseq (prin1-to-string (make-symbol (symbol-name sym))) 2))
                             (pkg (symbol-package sym)))
-                       (list name (package-name pkg) :internal sym)))))) 
-             :from-end t :key #'first :test #'string-equal))
+                       (list name (package-name pkg) :internal sym)))))|# 
+             :from-end t :key #'first :test #'string=))
+              
 
       (labels ((casify-name (nm) 
                             ; если пользователь набрал имя в верхнем регистре, а имя может быть прочитано в обоих, 
@@ -420,7 +423,7 @@ Str - входная строка, для которой необходимо з
         (let* ((s (if (= 1 (length show-list)) 
                       (first show-list) 
                     (editor::call-scrollable-menu show-list nil)))
-               (pos (position s show-list :test #'string-equal))
+               (pos (position s show-list :test #'string=))
                (delete-prefix? nil)
                (src (when pos (nth pos list-of-completes)))
                ;(name (first src)) ; имя для печати
