@@ -1,12 +1,25 @@
 ;;; -*- Encoding: utf-8; -*-
 ;;; infrastructure for making lispworks stepper macro friendly
 #|
+Written by Denis Budyak, 
+Email: (map 'string 'code-char '(98
+ 117 100 100 101 110 55 51 64 103 109 97 105 108 46 99 111 109))
+
+The code is in public domain.
+
 General idea is to reuse conses from original source at the places
 where breakpoint can be set in macroexpanded code.
 
 This practice is dangerous, as it is likely to change literal data. 
 So we "smash" only when we are in lispworks-tools::stepize function, which
 state we identify via advicing. 
+
+As an example, patch to iterate is included, see last form and
+separate lw-macro-friendly-stepper-iterate-patch.lisp
+With that patch you hopefully can set breakpoints at the head 
+of for and collect clauses. 
+
+State of the code is pre-alpha. Feedback is greatly appreciated.
 |#
 (eval-when (:compile-toplevel :load-toplevel :execute)
   (defpackage :lw-macro-friendly-stepper
