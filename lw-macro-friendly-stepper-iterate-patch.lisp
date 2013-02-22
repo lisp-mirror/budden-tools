@@ -32,7 +32,8 @@
         (when
             (and lw-macro-friendly-stepper:*in-stepize*
                  (consp (first expanded)))
-          (lw-macro-friendly-stepper:put-source-cons-at *clause* expanded first))
+          (lw-macro-friendly-stepper:put-source-cons-at-macroexpansion-result
+           *clause* expanded first))
         (values-list result)))
   
    

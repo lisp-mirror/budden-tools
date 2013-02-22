@@ -33,4 +33,7 @@
    (:file "pass-by-ref" ;:documentation "Pass place to a function by reference (portable)"
    )
    (:file "print-hash-table" ;:documentation "Print hashtable readably "
-))) 
+)
+   #+lispworks6.1
+   (:file "lw-macro-friendly-stepper")
+   )) 
