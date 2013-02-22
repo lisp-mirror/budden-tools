@@ -5,7 +5,7 @@ General idea is to reuse conses from original source at the places
 where breakpoint can be set in macroexpanded code.
 
 This practice is dangerous, as it is likely to change literal data. 
-So we "smash" only when we are in lispworks:stepize function, which
+So we "smash" only when we are in lispworks-tools::stepize function, which
 state we identify via advicing. 
 |#
 (eval-when (:compile-toplevel :load-toplevel :execute)
@@ -67,7 +67,7 @@ state we identify via advicing.
 			  (t (funcall fun x)))) tree))
 
 (defun extract-stepper-context-from-fn (fn)
-  "Extract stepper context from interpreted function (unused)"
+  "UNUSED. Extract stepper context from interpreted function"
   (maptree
    (lambda (x)
      (when (lispworks-tools::stepper-context-p x)
