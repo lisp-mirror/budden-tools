@@ -24,6 +24,8 @@
    (:file "def-trivial-test") ; yet another test suite
    (:file "budden-tools")   ; some useful functions
    (:file "with-conc-name") ; obsolete
+   #+lispworks6.1
+   (:file "lw-macro-friendly-stepper") ; put breakpoints in macros without macroexpansion
    (:file "proga")          ; portable, semi-obsolete
    (:file "proga-test") 
    (:file "iterate-extensions") ; some iterate drivers
@@ -34,6 +36,4 @@
    )
    (:file "print-hash-table" ;:documentation "Print hashtable readably "
 )
-   #+lispworks6.1
-   (:file "lw-macro-friendly-stepper")
    )) 
