@@ -52,7 +52,8 @@
                          
 
 (defun ! (&rest args) "One more shortcut for (asdf:oos 'asdf:load-op ,@args)"
-       (apply 'oos 'load-op args))
+       (apply 'oos 'load-op args)
+       (values))
 
 (defun load-package-file (system &key (component-name "package")) 
   "Loads only one component of a system as a source. Intention is a load ahead package.lisp 
