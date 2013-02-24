@@ -27,6 +27,7 @@ State of the code is pre-alpha. Feedback is greatly appreciated.
               (:export
                #:put-source-cons-at-macroexpansion-result
                #:*in-stepize*
+               #:smash-cons
                )))
 
 (in-package :lw-macro-friendly-stepper)
@@ -36,7 +37,7 @@ State of the code is pre-alpha. Feedback is greatly appreciated.
   (setf (car literal) (car expanded)
         (cdr literal) (cdr expanded)))
 
-(defmacro put-source-cons-at-macroexpansion-result (literal expanded accessor)
+(defmacro put-source-cons-at-macroexpansion-result (literal expanded &optional accessor)
   #-russian
   "Anti-hygienic macro to smash literal data. 
   literal - name of variable in environment, which contains literal cons from original source
@@ -56,12 +57,15 @@ State of the code is pre-alpha. Feedback is greatly appreciated.
   (assert (symbolp literal))
   (assert (symbolp expanded))
   (assert (symbolp accessor))
-  `(progn
-     (when *in-stepize*
-       (smash-cons ,literal (,accessor ,expanded))
-       (setf (,accessor ,expanded) ,literal)
-       )
-     ))
+  (let ((target
+         (if accessor `(,accessor ,expanded)
+           expanded)))
+    `(progn
+       (when *in-stepize*
+         (smash-cons ,literal ,target)
+         (setf ,target ,literal)
+         )))
+  )
 
 (defun my-wombat (x)
   "Steal wombat-2 (for debugging)"
