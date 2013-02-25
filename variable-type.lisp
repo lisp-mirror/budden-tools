@@ -206,6 +206,7 @@
   `(carat-implementation ,object ,field-name ,@args))
       
 (defmacro with-the1 (var type object &body body)
+  "= lett" 
   `(let ((,var (the* ,type ,object)))
      (declare (type ,type ,var))
      ,@body))
@@ -213,6 +214,8 @@
 (setf (get 'with-the1 'proga-implementation::proga-transformer) 
       'proga-implementation::open-up-if-4
       )
+; see (def-perga-clause :lett) in perga.lisp
+
      
 
 (defmacro with-freezed-env (&environment env &body body) 
