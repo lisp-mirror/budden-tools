@@ -43,15 +43,15 @@ State of the code is pre-alpha. Feedback is greatly appreciated.
   literal - name of variable in environment, which contains literal cons from original source
   expanded - name of variable in environment which contains result of macroexpansion or some part of that.
   accessor - symbol. Accessor to the place in macroexpanded code where breakpoint can be set.
-  Acts only when *in-stepize* is true.
+  Acts only when *in-stepize* is t, see advice on lispworks-tools::stepize
   Literal cons is filled with car and cdr of (accessor expanded) and is put into macroexpanded code at the place (accessor expanded) 
   "
   #+russian "
   Анти-гигиеничный макрос для уничтожения literal data.
-  Действует только когда *in-stepize* - истина
   literal - имя переменной, содержащей cons из исходника, на кром хотим поставить брекпойнт.
   expanded - имя переменной, содержащей результат макрорасширения или его часть
   accessor - место в макрорасширеннном коде, где можно поставить точку останова.
+  Действует только, если *in-stepize*, см. advice на lispworks-tools::stepize
   Cons из literal заполняется данными (car и cdr) из (accessor expanded) и помещается в макрорасширенный код на место (accessor expanded). После этого, на literal можно поставить точку останова.
    "
   (assert (symbolp literal))
@@ -60,7 +60,7 @@ State of the code is pre-alpha. Feedback is greatly appreciated.
   (let ((target
          (if accessor `(,accessor ,expanded)
            expanded)))
-    `(progn
+    `(progn    
        (when *in-stepize*
          (smash-cons ,literal ,target)
          (setf ,target ,literal)
