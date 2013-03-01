@@ -331,8 +331,8 @@
                  (destructuring-bind (cc-test . cc-exprs)
                      cond-clause
                    `(,cc-test ,@(perga-body-expander cc-exprs))))
-               tail)
-            ,@(perga-body-expander forms-after-clause)))))
+               tail))
+            ,@(perga-body-expander forms-after-clause))))
     (put-source-cons-at-macroexpansion-result clause result car)
     (values
      result

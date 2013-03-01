@@ -135,6 +135,12 @@
          '(cond (q (let ((a 6))))
                 (t (let ((b 7)) b))))
 
+(def-p-t perga.18.cond.2
+         '(perga (when a (cond (b 1) (t 2))
+                   d))
+         '(when a (cond (b 1) (t 2))
+            d))
+
 ; не работает, т.к. расширение содержит gensym-ы
 ;(def-p-t perga.18.case
 ;         '(perga (case 4 (1 (let a 6)) (t (let b 7) b)))
