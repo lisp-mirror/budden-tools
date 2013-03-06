@@ -206,7 +206,7 @@
   `(carat-implementation ,object ,field-name ,@args))
       
 (defmacro with-the1 (var type object &body body)
-  "= lett" 
+  "Combines type declaration, type check and binding. See also :lett perga clause" 
   `(let ((,var (the* ,type ,object)))
      (declare (type ,type ,var))
      ,@body))

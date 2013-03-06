@@ -425,7 +425,7 @@ not found (unless :key is specified, which is a error) and returns value"
   `(symbol-macrolet ,@args))
 
 (defmacro the* (typespec value)
-  "Asserts type and returns value. If type do not match, errs"
+  "Combines check-type and the"
   (once-only (value)
     `(progn
        (assert (typep ,value ',typespec))
