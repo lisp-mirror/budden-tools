@@ -73,6 +73,7 @@
 
 ;; structures
    budden-tools:struct-to-alist ; lispworks only for now
+   budden-tools:mandatory-slot  ; initarg for defstruct slots which must be initialized explicitly
 
 ;; strings and symbols
    def-merge-packages:char-upcase-ascii

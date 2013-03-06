@@ -124,7 +124,10 @@
                 `((:type . ,(type-of s))
                    ,@(loop for x in names for y in values collect `(,x . ,y))))
   #-lispworks (error "struct-to-alist not defined for this lisp version")
-  ) 
+  )
+
+(defun mandatory-slot (slot-name)
+  (error "mandatory slot ~S in defstruct is not initialized" slot-name)) 
 
 (defun copy-tree-of-structures (tree)
   ;(declare (optimize (speed 3) (safety 0) (debug 0)))
