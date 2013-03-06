@@ -16,7 +16,6 @@
   Вместо этого пользоваться :@, :&
 3. вместо labels - :lables, т.к. может быть несколько выражений. 
 4. вместо with-the1  - :lett
-5. block не обрабатывается
 
 
 |#
@@ -240,6 +239,15 @@
 (def-perga-clause macrolet
                   #'(lambda (body clause head tail forms-after-clause)
                       (flet-perga-transformer-inner body clause head tail forms-after-clause :allow-one-only t)))
+
+(def-perga-clause block
+                  #'(lambda (body clause head tail forms-after-clause)
+                      (declare (ignore body))
+                      (let ((result `((,head ,(car tail) ,@(perga-body-expander (cdr tail))) ,@(perga-body-expander forms-after-clause))))
+                        (put-source-cons-at-macroexpansion-result clause result car)
+                        (values
+                         result
+                         t))))
 
 ;(def-perga-clause block
 ;                  #'(lambda (&rest args)
@@ -485,4 +493,6 @@ forms-after-clause - уже обработанные формы после claus
                        body clause
                        'budden-tools:with-the1
                        tail forms-after-clause))) 
+
+
 
