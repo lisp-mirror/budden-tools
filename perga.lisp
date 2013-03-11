@@ -489,6 +489,7 @@ forms-after-clause - уже обработанные формы после claus
                                   head
                                   tail forms-after-clause)
                       (declare (ignore head))
+                      (assert (= (length clause) 4) () ":lett perga clause ~S should have contained exactly four items" clause)
                       (open-up-if-4
                        body clause
                        'budden-tools:with-the1
