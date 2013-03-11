@@ -2,14 +2,20 @@
 (in-package :budden-tools)
 
 (defstruct reference-box "Box to pass place to a function by reference"
-  getter setter)
+  v ; for debugging only 
+  getter
+  setter)
 
 (defmacro byref (place &environment environment)
   "Pass place to a function as a parameter. E.g. (my-modifier (byref var)). Callee must use with-byref-params"
-  (with-gensyms (new-value)
+  (with-gensyms (box new-value)
     (assert (not (constantp place environment)))
-    `(make-reference-box :getter (lambda () ,place)
-                         :setter (lambda (,new-value) (setf ,place ,new-value)))
+    `(let ((,box (make-reference-box :v ,place
+                                     :getter (lambda () ,place))))
+       (setf (reference-box-setter ,box)
+             (lambda (,new-value) (setf ,place ,new-value
+                                        (reference-box-v ,box) ,new-value)))
+       ,box)
     ))
 
 (defmacro with-byref-params (symbols &body body)
