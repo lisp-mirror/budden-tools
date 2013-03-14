@@ -24,12 +24,12 @@
 #+lispworks 
 (dspec:define-form-parser def-perga-clause (name &rest args)
   (declare (ignore def-perga-clause args))
-  `(def-perga-clause ,name))
+  name)
 
 (defun def-perga-clause-fun (symbol transformer &optional location)
   #-lispworks (declare (ignore location))
   (setf (get symbol 'perga-transformer) transformer)
-  #+lispworks (lispworks:record-definition symbol location)
+  #+lispworks (when location (lispworks:record-definition symbol location))
   )
 
 (defmacro def-perga-clause (symbol transformer)
@@ -48,7 +48,7 @@
    Consider some standard transformers: open-up-if-3, open-up-if-4, wind-up-tail-if-3,
    wind-up-tail-if-second-is-atom, open-up"
   #+lispworks
-   `(dspec:def (def-perga-clause ,symbol)
+   `(dspec:def ,symbol
       (def-perga-clause-fun ',symbol ,transformer (dspec:location))
       )
    #-lispworks
