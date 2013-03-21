@@ -427,20 +427,20 @@ not found (unless :key is specified, which is a error) and returns value"
   "Another name for symbol-macrolet"
   `(symbol-macrolet ,@args))
 
-(defmacro the* (typespec value)
+#|(defmacro the* (typespec value)
   "Combines check-type and the"
   (let ((the-symbol (gensym (format nil "~A" value))))
     `(let ((,the-symbol ,value))
        (assert (typep ,the-symbol ',typespec))
-       (the ,typespec ,the-symbol))))
+       (the ,typespec ,the-symbol))))|#
         
 
-#|(defmacro the* (typespec value)
+(defmacro the* (typespec value)
   "Combines check-type and the"
   (once-only (value)
     `(progn
        (assert (typep ,value ',typespec))
-       (the ,typespec ,value))))|#
+       (the ,typespec ,value))))
 
 (defun tree-weight (tree) #+russian "Общее количество консов в дереве"
   #-russian "number of conses in a tree (or smth like this :)"

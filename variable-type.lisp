@@ -205,11 +205,24 @@
   "See also ^-READER"
   `(carat-implementation ,object ,field-name ,@args))
       
-(defmacro with-the1 (var type object &body body)
+#|(defmacro with-the1 (var type object &body body)
   "Combines type declaration, type check and binding. See also :lett perga clause" 
   `(let ((,var (the* ,type ,object)))
      (declare (type ,type ,var))
-     ,@body))
+     ,@body))|#
+
+
+(defmacro with-the1 (var type object &body body)
+  "Combines type declaration, type check and binding. See also :lett perga clause" 
+  (let ((the-symbol (gensym (format nil "~A" var))))
+
+  `(let ((,var
+          (let ((,the-symbol ,object)) ; expanded `(the* ,type ,object)
+            (assert (typep ,the-symbol ',type))
+            (the ,type ,the-symbol))))
+     (declare (type ,type ,var))
+     ,@body)))
+
 
 (setf (get 'with-the1 'proga-implementation::proga-transformer) 
       'proga-implementation::open-up-if-4
