@@ -109,6 +109,7 @@
    budden-tools:pllet1 ; 'bind' place
    budden-tools:smlet ; another name for symbol-macrolet
    budden-tools:defun-to-file ; to see source of your generated function. TODO: package name->file name, gensyms vs `,
+   defparameter-always ; defparameter at load-toplevel,compile-toplevel,execute
    budden-tools:eval-with-file ; write code to file, compile it and load
    budden-tools:not-null ; type (not null)
    budden-tools:the* ; errs if type ain't match. Otherwise, returns a thing

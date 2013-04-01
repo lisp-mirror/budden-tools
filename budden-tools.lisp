@@ -569,3 +569,8 @@ modifying form, e.g. @code{(_f + a b) @equiv{} (incf a b)}."
 
 
 
+(dspec:define-dspec-alias defparameter-always (x) `(defparameter ,x))
+
+(defmacro defparameter-always (name initial-value &optional (documentation nil docp))
+  `(eval-when (:compile-toplevel :load-toplevel :execute)
+     (defparameter ,name ,initial-value ,@(when docp `(,documentation)))))
