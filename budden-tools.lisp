@@ -231,11 +231,8 @@
                (:collecting `(pass-keyarg ,keyarg)))))
 
 
-(defun path-to-a-file (filename) "d:/foo/file.ext --> d:/foo/" 
-  (let ((p (pathname filename)))
-    (make-pathname 
-     :host (pathname-host p) 
-     :directory (pathname-directory p))))
+(defun path-to-a-file (filename) "d:/foo/file.ext --> d:/foo/"
+  (make-pathname :defaults (patname filename) :name nil :type nil))
 
 (defun quit-lisp ()
   (let ((quit-symbol (or (find-symbol "QUIT" "CL-USER")
