@@ -8,7 +8,7 @@
   :serial t
   ;:documentation "Some utilities by Budden, public domain"
   :depends-on 
-  (:alexandria :split-sequence :cl-utilities :named-readtables
+  (:alexandria :cl-fad :split-sequence :cl-utilities :named-readtables
    :buddens-readtable :cl-ppcre		
    :iterate-keywords :swank :decorate-function)
   :components ( 

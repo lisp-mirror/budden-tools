@@ -17,6 +17,7 @@
   (:import-from :split-sequence #:split-sequence)
   (:import-from :swank #:*readtable-alist*)
   (:import-from :swank-backend #:pathname-to-filename #:filename-to-pathname #:make-weak-key-hash-table #:make-weak-value-hash-table)
+  (:import-from :cl-fad #:pathname-as-directory)
 ;  (:import-from :merge-packages-and-reexport #:collect-duplicates-into-sublists)
   (:export
    "

@@ -2,7 +2,11 @@
 (in-package :budden-tools)
 (in-readtable :buddens-readtable)
 
-(defparameter *defun-to-file-directory* #+win32 (str+ cl-user::*lisp-root* "sw/defun-to-file") #-win32 "/home/denis/sw/defun-to-file")
+(defparameter *defun-to-file-directory* #+win32 (pathname-as-directory (merge-pathnames
+                                                                        (pathname-as-directory *default-pathname-defaults*)
+                                                                        "defun-to-file"))
+  #-win32 (error "Not defined *defun-to-file-directory* variable for not win32 systems")
+  )
 
 (defun maybe-add-slash (string)
   #+russian "Добавляет / в конец имени папки, если его там ещё нет"
