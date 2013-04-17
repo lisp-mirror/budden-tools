@@ -22,7 +22,7 @@
 печатаются (что, в общем-то сводит всю идею на нет). Возвращает два значения - имя функции и имя файла"
   (proga 
     (assert (every #L(not (find !1 "\\/.?* ")) (string name)))
-    (let filename (str+ (maybe-add-slash *defun-to-file-directory*) name))
+    (let filename (str+ (namestring *defun-to-file-directory*) name))
     (proga
       (with-open-file out (str+ filename ".lisp") :direction :output
         :if-does-not-exist :create :if-exists :supersede)
