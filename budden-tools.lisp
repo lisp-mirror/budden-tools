@@ -148,7 +148,15 @@
      (t tree))))
                     
           
-(defun str+ (&rest args) (apply 'concatenate 'string (mapcar 'princ-to-string args))) (export 'str+)
+(defun str+ (&rest args)
+  (apply 'concatenate 'string
+         (mapcar (lambda (arg)
+                   (typecase arg
+                     (pathname (namestring arg))
+                     (t (string arg))))
+                 args)))
+(export 'str+)
+
 (defun str++ (&rest args) (format nil "~{~A~}" args)) (export 'str++) :budden-tools
 
 (defun non-empty-string-p (x) 
