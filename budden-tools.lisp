@@ -148,8 +148,8 @@
      (t tree))))
                     
           
-(defun str+ (&rest args) (apply 'concatenate 'string (mapcar 'string args))) (export 'str+)
-(defun str++ (&rest args) (format nil "~{~A~}" args)) (export 'str++) :budden-tools
+(defun str+ (&rest args) (apply 'concatenate 'string (mapcar 'string args))) 
+(defun str++ (&rest args) (format nil "~{~A~}" args)) 
 
 (defun non-empty-string-p (x) 
   #+russian "Возвращает x, если x - не nil и не пустая строка"
