@@ -47,8 +47,8 @@
   (declare (ignore body))
   (let* ((result
           `(,head ,tail ,.(perga-body-expander forms-after-clause))))
-    (smash-cons clause result)
-    (list clause)
+    (put-source-cons-at-macroexpansion-result clause result)
+    (list result)
     ))
 
 (defun open-up
