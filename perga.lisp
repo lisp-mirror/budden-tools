@@ -314,7 +314,7 @@
                                    forms-after-clause)
   (declare (ignore body ))
   (let ((result `((,head ,@(perga-body-expander tail))
-     ,@(perga-body-expander forms-after-clause)
+                  ,@(perga-body-expander forms-after-clause)
      )))
     (put-source-cons-at-macroexpansion-result clause result car)
     (values
@@ -327,6 +327,26 @@
 (def-perga-clause dolist 'when-perga-transformer)
 (def-perga-clause loop 'when-perga-transformer)
 (def-perga-clause dotimes 'when-perga-transformer)
+
+(defun do-perga-transformer (body clause head
+                                    tail
+                                    forms-after-clause)
+  "do пишется так же, как обычно, но тело обрабатывается. return-forms не обрабатаываются"
+  (declare (ignore body))
+  (destructuring-bind (bind-step-forms (end-test-form &rest result-forms) &body body-of-do)
+      tail
+    (let ((result `((,head ,bind-step-forms (,end-test-form ,result-forms)
+                           ,@(perga-body-expander body-of-do))
+                    ,@(perga-body-expander forms-after-clause))
+                  ))
+      (put-source-cons-at-macroexpansion-result clause result car)
+      (values
+       result
+       t
+       ))))
+
+(def-perga-clause do 'do-perga-transformer)
+      
 
 (defun cond-perga-transformer (body clause head
                                     tail
