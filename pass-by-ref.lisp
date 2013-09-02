@@ -20,7 +20,8 @@
 
 (defmacro with-byref-params (symbols &body body)
   "Handles parameter passed by reference. See test"
-  (assert (listp symbols) () "with-byref-params: ~S должно было быть символом" symbols)
+  (assert (typep symbols '(cons symbol)) () "with-byref-params: ~S должно было быть списком символов"
+    symbols)
   (iter 
     (:for symbol in symbols)
     (:for setter-new-name = (make-symbol (str+ symbol "-setter")))
