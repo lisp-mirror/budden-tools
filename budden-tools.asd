@@ -5,8 +5,8 @@
 (pushnew :building-see-packages *features*)
 
 (defsystem :budden-tools  
-;  #+new-projects-structure :defsystem-depends-on #+new-projects-structure (:asdf2-tools)
-  #+new-projects-structure :defsystem-depends-on #+new-projects-structure (:for-load)
+  #+new-projects-structure :defsystem-depends-on #+new-projects-structure (:asdf-main-extensions)
+;  #+new-projects-structure :defsystem-depends-on #+new-projects-structure (:for-load)
   :serial t
   ;:documentation "Some utilities by Budden, public domain"
   :depends-on 

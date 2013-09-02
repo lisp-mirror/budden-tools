@@ -7,6 +7,7 @@
 (defsystem russian-budden-tools
   :serial t
   ;:documentation "Some utilities by Budden, public domain"
+  #+new-projects-structure :defsystem-depends-on #+new-projects-structure (:asdf-main-extensions)
   :depends-on 
   (:budden-tools)
   :components ( 

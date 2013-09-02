@@ -147,9 +147,22 @@
       (copy-structure-and-its-slots tree))
      (t tree))))
                     
-          
-(defun str+ (&rest args) (apply 'concatenate 'string (mapcar 'string args))) 
-(defun str++ (&rest args) (format nil "~{~A~}" args)) 
+#-new-projects-structure          
+(defun str+ (&rest args) (apply 'concatenate 'string (mapcar 'string args)))
+#-new-projects-structure          
+(defun str++ (&rest args) (format nil "~{~A~}" args))
+#+new-projects-structure
+(defun str+ (&rest args)
+  (apply 'concatenate 'string
+         (mapcar (lambda (arg)
+                   (typecase arg
+                     (pathname (namestring arg))
+                     (t (string arg))))
+                 args)))
+(export 'str+)
+
+#+new-projects-structure
+(defun str++ (&rest args) (format nil "~{~A~}" args)) (export 'str++)
 
 (defun non-empty-string-p (x) 
   #+russian "Возвращает x, если x - не nil и не пустая строка"
