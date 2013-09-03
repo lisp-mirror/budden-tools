@@ -393,6 +393,9 @@
 (def-perga-clause typecase 'case-perga-transformer)
 (def-perga-clause etypecase 'case-perga-transformer)
 (def-perga-clause ecase 'case-perga-transformer)
+(def-perga-clause alexandria:eswitch 'case-perga-transformer)
+(def-perga-clause alexandria:switch 'case-perga-transformer)
+(def-perga-clause alexandria:cswitch 'case-perga-transformer)
 
 
 #|(defmacro perga (&whole form &body body)

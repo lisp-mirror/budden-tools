@@ -13,7 +13,7 @@
   (:documentation "Some tools by budden. See packages definition to find a list of symbols")
   (:use :cl :named-readtables :buddens-readtable ; :org.tfeb.hax.hierarchical-packages
    :def-merge-packages :decorate-function :iterk)
-  (:import-from :alexandria #:with-gensyms #:once-only #:string-designator #:eswitch)
+  (:import-from :alexandria #:with-gensyms #:once-only #:string-designator #:eswitch #:cswitch #:switch)
   (:import-from :split-sequence #:split-sequence)
   (:import-from :swank #:*readtable-alist*)
   (:import-from :swank-backend #:pathname-to-filename #:filename-to-pathname #:make-weak-key-hash-table #:make-weak-value-hash-table)
