@@ -508,7 +508,7 @@ As a short-hand, #\s means *STANDARD-OUTPUT*, #\t - *TRACE-OUTPUT*"
        
 (defmacro _f (op place &rest args)
   "Macro from @cite{(Graham 1993)}.  Turns the operator @arg{op} into a
-modifying form, e.g. @code{(_f + a b) @equiv{} (incf a b)}."
+modifying form, e.g. @code{(_f + a b) @equiv{} (incf a b)}. See also __f"
   (multiple-value-bind (vars forms var set access)
       (get-setf-expansion place)
     `(let* (,@(mapcar #'list vars forms)
@@ -527,7 +527,7 @@ modifying form, e.g. @code{(_f + a b) @equiv{} (incf a b)}."
 
 
 (defmacro __f (op arg1 place &rest args)
-  "Неудачное имя"
+  "Call (op arg1 place . args) and store the result to place. Place access is calculated once only. See also _f"
   (multiple-value-bind (vars forms var set access)
       (get-setf-expansion place)
     `(let* (,@(mapcar #'list vars forms)
