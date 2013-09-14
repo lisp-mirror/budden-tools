@@ -375,7 +375,7 @@ Str - входная строка, для которой необходимо з
                           ((null prefix)
                            t)
                           ((eq rem-prefix :prompt)
-                           (yes-or-no-p "Символ доступен в текущем пакете. Убрать префикс?"))
+                           (yes-or-no-p "Символ ~S доступен в текущем пакете. Убрать префикс?" symbol))
                           (t rem-prefix))))
                 
                    (setf package-name
