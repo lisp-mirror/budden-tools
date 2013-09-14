@@ -116,6 +116,8 @@
    budden-tools:not-null ; type (not null)
    budden-tools:the* ; errs if type ain't match. Otherwise, returns a thing
    budden-tools:eswitch ; reexported from alexandria
+   budden-tools:switch
+   budden-tools:cswitch 
 
    budden-tools:with-byref-params ; declare function to accept some
    ; params by reference
