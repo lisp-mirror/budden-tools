@@ -1123,6 +1123,8 @@ variables to allow for nested and thread safe reading."
             (when (and readmacro (not budden-tools::*inhibit-readmacro*))
                ;(break)
               (return (funcall readmacro stream symbol)))))
+          (when (boundp 'budden-tools::*fn-before-return-symbol-from-reader-hook*)
+            (setf symbol (funcall budden-tools::*fn-before-return-symbol-from-reader-hook* symbol stream)))
           (return symbol)
           )
         ))))

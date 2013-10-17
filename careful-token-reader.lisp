@@ -70,6 +70,11 @@
 ; factored out (defvar *symbol-name-starts-from-vertical-line* nil)  
 (defvar *inhibit-readmacro* nil "When true, readmacros are not processed and treated as normal symbols. It is used to find readmacro definition") 
 (defvar *reading-parens-stream* nil) 
+(defvar *fn-before-return-symbol-from-reader-hook*) 
+(setf (documentation '*fn-before-return-symbol-from-reader-hook* 'variable)
+      "Before the symbol is returned from sbcl-reader-budden-tools-lispworks::read-token, this function is called on symbol and a stream. Beware stream input is buffered, 
+so use stream parameter only to identify a reader. Return value of hook function is then returned instead of the original symbol"
+      )
 
 (let ((default-open-paren-reader (get-macro-character #\( (copy-readtable nil))))
   (defun paren-reader-with-closing-paren-notification (stream char)
