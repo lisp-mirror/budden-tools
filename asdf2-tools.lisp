@@ -101,6 +101,9 @@ call to load
     )
    )
  ))
+
+Find a path to fasls
+\(asdf:apply-output-translations (asdf:system-source-directory (asdf:find-system :appserver)))
 ")
 
 (defun read-stream-to-string (in)
