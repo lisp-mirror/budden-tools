@@ -335,7 +335,7 @@
   (declare (ignore body))
   (destructuring-bind (bind-step-forms (end-test-form &rest result-forms) &body body-of-do)
       tail
-    (let ((result `((,head ,bind-step-forms (,end-test-form ,result-forms)
+    (let ((result `((,head ,bind-step-forms (,end-test-form ,@result-forms)
                            ,@(perga-body-expander body-of-do))
                     ,@(perga-body-expander forms-after-clause))
                   ))
