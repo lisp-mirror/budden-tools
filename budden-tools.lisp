@@ -150,7 +150,7 @@
 #-new-projects-structure          
 (defun str+ (&rest args) (apply 'concatenate 'string (mapcar 'string args)))
 #-new-projects-structure          
-(defun str++ (&rest args) (format nil "~{~A~}" args))
+(defun str++ (&rest args) (let ((*print-circle* nil)) (format nil "~{~A~}" args)))
 #+new-projects-structure
 (defun str+ (&rest args)
   (apply 'concatenate 'string
@@ -162,7 +162,7 @@
 (export 'str+)
 
 #+new-projects-structure
-(defun str++ (&rest args) (format nil "~{~A~}" args)) (export 'str++)
+(defun str++ (&rest args) (let ((*print-circle* nil)) (format nil "~{~A~}" args))) (export 'str++)
 
 (defun non-empty-string-p (x) 
   #+russian "Возвращает x, если x - не nil и не пустая строка"
@@ -327,6 +327,15 @@ if to-alist is true, to ((a . b) (c . d) ...)"
 
 (defun alist-to-list (x) "Превращает alist в список ((a . b) (c . d)) -> (a b c d)"
   (loop for (key . value) in x append (list key value)))
+
+(defun swap-pairs-in-plist (list)
+  (iter
+    (:while list)
+    (:for name = (pop list))
+    (:for value = (pop list))
+    (:collect value)
+    (:collect name)))
+  
 
 (defun unsplice-list (list &key from-alist)
   "Обратный к splice-list"
