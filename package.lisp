@@ -54,6 +54,7 @@
 ;; alists, plists, arglist dispatching
    budden-tools:list-to-alist 
    budden-tools:alist-to-list
+   budden-tools:swap-pairs-in-plist ; returns new plist where keys and values are swapped
    budden-tools:assoc-getf*
    budden-tools:getf* ; setfable
    budden-tools:pass-keyargs
