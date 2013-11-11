@@ -20,7 +20,7 @@
 
 (defmacro with-byref-params (symbols &body body)
   "Handles parameter passed by reference. See test"
-  (assert (typep symbols '(cons symbol)) () "with-byref-params: ~S должно было быть списком символов"
+  (assert (typep symbols '(or (cons symbol) null)) () "with-byref-params: ~S должно было быть списком символов или nil-ом"
     symbols)
   (iter 
     (:for symbol in symbols)
