@@ -118,7 +118,9 @@
 
 ; ---------------------------------------------------------------- runtime^ --------------------------------------------------------------
 
-(defun function-symbol-for-^ (type-or-class field-name)
+(defgeneric function-symbol-for-^ (type-or-class field-name))
+
+(defmethod function-symbol-for-^ (type-or-class field-name)
   "возвращает функцию для выполнения ^"
   (multiple-value-bind (prefix package) (conc-prefix-by-type-or-class type-or-class)
     (let* ((target-symbol-name (str+ prefix field-name))
