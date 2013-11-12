@@ -385,19 +385,26 @@ Str - входная строка, для которой необходимо з
                              prefix
                            p-name))
                    (setf colons
-                         (if (and (string-equal p-name 
-                                                found-package-name)
-                                  (eq :internal status))
-                             "::"
-                         
-                           ":"))
+                         (cond
+                          ((and (string-equal p-name 
+                                              found-package-name)
+                                (eq :external status))
+                           ":")
+                           ((and (string-equal p-name
+                                              (if (symbol-package symbol)
+                                                  (package-name (symbol-package symbol))
+                                                ""))
+                                (eq :external status))
+                            ":")
+                           (t                         
+                           "::")))
                    (format nil "~A~A~A" 
                            (if do-delete-prefix "" (if home-package (if fake-package? prefix home-package) package-name))
                            (cond
                             ((eq (symbol-package symbol) *keyword-package*)
                              ":")
                             (do-delete-prefix "")
-                            (home-package (if (eq status :internal) "::" ":"))
+                            (home-package (if (eq status :external) ":" "::"))
                             (t colons))
                            (casify-name name))))
                (format-item (x)
@@ -419,7 +426,7 @@ Str - входная строка, для которой необходимо з
 
         (setf show-list 
               (mapcar #'format-item list-of-completes))
-          
+
         (let* ((s (if (= 1 (length show-list)) 
                       (first show-list) 
                     (editor::call-scrollable-menu show-list nil)))
