@@ -118,6 +118,7 @@
 
 ; ---------------------------------------------------------------- runtime^ --------------------------------------------------------------
 
+; должна возвращать два значения - 1 имя функции. 2 t, если нужно передать вторым параметром имя поля
 (defgeneric function-symbol-for-^ (type-or-class field-name))
 
 (defmethod function-symbol-for-^ (type-or-class field-name)
@@ -137,10 +138,13 @@
 (defun runtime^ (object field-name &rest args)
   "Вызывается, если на этапе компиляции не удалось определить тип объекта"
   (assert object () "(runtime^ nil ~S): Sorry, object can't be null!" field-name)
-  (let* ((class (class-of object))
-         (target-function-symbol (function-symbol-for-^ class field-name)))
-    (apply target-function-symbol object args)
-    ))
+  (let* ((class (class-of object)))
+    (multiple-value-bind (target-function-symbol field-p)
+        (function-symbol-for-^ class field-name)
+      (apply target-function-symbol object
+             (if field-p (cons field-name args)
+               args))
+      )))
 
 (defmacro common-carat-implementation (object field-name &rest args)
   "See also def-compiler-macro common-carat-implementation"
@@ -148,12 +152,14 @@
 
 (define-compiler-macro common-carat-implementation (object field-name &rest args &environment env)
   "See also defmacro common-carat-implementation"
-  (let1 variable-type-or-class (variable-type-or-class object env)
+  (let ((variable-type-or-class (variable-type-or-class object env)))
     (case variable-type-or-class
       ((t nil) `(runtime^ ,object ',field-name ,@args))
-      (t 
-       `(,(function-symbol-for-^ variable-type-or-class field-name) ,object ,@args))
-      )))
+      (t
+       (multiple-value-bind (function-symbol field-p)
+           (function-symbol-for-^ variable-type-or-class field-name)
+         `(,function-symbol ,object ,@(when field-p `(,field-name)) ,@args))
+       ))))
 
 (defmacro carat-implementation (object field-name &rest args)
   "This implementation can be shadowed in with-custom-carat-implementation"
