@@ -29,6 +29,8 @@
 (eval-when (:compile-toplevel)
   (error "load this file as a source, don't compile it!"))
 
+'mark-operation-done ; let's put this symbol here temporary
+
 #|(defmacro of-system (keywordized-system-name)
   "Asserts that file belongs to system"
   `(eval-when (:compile-toplevel :load-toplevel)
@@ -49,7 +51,6 @@
            ()
          "current file must be loaded through ~S system" ,keywordized-system-name))))
 
-                         
 
 (defun ! (&rest args) "One more shortcut for (asdf:oos 'asdf:load-op ,@args)"
        (apply 'oos 'load-op args)
