@@ -15,14 +15,14 @@
      (slot-value (editor::point-bigline point) 'editor::start-char))
   )
 
-#+nil 
+#| for debug 
  (editor:defcommand "show real point offset" (p)
      (declare (ignore p))
      (editor::message "real-point-offset=~S,ediot-region-stream-last-read-offset=~S"
                       (real-point-offset-2 (EDITOR:current-point))
                       nil ;(EDITOR::editor-region-stream-last-read-offset )
                       )
-  )
+  ) |#
 
 (defun get-protected-offset (buffer)
   (or
@@ -85,28 +85,6 @@
       (set-protected-offset buffer prompt-offset)
       t)
     ))
-
-#| trash (defun maybe-fix-protected-offset (point)
-  "If current point is after protected-offset, fixes protection point and returns t"
-  (let* (
-         (point-offset (real-point-offset-2 point))
-         (buffer (EDITOR:point-buffer point))
-         stream
-	 prompt
-         prompt-offset
-         )
-    (when (and
-           (eq (slot-value buffer 'EDITOR::flag) :listener)
-           (> point-offset (get-protected-offset buffer)))
-      (setf stream (EDITOR:variable-value-if-bound 'editor::rubber-stream))
-      (when stream
-        (setf prompt (EDITOR::editor-region-stream-start stream))
-                 ;(editor::editor-region-stream-last-read-offset stream))
-        (setf prompt-offset (real-point-offset-2 prompt))
-        (when (> prompt-offset (get-protected-offset buffer))
-          (setf (EDITOR:variable-value 'protected-offset :buffer buffer) prompt-offset)
-          t)
-        )))) |#
 
 (defvar *enable-protection* t) 
 
@@ -186,25 +164,6 @@
       (set-protected-offset buffer 0)
       (maybe-fix-protected-offset (buffers-end buffer) 1))))
   
-  
 
            
-
-#|
-(lispworks:defadvice (EDITOR::rubber-stream-finished-input hap-a-stream :before)
-    (stream)
-  (setf protected-offset 0
-        ; и это слишком рано. Да и вообще слишком ранняя функция rubber-stream-finished-input ; (real-point-offset-2 (editor::editor-region-stream-point stream))
-        ; это конец прошлого ввода - слишком рано (slot-value stream 'EDITOR::last-read-offset)
-        ))
-|#
-
-
-; как узнать место последней подсказки? 
-; EDITOR:rubber-read-a-command - внутри неё команда окрашивается красным, 
-; хотя это поздно
-; SYSTEM::current-prompt - после её вызова идёт печать. Вызов из 
-; system::%top-level-internal
-; EDITOR::*interactive-input-face* - цвет раскраски введённого текста  
-
 
