@@ -177,7 +177,7 @@
   (setf *super-image* (slot-value *super-port* 'image)) 
   
   (extract-and-save-one-icon 9 6 nil "lispworks-tools.refresh") 
-  #|(extract-and-save-one-icon (+ 9 (* 24 2)) 6 2 "lispworks-tools.preferences") 
+  (extract-and-save-one-icon (+ 9 (* 24 2)) 6 2 "lispworks-tools.preferences") 
 
   (extract-and-save-one-icon 185 6 nil "lispworks-tools.breakpoint")
   (extract-and-save-one-icon (+ 185 24) 6 nil "macroexpand")
@@ -255,7 +255,6 @@
   (extract-and-save-one-icon 738 38 nil "lispworks-tools.compile-and-load-system")
   (extract-and-save-one-icon (+ 23 738) 38 nil "compile-system")
   (extract-and-save-one-icon (+ 23 23 738) 38 nil "load-system")
- |#
   )
 
 
