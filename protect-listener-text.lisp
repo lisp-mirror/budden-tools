@@ -164,6 +164,24 @@
       (set-protected-offset buffer 0)
       (maybe-fix-protected-offset (buffers-end buffer) 1))))
   
+(defadvice (editor::history-previous-command allow-even-if-protected :around)
+    (p)
+  (let ((buffer (current-buffer)))
+    (unwind-protect
+        (progn
+          (set-protected-offset buffer -1)
+          (call-next-advice p))
+      (set-protected-offset buffer 0)
+      (maybe-fix-protected-offset (buffers-end buffer) 1))))
 
-           
 
+(defadvice (EDITOR:history-next-command allow-even-if-protected :around)
+    (p)
+  (let ((buffer (current-buffer)))
+    (unwind-protect
+        (progn
+          (set-protected-offset buffer -1)
+          (call-next-advice p))
+      (set-protected-offset buffer 0)
+      (maybe-fix-protected-offset (buffers-end buffer) 1))))
+  
