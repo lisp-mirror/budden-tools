@@ -1,6 +1,8 @@
 (eval-when (:compile-toplevel :load-toplevel :execute)
-  (defpackage :protect-listener-text (:use :cl :lispworks :editor))
-  )
+  (defpackage :protect-listener-text 
+    (:use :cl :lispworks :editor)
+    (:export #:*enable-protection*)
+  ))
 
 (in-package :protect-listener-text) 
 
@@ -105,6 +107,8 @@
           (setf (EDITOR:variable-value 'protected-offset :buffer buffer) prompt-offset)
           t)
         )))) |#
+
+(defvar *enable-protection* t) 
 
 (defun inner-check-editable-point (point buffer fix-even-if-at-the-end) 
   (let ((offset (real-point-offset-2 point)))
