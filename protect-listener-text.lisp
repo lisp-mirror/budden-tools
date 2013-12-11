@@ -9,6 +9,12 @@
 (EDITOR:define-editor-variable protected-offset 0
    "Internal variable to keep track of last listener prompt. One can not modify prompt unless variable is bound to -1")
 
+; Just one space after listener prompt
+(setf (editor:variable-value 'editor::prompt-regexp-string)
+      (format nil "^[A-Z=][^$%#>~a<]*[$%#>]+ " #\newline)
+      )
+
+
 (defun real-point-offset-2 (point) 
   "Maybe this is stupid"
   (+ (editor::point-offset point)
@@ -98,6 +104,8 @@
      ((< offset protected-offset)
       (EDITOR::editor-beep)
       (when *enable-protection*
+        (let ((*enable-protection* nil)) ; temporary 
+          (error "Attempt to edit non-editable listener history"))
         (EDITOR::signal-editing-in-a-read-only-window (EDITOR:point-buffer point))))
      ))))
         
