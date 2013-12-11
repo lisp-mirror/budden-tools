@@ -2,7 +2,21 @@
 ;; Текущий результат: умеем собирать инфу, но она 
 ;; обрабатывается в неопределённом будущем.
 ;; Надо обрабатывать своевременно. 
-(in-package :cl-user)
+(eval-when (:compile-toplevel :load-toplevel :execute)
+  (defpackage :dbg17
+    (:use :cl :lispworks)
+    (:export #:set-source-location-substitution
+     #:with-source-location-substitutions
+     #:*interesting-function-name*
+     #:*w-table*
+     #:*w-form*
+     #:*address-substitution-table*
+     #:END-SOURCE-LOCATION-SUBSTITUTIONS-FN
+     #:BEGIN-SOURCE-LOCATION-SUBSTITUTIONS-FN
+     #:*with-source-location-substitutions-level*
+     )))
+
+(in-package :dbg17)
 
 (defmacro compiler-break ()
   (break "compiler-break ~A" COMPILER:*function-name*))

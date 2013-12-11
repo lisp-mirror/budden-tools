@@ -1,6 +1,6 @@
 ;; Сначала загрузи dbg17.lisp
 ;; Пытаемся обработать в макросе. 
-(in-package :cl-user)
+(in-package :dbg17)
 
 ;; итак, мы умеем подменять путь для нормального кода (не в степпере, для степпера надо вернуться к dbg5). 
 ;; А как мы найдём его? 
@@ -32,15 +32,23 @@ COMPILER::in-process-forms-in-file.
   "Ключ таблицы - место в настоящем исходнике, значение - та форма, которая
    будет на этом месте показываться")
 
-(defun set-source-location-substitution (real-code source-place)
+(defvar *with-source-location-substitutions-level* nil "Если уровень не 0, то подстановки действуют")
+
+(defun set-source-location-substitution (source-place real-code)
   "source-place - место в настоящем исходнике, 
-   real-code - форма, к-рая будет там показывться"
+   real-code - форма, к-рая будет там показывться.
+   "
   (typecase *compile-time-substitution-table*
     (hash-table
-     (setf (gethash source-place *compile-time-substitution-table*) real-code)
-     )
-    (t (warn "set-source-location-substitution is out of with-source-location-substitutions scope"))
-    ))
+     (unless (eq source-place real-code)
+       (setf (gethash source-place *compile-time-substitution-table*) real-code)
+       t
+       ))
+    (t
+     (warn "set-source-location-substitution is out of with-source-location-substitutions scope")
+     nil)
+    )
+  )
 
 (defmacro first-cons-1 (&whole form x)
   "Этот макрос вызовет падение в отладчик"
@@ -48,11 +56,15 @@ COMPILER::in-process-forms-in-file.
 
 (defmacro second-cons-1 (&whole form x)
   "А здесь отладчик покажет исходник"
-  (set-source-location-substitution *first-cons* form) `(list ,x))
+  (set-source-location-substitution form *first-cons*) `(list ,x))
 
 
 (defun end-source-location-substitutions-fn ()
   "Converts map between conses to map between numeric addresses"
+  (incf *with-source-location-substitutions-level* -1) 
+  (unless (= *with-source-location-substitutions-level* 0)
+    (return-from END-SOURCE-LOCATION-SUBSTITUTIONS-FN nil))
+  (break)
   (setf *address-substitution-table* (make-hash-table :test 'eq))
   (maphash
    (lambda (source-place real-code)
@@ -62,12 +74,17 @@ COMPILER::in-process-forms-in-file.
           (let ((real-code-address (find-source-address-in-a-hash real-code)))
             (typecase real-code-address
               (integer
-               (setf (gethash real-code-address *address-substitution-table*)
-                     source-place-address))
+               (unless (eql real-code-address source-place-address)
+                 (setf (gethash real-code-address *address-substitution-table*)
+                       source-place-address)))
               (t #+nil (warn "code-address not found for ~S" real-code)))))
+         (COMPILER::MULTIPLE-TRANSFORMS-RECORD
+          (break "COMPILER::MULTIPLE-TRANSFORMS-RECORD")
+          )
          (t #+nil (warn "source-place address not found for ~S" source-place)))))
    *compile-time-substitution-table*)
-  nil)
+  (print `("number of substitutions is" ,(hash-table-count *address-substitution-table*)) *trace-output*)
+  nil) 
 
 
 
@@ -81,13 +98,15 @@ COMPILER::in-process-forms-in-file.
 (defadvice (COMPILER::process-form bind-compile-time-substitution-table :around
                                    :documentation "Isolates *compile-time-substitution-table* variable from other processes")
     (i-form)
-  (let ((*compile-time-substitution-table* *compile-time-substitution-table*))
+  (let ((*compile-time-substitution-table* *compile-time-substitution-table*)
+        (*with-source-location-substitutions-level* (or *with-source-location-substitutions-level* 0)))
     (call-next-advice i-form)))
      
 
 (defun begin-source-location-substitutions-fn ()
   (setf *compile-time-substitution-table*
         (or *compile-time-substitution-table* (make-hash-table :test 'eq)))
+  (incf *with-source-location-substitutions-level*) 
   )
 
 (defmacro begin-source-location-substitutions ()
@@ -96,7 +115,6 @@ COMPILER::in-process-forms-in-file.
 
 (defmacro end-source-location-substitutions ()
   (end-source-location-substitutions-fn)
-  (print *address-substitution-table*)
   )
 
 (setf *interesting-function-name* 'r)
@@ -116,11 +134,3 @@ COMPILER::in-process-forms-in-file.
          ,form
        (end-source-location-substitutions))))
 
-(defun r ()
-  (with-source-location-substitutions
-   (with-source-location-substitutions
-    (progn
-      (first-cons-1 "find-source покажет вторую форму")
-      (second-cons-1 "ой, и правда хакнули отладчик")
-      ))))
-  

@@ -192,3 +192,19 @@
     (:@ with-input-from-string (var "0"))
     (let a (read-from-string var))
     a))
+
+
+(setf DBG17:*INTERESTING-FUNCTION-NAME* 'fh1)
+(defun fh1 ()
+  (DBG17::BEGIN-SOURCE-LOCATION-SUBSTITUTIONS)
+  (perga
+    (:lett k integer 1)
+    (:lett j integer "0")
+    (cons k j))
+  (DBG17::END-SOURCE-LOCATION-SUBSTITUTIONS))
+    
+
+
+(defun where-let-steps ()
+  (let ((x 1))
+    x))

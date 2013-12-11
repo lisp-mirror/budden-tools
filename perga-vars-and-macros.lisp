@@ -13,9 +13,20 @@
   (setf -source-level-form-table- COMPILER::*SOURCE-LEVEL-FORM-TABLE*) nil)
 
 
+#|(defmacro perga (&whole form &body body)
+  (declare (ignore body))
+  (DBG17::BEGIN-SOURCE-LOCATION-SUBSTITUTIONS-FN)
+  (MULTIPLE-VALUE-PROG1
+      (perga-expander form)
+    (DBG17::END-SOURCE-LOCATION-SUBSTITUTIONS-FN)))|#
+
 (defmacro perga (&whole form &body body)
   (declare (ignore body))
-  (perga-expander form))
+  (PERGA-EXPANDER form))
+          
+
+;  `(dbg17:with-source-location-substitutions
+;    ,(perga-expander form)))
 
 
 (defun remove-perga-clause (name)
@@ -42,9 +53,9 @@
    tail     - tail (cdr) of clause
    forms-after-clause == (cdr body).
    Transformer should return two values:
-   If first value is t, this means that form is processed by the clause, 
-         second value should be a processed form, no further processing of body occurs.
-   if first value is nil, clause is kept intact forms-after-clause are processed. 
+   If second value is t, this means that form is processed by the clause, 
+         first value should be a processed form, no further processing of body occurs.
+   if second value is nil, clause is kept intact forms-after-clause are processed. 
    Consider some standard transformers: open-up-if-3, open-up-if-4, wind-up-tail-if-3,
    wind-up-tail-if-second-is-atom, open-up"
   #+lispworks

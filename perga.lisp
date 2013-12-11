@@ -47,6 +47,7 @@
   (declare (ignore body))
   (let* ((result
           `(,head ,tail ,.(perga-body-expander forms-after-clause))))
+    (dbg17:set-source-location-substitution clause result)
     (put-source-cons-at-macroexpansion-result clause result)
     (list result)
     ))
@@ -58,6 +59,7 @@
   (declare (ignore body))
   (let ((result
          `((,head ,@tail ,@(perga-body-expander forms-after-clause)))))
+    (dbg17:set-source-location-substitution clause (car result))
     (put-source-cons-at-macroexpansion-result clause result car)
     (values
      result
@@ -70,11 +72,12 @@
   "форму мы не поняли, считаем, что это вычисление" 
   (declare (ignore body head tail))
   (let* ((result `(,clause ,.(perga-body-expander forms-after-clause))))
+    (dbg17:set-source-location-substitution clause (car result))
   ;(smash-cons clause result)
   ;(setf (cdr body) nil)
   ;body
     result
-  ))
+    ))
 
 (defun pergify-body (body &key documentation)
   "На входе имеем тело определения типа defun, но без головы, 
@@ -158,9 +161,10 @@
                  ((cdr expanded-body) ; более одного выражения - это progn
                   ;(break "проверить брекпойнты!")
                   `(progn ,.expanded-body))
-                 (t (first expanded-body))))))))
+                 (t (first expanded-body)
+                    )))))))
     #|(let ((*print-circle* t))
-      (budden-tools::show-expr `(,form-table ,result)))|#
+        (budden-tools::show-expr `(,form-table ,result)))|#
     result
     ))
 
@@ -244,6 +248,7 @@
                   #'(lambda (body clause head tail forms-after-clause)
                       (declare (ignore body))
                       (let ((result `((,head ,(car tail) ,@(perga-body-expander (cdr tail))) ,@(perga-body-expander forms-after-clause))))
+                        (dbg17:set-source-location-substitution clause (car result))
                         (put-source-cons-at-macroexpansion-result clause result car)
                         (values
                          result
@@ -258,6 +263,7 @@
                       (declare (ignore body ))
                       (let ((result `((,head ,@(perga-body-expander tail)) 
                          ,@(perga-body-expander forms-after-clause))))
+                        (dbg17:set-source-location-substitution clause (car result))
                         (put-source-cons-at-macroexpansion-result clause result car)
                       (values
                        result
@@ -316,6 +322,7 @@
   (let ((result `((,head ,@(perga-body-expander tail))
                   ,@(perga-body-expander forms-after-clause)
      )))
+    (dbg17:set-source-location-substitution clause (car result))
     (put-source-cons-at-macroexpansion-result clause result car)
     (values
      result
@@ -339,6 +346,7 @@
                            ,@(perga-body-expander body-of-do))
                     ,@(perga-body-expander forms-after-clause))
                   ))
+      (dbg17:set-source-location-substitution clause (car result))
       (put-source-cons-at-macroexpansion-result clause result car)
       (values
        result
@@ -361,6 +369,7 @@
                    `(,cc-test ,@(perga-body-expander cc-exprs))))
                tail))
             ,@(perga-body-expander forms-after-clause))))
+    (dbg17:set-source-location-substitution clause (car result))
     (put-source-cons-at-macroexpansion-result clause result car)
     (values
      result
@@ -384,6 +393,7 @@
                         case-clauses)
                      )
               ,@(perga-body-expander forms-after-clause)))
+      (dbg17:set-source-location-substitution clause (car result))
       (put-source-cons-at-macroexpansion-result clause result car)
       (values
        result
@@ -430,6 +440,7 @@ forms-after-clause - уже обработанные формы после claus
     (typecase (car tail)
       (symbol
        (setf result `((,head ,tail ,@(perga-body-expander forms-after-clause))))
+       (dbg17:set-source-location-substitution clause (car result))
        (put-source-cons-at-macroexpansion-result clause result car)
        (values result t))
       (t nil)
@@ -450,6 +461,7 @@ forms-after-clause - уже обработанные формы после claus
   (let (result)
     (setf result
           `((,@tail ,@(perga-body-expander forms-after-clause))))
+    (dbg17:set-source-location-substitution clause (car result))
     (put-source-cons-at-macroexpansion-result clause result car)
     (values result t)
   ))
@@ -472,6 +484,7 @@ forms-after-clause - уже обработанные формы после claus
     (setf result
           `((,(car tail) ,(cdr tail)
                          ,@(perga-body-expander forms-after-clause))))
+    (dbg17:set-source-location-substitution clause (car result))
     (put-source-cons-at-macroexpansion-result clause result car)
     (values result t)
   ))
@@ -490,6 +503,7 @@ forms-after-clause - уже обработанные формы после claus
      ((= 2 (length tail))
       (setf result 
             `((,head ,tail ,@(perga-body-expander forms-after-clause))))
+      (dbg17:set-source-location-substitution clause (car result))
       (put-source-cons-at-macroexpansion-result clause result car)
       (values t result)
       )
@@ -523,10 +537,15 @@ forms-after-clause - уже обработанные формы после claus
                                   tail forms-after-clause)
                       (declare (ignore head))
                       (assert (= (length clause) 4) () ":lett perga clause ~S should have contained exactly four items" clause)
-                      (open-up-if-4
-                       body clause
-                       'budden-tools:with-the1
-                       tail forms-after-clause))) 
-
+                      (multiple-value-bind (result processed)
+                          (open-up-if-4
+                           body clause
+                           'budden-tools:with-the1
+                           tail forms-after-clause)
+                        (when processed
+                          (dbg17:set-source-location-substitution
+                           clause (car result)))
+                        (values result processed))))
+                        
 
 
