@@ -515,11 +515,11 @@ As a short-hand, #\s means *STANDARD-OUTPUT*, #\t - *TRACE-OUTPUT*"
 
       
        
-(defmacro _f (op place &rest args)
+(defmacro _f (op place &rest args &environment env)
   "Macro from @cite{(Graham 1993)}.  Turns the operator @arg{op} into a
-modifying form, e.g. @code{(_f + a b) @equiv{} (incf a b)}. See also __f"
+modifying form, e.g. @code{(_f + a b) @equiv{} (incf a b)}. See also __f. Modifed accoring to Matt to take care of env"
   (multiple-value-bind (vars forms var set access)
-      (get-setf-expansion place)
+      (get-setf-expansion place env)
     `(let* (,@(mapcar #'list vars forms)
             (,(car var) (,op ,access ,@args)))
        ,set)))
@@ -535,10 +535,10 @@ modifying form, e.g. @code{(_f + a b) @equiv{} (incf a b)}. See also __f"
 ;; see also atomic-queue.lisp
 
 
-(defmacro __f (op arg1 place &rest args)
+(defmacro __f (op arg1 place &rest args &environment env)
   "Call (op arg1 place . args) and store the result to place. Place access is calculated once only. See also _f"
   (multiple-value-bind (vars forms var set access)
-      (get-setf-expansion place)
+      (get-setf-expansion place env)
     `(let* (,@(mapcar #'list vars forms)
             (,(car var) (,op ,arg1 ,access ,@args)))
        ,set)))
