@@ -509,8 +509,13 @@ forms-after-clause - уже обработанные формы после claus
 
 (def-perga-clause budden-tools:with-the1
                   #'(lambda (body clause head tail forms-after-clause)
-                      (declare (ignorable body clause head tail forms-after-clause))
-                      (error "with-the1 in perga is forbidden, clause ~S" clause)))
+                      ;(declare (ignorable body clause head tail))
+                      (when forms-after-clause
+                        (error "with-the1 in perga is forbidden, clause ~S" clause))
+                      (dont-process
+                       body clause head tail forms-after-clause)))
+
+                      
 
 (def-perga-clause :lett
                   #'(lambda (body clause

@@ -141,8 +141,28 @@
             '(nil '(nil) '(1 2) '(1 . 2) '(1 2 3) '(1 2 . 3)))
     ))
 
+
 (defun perga-add-character-test ()
   (perga
     (:@ with-input-from-string (var "0"))
     (let a (read-from-string var))
     a))
+
+
+(defmacro finally-do (cleanup &body body)
+  `(unwind-protect
+       (perga ,@body)
+     ,cleanup))
+
+(def-trivial-test::! perga.finally-do
+                     (macroexpand 
+                      '(perga all
+                         (:lett x fixnum 1)
+                         (:@ finally-do (return-from all x))
+                         (:lett y fixnum x)
+                         (setf x (+ y 1))
+                         ))
+                     '(block all
+                        (budden-tools:with-the1 x fixnum 1
+                          (finally-do (return-from all x)
+                            (budden-tools:with-the1 y fixnum x (setf x (+ y 1)))))))
