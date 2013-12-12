@@ -23,10 +23,16 @@
 (defmacro perga (&whole form &body body)
   (declare (ignore body))
   (PERGA-EXPANDER form))
+  
+
+(defmacro pergao (&whole form &body body)
+  (declare (ignorable body form))
+  `(dbg17:with-source-location-substitutions
+    (perga ,@body)))
+  
+;  (PERGA-EXPANDER form))
           
 
-;  `(dbg17:with-source-location-substitutions
-;    ,(perga-expander form)))
 
 
 (defun remove-perga-clause (name)

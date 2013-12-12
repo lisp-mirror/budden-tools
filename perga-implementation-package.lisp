@@ -1,7 +1,8 @@
 ;;; -*- Encoding: utf-8; -*-
 ;;; perga macro 
 
-(def-merge-packages::! :perga-implementation
+(def-merge-packages::! :p
+ (:nicknames :PERGA-IMPLEMENTATION)
  (:always t)
  (:documentation "perga is an extensible macro which helps to get rid of some unnecessary parens and nesting levels 
 which are present in lisp syntax.
@@ -24,16 +25,16 @@ Currently perga is in need for redesign, so use with caution. let, flet forms wi
 some other might change. Look at perga-transformer usage in perga.lisp file for examples of extending 
 perga but beware this way of extending is likely to be broken in the near future.
 ")
- (:use :cl :iterk :budden-tools
+ (:use :cl :iterk :budden-tools :dbg17
    #+lispworks6 :lw-macro-friendly-stepper
    )
  (:export "
-  perga-implementation:perga ; Macro to get rid of some unnecessary parens and nesting levels which are present in lisp syntax
-  perga-implementation:def-perga-clause
-  perga-implementation:open-up-if-3
-  perga-implementation:open-up-if-4
-  perga-implementation:wind-up-tail-if-second-is-atom
-  perga-implementation:wind-up-tail-if-3
+  p:perga ; Macro to get rid of some unnecessary parens and nesting levels which are present in lisp syntax
+  p:def-perga-clause
+  p:open-up-if-3
+  p:open-up-if-4
+  p:wind-up-tail-if-second-is-atom
+  p:wind-up-tail-if-3
   "
   )
  )

@@ -29,8 +29,8 @@ COMPILER::in-process-forms-in-file.
 (defparameter *first-cons* nil)
 
 (defvar *compile-time-substitution-table* nil
-  "Ключ таблицы - место в настоящем исходнике, значение - та форма, которая
-   будет на этом месте показываться")
+  "Ключ таблицы - форма из сгенерированного кода, 
+   значение - место в исходнике из файла, на котором форма будет показываться")
 
 (defvar *with-source-location-substitutions-level* nil "Если уровень не 0, то подстановки действуют")
 
@@ -41,7 +41,7 @@ COMPILER::in-process-forms-in-file.
   (typecase *compile-time-substitution-table*
     (hash-table
      (unless (eq source-place real-code)
-       (setf (gethash source-place *compile-time-substitution-table*) real-code)
+       (setf (gethash real-code *compile-time-substitution-table*) source-place)
        t
        ))
     (t
@@ -64,10 +64,10 @@ COMPILER::in-process-forms-in-file.
   (incf *with-source-location-substitutions-level* -1) 
   (unless (= *with-source-location-substitutions-level* 0)
     (return-from END-SOURCE-LOCATION-SUBSTITUTIONS-FN nil))
-  (break)
+  ;(break)
   (setf *address-substitution-table* (make-hash-table :test 'eq))
   (maphash
-   (lambda (source-place real-code)
+   (lambda (real-code source-place)
      (let ((source-place-address (find-source-address-in-a-hash source-place)))
        (typecase source-place-address
          (integer
@@ -79,7 +79,7 @@ COMPILER::in-process-forms-in-file.
                        source-place-address)))
               (t #+nil (warn "code-address not found for ~S" real-code)))))
          (COMPILER::MULTIPLE-TRANSFORMS-RECORD
-          (break "COMPILER::MULTIPLE-TRANSFORMS-RECORD")
+          (warn "source-place-address=~S" source-place-address)
           )
          (t #+nil (warn "source-place address not found for ~S" source-place)))))
    *compile-time-substitution-table*)
@@ -134,3 +134,60 @@ COMPILER::in-process-forms-in-file.
          ,form
        (end-source-location-substitutions))))
 
+#| Где упоминается COMPILER::MULTIPLE-TRANSFORMS-RECORD
+
+(COMPILER::TRANSFORM-FORM COMPILER::GET-FORM-PATH COMPILER::FIND-NODE-SOURCE-PATH 
+COMPILER::FIND-NODE-FORM DBG::GENERATE-SCL-INFO DBG17:END-SOURCE-LOCATION-SUBSTITUTIONS-FN 
+COMPILER::COMPILER-SOURCE-LEVEL-TRANSFORMATION-A COMPILER::NODE-REPLACING-NODE)
+
+|#
+
+(defun hack-source-level-form-table (real-code)
+  "Находит real-code в *COMPILE-TIME-SUBSTITUTION-TABLE* и подставляет адрес
+из source-place в него. Возвращает код или подменённый код, а вторым значением - t, если сделала изменения"
+  (let* ((maybe-source-form
+          (typecase *COMPILE-TIME-SUBSTITUTION-TABLE*
+            (HASH-TABLE
+             (gethash real-code *COMPILE-TIME-SUBSTITUTION-TABLE* real-code))
+            (t
+             real-code)))
+         (maybe-other-address
+          (and maybe-source-form
+               (typecase COMPILER::*SOURCE-LEVEL-FORM-TABLE*
+                 (hash-table
+                  (gethash maybe-source-form COMPILER::*SOURCE-LEVEL-FORM-TABLE*
+                           ))))))
+    (typecase COMPILER::*SOURCE-LEVEL-FORM-TABLE*
+      (hash-table
+       (cond ((and (numberp maybe-other-address)
+                   (not (eq MAYBE-SOURCE-FORM real-code))
+                   (not (eq (gethash real-code COMPILER::*SOURCE-LEVEL-FORM-TABLE*)
+                            MAYBE-OTHER-ADDRESS)))
+              (setf (gethash real-code COMPILER::*SOURCE-LEVEL-FORM-TABLE*)
+                    maybe-other-address)
+              (values maybe-source-form t))
+             (t
+              (values maybe-source-form nil))))
+      (t
+       (values MAYBE-SOURCE-FORM nil)))))
+
+
+(defadvice (compiler::get-form-path take-code-from-compile-time-substitution-table :around)
+    (form)
+  (CALL-NEXT-ADVICE (HACK-SOURCE-LEVEL-FORM-TABLE form))
+  )
+
+#|
+(defadvice (COMPILER::FIND-NODE-SOURCE-PATH take-code-from-compile-time-substitution-table :around)
+    (node)
+  (when
+      (and (SLOT-EXISTS-P node 'compiler::source)
+           (SLOT-BOUNDP node 'compiler::source)
+           )
+    (HACK-SOURCE-LEVEL-FORM-TABLE (slot-value node 'compiler::source)))
+  (CALL-NEXT-ADVICE node))
+
+(remove-advice 'COMPILER::FIND-NODE-SOURCE-PATH 'take-code-from-compile-time-substitution-table)
+|#
+;(remove-advice 'compiler::get-form-path 'take-code-from-compile-time-substitution-table)
+; 'DBG::GENERATE-SCL-INFO

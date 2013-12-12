@@ -14,6 +14,7 @@
      #:END-SOURCE-LOCATION-SUBSTITUTIONS-FN
      #:BEGIN-SOURCE-LOCATION-SUBSTITUTIONS-FN
      #:*with-source-location-substitutions-level*
+     #:*COMPILE-TIME-SUBSTITUTION-TABLE*
      )))
 
 (in-package :dbg17)
