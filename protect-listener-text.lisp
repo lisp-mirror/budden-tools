@@ -104,8 +104,8 @@
      ((< offset protected-offset)
       (EDITOR::editor-beep)
       (when *enable-protection*
-        (let ((*enable-protection* nil)) ; temporary 
-          (error "Attempt to edit non-editable listener history"))
+        ;(let ((*enable-protection* nil)) ; temporary 
+        ;  (error "Attempt to edit non-editable listener history"))
         (EDITOR::signal-editing-in-a-read-only-window (EDITOR:point-buffer point))))
      ))))
         
