@@ -1,3 +1,5 @@
+;; Лучшее из этого кода находится в lw-macro-friendly-dbg.lisp 
+
 ;; Копия hack-debugger 5. 
 ;; Текущий результат: умеем собирать инфу, но она 
 ;; обрабатывается в неопределённом будущем.
@@ -81,25 +83,17 @@ COMPILER::in-process-forms-in-file.
        hash))))
 |#
 
-; запомним *first-cons*, чтобы потом знать, что на что подменять
-(defparameter *first-cons* nil)
-(defmacro first-cons (&whole form x) (setf *first-cons* form) `(break ,x))
-
-(defparameter *second-cons* nil)
-(defmacro second-cons (&whole form x) (setf *second-cons* form) `(break ,x))
-
 (defparameter *w-form* nil "Сворованная у wombat-2 форма")
 (defparameter *w-table* nil "Сворованная у wombat-2 таблица")
 
-(defparameter *address-substitution-table*
-  (make-hash-table :test 'eql)
-  "Ключ - адрес реального кода, значение - адрес места, где надо показать. Пока работает только для одной
- функции *interesting-function-name*"
-  )
+;(defparameter *address-substitution-table* nil 
+;  "Ключ - адрес реального кода, значение - адрес места, где надо показать. Пока работает только для одной
+; функции *interesting-function-name*"
+;  )
 
-(defparameter *interesting-function-name* 'y)
+; (defparameter *interesting-function-name* 'y)
 
-(defadvice (dbg::call-frame-edit-path hack-path
+#|(defadvice (dbg::call-frame-edit-path hack-path
                                       :around
                                       :documentation
                                       "Пример подмены пути редактирования для конкретной функции")
@@ -114,6 +108,9 @@ COMPILER::in-process-forms-in-file.
     (or maybe-new-path 
         original-path)))
 
+
+(REMOVE-ADVICE 'dbg::call-frame-edit-path 'hack-path) |#
+
 (defadvice (compiler::wombat-2 hack-two-conses :around)
     (form &optional (table COMPILER::*source-level-form-table*))
   (setf *w-table* table
@@ -124,25 +121,7 @@ COMPILER::in-process-forms-in-file.
 (defun find-source-address-in-a-hash (source)
   (gethash source *w-table*)) 
 
-(defun particular-fill-address-substitution-table ()
-  (let ((first-cons-address (find-source-address-in-a-hash *first-cons*))
-        (second-cons-address (find-source-address-in-a-hash *second-cons*)))
-    (assert (and first-cons-address second-cons-address))
-    (setf (gethash first-cons-address *address-substitution-table*) second-cons-address)
-    (setf (gethash second-cons-address *address-substitution-table*) first-cons-address)
-    ))
-           
-(defun y () (first-cons "find-source покажет вторую форму")
-  (second-cons "ой, и правда хакнули отладчик")
-  ;(compiler-break)
-  )
 
-
-(defun test ()
-  (break "Скомпилируй в файле y() и затем продолжи")
-  (particular-fill-address-substitution-table)
-  (y)
-  )
 
 
 ; сделать трассировку compiler::wombat-2 и скомпилировать f (через compile defun)

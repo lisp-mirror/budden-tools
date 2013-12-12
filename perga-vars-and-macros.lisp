@@ -20,15 +20,15 @@
       (perga-expander form)
     (DBG17::END-SOURCE-LOCATION-SUBSTITUTIONS-FN)))|#
 
-(defmacro perga (&whole form &body body)
+(defmacro inner-perga (&whole form &body body)
   (declare (ignore body))
   (PERGA-EXPANDER form))
   
 
-(defmacro pergao (&whole form &body body)
+(defmacro perga (&whole form &body body)
   (declare (ignorable body form))
-  `(dbg17:with-source-location-substitutions
-    (perga ,@body)))
+  `(lw-macro-friendly-dbg:with-source-location-substitutions
+    (inner-perga ,@body)))
   
 ;  (PERGA-EXPANDER form))
           

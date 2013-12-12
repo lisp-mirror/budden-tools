@@ -1,44 +1,23 @@
-;; Лучшее из этого кода находится в lw-macro-friendly-dbg.lisp 
+;;; -*- Encoding: utf-8; -*-
+;;; infrastructure for making lispworks debugger macro friendly
 
-;; Сначала загрузи dbg17.lisp
-;; Пытаемся обработать в макросе. 
-(in-package :dbg17)
+(in-package :lw-macro-friendly-dbg)
 
-;; итак, мы умеем подменять путь для нормального кода (не в степпере, для степпера надо вернуться к dbg5). 
-;; А как мы найдём его? 
-    
 
-#|
-выяснили, что 
-связывание COMPILER::*source-level-form-table* происходит в
-COMPILER::in-process-forms-in-file. 
+(defadvice (compiler::wombat-2 hack-two-conses :around)
+    (form &optional (table COMPILER::*source-level-form-table*))
+  (setf *w-table* table
+        *w-form* form)
+  (call-next-advice form table))
 
-Тогда compiler::process-form (следующий вызов) - уже со связанной таблицей. 
-Значит, для него и сделаем around. Логично? 
 
-Не логично, т.к. он много раз вызывается вложенно и таблица достраивается. 
-А нам нужно отсчитать от корня. 
+(defun find-source-address-in-a-hash (source)
+  (gethash source *w-table*)) 
 
-Лучше повиснем на compiler::wombat-2 
-и будем работать с его результатом. 
-
-Составим таблицу, какой конс мы на какой заменяем. 
-В результате wombat-2 найдём исходный и заменяемый конс и 
-
-|#
-
-; запомним *first-cons*, чтобы потом знать, что на что подменять
-(defparameter *first-cons* nil)
-
-(defvar *compile-time-substitution-table* nil
-  "Ключ таблицы - форма из сгенерированного кода, 
-   значение - место в исходнике из файла, на котором форма будет показываться")
-
-(defvar *with-source-location-substitutions-level* nil "Если уровень не 0, то подстановки действуют")
 
 (defun set-source-location-substitution (source-place real-code)
-  "source-place - место в настоящем исходнике, 
-   real-code - форма, к-рая будет там показывться.
+  "source-place - РјРµСЃС‚Рѕ РІ РЅР°СЃС‚РѕСЏС‰РµРј РёСЃС…РѕРґРЅРёРєРµ, 
+   real-code - С„РѕСЂРјР°, Рє-СЂР°СЏ Р±СѓРґРµС‚ С‚Р°Рј РїРѕРєР°Р·С‹РІС‚СЊСЃСЏ.
    "
   (typecase *compile-time-substitution-table*
     (hash-table
@@ -51,14 +30,6 @@ COMPILER::in-process-forms-in-file.
      nil)
     )
   )
-
-(defmacro first-cons-1 (&whole form x)
-  "Этот макрос вызовет падение в отладчик"
-  (setf *first-cons* form) `(break ,x))
-
-(defmacro second-cons-1 (&whole form x)
-  "А здесь отладчик покажет исходник"
-  (set-source-location-substitution form *first-cons*) `(list ,x))
 
 
 (defun end-source-location-substitutions-fn ()
@@ -89,19 +60,6 @@ COMPILER::in-process-forms-in-file.
 
 
 
-#|  (let ((first-cons-address (find-source-address-in-a-hash *first-cons*))
-        (second-cons-address (find-source-address-in-a-hash *second-cons*)))
-    (assert (and first-cons-address second-cons-address))
-    (setf (gethash first-cons-address *address-substitution-table*) second-cons-address)
-    (setf (gethash second-cons-address *address-substitution-table*) first-cons-address)
-    )) |#
-      
-(defmacro with-bound-compile-time-substitution-table (&body body)
-  `(let ((*compile-time-substitution-table* *compile-time-substitution-table*)
-         (*with-source-location-substitutions-level* (or *with-source-location-substitutions-level* 0)))
-     ,@body))  
-
-
 (defadvice (COMPILER::process-form bind-compile-time-substitution-table :around
                                    :documentation "Isolates *compile-time-substitution-table* variable from other processes")
     (i-form)
@@ -121,32 +79,12 @@ COMPILER::in-process-forms-in-file.
   (incf *with-source-location-substitutions-level*) 
   )
 
-(defmacro begin-source-location-substitutions ()
-  (begin-source-location-substitutions-fn)
-  )
 
-(defmacro end-source-location-substitutions ()
-  (end-source-location-substitutions-fn)
-  )
 
-(defmacro with-source-location-substitutions (form)
-  `(progn 
-     (begin-source-location-substitutions)
-     (multiple-value-prog1
-         ,form
-       (end-source-location-substitutions))))
-
-#| Где упоминается COMPILER::MULTIPLE-TRANSFORMS-RECORD
-
-(COMPILER::TRANSFORM-FORM COMPILER::GET-FORM-PATH COMPILER::FIND-NODE-SOURCE-PATH 
-COMPILER::FIND-NODE-FORM DBG::GENERATE-SCL-INFO DBG17:END-SOURCE-LOCATION-SUBSTITUTIONS-FN 
-COMPILER::COMPILER-SOURCE-LEVEL-TRANSFORMATION-A COMPILER::NODE-REPLACING-NODE)
-
-|#
 
 (defun hack-source-level-form-table (real-code)
-  "Находит real-code в *COMPILE-TIME-SUBSTITUTION-TABLE* и подставляет адрес
-из source-place в него. Возвращает код или подменённый код, а вторым значением - t, если сделала изменения"
+  "РќР°С…РѕРґРёС‚ real-code РІ *COMPILE-TIME-SUBSTITUTION-TABLE* Рё РїРѕРґСЃС‚Р°РІР»СЏРµС‚ Р°РґСЂРµСЃ
+РёР· source-place РІ РЅРµРіРѕ. Р’РѕР·РІСЂР°С‰Р°РµС‚ РєРѕРґ РёР»Рё РїРѕРґРјРµРЅС‘РЅРЅС‹Р№ РєРѕРґ, Р° РІС‚РѕСЂС‹Рј Р·РЅР°С‡РµРЅРёРµРј - t, РµСЃР»Рё СЃРґРµР»Р°Р»Р° РёР·РјРµРЅРµРЅРёСЏ"
   (let* ((maybe-source-form
           (typecase *COMPILE-TIME-SUBSTITUTION-TABLE*
             (HASH-TABLE
@@ -179,17 +117,3 @@ COMPILER::COMPILER-SOURCE-LEVEL-TRANSFORMATION-A COMPILER::NODE-REPLACING-NODE)
   (CALL-NEXT-ADVICE (HACK-SOURCE-LEVEL-FORM-TABLE form))
   )
 
-#|
-(defadvice (COMPILER::FIND-NODE-SOURCE-PATH take-code-from-compile-time-substitution-table :around)
-    (node)
-  (when
-      (and (SLOT-EXISTS-P node 'compiler::source)
-           (SLOT-BOUNDP node 'compiler::source)
-           )
-    (HACK-SOURCE-LEVEL-FORM-TABLE (slot-value node 'compiler::source)))
-  (CALL-NEXT-ADVICE node))
-
-(remove-advice 'COMPILER::FIND-NODE-SOURCE-PATH 'take-code-from-compile-time-substitution-table)
-|#
-;(remove-advice 'compiler::get-form-path 'take-code-from-compile-time-substitution-table)
-; 'DBG::GENERATE-SCL-INFO

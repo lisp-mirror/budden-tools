@@ -5,9 +5,6 @@
   :depends-on (:budden-tools :alexandria)
   :components
   (
-   (:file "experiments/hack-debugger/dbg17")
-   (:file "experiments/hack-debugger/dbg18")
-   (:file "experiments/hack-debugger/dbg18-test")
    (:file "perga-implementation-package")
    (:file "perga-vars-and-macros")
    (:file "perga-aux-funs")

@@ -37,7 +37,6 @@ State of the code is pre-alpha. Feedback is greatly appreciated.
   (setf (car literal) (car expanded)
         (cdr literal) (cdr expanded)))
 
-
 (defmacro put-source-cons-at-macroexpansion-result (literal expanded &optional accessor)
   #-russian
   "Anti-hygienic macro to smash literal data. 
@@ -55,12 +54,6 @@ State of the code is pre-alpha. Feedback is greatly appreciated.
   Действует только, если *in-stepize*, см. advice на lispworks-tools::stepize
   Cons из literal заполняется данными (car и cdr) из (accessor expanded) и помещается в макрорасширенный код на место (accessor expanded). После этого, на literal можно поставить точку останова.
    "
-
-  ; !!!!! DBG17 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  (return-from put-source-cons-at-macroexpansion-result nil)
-  ; !!!!! DBG17 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
-
   (assert (symbolp literal))
   (assert (symbolp expanded))
   (assert (symbolp accessor))
