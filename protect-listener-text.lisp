@@ -105,7 +105,7 @@
       (EDITOR::editor-beep)
       (when *enable-protection*
         ;(let ((*enable-protection* nil)) ; temporary 
-        ;  (error "Attempt to edit non-editable listener history"))
+        ;  (break "Attempt to edit non-editable listener history"))
         (EDITOR::signal-editing-in-a-read-only-window (EDITOR:point-buffer point))))
      ))))
         
@@ -162,15 +162,40 @@
   (check-editable-point start 0 0)
   (check-editable-point end t -1))
 
+(defmacro with-inhibited-protection (buf &body body)
+  (let ((buffer (gensym)))
+  `(let ((,buffer ,buf))
+     (unwind-protect
+         (progn
+           (set-protected-offset ,buffer -1)
+           ,@body) 
+       (set-protected-offset ,buffer 0)
+       (maybe-fix-protected-offset (buffers-end ,buffer) 1)))))
+  
+
 (defadvice (editor::clear-listener allow-even-if-protected :around)
     ()
-  (let ((buffer (current-buffer)))
-    (unwind-protect
-        (progn
-          (set-protected-offset buffer -1)
-          (call-next-advice))
-      (set-protected-offset buffer 0)
-      (maybe-fix-protected-offset (buffers-end buffer) 1))))
+  (with-inhibited-protection (current-buffer)
+   (call-next-advice)))
+  
+
+(defadvice (editor::updating-rubber-points allow-even-if-protected :around)
+    (stream chars char-or-string cstart cend)
+  (editor::check-editor-stream stream) ; stolen from original definition
+  (let ((buffer (point-buffer (editor::rubber-stream-output-point stream))))
+    (with-inhibited-protection buffer
+      (call-next-advice stream chars char-or-string cstart cend))))
+    
+                                           
+
+
+#|(defadvice (EDITOR::rubber-out allow-even-if-protected :around)
+    (stream char)
+  (EDITOR::editor-beep)
+  (EDITOR::editor-beep)
+  (with-inhibited-protection
+    (call-next-advice stream char)))|#
+
   
 (defadvice (editor::history-previous-command allow-even-if-protected :around)
     (p)
@@ -192,4 +217,5 @@
           (call-next-advice p))
       (set-protected-offset buffer 0)
       (maybe-fix-protected-offset (buffers-end buffer) 1))))
+  
   
