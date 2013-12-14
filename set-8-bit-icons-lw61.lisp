@@ -1,11 +1,20 @@
 ;;---------------------------------------------------
-;; This is part of Budden's tools for lispworks
+;; This was intended to be a part of Budden's tools for 
+;; Lispworks
 ;; 
 ;; Change lispworks IDE icons to 8 bit bmp-s 
-;; to avoid watching Malevich' black square when work
-;; through RDP in Windows XP
+;; to avoid watching Malevich' black square when sreen
+;; resolution is 16 bit (e.g. through RDP in Windows XP)
 ;; To enable or disable icons, use 
 ;; (set-8-bit-icons-lw61::! [t or nil]) 
+;; 
+;; I extracted icons from a screenshots of 4.4 and 6.1 
+;; Personal IDE but I can't publish them as I have no 
+;; permission from Lispworks ltd. 
+;;
+;; So you can extract them from screenshot yourself, 
+;; draw your own icon set of request icons 
+;; from Lispworks ltd.
 ;; 
 ;; Public domain
 ;; Created by budden73 2013-12-10
