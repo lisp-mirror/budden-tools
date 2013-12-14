@@ -38,6 +38,6 @@
    )
    (:file "pass-by-ref" ;:documentation "Pass place to a function by reference (portable)"
    )
-   (:file "print-hash-table" ;:documentation "Print hashtable readably "
+   (:file "print-hash-table" ;:documentation "Print hashtable readably and other hash table utils"
 )
    )) 

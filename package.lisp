@@ -72,6 +72,7 @@
    budden-tools:make-weak-key-hash-table ; from swank
    budden-tools:make-weak-value-hash-table ; from swank
    budden-tools:mkhash ; make hash and fill it with data, used for printing hash-tables readably
+   budden-tools:hash-table-difference ; like set-difference, but for hash tables
 
 ;; structures
    budden-tools:struct-to-alist ; lispworks only for now
