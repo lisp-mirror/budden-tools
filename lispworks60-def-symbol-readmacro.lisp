@@ -337,8 +337,9 @@ Str - входная строка, для которой необходимо з
                   (:next-iteration))
                 (:for name = (subseq (prin1-to-string (make-symbol (symbol-name sym))) 2))
                 (:for pkg2 = (symbol-package sym))
-                (:collect 
-                   (list name (package-name pkg2) storage sym)))
+                (when pkg2 ; can be inherited uninterned symbol so it has no home package
+                  (:collect 
+                   (list name (package-name pkg2) storage sym))))
               #|(if (not ext)
                   (iter
                     (:for sym 
