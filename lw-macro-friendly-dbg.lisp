@@ -34,29 +34,30 @@
 
 (defun end-source-location-substitutions-fn ()
   "Converts map between conses to map between numeric addresses"
-  (incf *with-source-location-substitutions-level* -1) 
-  (unless (= *with-source-location-substitutions-level* 0)
-    (return-from END-SOURCE-LOCATION-SUBSTITUTIONS-FN nil))
-  (let ((address-substitution-table (make-hash-table :test 'eq)))
-    (maphash
-     (lambda (real-code source-place)
-       (let ((source-place-address (find-source-address-in-a-hash source-place)))
-         (typecase source-place-address
-           (integer
-            (let ((real-code-address (find-source-address-in-a-hash real-code)))
-              (typecase real-code-address
-                (integer
-                 (unless (eql real-code-address source-place-address)
-                   (setf (gethash real-code-address address-substitution-table)
-                         source-place-address)))
-                (t #+nil (warn "code-address not found for ~S" real-code)))))
-           (COMPILER::MULTIPLE-TRANSFORMS-RECORD
-            (warn "source-place-address=~S" source-place-address)
-            )
-           (t #+nil (warn "source-place address not found for ~S" source-place)))))
-     *compile-time-substitution-table*)
+  (when *with-source-location-substitutions-level*
+    (incf *with-source-location-substitutions-level* -1) 
+    (unless (= *with-source-location-substitutions-level* 0)
+      (return-from END-SOURCE-LOCATION-SUBSTITUTIONS-FN nil))
+    (let ((address-substitution-table (make-hash-table :test 'eq)))
+      (maphash
+       (lambda (real-code source-place)
+         (let ((source-place-address (find-source-address-in-a-hash source-place)))
+           (typecase source-place-address
+             (integer
+              (let ((real-code-address (find-source-address-in-a-hash real-code)))
+                (typecase real-code-address
+                  (integer
+                   (unless (eql real-code-address source-place-address)
+                     (setf (gethash real-code-address address-substitution-table)
+                           source-place-address)))
+                  (t #+nil (warn "code-address not found for ~S" real-code)))))
+             (COMPILER::MULTIPLE-TRANSFORMS-RECORD
+              (warn "source-place-address=~S" source-place-address)
+              )
+             (t #+nil (warn "source-place address not found for ~S" source-place)))))
+       *compile-time-substitution-table*)
     ;(print `("number of substitutions is" ,(hash-table-count *address-substitution-table*)) *trace-output*)
-    nil)) 
+      nil)))
 
 
 
@@ -74,10 +75,12 @@
      
 
 (defun begin-source-location-substitutions-fn ()
-  (setf *compile-time-substitution-table*
-        (or *compile-time-substitution-table* (make-hash-table :test 'eq)))
-  (incf *with-source-location-substitutions-level*) 
-  )
+  (when *with-source-location-substitutions-level* ; пытаемся избежать проблем, если 
+     ; по какой-то причине переменные не связаны
+    (setf *compile-time-substitution-table*
+          (or *compile-time-substitution-table* (make-hash-table :test 'eq)))
+    (incf *with-source-location-substitutions-level*) 
+    ))
 
 
 
