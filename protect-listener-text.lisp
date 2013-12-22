@@ -153,7 +153,7 @@
     (start end &optional deleted-string)
   (declare (ignore deleted-string))
   (check-editable-point start 0 0)
-  (check-editable-point end t -1)
+  (check-editable-point end t 0)
   )
 
 (defadvice (EDITOR::%kill-region disallow-if-protected :before)
