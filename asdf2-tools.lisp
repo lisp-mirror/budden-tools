@@ -607,5 +607,49 @@ if you undefsystem it"
    (packages :initarg :packages))
   (:documentation "Represents file with package definitions. List files as a value of :packages initarg"))
 
+(dspec:define-dspec-class defsystem nil 
+  "Defined system"
+  :definedp 
+  #'(lambda (name)
+      ;; Find any object that def-saved-value recorded
+      (asdf::system-registered-p name))
+  :undefiner #'(lambda (&rest ignore) 
+                 (declare (ignore ignore)) 
+                 (warn "Don't know how to undefine asdf::defsystem")
+                 (constantly t)
+                 )
+  :object-dspec
+  #'(lambda (obj)
+      (and (typep obj 'system)
+           `(defsystem ,(component-name obj)))))
+
+(dspec:define-form-parser defsystem (name &rest args)
+  (declare (ignore defsystem args))
+  `(defsystem ,name))
+
     
   
+(lispworks:defadvice (defsystem defsystem-record-definition :around)
+    (call environment)
+  ;(print call)
+  (let ((system-name (second call)))
+    (cond
+     (system-name
+      `(dspec:def (defsystem ,system-name)
+         (progn
+           (dspec::record-definition `(defsystem ,',system-name)
+                                     (dspec:location))
+           ,(lispworks:call-next-advice call environment))))
+     (t     
+      (lispworks:call-next-advice call environment)))))
+ ; `(call-next-advice ,name ,@options))
+
+
+
+#|(defmacro defsystem (name &body options)
+  #-lispworks `(defsystem-inner ,name ,options)
+  #+lispworks `(dspec:def (defsystem ,(asdf-keywordize name))
+                 (when (dspec::record-definition `(defsystem ,',(asdf-keywordize name))
+                                          (dspec:location))
+                   (defsystem-inner ,name ,@options))
+                 ))|# 
