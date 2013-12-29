@@ -9,7 +9,7 @@
 (EDITOR:define-editor-variable protected-offset 0
    "Internal variable to keep track of last listener prompt. One can not modify prompt unless variable is bound to -1")
 
-; Just one space after listener prompt
+; Just one space after listener prompt. Note this will not work for Cyrillic text
 (setf (editor:variable-value 'editor::prompt-regexp-string)
       (format nil "^[A-Z=][^$%#>~a<]*[$%#>]+ " #\newline)
       )
@@ -143,10 +143,13 @@
   (declare (ignore character combine-char))
   (check-editable-point point nil 0))
 
+
+;(defvar *last-delete-characters-n*)
 (defadvice (EDITOR::delete-characters disallow-if-protected :before)
     (point &optional (n 1))
-  (declare (ignore n))
-  (check-editable-point point t -1))
+  ;(setf *last-delete-characters-n* n)
+  (check-editable-point point t 0)
+  (check-editable-point point t n))
                                     
 
 (defadvice (EDITOR:delete-between-points disallow-if-protected :before)
