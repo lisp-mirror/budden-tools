@@ -30,6 +30,7 @@
    (:file "lw-macro-friendly-stepper") ; put breakpoints in macros without macroexpansion (for stepper)
    (:file "lw-macro-friendly-dbg-vars-and-macros") ; find frame source correction for debugger
    (:file "lw-macro-friendly-dbg") ; find frame source correction for debugger
+   (:file "res-fun-with-keyargs-in-a-debugger") ; :restart-with-keywords-risky debugger command - restart frames with &key args
    (:file "proga")          ; portable, semi-obsolete
    (:file "proga-test") 
    (:file "iterate-extensions") ; some iterate drivers
