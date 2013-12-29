@@ -1049,7 +1049,7 @@ variables to allow for nested and thread safe reading."
       ; brt - если назначен специальный ридер для этого пакета, используем его
       (let ((found (hp-find-package package-designator)))
         (unless found
-          (error "package ~S not found" package-designator
+          (simple-reader-error stream "package ~S not found" package-designator
                  ))
         (let ((custom-token-reader (budden-tools::get-custom-reader-for-package found)))
           (when custom-token-reader
@@ -1112,11 +1112,11 @@ variables to allow for nested and thread safe reading."
                      (when (eq test :external) (return symbol))
                      (let ((name (read-buffer-to-string)))
                        (with-simple-restart (continue "Use symbol anyway.")
-                         (error (if test
-                                    "The symbol ~S is not external in the ~A package."
-                                  "Symbol ~S not found in the ~A package.")
-                                name (package-name found)
-                                ))
+                         (simple-reader-error stream (if test
+                                                  "The symbol ~S is not external in the ~A package."
+                                                "Symbol ~S not found in the ~A package.")
+                                              name (package-name found)
+                                              ))
                        (return (intern name found))))))))
           (when (not seen-multiple-escapes)
           (let ((readmacro (budden-tools::symbol-readmacro symbol)))
