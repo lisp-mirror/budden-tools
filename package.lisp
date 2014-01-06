@@ -221,7 +221,10 @@
 
 ;; locations
    budden-tools:row-col-offset ; type for storing location in a row-col coordinates
+   budden-tools:row-col-offset-row 
+   budden-tools:row-col-offset-col 
    budden-tools:buffer-offset-to-row-col-offset ; find row-col-offset in an editor
+   budden-tools:row-col-offset-to-buffer-offset
    "
    ))
 
