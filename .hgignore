@@ -7,3 +7,4 @@ syntax: glob
 *.bak
 glob:doc/tinaa/*
 glob:xlam/*.*
+glob:img/*.bmp
