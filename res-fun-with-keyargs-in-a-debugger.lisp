@@ -1,3 +1,13 @@
+;;; -*- Encoding: utf-8; -*-
+
+;;; Lispworks, Restarting functions with &key arguments
+;; budden-tools for Lispworks by budden73, 2013-2014
+;; to restart function, use :restart-with-keywords-risky debugger command
+;; note that current values of arguments are used, not initial ones.
+;; So, if default values are changed and function is recompiled, 
+;; or if arugments are altered inside a function, restart will be not
+;; equivalent to initial call. 
+
 (def-merge-packages::! :res-fun-with-keyargs-in-a-debugger
  (:use :cl :hcl :lispworks)
  (:import-from :alexandria.0.dev
@@ -7,28 +17,31 @@
 
 (in-package :res-fun-with-keyargs-in-a-debugger)
 
+#| Useful code for debugger study, don't delete it
+
 (defvar *restart-risky* nil
   "If it is t, we try to restart frame even if its lambda-list contains &key arguments")
 
 (defadvice (dbg::get-frame-arguments my-hack :around)
-  (dbg::frame function DBG::same-arguments-p 
-      ; &rest keys ; hmm, unable to pass it to call-next-advice? 
+  (&rest all-args ; hmm, unable to pass it to call-next-advice? 
               )
   "This function is called when we try to restart a frame"
-  (let (risky-args-with-keys)
-    (cond
-     ((null *restart-risky*)
-      (call-next-advice dbg::frame function DBG::same-arguments-p))
-     ((null DBG::same-arguments-p) ; не знаем, что это и не будем рисковать.
-      (call-next-advice dbg::frame function DBG::same-arguments-p)
-      ) 
-     ((setf risky-args-with-keys  
-            (ignore-errors (process-risky-lambda-list function)))
-      ; это ключи - попытаем удачи
-      (dbg::dbg-eval `(list ,@risky-args-with-keys)))
-     (t
-      (call-next-advice dbg::frame function DBG::same-arguments-p)
-      ))))
+  (destructuring-bind (dbg::frame function DBG::same-arguments-p &rest keys)
+      all-args
+    (let (risky-args-with-keys)
+      (cond
+       ((null *restart-risky*)
+        (apply #'call-next-advice dbg::frame function DBG::same-arguments-p keys))
+       ((null DBG::same-arguments-p) ; РЅРµ Р·РЅР°РµРј, С‡С‚Рѕ СЌС‚Рѕ Рё РЅРµ Р±СѓРґРµРј СЂРёСЃРєРѕРІР°С‚СЊ.
+        (apply #'call-next-advice dbg::frame function DBG::same-arguments-p keys)
+        ) 
+       ((setf risky-args-with-keys  
+              (ignore-errors (process-risky-lambda-list function)))
+      ; СЌС‚Рѕ РєР»СЋС‡Рё - РїРѕРїС‹С‚Р°РµРј СѓРґР°С‡Рё
+        (dbg::dbg-eval `(list ,@risky-args-with-keys)))
+       (t
+        (apply #'call-next-advice dbg::frame function DBG::same-arguments-p keys)
+        )))))
   
 (defun convert-keyword-def-to-call (something keyword-parameters)
   "Returns a list to add to parameter list"
@@ -84,6 +97,7 @@
       (setf result (append result (convert-keyword-def-to-call something keyword-parameters))))
     result
     ))
+|#
 
   
 (defun risky-restart-frame-command (ignore &optional (samep t))
