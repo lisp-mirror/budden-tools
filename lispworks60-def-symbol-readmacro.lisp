@@ -127,7 +127,7 @@ NIL
   (let1 *use-decorated-package-system-fns* t 
     (multiple-value-bind (string package)
         (funcall fn point)
-      (SHOW-EXPR `(symbol-string-at-point returned ,string ,package))
+      ; (SHOW-EXPR `(symbol-string-at-point returned ,string ,package))
       (values
        string
        package 

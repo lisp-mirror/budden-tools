@@ -443,18 +443,51 @@ srcpl - symbol-readmacro. Прочитать объект и запрограм�
   )
 
 
+(defstruct row-col-offset "Хранит положение в файле. 
+  Строки и колонки начинаются с 1 (надо отметить, что в EMACS колонки начинаются с 0). Может опционально хранить offset в буфере или файле"
+  (row 0) (col 0) b-offset f-offset)
+
+#+lispworks 
+(defun buffer-offset-to-row-col-offset (buffer offset-or-point)
+  "По смещению в буфере возвращает row-col-offset. UNTESTED"
+  (editor::with-point
+     ((point (etypecase offset-or-point
+               (editor::point offset-or-point)
+               (integer (editor:buffers-start buffer)))))
+    (when (typep offset-or-point 'integer)
+      (editor:character-offset point offset-or-point))
+   
+    ; stolen from EDITOR:what-line-command
+    (let* ((row
+            (1+ (editor::count-lines
+                 (editor:buffers-start buffer) point)))
+           
+           ; stolen from editor::show-cursor-position-info <- EDITOR:what-cursor-position-command
+           (col (editor::point-column point))
+           (b-offset (editor::point-to-offset point)))
+      (make-row-col-offset :row row :col col
+                           :b-offset b-offset))))
+
+
 #+lispworks 
 (defun point-file-offset (point)
   (let* ((buffer (editor::point-buffer point))
          (lineno (editor::count-lines (editor::buffers-start buffer) point)))
     (+ (real-point-offset point) lineno)))
 
+
+; Здесь переделать в row-col-offset и проследить, где используется, там заменить.
+
 (defun extract-file-position (stream)
-  "Возвращает текущую позицию в потоке (в каких единицах?)" 0
+  "Возвращает текущую позицию в потоке. Для editor-region-stream - в виде row-col-offset, иначе - число - смещение в файле" 
   (typecase stream
     #+lispworks
     (editor::editor-region-stream
-     (point-file-offset (slot-value stream 'editor::point))
+     (let ((point (slot-value stream 'editor::point)))
+       (buffer-offset-to-row-col-offset
+        (EDITOR:point-buffer point)
+        point))
+     ; (point-file-offset (slot-value stream 'editor::point))
      ;1 point-of-the-position (copy-point 
      ;(+ (file-position stream) 
      ;   (point-file-offset #|05 real-point-offset|# (slot-value stream 'editor::start))

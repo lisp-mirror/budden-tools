@@ -215,8 +215,13 @@
    |`|
    |,|
 ;; some symbol-readmacros. Will work when :def-symbol-readmacro is loaded
-   budden-tools:/with-package/
-   budden-tools:/with-readtable-case/
+   budden-tools:/with-package/ ; deprecated. 
+   budden-tools:/with-readtable-case/ ; deprecated
+
+
+;; locations
+   budden-tools:row-col-offset ; type for storing location in a row-col coordinates
+   budden-tools:buffer-offset-to-row-col-offset ; find row-col-offset in an editor
    "
    ))
 
