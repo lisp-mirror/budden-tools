@@ -469,6 +469,17 @@ srcpl - symbol-readmacro. Прочитать объект и запрограм�
                            :b-offset b-offset))))
 
 
+(defun row-col-offset-to-buffer-offset (offset-or-row-col-offset)
+  (etypecase offset-or-row-col-offset
+    (integer
+     offset-or-row-col-offset)
+    (row-col-offset
+     (row-col-offset-b-offset offset-or-row-col-offset)
+     )))
+      
+      
+
+
 #+lispworks 
 (defun point-file-offset (point)
   (let* ((buffer (editor::point-buffer point))
@@ -535,6 +546,8 @@ srcpl - symbol-readmacro. Прочитать объект и запрограм�
   (let (source beg end)
     (when position
       (dsetq (source beg end) position))
+    (setf beg (row-col-offset-to-buffer-offset beg))
+    (setf end (row-col-offset-to-buffer-offset beg))
     (when source
       "Здесь нам нужен нелёгкий выбор. Если объект уже имеет данные о своём расположении, 
 мы предпочитаем взять их. Хотя, на самом-то деле, нам нужно взять все и сделать
