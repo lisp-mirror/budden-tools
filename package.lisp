@@ -225,6 +225,7 @@
    budden-tools:row-col-offset-col 
    budden-tools:buffer-offset-to-row-col-offset ; find row-col-offset in an editor
    budden-tools:row-col-offset-to-buffer-offset
+   BUDDEN-TOOLS:row-col-offset-b-offset
    "
    ))
 

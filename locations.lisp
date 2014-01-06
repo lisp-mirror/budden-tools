@@ -470,6 +470,7 @@ srcpl - symbol-readmacro. Прочитать объект и запрограм�
 
 
 (defun row-col-offset-to-buffer-offset (offset-or-row-col-offset)
+  "На вход принимает row-col-offset или число (уже смещение в буфере). Возвращает смещение в буфере"
   (etypecase offset-or-row-col-offset
     (integer
      offset-or-row-col-offset)
@@ -478,8 +479,6 @@ srcpl - symbol-readmacro. Прочитать объект и запрограм�
      )))
       
       
-
-
 #+lispworks 
 (defun point-file-offset (point)
   (let* ((buffer (editor::point-buffer point))
