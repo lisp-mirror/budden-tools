@@ -33,7 +33,8 @@
   )
 
 #+lispworks 
-(defmacro def-symbol-readmacro (symbol reader) 
+(defmacro def-symbol-readmacro (symbol reader &key documentation)
+  (declare (ignore documentation))
   `(dspec:def ,symbol
      (def-symbol-readmacro-fun ',symbol ,reader (dspec:location))
      ))
