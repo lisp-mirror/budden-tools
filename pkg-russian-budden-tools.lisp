@@ -1,4 +1,8 @@
 ;;; -*- Encoding: utf-8; -*-
+
+;; This file can be unnecessary for lispworks as lispwork 
+;; contains functions like LISPWORKS:unicode-char-equal etc.
+
 (in-package :cl-user) 
 
 (eval-when (:execute)
