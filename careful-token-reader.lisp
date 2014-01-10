@@ -125,8 +125,8 @@ so use stream parameter only to identify a reader. Return value of hook function
 ;;; end of open-paren for symbol-readmacro
 
 
-(defun simple-reader-error (stream format-string &rest args )
-  (error "~A in stream ~A" (apply 'format nil format-string args) stream))
+; (defun simple-reader-error (stream format-string &rest args )
+;   (error "~A in stream ~A" (apply 'format nil format-string args) stream))
 
 
 (eval-when (:load-toplevel) (print "6--------------------------------------"))

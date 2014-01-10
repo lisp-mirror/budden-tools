@@ -13,7 +13,7 @@
   (:documentation "Some tools by budden. See packages definition to find a list of symbols")
   (:use :cl :named-readtables :buddens-readtable ; :org.tfeb.hax.hierarchical-packages
    :def-merge-packages :decorate-function :iterk)
-  (:import-from :alexandria #:with-gensyms #:once-only #:string-designator #:eswitch #:cswitch #:switch)
+  (:import-from :alexandria #:with-gensyms #:once-only #:string-designator #:eswitch #:cswitch #:switch alexandria:simple-reader-error)
   (:import-from :split-sequence #:split-sequence)
   (:import-from :swank #:*readtable-alist*)
   (:import-from :swank-backend #:pathname-to-filename #:filename-to-pathname #:make-weak-key-hash-table #:make-weak-value-hash-table)
@@ -221,6 +221,7 @@
 
 ;; locations
    budden-tools:row-col-offset ; type for storing location in a row-col coordinates
+   budden-tools:make-row-col-offset 
    budden-tools:row-col-offset-row 
    budden-tools:row-col-offset-col 
    budden-tools:buffer-offset-to-row-col-offset ; find row-col-offset in an editor
