@@ -403,7 +403,7 @@ srcpl - symbol-readmacro. Прочитать объект и запрограм�
   )
 
 (defun extract-source-filename-from-stream (stream)
-  "Посмотреть в SLIME. ДУБЛИРОВАНО ГДЕ_ТО ЕЩЁ, дубль убрать"
+  "Посмотреть в SLIME"
 ;  (declare (optimize speed))
   #-lispworks (error "Not implemented")
   #+lispworks
@@ -496,24 +496,7 @@ srcpl - symbol-readmacro. Прочитать объект и запрограм�
      (let ((point (slot-value stream 'editor::point)))
        (buffer-offset-to-row-col-offset
         (EDITOR:point-buffer point)
-        point))
-     ; (point-file-offset (slot-value stream 'editor::point))
-     ;1 point-of-the-position (copy-point 
-     ;(+ (file-position stream) 
-     ;   (point-file-offset #|05 real-point-offset|# (slot-value stream 'editor::start))
-     ;   
-     ;   )
-     )
-    #+lispworks4 ; всё равно не работает, т.к. *stream-line-count* меняет только наш ридер, а не лисповый
-    (stream::ef-file-stream 
-     (let1 v (or (gethash stream *stream-line-count*) 0)
-       (- (file-position stream) v)
-       ))
-    #|#+nothingLispworks6
-    (stream::ef-file-stream 
-     (let1 v (or (gethash stream *stream-line-count*) 0)
-       (- (file-position stream) v)
-       ))|#
+        point)))
     (t (file-position stream))))
  
         
