@@ -17,8 +17,6 @@
 
 (in-package :res-fun-with-keyargs-in-a-debugger)
 
-#| Useful code for debugger study, don't delete it
-
 (defvar *restart-risky* nil
   "If it is t, we try to restart frame even if its lambda-list contains &key arguments")
 
@@ -38,21 +36,35 @@
        ((setf risky-args-with-keys  
               (ignore-errors (process-risky-lambda-list function)))
       ; это ключи - попытаем удачи
-        (dbg::dbg-eval `(list ,@risky-args-with-keys)))
+        (dbg::dbg-eval (print `(list ,@risky-args-with-keys))))
        (t
         (apply #'call-next-advice dbg::frame function DBG::same-arguments-p keys)
         )))))
   
+;(defun extract-keyword-from-keyword-arg-spec (spec)
+;  (typecase spec
+;    (symbol spec)
+;    ((cons symbol)
+;     (car spec))
+;    (t nil)))
+    
+    
+
 (defun convert-keyword-def-to-call (something keyword-parameters)
-  "Returns a list to add to parameter list"
+  "Returns a list to add to parameter list. Something is keyword argument spec from lambda-list"
   (when (eq something '&key)
     (return-from convert-keyword-def-to-call nil))
   (dolist (k keyword-parameters)
     (destructuring-bind ((keyword-name name) init supplied-p) k
       (declare (ignore init supplied-p))
-      (when (eq name something)
-        (return-from convert-keyword-def-to-call
-          `(,keyword-name ,name)))))
+      (let ((name-from-lambda-list
+             (etypecase something
+              (symbol something)
+              (cons (car something)))))
+        (when (eq name-from-lambda-list name)
+          (return-from convert-keyword-def-to-call
+            `(,keyword-name ,name)))
+        )))
   (list something))
 
 
@@ -97,9 +109,7 @@
       (setf result (append result (convert-keyword-def-to-call something keyword-parameters))))
     result
     ))
-|#
-
-  
+   
 (defun risky-restart-frame-command (ignore &optional (samep t))
   "Wrapper around dbg::restart-frame-command to allow restarting functions with &key"
   (let ((*restart-risky* t))
