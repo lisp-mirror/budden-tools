@@ -102,12 +102,18 @@ so use stream parameter only to identify a reader. Return value of hook function
   (when *reading-parens*
     (push-function-to-call-when-paren-is-closing
      (lambda (result stream)
-       (assert (consp result) () 
-         "Something wrong with symbol readmacro: list reader on ~S returned atom ~S" stream result)
-       (assert (eq object (car result)) ()
-         "In ~S, symbol-readmacro should be at the first position in a list" result)
-       (assert (null (cdr result)) ()
-         "car-symbol-readmacro should have read entire list in ~S" result)
+       (unless (consp result)
+         (simple-reader-error
+          stream 
+          "Something wrong with symbol readmacro: list reader on ~S returned atom ~S" stream result))
+       (unless (eq object (car result))
+         (simple-reader-error 
+          stream                    
+         "In ~S, symbol-readmacro should be at the first position in a list" result))
+       (unless (null (cdr result))
+         (simple-reader-error
+          stream
+          "car-symbol-readmacro should have read entire list in ~S" result))
        (car result))))
     object)
 
