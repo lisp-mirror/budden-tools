@@ -77,6 +77,20 @@ to resolve circular references between systems"
   (load (component-pathname component)))
 
 
+(defmethod output-files ((op compile-op) (c load-only-cl-source-file))
+  (declare (ignorable op c))
+  nil)
+
+(defmethod operation-done-p ((op compile-op) (c load-only-cl-source-file))
+  (declare (ignorable op c))
+  t)
+
+(defmethod input-files ((operation load-op) (c load-only-cl-source-file))
+  (declare (ignorable op))
+  (list (component-pathname c)))
+
+
+
 ;;; the following are non-functions. In fact
 (defvar *asdf-help* "Read my docstring"
   "Code snippets to use with asdf. 
