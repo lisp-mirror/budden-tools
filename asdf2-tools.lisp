@@ -63,15 +63,27 @@ to resolve circular references between systems"
   (perform (make-instance 'load-source-op) (find-component (find-system system) component-name))
   )
 
+; from asdf-binary-locations
+(defclass load-only-file-mixin ()
+  ())
+
+(defclass load-only-cl-source-file (load-only-file-mixin cl-source-file)
+  ())
+
+(defmethod perform :around ((op compile-op) (component load-only-file-mixin))
+  nil)
+
+(defmethod perform ((op load-op) (component load-only-cl-source-file))
+  (load (component-pathname component)))
+
 
 ;;; the following are non-functions. In fact
 (defvar *asdf-help* "Read my docstring"
   "Code snippets to use with asdf. 
-To load only a source and not to compile a file: 
+To load only a source and not to compile a file,
 change a type of a component: 
-\(asdf::! :asdf-binary-locations) 
 ...
-\(asdf-binary-locations-system::load-only-cl-source-file \"your-file\")
+\(:load-only-cl-source-file \"your-file\") ; stolen from asdf-binary-locations
 
 To return a system-object by a system name:
 \(asdf:find-system system-name)
