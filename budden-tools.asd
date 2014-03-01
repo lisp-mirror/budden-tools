@@ -20,8 +20,9 @@
    (:file "def-merge-packages"
     ;:documentation "defpackage with some new clauses which are useful in conjunction with this library. See def-merge-packages::!"
     )
-   (:package-file "package") ; might need 
+   (:package-file "package") ; might need
    (:package-file "package-proga-implementation")
+   (:file "def-toplevel-progn")
    (:file "let1")
    (:file "def-trivial-test") ; yet another test suite
    (:file "budden-tools")   ; some useful functions
