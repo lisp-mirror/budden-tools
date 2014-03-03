@@ -348,27 +348,38 @@ FIXME shadow find-symbol? FIXME rename"
     (setf name (string-upcase-ascii name)))
    (t name)))
 
-(defun intern-check-forbidden (name package)
+(defun intern-check-forbidden (name package stream)
   "Looks if the name is forbidden. Prior to call of the function, name should be transformed according to readtable-case conventions. Internal function, do not use it in your code."
-  (proga
-    (let m (gethash (keywordize-package-designator package) 
-                    *per-package-metadata*))
+  (let ((m (gethash (keywordize-package-designator package) 
+                    *per-package-metadata*)))
     (when m
-      (let fs (package-metadata-forbidden-symbol-names m))
-      (assert (null (find name fs :test 'string=)) () "Symbol name ~S is forbidden in ~A" name package)
+      (let ((fs (package-metadata-forbidden-symbol-names m)))
+        (when (find name fs :test 'string=)
+          (simple-reader-error stream "Symbol name ~S is in forbidden-symbol-names of ~A" name package))))
       ;(break)
-      (assert (null (package-metadata-interning-is-forbidden m)) () "Unable to intern ~S into ~A as interning is currently forbidden for ~A" name package package)
-      )
-    (intern name package)))
+    (multiple-value-bind (symbol-found success) (find-symbol name package)
+      (cond
+       ((and (not success)
+             (or (not m)
+                 (not (package-metadata-allow-qualified-intern m))))
+        (simple-reader-error stream "qualified-intern is not allowed for ~A" package))
+       ((and (not success)
+             m
+             (package-metadata-interning-is-forbidden m))
+        (simple-reader-error stream "interning-is-forbidden for ~A" name package))
+       (success
+        symbol-found)
+       (t 
+        (intern name package))))))
 
-(defun check-symbol-forbidden (symbol package)
+#|FIXME Delete me (defun check-symbol-forbidden (symbol package)
   "Check if the symbol's name is forbidden in the package. Prior to call of the function, name should be transformed according to readtable-case conventions. This is interal function, don't use it in your code"
   (when (member symbol (package-metadata-forbidden-symbol-names (ensure-package-metadata package)) :test 'string=) ;
     ; find with string= so that to intercept symbol with the wrong name even if someone evil have uninterned our 'true' forbidden symbol
     (error "Symbol ~S is forbidden in ~A" symbol package)
     )
   symbol 
-  )
+  )|#
 
 (defvar *show-package-system-vars-id* 0)
 

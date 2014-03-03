@@ -1105,7 +1105,7 @@ variables to allow for nested and thread safe reading."
                (block nil
                  (if (or (zerop colons) (= colons 2) (eq found *keyword-package*))
                      (if (= colons 2)
-                         (return (budden-tools::intern-check-forbidden (subseq *read-buffer* 0 *ouch-ptr*) found))
+                         (return (budden-tools::intern-check-forbidden (subseq *read-buffer* 0 *ouch-ptr*) found stream))
                        (return (intern* *read-buffer* *ouch-ptr* found)))
                    (multiple-value-bind (symbol test)
                        (find-symbol* *read-buffer* *ouch-ptr* found)
