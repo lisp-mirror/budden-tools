@@ -18,6 +18,7 @@
      #:get-undecorated)
     (:use :cl)))
 
+(asdf:of-system :decorate-function)
 (in-package :decorate-function)
 
 ;;; Здесь нормально (с проверкой переопределения) сделаны макросы. Ф-ии надо переделать. 

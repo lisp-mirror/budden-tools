@@ -1,6 +1,6 @@
 ;;; -*- Encoding: utf-8; -*-
 ;;; Loading of the file sets up #L readmacro 
-
+(asdf:of-system :buddens-readtable)
 (in-package :buddens-readtable)
 
 ;; SharpL 
