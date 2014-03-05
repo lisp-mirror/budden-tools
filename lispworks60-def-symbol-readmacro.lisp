@@ -297,7 +297,7 @@ Str - входная строка, для которой необходимо з
                          (casified-prefix
                           (or 
                            (budden-tools:hp-find-package casified-prefix editor-package)
-                           (error "Package or local-nickname ~S not found" casified-prefix)))
+                           (editor:editor-error "Package or local-nickname ~S not found" casified-prefix)))
                          ((and
                            (null casified-prefix)
                            (eql colon-pos 0)
