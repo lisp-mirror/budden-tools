@@ -717,6 +717,10 @@ variables to allow for nested and thread safe reading."
                    really-package)
              )))))
 
+;brt
+(defvar *return-package-and-symbol-name-from-read* nil
+  "Side branch of read. It is intended to parse symbol with all bells and whistles. If it is true and
+  we (read) to get a symbol, two values are returned: potential symbol name and package found. No symbol is interned")
 
 ;;; If the symbol named by the first LENGTH characters of NAME doesn't exist,
 ;;; then create it, special-casing the keyword package.
@@ -1092,7 +1096,7 @@ variables to allow for nested and thread safe reading."
                        (hp-find-package package-designator)
                        (sane-package))))
         (unless found
-          (error "package ~S not found" package-designator
+          (simple-reader-error "package ~S not found" package-designator
                  ))
         ;brt
         (let ((custom-token-parsers (budden-tools::get-custom-token-parsers-for-package found)))
@@ -1100,6 +1104,9 @@ variables to allow for nested and thread safe reading."
             (multiple-value-bind (result parsed) (funcall parser stream (subseq *read-buffer* 0 *ouch-ptr*) found)
               (when parsed
                 (return-from read-token (values result t))))))
+
+        (when *return-package-and-symbol-name-from-read*
+          (return-from read-token (values (subseq *read-buffer* 0 *ouch-ptr*) found)))
 
         (let ((symbol
                (block nil

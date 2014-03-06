@@ -19,7 +19,11 @@
  (:use :cl 
   :budden-tools 
   )
- )
+ (:export "
+   sbcl-reader-budden-tools-lispworks:*return-package-and-symbol-name-from-read*
+   sbcl-reader-budden-tools-lispworks:read-token
+ "
+ ))
 
 (in-package :sbcl-reader-budden-tools-lispworks)
 
