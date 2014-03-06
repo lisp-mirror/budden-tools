@@ -296,10 +296,10 @@ iii) if symbol is found more than once then first-symbol-found,list of packages,
 
 (defsetf readtable-case-advanced set-readtable-case-advanced)
 
-; новшества: 1. символы со всеми ascii в нижнем регистре ищутся только в верхнем регистре
-; Все остальные - только "как есть"
-; 2. ЭТО ЗАКОММЕНТИРОВАНО все keywords преобразуются к верхнему регистру в момент чтения
+
 (defun find-symbol-with-advanced-readtable-case (name p rt starts-with-vertical-line)
+  "Если (readtable-case rt) = :upcase-if-unform, то символы, у к-рых все ascii буквы - 
+   в нижнем регистре, ищутся только в верхнем регистре. Все остальные буквы ищутся как есть без преобразования регистра"
   (let ((p-sym nil) (storage-type nil))
     (case (readtable-case-advanced rt)
       (:upcase-if-uniform
@@ -308,10 +308,6 @@ iii) if symbol is found more than once then first-symbol-found,list of packages,
            (:lowercase
             (setf (values p-sym storage-type) (find-symbol (string-upcase-ascii name) p))
             ; убираем неоднозначность. Теперь всё, что введено в одинаковом регистре, апкейсится. 
-            ; (when (and (not storage-type) 
-            ;           (not (eq p *keyword-package*)) ; константы - только в верхнем регистре
-            ;           )
-            ;  (setf (values p-sym storage-type) (find-symbol name p)))
             )
            ((:uppercase :ignore-case nil)
             (setf (values p-sym storage-type) (find-symbol name p))))
@@ -366,7 +362,7 @@ FIXME shadow find-symbol? FIXME rename"
        ((and (not success)
              m
              (package-metadata-interning-is-forbidden m))
-        (simple-reader-error stream "interning-is-forbidden for ~A" name package))
+        (simple-reader-error stream "interning-is-forbidden for ~A trying to intern ~S" package name))
        (success
         symbol-found)
        (t 
