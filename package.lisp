@@ -11,7 +11,7 @@
 (def-merge-packages::! :BUDDEN-TOOLS
   (:nicknames "budden-tools")
   (:documentation "Some tools by budden. See packages definition to find a list of symbols")
-  (:use :cl :named-readtables :buddens-readtable ; :org.tfeb.hax.hierarchical-packages
+  (:use :cl :named-readtables  ; :org.tfeb.hax.hierarchical-packages
    :def-merge-packages :decorate-function :iterk)
   (:import-from :alexandria #:with-gensyms #:once-only #:string-designator #:eswitch #:cswitch #:switch alexandria:simple-reader-error)
   (:import-from :split-sequence #:split-sequence)
@@ -183,6 +183,7 @@
 ;; see-packages and friends
    budden-tools:*keyword-package* ; just a keyword package
    budden-tools:enable-buddens-readtable-extensions ; enable symbol-readmacros, custom-token-parsers, advanced-readtable-case and local-nicknames on a (named) readtable. TODO: rename it
+   budden-tools:reset-to-standard-readtable ; undo enable-buddens-readtable-extensions and reset readtable to standar syntax
    budden-tools:*per-package-alias-table* ; stolen from \"hierarchical packages\"
    budden-tools:hp-find-package ; stolen from \"hierarchical packages\"
    budden-tools:hp-in-package  ; stolen from \"hierarchical packages\"
@@ -216,7 +217,7 @@
    |,|
 ;; some symbol-readmacros. Will work when :def-symbol-readmacro is loaded
    budden-tools:/with-package/ ; deprecated. 
-   budden-tools:/with-readtable-case/ ; deprecated
+;   budden-tools:/with-readtable-case/ ; deprecated
 
 
 ;; locations

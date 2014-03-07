@@ -28,9 +28,10 @@
   "Alters readtable to enable budden's readtable extensions. If readtable is nil, 
 alters a new copy of standard readtable. Returns readtable it has altered. If readtable
 is already an altered readtable, simply returns it"
-  (proga nil
+  (let (rt)
+  (block nil
     ; (let readtable (ensure-readtable readtable-designator))
-    (let rt
+    (setf rt
       (etypecase readtable-designator-or-nil
         (null (copy-readtable nil))
         (t (ensure-readtable readtable-designator-or-nil))))
@@ -44,7 +45,7 @@ is already an altered readtable, simply returns it"
 
     (set-dispatch-macro-character #\# #\: #'sbcl-reader-budden-tools-lispworks::sharp-colon rt)
 
-    (let good-readtable (copy-readtable rt))
+    ;(setf good-readtable (copy-readtable rt))
 
     (iter 
       (:for i :from 0 to 255)
@@ -62,9 +63,9 @@ is already an altered readtable, simply returns it"
             ; let's try to live without #\\ as a token starting character. 
             )
            ;?? (set-syntax-from-char c #\# rt good-readtable) ; will make it non-terminating macro character
-           (set-macro-character c #'sbcl-reader-budden-tools-lispworks::read-token t rt))
+           (set-macro-character c #'sbcl-reader-budden-tools-lispworks:read-token t rt))
           (:colon
-           (set-macro-character c #'sbcl-reader-budden-tools-lispworks::read-token t rt))
+           (set-macro-character c #'sbcl-reader-budden-tools-lispworks:read-token t rt))
           ((:dot :whitespace[2] :single-escape :multiple-escape nil))
           )
         )
@@ -73,10 +74,18 @@ is already an altered readtable, simply returns it"
 
     (iter
       (:for c in *def-symbol-reamacro-additional-name-starting-characters*)
-      (set-macro-character c #'sbcl-reader-budden-tools-lispworks::read-token t rt))
+      (set-macro-character c #'sbcl-reader-budden-tools-lispworks:read-token t rt))
 
     rt)
-  )
+  ))
+
+(defun reset-to-standard-readtable (readtable-designator)
+  "Removes buddens readtable extensions from readtable and reset it to standard one"
+  (let ((rt (ensure-readtable readtable-designator)))
+    (setf (gethash rt *readtable-uses-sbcl-reader-budden-tools-lispworks*) nil)
+    (setf (gethash rt *readtable-case-is-upcase-if-uniform*) nil)
+    (copy-readtable nil rt)
+    rt))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; Change a readtable end ;;;;;;;;;;;;;
