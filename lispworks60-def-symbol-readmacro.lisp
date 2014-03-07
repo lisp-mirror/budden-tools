@@ -615,12 +615,6 @@ Str - входная строка, для которой необходимо з
   (declare (ignorable p))
   (setf *readtable* (copy-readtable nil)))
 
-(editor:defcommand "RT New" 
-     (p) ""
-     "" 
-  (declare (ignorable p))
-  (setf *readtable* *my-readtable*))
-
 (editor::defcommand "Complete Package Name"
      (p) "Complete package at point" "Complete package at point"
   (declare (ignorable p))

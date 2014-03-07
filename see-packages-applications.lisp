@@ -163,19 +163,6 @@ make-load-form
 ; (pushnew 'convert-carat-to-^ (get-custom-token-parsers-for-package :budden))
 
 
-;; (/with-readtable-case/ :preserve '(foo bar))
-;; Note that readtable case is evaluated at read-time 
-(def-symbol-readmacro |/WITH-READTABLE-CASE/|
-                      (lambda (stream symbol)
-                        (declare (ignore symbol))
-                        (let1 new-case (read stream)
-                          (print new-case)
-                          (pllet1 (readtable-case (packages-seen-p *readtable*)) new-case
-                            (pllet1 (readtable-case *readtable*) new-case
-                              (let1 colon-readtable (or (gethash *readtable* *my-readtable-to-colon-readtable*) *readtable*)
-                                (pllet1 (readtable-case colon-readtable) new-case
-                                  (it-is-a-car-symbol-readmacro (read stream)))))))))
-
 (defparameter *essential-binding-checkers* 
   '(boundp fboundp) ;  ap5:rboundp - куда-то в другое мсто запихать
   "List of function names. Either function recieves one parameter, a symbol. If symbol is essential

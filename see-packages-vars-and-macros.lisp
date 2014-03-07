@@ -13,6 +13,7 @@
 
 (defvar *keyword-package* (find-package :keyword))
 
+#|obsolete
 (defvar *package-seen-packages* (make-weak-key-hash-table :test 'eq)
   "Additional packages to see from that package")
 
@@ -21,7 +22,7 @@
 
 (defvar *my-readtable-to-colon-readtable* (make-weak-key-hash-table :test 'eq)
   "Maps altered readtable to their colon-readtable"
-  )
+  )|#
 
 (defvar *readtable-uses-sbcl-reader-budden-tools-lispworks* (make-weak-key-hash-table :test 'eq)
   "Readtable implements reader extensions via SBCL reader")
@@ -51,17 +52,6 @@ reading would be broken.")
   "Использовать только для тестирования!"
   `(let1 *readtable* *good-readtable* ,@body))
 
-(defmacro with-good-readtable-2 ((&key (ensure-this-is-a-bad-one t)) &body body)
-  "переданная readtable должна быть получена с помощью see-packages-on"
-  (with-gensyms (good)
-    `(proga
-       (let ,good (gethash *readtable* *my-readtable-to-good-readtable*))
-;       (print '(:good-readtable-is ,good))
-       ,@(when ensure-this-is-a-bad-one
-           `((assert ,good nil "with-good-readtable: ~A is not a hp-readtable" *readtable*)))
-       (let *readtable* (or ,good *readtable*))
-       ,@body
-       )))
 
 (defvar *print-normalize-seen-symbols* t "Print seen symbols with package
 prefix even if they can be read without the prefix")
