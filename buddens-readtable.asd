@@ -4,7 +4,7 @@
 (defsystem :buddens-readtable
         :serial t
         :depends-on 
-        (:named-readtables)
+        (:named-readtables :see-packages)
 	:components 
         (
          (:file "buddens-readtable-package")

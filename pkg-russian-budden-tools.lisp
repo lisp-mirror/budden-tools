@@ -14,7 +14,7 @@
 (def-merge-packages::! :RUSSIAN-BUDDEN-TOOLS
   (:nicknames "russian-budden-tools")
   (:documentation "case transformation and comparison of Russian characters")
-  (:use :budden-tools :cl :named-readtables :buddens-readtable 
+  (:use :budden-tools :cl :named-readtables ; :buddens-readtable 
    :def-merge-packages :iterk)
   (:import-from :alexandria #:with-gensyms #:once-only #:string-designator #:eswitch)
   (:import-from :split-sequence #:split-sequence)

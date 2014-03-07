@@ -11,7 +11,7 @@
   ;:documentation "Some utilities by Budden, public domain"
   :depends-on 
   (:alexandria :cl-fad :split-sequence :cl-utilities :named-readtables
-   :buddens-readtable :cl-ppcre		
+   :cl-ppcre		
    :iterate-keywords :swank :decorate-function)
   :components ( 
     ;(:file "hierarchical-packages"
