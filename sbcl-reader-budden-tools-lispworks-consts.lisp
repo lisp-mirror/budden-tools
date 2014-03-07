@@ -1,4 +1,4 @@
-;;; -*- Encoding: utf-8; -*-
+﻿;;; -*- Encoding: utf-8; -*-
 ;;;; READ and friends
 
 ;;;; This software is ported from SBCL to Lispworks by Budden. See the README file for
@@ -22,6 +22,11 @@
  (:export "
    sbcl-reader-budden-tools-lispworks:*return-package-and-symbol-name-from-read*
    sbcl-reader-budden-tools-lispworks:read-token
+   sbcl-reader-budden-tools-lispworks:potential-symbol
+   sbcl-reader-budden-tools-lispworks:make-potential-symbol
+   sbcl-reader-budden-tools-lispworks:potential-symbol-casified-name
+   sbcl-reader-budden-tools-lispworks:potential-symbol-package
+   sbcl-reader-budden-tools-lispworks:potential-symbol-p
  "
  ))
 
