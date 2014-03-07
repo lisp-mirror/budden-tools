@@ -358,11 +358,11 @@ FIXME shadow find-symbol? FIXME rename"
        ((and (not success)
              (or (not m)
                  (not (package-metadata-allow-qualified-intern m))))
-        (simple-reader-error stream "qualified-intern is not allowed for ~A" package))
+        (simple-reader-error stream "qualified-intern is not allowed for ~A while trying to intern ~S" package name))
        ((and (not success)
              m
              (package-metadata-interning-is-forbidden m))
-        (simple-reader-error stream "interning-is-forbidden for ~A trying to intern ~S" package name))
+        (simple-reader-error stream "interning-is-forbidden for ~A while trying to intern ~S" package name))
        (success
         symbol-found)
        (t 
