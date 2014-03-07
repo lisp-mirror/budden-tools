@@ -8,3 +8,4 @@ syntax: glob
 glob:doc/tinaa/*
 glob:xlam/*.*
 glob:img/*.bmp
+glob:*.ofasl
