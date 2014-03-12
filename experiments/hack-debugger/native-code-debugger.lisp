@@ -56,25 +56,43 @@
 (defparameter +number-of-bytes-in-word+ 4)
 
 
-(defun extract-function-call-from-offset (dest-address)
-  "По адресу находится прямой или косвенный вызов. Извлечь операцию и адрес вызываемой функции"
-  (let* ((result nil)
+(defun extract-function-call-from-offset-inner (dest-address)
+  "По адресу находится прямой или косвенный вызов. Извлечь вид операции вызова и объект вызываемой ф-ии. 
+  Операция вызова: 1 - прямая, 2 - косв"
+  (let* (
          (first-byte (peek-byte dest-address))
-         second-byte
          (call-address-as-list-of-bytes nil))
     (cond
      ((= first-byte #xE8)
       (setf call-address-as-list-of-bytes
             (extract-n-bytes (+ dest-address 1) 4))
-      (setf result (list* first-byte call-address-as-list-of-bytes))
-      result)
+      (values 1 call-address-as-list-of-bytes)
+      )
      ((and (= #xFF first-byte)
-           (= #x15 (setf second-byte (peek-byte (+ dest-address 1)))))
+           (= #x15 (peek-byte (+ dest-address 1))))
       (setf call-address-as-list-of-bytes
             (extract-n-bytes (+ dest-address 2) +number-of-bytes-in-word+))
-      (setf result (list* first-byte second-byte call-address-as-list-of-bytes)))
+      (values 2 call-address-as-list-of-bytes))
      (t
       (error "extract-function-call-from-offset is unable to handle ~S command" first-byte)))))
+
+
+(defun extract-function-call-from-offset (dest-address)
+  "По адресу находится прямой или косвенный вызов. Извлечь операцию вызова и функцию"
+  (multiple-value-bind (call-kind bytes) (extract-function-call-from-offset-inner dest-address)
+    (let (address)
+      (ecase call-kind
+       (1
+        (setf address (32-bytes-to-n bytes))
+        (setf address (+ address dest-address +hackish-address-shift+)))
+       (2
+        (setf address (32-bytes-to-n bytes))
+        )
+       )
+       (values call-kind
+               (pointer-from-address address)))))
+  
+
    
 ;    (dotimes (i 5)
 
@@ -119,17 +137,17 @@
     (int32-to-integer (int32-1+ (int32-lognot (integer-to-int32 (- x)))))
    )))|#
 
+(defparameter +hackish-address-shift+ 5)
+
 (defun calc-call-opcode (fn-address offset replace-to-address)
   "Вычисляет адрес, чтобы вместо прямого вывова был вызов replace-to-address"
-  (let ((call-offset (- replace-to-address fn-address offset 5)))
+  (let ((call-offset (- replace-to-address fn-address offset +hackish-address-shift+)))
     (list* #xE8 (reverse
                  (n-to-32-bytes
                   ;(maybe-twos-complement
                    call-offset
                    ;)
                    )))))
-
-(defparameter +hackish-address-shift+ 5)
 
 (defun calc-indirect-opcode (replace-to-address)
   "Вычисляет адрес, чтобы вместо косвенного вывова был вызов replace-to-address"
@@ -155,33 +173,31 @@
     (let* ((function-object (symbol-function function-name))
            fn-address 
            new-opcode
-           current-call
            replace-to-address
+           call-kind
+           current-fn
            )
       (assert (functionp function-object))
       (assert (integerp offset))
       (gc-generation t)
       (setf fn-address (extract-address-from-function function-object))
-      (setf current-call (extract-function-call-from-offset (+ fn-address offset)))
+      (multiple-value-setq (call-kind *current-smashed-function*)
+          (extract-function-call-from-offset (+ fn-address offset)))
       (setf new-opcode
-          (cond
-           ((every '= '(#xFF #x15) current-call)
-            (setf *current-smashed-function* (pointer-from-address (32-bytes-to-n (cddr current-call))))
-            (setf replace-to-address (+ (object-address 'maybe-break)
-                                        +hackish-symbol-value-offset+))
-            (calc-indirect-opcode ; fn-address offset
-             replace-to-address))
-           ((= #xE8 (first current-call))
-            (setf *current-smashed-function* (pointer-from-address (32-bytes-to-n (cdr current-call))))
+          (ecase call-kind
+           (2
+            (setf replace-to-address (+ (object-address 'maybe-break) +hackish-symbol-value-offset+))
+            (calc-indirect-opcode replace-to-address))
+           (1
+            (gc-generation t)
             (setf replace-to-address (extract-address-from-function #'maybe-break))
-            (calc-call-opcode fn-address offset replace-to-address))
-           (t
-            (error "unknown command ~S to set breakpoint" current-call))))
+            (calc-call-opcode (extract-address-from-function function-object) offset replace-to-address))
+           ))
     ;(format t "~%fn-address=~X, replace-to-address=~X, current-call=~S"
     ;        fn-address replace-to-address current-call)
       (poke-opcode function-object offset new-opcode)
-      ;(assert (or (functionp *current-smashed-function*) (and (symbolp *current-smashed-function*)
-      ;                                                        (fboundp *current-smashed-function*))))
+      (assert (or (functionp *current-smashed-function*) (and (symbolp *current-smashed-function*)
+                                                              (fboundp *current-smashed-function*))))
     ;(normal-gc)
       )))
 
