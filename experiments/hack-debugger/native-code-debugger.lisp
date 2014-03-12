@@ -55,23 +55,24 @@
 
 (defparameter +number-of-bytes-in-word+ 4)
 
-(defun extract-function-call-from-offset (function-object offset)
-  (let* ((dest-address (+ (extract-address-from-function function-object) offset))
-         (result nil)
+
+(defun extract-function-call-from-offset (dest-address)
+  "По адресу находится прямой или косвенный вызов. Извлечь операцию и адрес вызываемой функции"
+  (let* ((result nil)
          (first-byte (peek-byte dest-address))
          second-byte
-         (call-address-as-list-of-hex-strings nil))
+         (call-address-as-list-of-bytes nil))
     (cond
      ((= first-byte #xE8)
-      (setf call-address-as-list-of-hex-strings
+      (setf call-address-as-list-of-bytes
             (extract-n-bytes (+ dest-address 1) 4))
-      (setf result (list* first-byte call-address-as-list-of-hex-strings))
+      (setf result (list* first-byte call-address-as-list-of-bytes))
       result)
      ((and (= #xFF first-byte)
            (= #x15 (setf second-byte (peek-byte (+ dest-address 1)))))
-      (setf call-address-as-list-of-hex-strings
+      (setf call-address-as-list-of-bytes
             (extract-n-bytes (+ dest-address 2) +number-of-bytes-in-word+))
-      (setf result (list* first-byte second-byte call-address-as-list-of-hex-strings)))
+      (setf result (list* first-byte second-byte call-address-as-list-of-bytes)))
      (t
       (error "extract-function-call-from-offset is unable to handle ~S command" first-byte)))))
    
@@ -81,7 +82,7 @@
   (let* ((dest-address (+ (extract-address-from-function function-object) offset))
          )
     (dolist (byte opcode-list)
-      (poke dest-address byte) ; read-byte-from-hex-string byte))
+      (poke dest-address byte) 
       (incf dest-address))
     (format t "~%dest address is ~X~%poke opcode ~S" dest-address opcode-list)))
 
@@ -100,6 +101,15 @@
     ;(format t "~%~X" quotient)
     (setf x quotient)
     ))
+
+(defun 32-bytes-to-n (x)
+  "Дан список байт, построить число из них (в обратном порядке)"
+  (assert (typep x '(or (cons integer) null)))
+  (let* ((len (length x))
+         (result 0))
+    (dotimes (i len)
+      (setf result (+ (* result #x100) (elt x (- len i 1)))))
+    result))
 
 #|(defun maybe-twos-complement (x)
   "Вроде не нужна?"
@@ -133,27 +143,36 @@
 
 (defparameter +hackish-symbol-value-offset+ 4)
 
-(defun set-breakpoint-in-function (function-object offset)
+
+(defstruct breakpoint-key function-name offset)
+
+(defparameter *breakpoints* (make-hash-table :test 'equalp)
+  "breakpoint-key => smashed function")
+
+(defun set-breakpoint-in-function (function-name offset)
   (progn ; with-other-threads-disabled
-    (gc-generation t) ; no way to guarantee absence of gc.
-    (assert (functionp function-object))
-    (assert (integerp offset))
-    (let* (fn-address 
+    (assert (symbolp function-name))
+    (let* ((function-object (symbol-function function-name))
+           fn-address 
            new-opcode
            current-call
-           replace-to-address)
-      (gc-generation t)
-      (setf current-call (extract-function-call-from-offset function-object offset))
+           replace-to-address
+           )
+      (assert (functionp function-object))
+      (assert (integerp offset))
       (gc-generation t)
       (setf fn-address (extract-address-from-function function-object))
+      (setf current-call (extract-function-call-from-offset (+ fn-address offset)))
       (setf new-opcode
           (cond
            ((every '= '(#xFF #x15) current-call)
+            (setf *current-smashed-function* (pointer-from-address (32-bytes-to-n (cddr current-call))))
             (setf replace-to-address (+ (object-address 'maybe-break)
                                         +hackish-symbol-value-offset+))
             (calc-indirect-opcode ; fn-address offset
              replace-to-address))
            ((= #xE8 (first current-call))
+            (setf *current-smashed-function* (pointer-from-address (32-bytes-to-n (cdr current-call))))
             (setf replace-to-address (extract-address-from-function #'maybe-break))
             (calc-call-opcode fn-address offset replace-to-address))
            (t
@@ -161,6 +180,8 @@
     ;(format t "~%fn-address=~X, replace-to-address=~X, current-call=~S"
     ;        fn-address replace-to-address current-call)
       (poke-opcode function-object offset new-opcode)
+      ;(assert (or (functionp *current-smashed-function*) (and (symbolp *current-smashed-function*)
+      ;                                                        (fboundp *current-smashed-function*))))
     ;(normal-gc)
       )))
 
@@ -178,21 +199,24 @@
 (defparameter test-fn "just an anchor")
 
 ;; тест для непосредственно вызываемых функций
-#|
-(compile `(defun test-fn ()
+(compile `(defun test-fn-1 ()
             (funcall ,#'function-to-smash)
             ;(function-to-smash)
             ))
-|#
+(format t "~%old call is ~S" (extract-function-call-from-offset (+ (extract-address-from-function #'test-fn-1) 23)))
+(eval '(set-breakpoint-in-function 'test-fn-1 23))
+(format t "~%new call is ~S" (extract-function-call-from-offset (+ (extract-address-from-function #'test-fn-1) 23)))
+(test-fn-1)
 
 
-(defun test-fn ()
+(defun test-fn-2 ()
   (function-to-smash))
 
-(format t "~%old call is ~S" (extract-function-call-from-offset #'test-fn 23))
-(eval '(set-breakpoint-in-function #'test-fn 23))
-(format t "~%new call is ~S" (extract-function-call-from-offset #'test-fn 23))
-(test-fn)
-(LISPWORKS-TOOLS::inspect-an-object #'test-fn)
+(format t "~%old call is ~S" (extract-function-call-from-offset (+ (extract-address-from-function #'test-fn-2) 23)))
+(eval '(set-breakpoint-in-function 'test-fn-2 23))
+(format t "~%new call is ~S" (extract-function-call-from-offset (+ (extract-address-from-function #'test-fn-2) 23)))
+(test-fn-2)
+
+;(LISPWORKS-TOOLS::inspect-an-object #'test-fn)
 
   
