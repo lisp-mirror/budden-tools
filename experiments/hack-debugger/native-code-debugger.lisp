@@ -1,9 +1,16 @@
-(def-merge-packages::! :npd
-  (:use :cl :hcl :lispworks :mp :system)
-  (:shadowing-import-from #:system #:with-fast-lock)
-  )
 
-(in-package :npd)
+(eval-when (:compile-toplevel :load-toplevel :execute)
+  (defpackage :native-code-stepper
+    (:use :cl :hcl :lispworks :mp :system)
+    (:shadowing-import-from #:system #:with-fast-lock)
+    (:export 
+     #:*tracing-enabled*
+     #:*stepping-enabled*
+     #:set-step-points-everywhere-on-fn
+     )
+    ))
+
+(in-package :native-code-stepper)
 
 #| 
   Что тут есть? Умеем подменять вызов call [address] и call address на вызов нашей ф-ии, к-рая выполняет код
@@ -20,16 +27,24 @@
 |#
 
 
-(defvar *stepping-enabled* t
-  "Если это истина, то наш степпер что-то делает")
+(defvar *tracing-enabled* t
+  "If true, step points are printed")
+
+(defvar *stepping-enabled* nil
+  "If this is true, every step point breaks")
   
 
-(defun my-do-break (fn args)
+(defun my-do-break (call-from call-to args)
   (declare (ignorable args))
+  (when *tracing-enabled*
+    (format t "~%native stepper break, from ~S into ~S, args=~S" call-from call-to args))
   (when *stepping-enabled*
-    (format t "~%native stepper break, fn=~S, args=~S" fn args))
-  (apply fn args)
+    (break "Stepper break before call from ~S into ~S with args=~S~%Use GUI debugger to find current source" call-from call-to args))
+  (apply call-to args)
   )
+
+(dolist (name '(my-do-break make-breakpoint break invoke-debugger))
+  (pushnew name DBG::*hidden-symbols*))
 
 (defvar *active-breakpoints* nil "list of created breakpoints")
 
@@ -39,8 +54,9 @@
   is unable to find source location so the entire mechanism becomes useless"
   (let* ((pointer (cons nil nil))
          (breaker ; lambda call to which is places instead of original call
-          (lambda (&rest args) (my-do-break (car pointer) args)))
-         (smashed-fn ; function which was called before
+          (lambda (&rest args)
+            (my-do-break function-name (car pointer) args)))
+         (smashed-fn ; function call to which we substituted
           (set-breakpoint-in-function function-name offset breaker)))
     (setf (car pointer) smashed-fn)
     (push breaker *active-breakpoints*)
@@ -144,7 +160,8 @@
     (dolist (byte opcode-list)
       (poke dest-address byte) 
       (incf dest-address))
-    (format t "~%dest address is ~X~%poke opcode ~S" dest-address opcode-list)))
+    ;(format t "~%dest address is ~X~%poke opcode ~S" dest-address opcode-list)
+    ))
 
 (defun n-to-hex (x)
   "Превращает в строку"
@@ -256,7 +273,7 @@
       (poke-opcode function-object offset new-opcode)
       (assert (or (functionp current-fn) (and (symbolp current-fn)
                                               (fboundp current-fn))))
-      (print new-opcode)
+      ;(print new-opcode)
       current-fn
     ;(normal-gc)
       )))
@@ -277,7 +294,7 @@
         (push (elt locations i) result)))
     result))
 
-(defun put-breakpoints-everywhere-on-fn (function-or-name)
+(defun set-step-points-everywhere-on-fn (function-or-name)
   (let* ((fn (coerce function-or-name 'function))
          (offsets (extract-function-breakable-offsets fn)))
     (mapcar (lambda (o) (make-breakpoint fn o)) offsets)))
@@ -287,28 +304,43 @@
 
 ;;;;  -------------------------------- TESTS -------------------------------------------------
 
-(defun fn-to-smash-of-x (x) (format t "~%fn-to-smash-of-x is running. Arg: ~S~%" x))
-(defun fn-to-smash-with-no-args () (print "fn-to-smash-with-no-args is running"))
+(defun subroutine-of-x (x) (format t "~%subroutine-of-x is running. Arg: ~S~%" x) (list 0 x))
+(defun subroutine-with-no-args () (print "subroutine-with-no-args is running"))
 (defparameter test-fn "just an anchor")
 
 ;; тест для непосредственно вызываемых функций
 (compile `(defun test-fn-1 ()
-            (funcall ,#'fn-to-smash-of-x 3)
-            ;(function-to-smash)
+            (funcall ,#'subroutine-of-x 3)
             ))
 
 (eval '(make-breakpoint 'test-fn-1 33))
+
+(format t "~%calling test-fn-1 (no source code location)...")
+
 (test-fn-1)
 
 (defun test-fn-2 (x)
-  (fn-to-smash-of-x x))
+  (subroutine-of-x x))
 
 
-;(format t "~%old call is ~S" (locate-call-from-next-command-offset (+ (extract-address-from-function #'test-fn-2) 27)))
-(make-breakpoint 'test-fn-2 33) 
-;(format t "~%new call is ~S" (locate-call-from-next-command-offset (+ (extract-address-from-function #'test-fn-2) 27)))
-(test-fn-2 'test-param-for-test-fn-2
- )
+; (make-breakpoint 'test-fn-2 33) 
+(set-step-points-everywhere-on-fn 'test-fn-2)
+
+(format t "~%calling test-fn-2 in step mode...")
+
+(let ((*stepping-enabled* t))
+  (test-fn-2 'test-param-for-test-fn-2))
+
+(defun test-fn-3 (x)
+  (subroutine-of-x (subroutine-of-x x)))
+
+(set-step-points-everywhere-on-fn 'test-fn-3)
+(format t "~%calling test-fn-3...")
+(format t "~%test-fn-3 returned ~S~%" (test-fn-3 1))
+
+(defun test-fn-4 (x)
+  (+ (+ x 1))) 
+; breakpoint do not work here for an unknown reason
 
 ; (LISPWORKS-TOOLS::inspect-an-object #'test-fn-2)
 
