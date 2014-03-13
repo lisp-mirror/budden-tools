@@ -1,3 +1,18 @@
+;;; -*- Encoding: utf-8; -*-
+
+;  Concept of native code stepper
+;  Tested as 32-bit LW for Windows (and works poorly)
+;  Unlikely to work on other systems
+;  The code is not GC-safe as I found no way to suspend GC
+;  Crashes sometimes at last test and is completely unreliable
+;  Ask your Lisp vendor to implement it correctly.
+;  Advantages over stepper:
+;  No need for recompilation or "restart frame stepping"
+;  Can modify function currently on stack so that 
+;  Can work in a conjunction with "break on return from frame" 
+;  Close to VS experience
+;  Disadvantages: less verbose
+
 
 (eval-when (:compile-toplevel :load-toplevel :execute)
   (defpackage :native-code-stepper
@@ -10,19 +25,24 @@
      )
     ))
 
+(eval-when (:execute)
+  (error "Use compile-load sequence to run the concept"))
+
 (in-package :native-code-stepper)
 
-#| 
-  Что тут есть? Умеем подменять вызов call [address] и call address на вызов нашей ф-ии, к-рая выполняет код
-  и затем передаёт выполнение той ф-ии, к-рая была изначально. Ведём список таких подмен. 
-  Убирать подмену не умеем пока. 
+(defun my+ (&rest args) (apply #'cl:+ args))
 
- План дальнейших действий:
- - убираем все консы
- - функция "подготовить функцию к степу":
- -- идём по векторам и находим все точки, где можно притулиться. Везде ставим брекпойнты
- -- когда первый брекпойнт срабатывает, устанавливаем "прерывание на возврате"
- -- если делаем "continue", отключаем все такие брекпойнты 
+#| 
+  Р§С‚Рѕ С‚СѓС‚ РµСЃС‚СЊ? РЈРјРµРµРј РїРѕРґРјРµРЅСЏС‚СЊ РІС‹Р·РѕРІ call [address] Рё call address РЅР° РІС‹Р·РѕРІ РЅР°С€РµР№ С„-РёРё, Рє-СЂР°СЏ РІС‹РїРѕР»РЅСЏРµС‚ РєРѕРґ
+  Рё Р·Р°С‚РµРј РїРµСЂРµРґР°С‘С‚ РІС‹РїРѕР»РЅРµРЅРёРµ С‚РѕР№ С„-РёРё, Рє-СЂР°СЏ Р±С‹Р»Р° РёР·РЅР°С‡Р°Р»СЊРЅРѕ. Р’РµРґС‘Рј СЃРїРёСЃРѕРє С‚Р°РєРёС… РїРѕРґРјРµРЅ. 
+  РЈР±РёСЂР°С‚СЊ РїРѕРґРјРµРЅСѓ РЅРµ СѓРјРµРµРј РїРѕРєР°. 
+
+ РџР»Р°РЅ РґР°Р»СЊРЅРµР№С€РёС… РґРµР№СЃС‚РІРёР№:
+ - СѓР±РёСЂР°РµРј РІСЃРµ РєРѕРЅСЃС‹
+ - С„СѓРЅРєС†РёСЏ "РїРѕРґРіРѕС‚РѕРІРёС‚СЊ С„СѓРЅРєС†РёСЋ Рє СЃС‚РµРїСѓ":
+ -- РёРґС‘Рј РїРѕ РІРµРєС‚РѕСЂР°Рј Рё РЅР°С…РѕРґРёРј РІСЃРµ С‚РѕС‡РєРё, РіРґРµ РјРѕР¶РЅРѕ РїСЂРёС‚СѓР»РёС‚СЊСЃСЏ. Р’РµР·РґРµ СЃС‚Р°РІРёРј Р±СЂРµРєРїРѕР№РЅС‚С‹
+ -- РєРѕРіРґР° РїРµСЂРІС‹Р№ Р±СЂРµРєРїРѕР№РЅС‚ СЃСЂР°Р±Р°С‚С‹РІР°РµС‚, СѓСЃС‚Р°РЅР°РІР»РёРІР°РµРј "РїСЂРµСЂС‹РІР°РЅРёРµ РЅР° РІРѕР·РІСЂР°С‚Рµ"
+ -- РµСЃР»Рё РґРµР»Р°РµРј "continue", РѕС‚РєР»СЋС‡Р°РµРј РІСЃРµ С‚Р°РєРёРµ Р±СЂРµРєРїРѕР№РЅС‚С‹ 
 
 |#
 
@@ -43,7 +63,7 @@
   (apply call-to args)
   )
 
-(dolist (name '(my-do-break make-breakpoint break invoke-debugger))
+(dolist (name '(make-breakpoint break invoke-debugger))
   (pushnew name DBG::*hidden-symbols*))
 
 (defvar *active-breakpoints* nil "list of created breakpoints")
@@ -60,10 +80,11 @@
           (set-breakpoint-in-function function-name offset breaker)))
     (setf (car pointer) smashed-fn)
     (push breaker *active-breakpoints*)
+    (print breaker)
     (values smashed-fn breaker)))
 
 (defun extract-address-from-function (function)
-  "Возвращает адрес по объекту функции. Lame: extracts address from printed representation"
+  "Р’РѕР·РІСЂР°С‰Р°РµС‚ Р°РґСЂРµСЃ РїРѕ РѕР±СЉРµРєС‚Сѓ С„СѓРЅРєС†РёРё. Lame: extracts address from printed representation"
   (assert (functionp function))
   (let* ((text (format nil "~A" function))
          (length (length text))
@@ -87,7 +108,7 @@
 
 
 (defun extract-n-bytes (addr n) 
-  "Достаёт n байт и возвращает список"
+  "Р”РѕСЃС‚Р°С‘С‚ n Р±Р°Р№С‚ Рё РІРѕР·РІСЂР°С‰Р°РµС‚ СЃРїРёСЃРѕРє"
   (let (result)
     (dotimes (i n)
       (push (peek-byte addr) result)
@@ -104,8 +125,8 @@
 
 
 (defun locate-call-from-next-command-offset-inner (next-command-address next-command-offset)
-  "По адресу находится косвенный вызов, или по следующему за ним адресу находится косвенный вызов. Извлечь уточнённый offset, вид операции вызова и объект вызываемой ф-ии. 
-  Операция вызова: 1 - прямая, 2 - косв"
+  "РџРѕ Р°РґСЂРµСЃСѓ РЅР°С…РѕРґРёС‚СЃСЏ РєРѕСЃРІРµРЅРЅС‹Р№ РІС‹Р·РѕРІ, РёР»Рё РїРѕ СЃР»РµРґСѓСЋС‰РµРјСѓ Р·Р° РЅРёРј Р°РґСЂРµСЃСѓ РЅР°С…РѕРґРёС‚СЃСЏ РєРѕСЃРІРµРЅРЅС‹Р№ РІС‹Р·РѕРІ. РР·РІР»РµС‡СЊ СѓС‚РѕС‡РЅС‘РЅРЅС‹Р№ offset, РІРёРґ РѕРїРµСЂР°С†РёРё РІС‹Р·РѕРІР° Рё РѕР±СЉРµРєС‚ РІС‹Р·С‹РІР°РµРјРѕР№ С„-РёРё. 
+  РћРїРµСЂР°С†РёСЏ РІС‹Р·РѕРІР°: 1 - РїСЂСЏРјР°СЏ, 2 - РєРѕСЃРІ"
   (let* ((approx-dest-address (- next-command-address +length-of-indirect-call-command+))
          (this-command-offset (- next-command-offset +length-of-indirect-call-command+))
          (apd approx-dest-address)
@@ -131,7 +152,7 @@
 
 
 (defun locate-call-from-next-command-offset (next-command-address next-command-offset)
-  "Предыдущая команда - это косвенный или прямой call. Return 'call' command offset in a code vector, kind of a call (1-direct,2-indirect) and a function called"
+  "РџСЂРµРґС‹РґСѓС‰Р°СЏ РєРѕРјР°РЅРґР° - СЌС‚Рѕ РєРѕСЃРІРµРЅРЅС‹Р№ РёР»Рё РїСЂСЏРјРѕР№ call. Return 'call' command offset in a code vector, kind of a call (1-direct,2-indirect) and a function called"
   (multiple-value-bind (offset call-kind bytes)
       (locate-call-from-next-command-offset-inner next-command-address next-command-offset)
     (let (address)
@@ -164,13 +185,13 @@
     ))
 
 (defun n-to-hex (x)
-  "Превращает в строку"
+  "РџСЂРµРІСЂР°С‰Р°РµС‚ РІ СЃС‚СЂРѕРєСѓ"
   (format nil "~X" x))
 
 
 
 (defun n-to-32-bytes (x)
-  "Дано на входе 32-разрядное число, разбиваем на байты"
+  "Р”Р°РЅРѕ РЅР° РІС…РѕРґРµ 32-СЂР°Р·СЂСЏРґРЅРѕРµ С‡РёСЃР»Рѕ, СЂР°Р·Р±РёРІР°РµРј РЅР° Р±Р°Р№С‚С‹"
   (do ((quotient nil)(remainder nil)(result nil)(i 0 (+ i 1)))
       ((= i +number-of-bytes-in-word+) result)
     (multiple-value-setq (quotient remainder) (floor x #x100))
@@ -180,7 +201,7 @@
     ))
 
 (defun 32-bytes-to-n (x)
-  "Дан список байт, построить число из них (в обратном порядке)"
+  "Р”Р°РЅ СЃРїРёСЃРѕРє Р±Р°Р№С‚, РїРѕСЃС‚СЂРѕРёС‚СЊ С‡РёСЃР»Рѕ РёР· РЅРёС… (РІ РѕР±СЂР°С‚РЅРѕРј РїРѕСЂСЏРґРєРµ)"
   (assert (typep x '(or (cons integer) null)))
   (let* ((len (length x))
          (result 0))
@@ -189,7 +210,7 @@
     result))
 
 #|(defun maybe-twos-complement (x)
-  "Вроде не нужна?"
+  "Р’СЂРѕРґРµ РЅРµ РЅСѓР¶РЅР°?"
   (cond
    ((>= x 0) x)
    (t 
@@ -199,7 +220,7 @@
 (defparameter +hackish-address-shift+ 5)
 
 (defun calc-call-opcode (dst-address address-to-call size)
-  "Вычисляет адрес, чтобы вместо прямого вывова был вызов replace-to-address. Добивает до size нопами"
+  "Р’С‹С‡РёСЃР»СЏРµС‚ Р°РґСЂРµСЃ, С‡С‚РѕР±С‹ РІРјРµСЃС‚Рѕ РїСЂСЏРјРѕРіРѕ РІС‹РІРѕРІР° Р±С‹Р» РІС‹Р·РѕРІ replace-to-address. Р”РѕР±РёРІР°РµС‚ РґРѕ size РЅРѕРїР°РјРё"
   (assert (>= size 5))
   (let ((result nil)
         (call-offset (- address-to-call dst-address +hackish-address-shift+)))
@@ -218,7 +239,7 @@
     result))
 
 (defun calc-indirect-opcode (replace-to-address)
-  "Вычисляет адрес, чтобы вместо косвенного вывова был вызов replace-to-address. Нам, по сути, не нужен"
+  "Р’С‹С‡РёСЃР»СЏРµС‚ Р°РґСЂРµСЃ, С‡С‚РѕР±С‹ РІРјРµСЃС‚Рѕ РєРѕСЃРІРµРЅРЅРѕРіРѕ РІС‹РІРѕРІР° Р±С‹Р» РІС‹Р·РѕРІ replace-to-address. РќР°Рј, РїРѕ СЃСѓС‚Рё, РЅРµ РЅСѓР¶РµРЅ"
   (let ((call-offset replace-to-address))
     (list* #xFF #x15 (reverse
                       (n-to-32-bytes
@@ -237,7 +258,7 @@
   "breakpoint-key => smashed function")
 
 (defun set-breakpoint-in-function (function-or-name next-command-offset fn-to-put)
-  "Подменяет вызов на функцию. offset at function name must point to call, either direct or indirect"
+  "РџРѕРґРјРµРЅСЏРµС‚ РІС‹Р·РѕРІ РЅР° С„СѓРЅРєС†РёСЋ. offset at function name must point to call, either direct or indirect"
   (progn ; with-other-threads-disabled
     (let* ((function-object (coerce function-or-name 'function))
            fn-address
@@ -253,10 +274,11 @@
       (setf fn-address (extract-address-from-function function-object))
       (multiple-value-setq (offset call-kind current-fn)
           (locate-call-from-next-command-offset (+ fn-address next-command-offset) next-command-offset))
+      (setf fn-address nil) ; invalidate address as gc will be called now
       (setf new-opcode
           (ecase call-kind
            (2
-            ; полезный код для подмены именованной на именованную, но нам он тут вроде не нужен
+            ; РїРѕР»РµР·РЅС‹Р№ РєРѕРґ РґР»СЏ РїРѕРґРјРµРЅС‹ РёРјРµРЅРѕРІР°РЅРЅРѕР№ РЅР° РёРјРµРЅРѕРІР°РЅРЅСѓСЋ, РЅРѕ РЅР°Рј РѕРЅ С‚СѓС‚ РІСЂРѕРґРµ РЅРµ РЅСѓР¶РµРЅ
             ; (setf replace-to-address (+ (object-address fn-to-put) +hackish-symbol-value-offset+))
             ; (calc-indirect-opcode replace-to-address))
             (gc-generation t)
@@ -283,7 +305,7 @@
 
 
 (defun extract-function-breakable-offsets (function-object)
-  "Unfinished"
+  "Uses mysterious consts to find breakable points which debugger can handle"
   (assert (functionp function-object))
   (let* ((constants (SYSTEM::function-constants function-object))
          (first-constants (first constants))
@@ -294,31 +316,56 @@
         (push (elt locations i) result)))
     result))
 
+
+(defun add-function-reference (function-object referred-function)
+  (assert (functionp function-object))
+  (let* ((constants (SYSTEM::function-constants function-object)))
+    (pushnew referred-function (cdr constants))))
+
+
 (defun set-step-points-everywhere-on-fn (function-or-name)
+  "Extract all steppable points from compiled function and set breakpoints on them"
   (let* ((fn (coerce function-or-name 'function))
          (offsets (extract-function-breakable-offsets fn)))
+    (format t "offsets=~{~D~}" offsets)
     (mapcar (lambda (o) (make-breakpoint fn o)) offsets)))
     
   
-  
+(defun poke-int3 (function offset &optional (count-of-nops 0))
+  (assert (functionp function))
+  (let ((offs (+ (extract-address-from-function function) offset)))
+    (poke offs #xCC) ; int3 int 3
+    (dotimes (i count-of-nops)
+      (incf offs)
+      (poke offs #x90 ; nop
+            ))))  
 
 ;;;;  -------------------------------- TESTS -------------------------------------------------
 
-(defun subroutine-of-x (x) (format t "~%subroutine-of-x is running. Arg: ~S~%" x) (list 0 x))
-(defun subroutine-with-no-args () (print "subroutine-with-no-args is running"))
-(defparameter test-fn "just an anchor")
+(defun subroutine-of-x (x)
+  "test function"
+  (format t "~%subroutine-of-x is running. Arg: ~S~%" x)
+  (list 0 x))
 
-;; тест для непосредственно вызываемых функций
+(defun subroutine-with-no-args ()
+  "test function"
+  (print "subroutine-with-no-args is running"))
+
+
+(defparameter test-fn-1 "just an anchor to find defun")
+;; test of direct 'call'
 (compile `(defun test-fn-1 ()
             (funcall ,#'subroutine-of-x 3)
             ))
 
+; example of manual breakpoint setting
 (eval '(make-breakpoint 'test-fn-1 33))
 
 (format t "~%calling test-fn-1 (no source code location)...")
 
 (test-fn-1)
 
+;; test of indirect 'call []'
 (defun test-fn-2 (x)
   (subroutine-of-x x))
 
@@ -328,7 +375,9 @@
 
 (format t "~%calling test-fn-2 in step mode...")
 
-(let ((*stepping-enabled* t))
+
+(let ((*stepping-enabled* t ; if t, execution breaks here
+                          ))
   (test-fn-2 'test-param-for-test-fn-2))
 
 (defun test-fn-3 (x)
@@ -344,4 +393,11 @@
 
 ; (LISPWORKS-TOOLS::inspect-an-object #'test-fn-2)
 
-  
+; SYSTEM::disassembly-objetc-find-reference-for-offset coco 28 
+; РґРµР»Р°РµС‚ С‚Рѕ, С‡С‚Рѕ РјС‹ СѓР¶Рµ РЅР°С‡РёР»РёСЃСЊ
+; RAW::fixup-moved-function РёРЅС‚РµСЂРµСЃРЅРѕ, РЅРѕ РІСЂСЏРґ Р»Рё СЂР°Р·Р±РµСЂСѓСЃСЊ. 
+(defun fff (x) (+ x 1))
+(defun pmm (x)
+  (fff (fff (fff x))))
+
+;; system::compute-callable-constants #'test-fn-5 - РІРѕР·РІСЂР°С‰Р°РµС‚ РёРЅС‚РµСЂРµСЃРЅРѕРµ РЅР°Рј.
