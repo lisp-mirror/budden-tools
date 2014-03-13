@@ -63,12 +63,12 @@
   (apply call-to args)
   )
 
-(dolist (name '(make-breakpoint break invoke-debugger))
+(dolist (name '(make-breakpoint-2 break invoke-debugger))
   (pushnew name DBG::*hidden-symbols*))
 
 (defvar *active-breakpoints* nil "list of created breakpoints")
 
-(defun make-breakpoint (function-name offset)
+#|(defun make-breakpoint (function-name offset)
   "breakpoint is indeed a closure and a change in a function code. 
   Only function calls can be used as a breakpoint locations, otherwise debugger
   is unable to find source location so the entire mechanism becomes useless"
@@ -81,11 +81,26 @@
     (setf (car pointer) smashed-fn)
     (push breaker *active-breakpoints*)
     (print breaker)
-    (values smashed-fn breaker)))
+    (values smashed-fn breaker)))|#
+
+
+(defun make-breakpoint-2 (fn offset old-called kind)
+  "breakpoint is indeed a closure and a change in a function code and constants. 
+  Only function calls can be used as a breakpoint locations, otherwise debugger
+  is unable to find source location so the entire mechanism becomes useless"
+  (let* ((breaker ; lambda call to which is places instead of original call
+          (lambda (&rest args)
+            (my-do-break fn old-called args))))
+    (set-breakpoint-in-function-2 fn offset breaker kind old-called)
+    (push breaker *active-breakpoints*)
+    (print breaker)
+    (values old-called breaker)))
+
 
 (defun extract-address-from-function (function)
   "Возвращает адрес по объекту функции. Lame: extracts address from printed representation"
   (assert (functionp function))
+  ; (object-address function) is not that precise
   (let* ((text (format nil "~A" function))
          (length (length text))
          (offset (- length 9))
@@ -94,9 +109,28 @@
          (address (read-from-string hex-address)))
     address))
 
+(defun extract-code-size-from-function (function)
+  "Returns a code from a function (LAME: with the help of inspector)"
+  (assert (functionp function))
+  (let* ((code (first (nth-value 1 (get-inspector-values function nil))))
+         (printed-code (prin1-to-string code))
+         (end-pos (position #\) printed-code :from-end t))
+         (beg-pos (position #\( printed-code :from-end t))
+         (length-as-string (subseq printed-code (1+ beg-pos) end-pos))
+         (*read-base* #10r10)
+         (length (read-from-string length-as-string)))
+    length))
+    
+
 (defun poke (addr byte)
   "Write byte at addr"
   (setf (fli:dereference (fli:make-pointer :address addr :type :unsigned-byte)) byte))
+
+(defun poke-unsigned (addr integer)
+  (setf (fli:dereference (fli:make-pointer :address addr :type :unsigned)) integer))
+
+(defun peek-unsigned (addr)
+  (fli:dereference (fli:make-pointer :address addr :type :unsigned)))
 
 (defun peek-byte (addr)
   "Read byte from addr"
@@ -257,46 +291,81 @@
 (defparameter *breakpoints* (make-hash-table :test 'equalp)
   "breakpoint-key => smashed function")
 
-(defun set-breakpoint-in-function (function-or-name next-command-offset fn-to-put)
+(defparameter +magic-reference-table-offset+ 12)
+(defparameter +magic-word-size+ 4)
+
+(defun replace-fn-reference (fn new-fn call-kind old-fn)
+  "Changes fn's reference from old-fn to new-fn in an fn's reference table"
+  (let* ((code-size (extract-code-size-from-function fn))
+         (references (extract-function-references fn))
+         (pos (position old-fn references))
+         (gc-done (gc-generation t))
+         (fn-address (extract-address-from-function fn))
+         (table-address (+ fn-address code-size +magic-reference-table-offset+))
+         (new-fn-address (- (extract-address-from-function new-fn) 
+                            call-kind ; magic
+                            ))
+         entry-address
+         old-value)
+    (declare (ignore gc-done))
+    (unless pos
+      (return-from replace-fn-reference nil) ; changed already or something's wrong
+      )
+    (setf entry-address (+ table-address (* pos +magic-word-size+)))
+    (setf old-value (peek-unsigned entry-address))
+    (poke-unsigned entry-address new-fn-address)
+    (assert (= fn-address (extract-address-from-function fn)) () "Your image is likely to be smashed. Restart lisp")
+    (format t "~%Old entry in a reference table: ~X" old-value)
+    (format t "~%code-size=~D,pos=~S,table-address=~X" code-size pos table-address)
+    
+    ; do nothing, just imitate
+    ))
+    
+
+
+
+(defun set-breakpoint-in-function-2 (fn offset breaker call-kind old-called)
   "Подменяет вызов на функцию. offset at function name must point to call, either direct or indirect"
   (progn ; with-other-threads-disabled
-    (let* ((function-object (coerce function-or-name 'function))
+    (let* ((fn (coerce fn 'function))
            fn-address
-           offset ; offset of command to modify
            new-opcode
            replace-to-address
-           call-kind
-           current-fn
            )
-      (assert (functionp function-object))
-      (assert (integerp next-command-offset))
-      (gc-generation t)
-      (setf fn-address (extract-address-from-function function-object))
-      (multiple-value-setq (offset call-kind current-fn)
-          (locate-call-from-next-command-offset (+ fn-address next-command-offset) next-command-offset))
-      (setf fn-address nil) ; invalidate address as gc will be called now
+      (assert (functionp fn))
+      ; (gc-generation t)
+      ; (setf fn-address (extract-address-from-function fn))
+      (replace-fn-reference fn breaker 0 old-called)
       (setf new-opcode
           (ecase call-kind
-           (2
+           (1
             ; полезный код для подмены именованной на именованную, но нам он тут вроде не нужен
-            ; (setf replace-to-address (+ (object-address fn-to-put) +hackish-symbol-value-offset+))
+            ; (setf replace-to-address (+ (object-address breaker) +hackish-symbol-value-offset+))
             ; (calc-indirect-opcode replace-to-address))
             (gc-generation t)
-            (setf replace-to-address (extract-address-from-function fn-to-put))
-            (calc-call-opcode (+ (extract-address-from-function function-object) offset) replace-to-address 6)
+            ;(poke-unsigned (+ (extract-address-from-function fn) offset)
+            ;               (extract-address-from-function breaker))
+            (setf fn-address (extract-address-from-function fn))
+            (setf replace-to-address (extract-address-from-function breaker))
+            (incf offset -2)
+            (calc-call-opcode (+ (extract-address-from-function fn) offset) replace-to-address 6)
             )
-           (1
+           (0
             (gc-generation t)
-            (setf replace-to-address (extract-address-from-function fn-to-put))
-            (calc-call-opcode (+ (extract-address-from-function function-object) offset) replace-to-address 5))
-           ))
+            (setf fn-address (extract-address-from-function fn))
+            (setf replace-to-address (extract-address-from-function breaker))
+            (incf offset -1)        
+            (calc-call-opcode (+ (extract-address-from-function fn) offset) replace-to-address 5)
+           )))
     ;(format t "~%fn-address=~X, replace-to-address=~X, current-call=~S"
     ;        fn-address replace-to-address current-call)
-      (poke-opcode function-object offset new-opcode)
-      (assert (or (functionp current-fn) (and (symbolp current-fn)
-                                              (fboundp current-fn))))
+      (poke-opcode fn offset new-opcode)
+      (assert (= (extract-address-from-function fn) fn-address) () "your image is likely smashed")
+      (assert (= (extract-address-from-function breaker) replace-to-address) () "your image is likely smashed")
+      (assert (or (functionp old-called) (and (symbolp old-called)
+                                              (fboundp old-called))))
       ;(print new-opcode)
-      current-fn
+      old-called
     ;(normal-gc)
       )))
 
@@ -304,8 +373,19 @@
 
 
 
-(defun extract-function-breakable-offsets (function-object)
-  "Uses mysterious consts to find breakable points which debugger can handle"
+(defun extract-function-references (function-object)
+  "Functions we refer to"
+  (assert (functionp function-object))
+  (let* ((constants (SYSTEM::function-constants function-object))
+         (limit (- (length constants) 1))
+         (result nil))
+    (dotimes (i limit)
+      (push (elt constants (+ i 1)) result))
+    (nreverse result)))
+
+
+#|(defun extract-function-breakable-offsets (function-object)
+  "OBSOLETE. Uses mysterious consts to find breakable points which debugger can handle"
   (assert (functionp function-object))
   (let* ((constants (SYSTEM::function-constants function-object))
          (first-constants (first constants))
@@ -314,21 +394,18 @@
     (dotimes (i (length locations))
       (when (= 0 (mod i 3))
         (push (elt locations i) result)))
-    result))
-
-
-(defun add-function-reference (function-object referred-function)
-  (assert (functionp function-object))
-  (let* ((constants (SYSTEM::function-constants function-object)))
-    (pushnew referred-function (cdr constants))))
+    result))|#
+  
 
 
 (defun set-step-points-everywhere-on-fn (function-or-name)
   "Extract all steppable points from compiled function and set breakpoints on them"
   (let* ((fn (coerce function-or-name 'function))
-         (offsets (extract-function-breakable-offsets fn)))
-    (format t "offsets=~{~D~}" offsets)
-    (mapcar (lambda (o) (make-breakpoint fn o)) offsets)))
+         (constants (SYSTEM::compute-callable-constants fn)))
+    (format t "constants=~S" constants)
+    (dolist (rec constants)
+      (destructuring-bind (offset call-into call-kind) rec
+        (make-breakpoint-2 fn offset call-into call-kind)))))
     
   
 (defun poke-int3 (function offset &optional (count-of-nops 0))
@@ -345,59 +422,27 @@
 (defun subroutine-of-x (x)
   "test function"
   (format t "~%subroutine-of-x is running. Arg: ~S~%" x)
-  (list 0 x))
+  (+ 1 x))
 
 (defun subroutine-with-no-args ()
   "test function"
   (print "subroutine-with-no-args is running"))
 
 
-(defparameter test-fn-1 "just an anchor to find defun")
-;; test of direct 'call'
-(compile `(defun test-fn-1 ()
-            (funcall ,#'subroutine-of-x 3)
-            ))
-
-; example of manual breakpoint setting
-(eval '(make-breakpoint 'test-fn-1 33))
+(defun test-fn-1 (x)
+  (+ 2 (subroutine-of-x (subroutine-of-x x))))
+(set-step-points-everywhere-on-fn #'test-fn-1)
 
 (format t "~%calling test-fn-1 (no source code location)...")
-
-(test-fn-1)
-
-;; test of indirect 'call []'
-(defun test-fn-2 (x)
-  (subroutine-of-x x))
+(defun do-test-1 ()
+  (let ((*stepping-enabled* t))
+    (test-fn-1 1)))
+(do-test-1)
 
 
-; (make-breakpoint 'test-fn-2 33) 
-(set-step-points-everywhere-on-fn 'test-fn-2)
-
-(format t "~%calling test-fn-2 in step mode...")
-
-
-(let ((*stepping-enabled* t ; if t, execution breaks here
-                          ))
-  (test-fn-2 'test-param-for-test-fn-2))
-
-(defun test-fn-3 (x)
-  (subroutine-of-x (subroutine-of-x x)))
-
-(set-step-points-everywhere-on-fn 'test-fn-3)
-(format t "~%calling test-fn-3...")
-(format t "~%test-fn-3 returned ~S~%" (test-fn-3 1))
-
-(defun test-fn-4 (x)
-  (+ (+ x 1))) 
-; breakpoint do not work here for an unknown reason
-
+; some useful staff
+;; system::compute-callable-constants #'test-fn-5 - возвращает интересное нам.
 ; (LISPWORKS-TOOLS::inspect-an-object #'test-fn-2)
-
 ; SYSTEM::disassembly-objetc-find-reference-for-offset coco 28 
 ; делает то, что мы уже начились
 ; RAW::fixup-moved-function интересно, но вряд ли разберусь. 
-(defun fff (x) (+ x 1))
-(defun pmm (x)
-  (fff (fff (fff x))))
-
-;; system::compute-callable-constants #'test-fn-5 - возвращает интересное нам.
