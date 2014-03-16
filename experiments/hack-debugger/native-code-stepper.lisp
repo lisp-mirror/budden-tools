@@ -30,6 +30,8 @@
 
 (in-package :native-code-stepper)
 
+(proclaim '(optimize (space 0) (speed 0)))
+
 (defun my+ (&rest args) (apply #'cl:+ args))
 
 #| 
@@ -53,30 +55,89 @@
 (defvar *stepping-enabled* nil
   "If this is true, every step point breaks")
   
+(defvar *in-my-do-break* t)
+(defvar *stepped-source-is-shown-already-in-the-debugger* nil)
+
 
 (defun my-do-break (call-from call-to args)
   (declare (ignorable args))
   (when *tracing-enabled*
     (format t "~%native stepper break, from ~S into ~S, args=~S" call-from call-to args))
   (when *stepping-enabled*
-    (break "Stepper break before call from ~S into ~S with args=~S~%Use GUI debugger to find current source" call-from call-to args))
+    (let ((DBG::*hidden-symbols*
+           (append '(break my-do-break invoke-debugger make-breakpoint) DBG::*hidden-symbols*))
+          ;(DBG:*print-invisible-frames* nil)
+          (*stepped-source-is-shown-already-in-the-debugger* nil)
+          (*in-my-do-break* t)
+          )
+      (break "Stepper break before call from ~S into ~S with args=~S~%If all is Ok, your current source is shown in the editor. Use 'continue' command to step further" call-from call-to args)))
   (apply call-to args)
   )
 
-(dolist (name '(make-breakpoint break invoke-debugger))
-  (pushnew name DBG::*hidden-symbols*))
+;(dolist (name '(make-breakpoint
+;                ; break
+;                invoke-debugger
+;                my-do-break))
+;  (pushnew name DBG::*hidden-symbols*))
+
+(defparameter *non-steppable-calls* '(runtime:bad-args-or-stack ; useless
+                                      system::*%+$any-stub ; does not work
+                                      system::*%-$any-stub ; does not work
+                                      ) 
+  "Functions call to which we don't touch while making function steppable")
+
+
+(defun remove-some-optimizations ()
+  "Remove transforms so that to get more steppable points"
+  (setf (get '+ 'COMPILER::lwx86-fndefs) nil)
+  (setf (get '- 'COMPILER::lwx86-fndefs) nil)
+  (setf (get '* 'COMPILER::lwx86-fndefs) nil)
+  (setf (get '/ 'COMPILER::lwx86-fndefs) nil)
+  )
+
+(remove-some-optimizations)
 
 (defvar *active-breakpoints* nil "list of created breakpoints")
+
+(defun call-steppable-p (call-into call-kind)
+  (and (not (= call-kind 0)) ; 
+       ; don't attempt to step direct calls as they
+       ; use stack in some other way. 
+  (typecase call-into
+    (symbol
+     (and 
+      (not (member call-into *non-steppable-calls*))
+      (not (= call-kind 0))))
+    (function 
+     (not (member (coerce call-into 'function) *non-steppable-calls* :key (lambda (x) (coerce x 'function)))))
+    (t ; other constants, e.g. numbers. 
+     nil))))
 
 (defun make-breakpoint (fn offset old-called kind)
   "breakpoint is indeed a closure and a change in a function code and constants. 
   Only function calls can be used as a breakpoint locations, otherwise debugger
   is unable to find source location so the entire mechanism becomes useless"
-  (let* ((breaker ; lambda call to which is places instead of original call
-          (lambda (&rest args)
-            (my-do-break fn old-called args))))
-    (set-breakpoint-in-function fn offset breaker kind old-called)
-    (push breaker *active-breakpoints*)
+  (let* ((breaker-symbol
+          (if (symbolp old-called)
+              (make-symbol (concatenate 'string
+                                        "step-"
+                                        (package-name (symbol-package old-called))
+                                        "::"
+                                        (symbol-name old-called)))
+            (gensym) ; we can include printable representation of function here, but we need to strip away address of it
+            )
+          )
+         (breaker ; lambda call to which is places instead of original call
+          (cond
+           ;((eq old-called #'system::*%+$any-stub)
+           ; (my-do-break-2 fn old-called args)
+           ; )
+           (t
+            (lambda (&rest args)
+              (my-do-break fn old-called args))))))
+    (setf (symbol-function breaker-symbol) breaker)
+    (set-breakpoint-in-function fn offset breaker-symbol kind old-called)
+    (push breaker-symbol *active-breakpoints*)
     (print breaker)
     (values old-called breaker)))
 
@@ -226,40 +287,52 @@
 (defparameter +magic-reference-table-offset+ 12)
 (defparameter +magic-word-size+ 4)
 
+(defun object-to-entry-in-reference-table (obj call-kind)
+  "We have an object. Lets' calc a value for it that fits into reference table"
+  (ecase call-kind
+    (1 (+ (object-address obj)
+          +hackish-symbol-value-offset+ ; magic
+          (- call-kind) ; magic
+          ))
+    (0 (extract-address-from-function obj))))
+
 (defun replace-fn-reference (fn new-fn call-kind old-fn)
-  "Changes fn's reference from old-fn to new-fn in an fn's reference table"
+  "Changes fn's reference from old-fn to new-fn in an fn's reference table. Call-kind must be of old-fn"
   (let* ((code-size (extract-code-size-from-function fn))
          (references (extract-function-references fn))
          (pos (position old-fn references))
          (gc-done (gc-generation t))
          (fn-address (extract-address-from-function fn))
          (table-address (+ fn-address code-size +magic-reference-table-offset+))
-         (new-fn-address (- (extract-address-from-function new-fn) 
-                            call-kind ; magic
-                            ))
+         (new-value (object-to-entry-in-reference-table new-fn call-kind))
+         (check-old-value (object-to-entry-in-reference-table old-fn call-kind))
          entry-address
-         old-value)
+         old-fn-address
+         real-old-value)
     (declare (ignore gc-done))
     (unless pos
       (return-from replace-fn-reference nil) ; changed already or something's wrong
       )
     (setf entry-address (+ table-address (* pos +magic-word-size+)))
-    (setf old-value (peek-unsigned entry-address))
-    (poke-unsigned entry-address new-fn-address)
-    (assert (= fn-address (extract-address-from-function fn)) () "Your image is likely to be smashed. Restart lisp")
-    (format t "~%Old entry in a reference table: ~X" old-value)
+    (setf real-old-value (peek-unsigned entry-address))
+    (assert (= real-old-value check-old-value) () "Didn't find correct old value in reference table")
+    (poke-unsigned entry-address new-value)
+    ;(assert (= new-value (extract-address-from-function fn)) () "Your image is likely to be smashed (0)")
+    (format t "~%Old entry in a reference table: ~X" real-old-value)
     (format t "~%code-size=~D,pos=~S,table-address=~X" code-size pos table-address)
     
     ; do nothing, just imitate
     ))
     
 
+(defun temp-breaker (&rest ignore)
+  (print "I'm test-breaker"))
 
-
-(defun set-breakpoint-in-function (fn offset breaker call-kind old-called)
+(defun set-breakpoint-in-function (fn offset breaker-symbol call-kind old-called)
   "Подменяет вызов на функцию. offset at function name must point to call, either direct or indirect"
   (progn ; with-other-threads-disabled
     (let* ((fn (coerce fn 'function))
+           (breaker-fn (symbol-function breaker-symbol))
            fn-address
            new-opcode
            replace-to-address
@@ -267,33 +340,46 @@
       (assert (functionp fn))
       ; (gc-generation t)
       ; (setf fn-address (extract-address-from-function fn))
-      (replace-fn-reference fn breaker 0 old-called)
       (setf new-opcode
           (ecase call-kind
-           (1
-            ; полезный код для подмены именованной на именованную, но нам он тут вроде не нужен
-            ; (setf replace-to-address (+ (object-address breaker) +hackish-symbol-value-offset+))
-            ; (calc-indirect-opcode replace-to-address))
+           (1 ; call [symbol]
+                   ; если funcall (car list) превращается в call [адрес (car list)], мы сломаемся. FIXME проверить
+            (assert (symbolp old-called) () "Can't handle other indirect calls than from a symbol")
             (gc-generation t)
+            (replace-fn-reference fn breaker-symbol 1 old-called)
+            ;(setf breaker #'temp-breaker)
+            (gc-generation t)
+            (setf fn-address (extract-address-from-function fn))
+            (setf replace-to-address (+ (object-address breaker-symbol) +hackish-symbol-value-offset+))
+            (incf offset -2)
+            (calc-indirect-opcode replace-to-address)
             ;(poke-unsigned (+ (extract-address-from-function fn) offset)
             ;               (extract-address-from-function breaker))
-            (setf fn-address (extract-address-from-function fn))
-            (setf replace-to-address (extract-address-from-function breaker))
-            (incf offset -2)
-            (calc-call-opcode (+ (extract-address-from-function fn) offset) replace-to-address 6)
+            ;(setf replace-to-address (extract-address-from-function breaker))
+            ;(incf offset -2)
+            ;(calc-call-opcode (+ (extract-address-from-function fn) offset) replace-to-address 6)
             )
            (0
             (gc-generation t)
+            (replace-fn-reference fn breaker-fn 0 old-called)
+            (gc-generation t)
             (setf fn-address (extract-address-from-function fn))
-            (setf replace-to-address (extract-address-from-function breaker))
+            (setf replace-to-address (extract-address-from-function breaker-fn))
             (incf offset -1)        
             (calc-call-opcode (+ (extract-address-from-function fn) offset) replace-to-address 5)
            )))
     ;(format t "~%fn-address=~X, replace-to-address=~X, current-call=~S"
     ;        fn-address replace-to-address current-call)
       (poke-opcode fn offset new-opcode)
-      (assert (= (extract-address-from-function fn) fn-address) () "your image is likely smashed")
-      (assert (= (extract-address-from-function breaker) replace-to-address) () "your image is likely smashed")
+      (assert (= (extract-address-from-function fn) fn-address)
+          () "your image is likely smashed (1)")
+      (ecase call-kind
+       (1
+        (assert (= (+ (object-address breaker-symbol) +hackish-symbol-value-offset+) replace-to-address)
+            () "your image is likely smashed (2)"))
+       (0
+        (assert (= (extract-address-from-function breaker-fn) replace-to-address)
+            () "your image is likely smashed (3)")))
       (assert (or (functionp old-called) (and (symbolp old-called)
                                               (fboundp old-called))))
       ;(print new-opcode)
@@ -337,7 +423,8 @@
     (format t "constants=~S" constants)
     (dolist (rec constants)
       (destructuring-bind (offset call-into call-kind) rec
-        (make-breakpoint fn offset call-into call-kind)))))
+        (when (call-steppable-p call-into call-kind)
+          (make-breakpoint fn offset call-into call-kind))))))
     
   
 (defun poke-int3 (function offset &optional (count-of-nops 0))
@@ -351,6 +438,11 @@
 
 ;;;;  -------------------------------- TESTS -------------------------------------------------
 
+(defun subroutine-of-x-and-y (x &key y)
+  "test function"
+  (format t "~%subroutine-of-x-and-y is running. Args: ~S,~S~%" x y)
+  (+ y x))
+
 (defun subroutine-of-x (x)
   "test function"
   (format t "~%subroutine-of-x is running. Arg: ~S~%" x)
@@ -361,19 +453,79 @@
   (print "subroutine-with-no-args is running"))
 
 
+;(defun test-fn-1 (x)
+;  (+ 2 (subroutine-of-x (subroutine-of-x x))))
+
 (defun test-fn-1 (x)
-  (+ 2 (subroutine-of-x (subroutine-of-x x))))
+  ;(+ x 1)
+  (subroutine-of-x-and-y x :y 1)
+  )
+
+(disassemble #'test-fn-1)
 (set-step-points-everywhere-on-fn #'test-fn-1)
+(disassemble #'test-fn-1)
 
 (format t "~%calling test-fn-1 (no source code location)...")
 (defun do-test-1 ()
-  (let ((*stepping-enabled* t))
-    (test-fn-1 1)))
+  (let (
+        ;(*stepping-enabled* t)
+        )
+    (test-fn-1 1.1)))
 (do-test-1)
 
 
+(defparameter test-fn "just an anchor")
+
+;; тест для непосредственно вызываемых функций
+(compile `(progn
+            (proclaim '(optimize (space 0) (speed 0)))
+            (defun test-fn ()
+            (funcall ,#'subroutine-of-x 3.3)
+            ;(function-to-smash)
+            )))
+(eval '(set-step-points-everywhere-on-fn #'test-fn))
+(disassemble #'test-fn)
+(eval '(test-fn))
+(disassemble #'test-fn)
+
+(defun find-stepped-code (initial-frame)
+  (do ((frame initial-frame (slot-value frame 'dbg::%next)))
+      ((null frame) nil)
+    (when (slot-exists-p frame 'dbg::function-name)
+      (let* ((function-name
+              (slot-value frame 'dbg::function-name)))
+        (when (equalp function-name '(subfunction 1 make-breakpoint))
+          (return-from find-stepped-code
+            (slot-value frame 'dbg::%next)))))))
+      
+  
+
+;;;;;;;;;;;; Tune the IDE  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(defadvice (lispworks-tools::debugger-select-frame find-source-just-at-select-frame-time :before) (frame self &optional update-backtrace)
+  (declare (ignore update-backtrace))
+  (when (and *in-my-do-break*
+             (not *stepped-source-is-shown-already-in-the-debugger*))
+    (let ((stepped-code-frame
+           (find-stepped-code frame)))
+      (when stepped-code-frame
+        (setf *stepped-source-is-shown-already-in-the-debugger* t)
+        (ignore-errors
+          (SYSTEM::DBG-EDIT-FRAME-INTERNAL stepped-code-frame self))
+        ))))
+        
+
+
+(defadvice (DBG::DEBUG-TO-LISTENER-P dont-debug-to-listener :around) (condition)
+  (if *in-my-do-break* nil (call-next-advice condition)))
+
+(defun just-break ()
+  (break))
+
+; (just-break)
+
+
 ; some useful staff
-;; system::compute-callable-constants #'test-fn-5 - возвращает интересное нам.
+;; system::compute-callable-constants #'test-fn-5 - возвращает интересноенам.
 ; (LISPWORKS-TOOLS::inspect-an-object #'test-fn-2)
 ; SYSTEM::disassembly-objetc-find-reference-for-offset coco 28 
 ; делает то, что мы уже начились
