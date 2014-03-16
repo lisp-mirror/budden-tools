@@ -63,35 +63,19 @@
   (apply call-to args)
   )
 
-(dolist (name '(make-breakpoint-2 break invoke-debugger))
+(dolist (name '(make-breakpoint break invoke-debugger))
   (pushnew name DBG::*hidden-symbols*))
 
 (defvar *active-breakpoints* nil "list of created breakpoints")
 
-#|(defun make-breakpoint (function-name offset)
-  "breakpoint is indeed a closure and a change in a function code. 
-  Only function calls can be used as a breakpoint locations, otherwise debugger
-  is unable to find source location so the entire mechanism becomes useless"
-  (let* ((pointer (cons nil nil))
-         (breaker ; lambda call to which is places instead of original call
-          (lambda (&rest args)
-            (my-do-break function-name (car pointer) args)))
-         (smashed-fn ; function call to which we substituted
-          (set-breakpoint-in-function function-name offset breaker)))
-    (setf (car pointer) smashed-fn)
-    (push breaker *active-breakpoints*)
-    (print breaker)
-    (values smashed-fn breaker)))|#
-
-
-(defun make-breakpoint-2 (fn offset old-called kind)
+(defun make-breakpoint (fn offset old-called kind)
   "breakpoint is indeed a closure and a change in a function code and constants. 
   Only function calls can be used as a breakpoint locations, otherwise debugger
   is unable to find source location so the entire mechanism becomes useless"
   (let* ((breaker ; lambda call to which is places instead of original call
           (lambda (&rest args)
             (my-do-break fn old-called args))))
-    (set-breakpoint-in-function-2 fn offset breaker kind old-called)
+    (set-breakpoint-in-function fn offset breaker kind old-called)
     (push breaker *active-breakpoints*)
     (print breaker)
     (values old-called breaker)))
@@ -156,58 +140,6 @@
 (defparameter +length-of-indirect-call-command+ 6 "Magic constant")
 (defparameter +direct-call+ 1)
 (defparameter +indirect-call+ 2)
-
-
-(defun locate-call-from-next-command-offset-inner (next-command-address next-command-offset)
-  "По адресу находится косвенный вызов, или по следующему за ним адресу находится косвенный вызов. Извлечь уточнённый offset, вид операции вызова и объект вызываемой ф-ии. 
-  Операция вызова: 1 - прямая, 2 - косв"
-  (let* ((approx-dest-address (- next-command-address +length-of-indirect-call-command+))
-         (this-command-offset (- next-command-offset +length-of-indirect-call-command+))
-         (apd approx-dest-address)
-         (first-byte (peek-byte apd))
-         (second-byte (peek-byte (+ 1 apd)))
-         (call-address-as-list-of-bytes nil))
-    (cond
-     ((= second-byte #xE8 ; direct call
-         ) 
-      (setf call-address-as-list-of-bytes
-            (extract-n-bytes (+ apd 2) 4))
-      (values (+ this-command-offset 1) +direct-call+ call-address-as-list-of-bytes)
-      )
-     ((and (= #xFF first-byte)
-           (= #x15 (peek-byte (+ apd 1)))
-           ; indirect call 
-           )
-      (setf call-address-as-list-of-bytes
-            (extract-n-bytes (+ apd 2) +number-of-bytes-in-word+))
-      (values this-command-offset +indirect-call+ call-address-as-list-of-bytes))
-     (t
-      (error "extract-function-call-from-offset is unable to handle ~S command" first-byte)))))
-
-
-(defun locate-call-from-next-command-offset (next-command-address next-command-offset)
-  "Предыдущая команда - это косвенный или прямой call. Return 'call' command offset in a code vector, kind of a call (1-direct,2-indirect) and a function called"
-  (multiple-value-bind (offset call-kind bytes)
-      (locate-call-from-next-command-offset-inner next-command-address next-command-offset)
-    (let (address)
-      (cond
-       ((= call-kind +direct-call+)
-        (setf address (32-bytes-to-n bytes))
-        (setf address (+ address next-command-address)))
-       ((= call-kind +indirect-call+)
-        (setf address (32-bytes-to-n bytes))
-        )
-       (t
-        (error "unknown call-kind")
-        )
-       )
-       (values offset
-               call-kind
-               (pointer-from-address address)))))
-  
-
-   
-;    (dotimes (i 5)
 
 (defun poke-opcode (function-object offset opcode-list)
   (let* ((dest-address (+ (extract-address-from-function function-object) offset))
@@ -324,7 +256,7 @@
 
 
 
-(defun set-breakpoint-in-function-2 (fn offset breaker call-kind old-called)
+(defun set-breakpoint-in-function (fn offset breaker call-kind old-called)
   "Подменяет вызов на функцию. offset at function name must point to call, either direct or indirect"
   (progn ; with-other-threads-disabled
     (let* ((fn (coerce fn 'function))
@@ -405,7 +337,7 @@
     (format t "constants=~S" constants)
     (dolist (rec constants)
       (destructuring-bind (offset call-into call-kind) rec
-        (make-breakpoint-2 fn offset call-into call-kind)))))
+        (make-breakpoint fn offset call-into call-kind)))))
     
   
 (defun poke-int3 (function offset &optional (count-of-nops 0))
