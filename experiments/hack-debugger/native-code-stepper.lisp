@@ -31,6 +31,12 @@
 
 (in-package :native-code-stepper)
 
+(defun unintern-all-internal-symbols-of-package (package)
+  (let ((package (find-package package)))
+    (do-symbols (s package)
+      (when (eq (symbol-package s) package)
+        (unintern s package)))))
+
 (proclaim '(optimize (space 0) (speed 0) (debug 3) (fixnum-safety 3)))
 
 
@@ -56,28 +62,48 @@
 (defvar *stepping-enabled* t
   "If this is true, every step point breaks")
   
-(defvar *in-my-do-break* t)
-(defvar *stepped-source-is-shown-already-in-the-debugger* nil)
-(defvar *stepper-call-from* nil)
+(defvar *in-my-do-break* nil "Bound to t in a call to (break) made inside my-do-break")
+(defvar *stepped-source-is-shown-already-in-the-debugger* nil
+  "When debugger is opened and dbg::debugger-select-frame is called for the first time, we show stepped source")
+;(defvar *stepper-call-from* nil)
 (defvar *stepper-call-to* nil)
+;(defvar *stepper-call-args* nil)
+(defvar *step-into-flag* nil "is set to t inside (break)<-(my-do-break) to step into call")
+(defvar *my-do-break-call-done* nil "is set to t to avoid double calling of call-to from my-do-break")
 
 
-(defun my-do-break (call-from call-to args)
-  (declare (ignorable args))
+(defun my-do-break (call-from call-to call-args)
   (when *tracing-enabled*
-    (format t "~%native stepper break, from ~S into ~S, args=~S" call-from call-to args))
-  (when *stepping-enabled*
-    (let ((DBG::*hidden-symbols*
-           (append '(break my-do-break invoke-debugger make-breakpoint) DBG::*hidden-symbols*))
+    (format t "~%native stepper break, from ~S into ~S, args=~S" call-from call-to call-args))
+  (cond
+   (*stepping-enabled*
+    (let ( ; bindings for both break and apply
+          (*step-into-flag* nil)
+          ) 
+      (let ( ; bindings for break only
+            (DBG::*hidden-symbols*
+             (append '(break my-do-break invoke-debugger make-breakpoint) DBG::*hidden-symbols*))
+            (DBG::*default-debugger-commands*
+             (append 
+              '((:so step-over "step over")
+                (:sc step-continue "continue")
+                (:si step-into "step into")
+                )
+              DBG::*default-debugger-commands*))
           ;(DBG:*print-invisible-frames* nil)
-          (*stepped-source-is-shown-already-in-the-debugger* nil)
-          (*stepper-call-from* call-from)
-          (*stepper-call-to* call-to)
-          (*in-my-do-break* t)
-          )
-      (break "Stepper break before call from ~S into ~S with args=~S~%If all is Ok, your current source is shown in the editor. Use 'continue' command to step further" call-from call-to args)))
-  (apply call-to args)
-  )
+          ;(*stepper-call-from* call-from)
+            (*stepper-call-to* call-to)
+            ;(*stepper-call-args* call-args)
+            (*in-my-do-break* t)
+            (*stepped-source-is-shown-already-in-the-debugger* nil))
+        (break "Stepper break before call from ~S into ~S with args=~S~%Current source should be highlighted in the editor.~%type :so for step over, :si for step in,:sc for continue" call-from call-to call-args)
+        ; step-* functions are called from break that may stepize other functions 
+        ; and/or set *step-into-flag*
+        )
+      (apply call-to call-args)))
+   (t
+    (apply call-to call-args)
+    )))
 
 ;(dolist (name '(make-breakpoint
 ;                ; break
@@ -85,29 +111,85 @@
 ;                my-do-break))
 ;  (pushnew name DBG::*hidden-symbols*))
 
-(defparameter *non-steppable-calls* '(runtime:bad-args-or-stack ; useless
-                                      system::*%+$any-stub ; does not work
-                                      system::*%-$any-stub ; does not work
-                                      break ; bad things would happen
-) 
-  "Functions call to which we don't touch while making function steppable")
-
 
 (defvar *active-steppoints* nil "list of created breakpoints")
 
+
+;;;  Can we step this? ;;;;;;;;;;;;;;;;;;;;;;;;
+(defparameter *non-steppable-calls* '(
+                                      invoke-debugger
+                                      dbg::get-call-frame
+                                      dbg::debug1
+                                      conditions::in-break
+                                      runtime:bad-args-or-stack ; useless
+                                      system::*%+$any-stub ; does not work
+                                      system::*%-$any-stub ; does not work
+                                      break ; bad things would happen
+                                      ) 
+  "Functions call to which we don't touch while making function steppable")
+
+(defvar *non-stepizable-fns*
+  '(
+    my-do-break
+    ;; no need to mention system symbols as they're 
+    ;; already mentioned in 
+    ;invoke-debugger
+    ;break
+    ;dbg::get-call-frame
+    ;dbg::debug1
+    ;conditions::in-break
+    ;runtime:bad-args-or-stack ; useless
+    ;system::*%+$any-stub ; does not work
+    ;system::*%-$any-stub ; does not work
+    ;break ; bad things would happen
+    )
+  "Functions we not trying to stepize")
+
+(defparameter *packages-of-non-stepizable-functions*
+  (copy-list *packages-for-warn-on-redefinition*)
+  "Calls to functions in that packages can be step points, but we never step in those function. 
+  Take them into our variable so that don't 
+   lose in a situation where *packages-for-warn-on-redefinition* is bound to nil"
+  )
+
+
 (defun call-steppable-p (call-into call-kind)
-  (and (not (= call-kind 0)) ; 
+  (when (= call-kind 0)
        ; don't attempt to step direct calls as they
        ; use stack in some other way. 
+    (return-from call-steppable-p nil))
   (typecase call-into
     (symbol
      (and 
+      ; (potentially-steppable-function-name-p call-into)
       (not (member call-into *non-steppable-calls*))
       (not (= call-kind 0))))
     (function 
      (not (member (coerce call-into 'function) *non-steppable-calls* :key (lambda (x) (coerce x 'function)))))
     (t ; other constants, e.g. numbers. 
-     nil))))
+     nil)))
+
+
+(defun package-is-not-for-stepping (p)
+  "Accepts nil, package, or package name"
+  (etypecase p
+    (package
+     (package-is-not-for-stepping (package-name p)))
+    ((or symbol string)
+     (member p *packages-of-non-stepizable-functions* :test 'string=))
+    (null
+     nil)))
+
+(defun stepizible-function-name-p (fn-name)
+  "Function we can step into"
+  (cond
+   ((member fn-name *non-steppable-calls*) nil)
+   ((member fn-name *non-stepizable-fns*) nil)
+   ((dbg-never-stop-complex-name-p fn-name) nil)
+   ((and (symbolp fn-name)
+         (package-is-not-for-stepping (symbol-package fn-name)))
+          nil)
+   (t t)))
 
 
 (defstruct breaker-info fn offset old-called kind)
@@ -119,7 +201,7 @@
   (let* ((breaker-symbol
           (if (symbolp old-called)
               (make-symbol (concatenate 'string
-                                        "step-"
+                                        "stepper-call-"
                                         (package-name (symbol-package old-called))
                                         "::"
                                         (symbol-name old-called)))
@@ -266,34 +348,9 @@
 
 (defparameter +hackish-address-shift+ 5)
 
-(defun calc-call-opcode (dst-address address-to-call size)
-  "Вычисляет адрес, чтобы вместо прямого вывова был вызов replace-to-address. Добивает до size нопами"
-  (assert (>= size 5))
-  (let ((result nil)
-        (call-offset (- address-to-call dst-address +hackish-address-shift+)))
-    (dotimes (i (- size 5))
-      (push #x90 ; nop 
-            result))
-    (setf result
-          (nconc (nreverse
-                  (n-to-32-bytes
-                  ;(maybe-twos-complement
-                   call-offset
-                   ;)
-                   ))
-                 result))
-    (push #xE8 result)
-    result))
-
-(defun calc-indirect-opcode (replace-to-address)
-  "Вычисляет адрес, чтобы вместо косвенного вывова был вызов replace-to-address. Нам, по сути, не нужен"
-  (let ((call-offset replace-to-address))
-    (list* #xFF #x15 (reverse
-                      (n-to-32-bytes
-                  ;(maybe-twos-complement
-                       call-offset
-                   ;)
-                       )))))
+(defun calc-call-offset (dst-address address-to-call)
+  "Offset for direct call"
+  (- address-to-call dst-address +hackish-address-shift+))
 
 (defparameter +hackish-symbol-value-offset+ 4 ; currently unused
   )
@@ -316,12 +373,17 @@
           ))
     (0 (extract-address-from-function obj))))
 
+(defun do-gc ()
+  (gc-generation t))
+
+; (defun fn-reference-entry-address (
+
 (defun replace-fn-reference (fn new-fn call-kind old-fn)
   "Changes fn's reference from old-fn to new-fn in an fn's reference table. Call-kind must be of old-fn"
   (let* ((code-size (extract-code-size-from-function fn))
          (references (extract-function-references fn))
          (pos (position old-fn references))
-         (gc-done (gc-generation t))
+         (gc-done (do-gc))
          (fn-address (extract-address-from-function fn))
          (table-address (+ fn-address code-size +magic-reference-table-offset+))
          (new-value (object-to-entry-in-reference-table new-fn call-kind))
@@ -336,7 +398,8 @@
     (setf real-old-value (peek-unsigned entry-address))
     (assert (= real-old-value check-old-value) () "Didn't find correct old value in reference table")
     (poke-unsigned entry-address new-value)
-    ;(assert (= new-value (extract-address-from-function fn)) () "Your image is likely to be smashed (0)")
+    (do-gc)
+    ; (assert (= new-value (extract-address-from-function fn)) () "Your image is likely to be smashed (0)")
     (format t "~%Old entry in a reference table: ~X" real-old-value)
     (format t "~%code-size=~D,pos=~S,table-address=~X" code-size pos table-address)
     
@@ -366,32 +429,26 @@
            (1 ; call [symbol]
                    ; если funcall (car list) превращается в call [адрес (car list)], мы сломаемся. FIXME проверить
             (assert (symbolp old-called) () "Can't handle other indirect calls than from a symbol")
-            (gc-generation t)
+            (do-gc)
             (replace-fn-reference fn breaker-symbol 1 old-called)
             ;(setf breaker #'temp-breaker)
-            (gc-generation t)
+            (do-gc)
             (setf fn-address (extract-address-from-function fn))
             (setf replace-to-address (+ (object-address breaker-symbol) +hackish-symbol-value-offset+))
-            (incf offset -2)
-            (calc-indirect-opcode replace-to-address)
-            ;(poke-unsigned (+ (extract-address-from-function fn) offset)
-            ;               (extract-address-from-function breaker))
-            ;(setf replace-to-address (extract-address-from-function breaker))
-            ;(incf offset -2)
-            ;(calc-call-opcode (+ (extract-address-from-function fn) offset) replace-to-address 6)
+            replace-to-address
             )
            (0
-            (gc-generation t)
+            (do-gc)
             (replace-fn-reference fn breaker-fn 0 old-called)
-            (gc-generation t)
+            (do-gc)
             (setf fn-address (extract-address-from-function fn))
             (setf replace-to-address (extract-address-from-function breaker-fn))
-            (incf offset -1)        
-            (calc-call-opcode (+ (extract-address-from-function fn) offset) replace-to-address 5)
+            (calc-call-offset (+ (extract-address-from-function fn) offset -1) replace-to-address)
            )))
     ;(format t "~%fn-address=~X, replace-to-address=~X, current-call=~S"
     ;        fn-address replace-to-address current-call)
-      (poke-opcode fn offset new-opcode)
+      ;(poke-opcode fn offset new-opcode)
+      (poke-unsigned (+ fn-address offset) new-opcode)
       (assert (= (extract-address-from-function fn) fn-address)
           () "your image is likely smashed (1)")
       (ecase call-kind
@@ -436,15 +493,21 @@
 
 (defun stepize-fn (function-or-name)
   "Extract all steppable points from compiled function and set breakpoints on them"
-  (unless (function-has-step-points-p function-or-name)
+  (cond
+   ((breaker-symbol-p function-or-name)
+    (error "attemp to step breaker-symbol"))
+   ((function-has-step-points-p function-or-name)
+    ; stepper points are set already - do nothing
+    )
+   (t
     (let* ((fn (coerce function-or-name 'function))
            (constants (SYSTEM::compute-callable-constants fn)))
-      (format t "constants=~S" constants)
+      (format t "~%stepizing ~S~%constants=~S~%" fn constants)
       (dolist (rec constants)
         (destructuring-bind (offset call-into call-kind) rec
           (when (call-steppable-p call-into call-kind)
-            (make-breakpoint fn offset call-into call-kind)))))))
-
+            (make-breakpoint fn offset call-into call-kind))))))))
+  
 
 (defun unstepize-fn (function-or-name)
   "Remove all steppable points from fn"
@@ -467,29 +530,34 @@
       (poke offs #x90 ; nop
             ))))  
 
-;;; DBG utils ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(defun dbg-top-frame (&optional (some-frame DBG::*dbg-eval-frame*))
-  "Top of debugger stack"
-  (cond
-   ((null some-frame)
-    nil)
-   (t
-    (do ((this some-frame r)
-         (r some-frame (slot-value r 'dbg::prev)))
-        ((null r) this)))))
 
-(defun find-stepped-code (&optional (some-frame DBG::*dbg-eval-frame*))
+(defun dbg-get-some-frame ()
+  (assert dbg::*debugger-stack*)
+  (slot-value DBG::*debugger-stack* 'DBG::current-frame)
+  )
+
+
+;;; Study of stack frames and operations on them ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(defun dbg-top-frame (&optional initial-frame)
+  "Top of debugger stack"
+  (setf initial-frame (or initial-frame (dbg-get-some-frame)))
+  (do ((this initial-frame r)
+       (r initial-frame (slot-value r 'dbg::prev)))
+      ((null r) this)))
+
+(defun dbg-find-stepped-code ()
   "When called from a debugger, returns toplevel stepped code frame"
-  (let ((initial-frame (dbg-top-frame some-frame)))
+  (error "Unlikely to be correct")
+  (let ((initial-frame (dbg-top-frame)))
     (unless initial-frame
-      (return-from find-stepped-code nil))
+      (return-from dbg-find-stepped-code nil))
     (do ((frame initial-frame (slot-value frame 'dbg::%next)))
         ((null frame) nil)
       (when (slot-exists-p frame 'dbg::function-name)
         (let* ((function-name
                 (slot-value frame 'dbg::function-name)))
           (when (equalp function-name '(subfunction 1 make-breakpoint))
-            (return-from find-stepped-code
+            (return-from dbg-find-stepped-code
               (slot-value frame 'dbg::%next))))))))
       
   
@@ -497,10 +565,12 @@
 ;;;;;;;;;;;; Tune the IDE  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defadvice (lispworks-tools::debugger-select-frame find-source-just-at-select-frame-time :before) (frame self &optional update-backtrace)
   (declare (ignore update-backtrace))
-  (when (and *in-my-do-break*
+  (when (and *in-my-do-break* *stepping-enabled*
              (not *stepped-source-is-shown-already-in-the-debugger*))
     (let ((stepped-code-frame
-           (find-stepped-code frame)))
+           (dbg-find-topmost-stepizible-frame (dbg-top-frame frame))
+           ; (dbg-find-stepped-code frame)
+           ))
       (when stepped-code-frame
         (setf *stepped-source-is-shown-already-in-the-debugger* t)
         (ignore-errors
@@ -511,10 +581,14 @@
   (if *in-my-do-break* nil (call-next-advice condition)))
 
 ;;;; IDE commands for stepper ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(defun step-continue ()
+(defun step-continue (&rest ignore)
   "Continue execution w/o stepping"
-  (dolist (breaker-symbol *active-steppoints*)
-    (delete-breakpoint breaker-symbol))
+  (declare (ignore ignore))
+  (setf *stepping-enabled* nil)
+  (setf *step-into-flag* nil)
+  ;(setf *in-my-do-break* nil) действительно это надо было?
+  ;(dolist (breaker-symbol *active-steppoints*)
+  ;  (delete-breakpoint breaker-symbol))
   (dbg::dbg-continue))
 
 
@@ -529,53 +603,82 @@
           (return-from function-has-step-points-p t))))
     nil))
 
-
-(defvar *never-step-fns*
-  '(dbg::get-call-frame
-    dbg::debug1
-    invoke-debugger
-    conditions::in-break
-    break
-    my-do-break))
-
-(defun never-stop-complex-name-p (name)
+(defun dbg-never-stop-complex-name-p (name)
   (equalp name '(subfunction 1 make-breakpoint)))
 
-(defun potentially-steppable-dbg-frame-p (frame)
+(defun dbg-stepizible-frame-p (frame)
   (when (slot-exists-p frame 'dbg::function-name)
     (let ((fn-name (slot-value frame 'dbg::function-name)))
-      (cond
-       ((member fn-name *never-step-fns*) nil)
-       ((never-stop-complex-name-p fn-name) nil)
-       (t t)))))
+      (stepizible-function-name-p fn-name)
+      )))
 
-;(defun dbg-find-topmost-potentially-steppable-frame ()
-;  "Find potentially steppable fn on debugger stack"
-;  (let ((top (dbg-top-frame)))
-;    (do ((frame top (slot-value frame 'dbg::%next)))
-;        ((null frame) nil)
-;      )))     
+(defun dbg-find-topmost-stepizible-frame (down-from-frame)
+  "Find potentially steppable fn on debugger stack below from given frame"
+  ;(let ((top (dbg-top-frame down-from-frame)))
+  (do ((frame down-from-frame (slot-value frame 'dbg::%next)))
+      ((null frame) nil)
+    (when (dbg-stepizible-frame-p frame)
+      (return-from dbg-find-topmost-stepizible-frame frame))
+    ))
+
+(defun dbg-stepize-stepizible-frame (frame)
+  (stepize-fn (slot-value frame 'DBG::function-name)))
 
 
-(defun step-step ()
-  "Step current function - WRONG"
-  ; должна быть переменная "текущая шагаемая функция" и в зависимости от неё мы останавливаемся на step-поинтах или не останавливаемся
-  (let ((frame DBG::*dbg-eval-frame*))
+(defun step-over (&rest ignore)
+  "Step current function not entering the calls"
+  ; должна быть переменная "текущая шагаемая функция" и в зависимости от неё мы останавливаемся на step-поинтах или не останавливаемся. Но переменной мы её не можем сделать, т.к. не знаем способа указать на точку в стеке. Вместо этого можем завести special переменную и искать на стеке её биндинги. А вообще, может быть и ничего. Если мы пришли в step-point, то она и есть вершина видимого стека.
+  (declare (ignore ignore))
+  (assert DBG::*debugger-stack*)
+  (let ((frame (dbg-get-some-frame)))
     (cond
-     ((not (potentially-steppable-dbg-frame-p frame))
-      (y-or-n-p "Selected frame is not steppable"))
-     ((not (function-has-step-points-p (slot-value frame 'dbg::function-name)))
+     (*in-my-do-break* ; we're already at step-point break
+      
+      ; what about stepping out? FIXME - cover only a case of normal return to next frame
+      ; non-local transfers and exceptions are not covered
+      (let* ((our-frame
+              (dbg-find-topmost-stepizible-frame (dbg-top-frame frame))
+              ; this is currently stepped frame as *in-my-do-break* is t, hence (my-do-break)->(break) is on the stack
+              )
+             (next-stepizible-frame
+              (dbg-find-topmost-stepizible-frame our-frame)
+              ))
+        (when next-stepizible-frame 
+          (dbg-stepize-stepizible-frame next-stepizible-frame)))
+      (setf *step-into-flag* nil)
+      (dbg::dbg-continue)
+      )
+     ((dbg-stepizible-frame-p frame)
+      ; entering step mode in a selected frame
       (stepize-fn (slot-value frame 'DBG::function-name))
+      (setf *stepping-enabled* t)
+      (setf *step-into-flag* nil)
       (dbg::dbg-continue))
-     (t
-      (DBG::dbg-continue))
+     (t ; ent
+      (capi:display-message "Selected frame is not steppable"))
      )))
 
-(defun step-into ()
-  "Step into function to call"
+(defun step-into (&rest ignore)
+  (declare (ignore ignore))
   (cond
-   ((breaker-symbol-p *stepper-call-to*)
-    (
+   (*in-my-do-break*
+    (cond
+     ((null *stepper-call-to*)
+      (CAPI:display-message "Looks like a bug: *stepper-call-into* is nil while *in-my-do-break* is t"))
+     ((stepizible-function-name-p *stepper-call-to*)
+      (stepize-fn *stepper-call-to*)
+      (setf *step-into-flag* t)
+      (DBG::dbg-continue))
+     (t
+      (capi:display-message "function ~S is not steppable" *stepper-call-to*)
+      )))          
+   (t
+    (step-over)))
+  )
+;  "Step into function to call"
+;  (cond
+;   ((breaker-symbol-p 
+;    (
   
     
 ;;;;  -------------------------------- TESTS -------------------------------------------------
@@ -595,31 +698,43 @@
   (print "subroutine-with-no-args is running"))
 
 
-;(defun test-fn-1 (x)
-;  (+ 2 (subroutine-of-x (subroutine-of-x x))))
-
-(defun test-fn-1 (x)
+(defun test-fn (x)
   ;(+ x 1)
   (cond
    ((eq x 2)
-    (test-fn-1 (+ x 1)))
+    (+ (test-fn (+ x 1)) 3))
    (t 
     (subroutine-of-x-and-y x :y 1)
     ))
   )
 
-(disassemble #'test-fn-1)
-(stepize-fn #'test-fn-1)
-(disassemble #'test-fn-1)
+(disassemble #'test-fn)
+(stepize-fn #'test-fn)
+(disassemble #'test-fn)
 
-(format t "~%calling test-fn-1 (no source code location)...")
-(defun do-test-1 ()
+(defun do-test ()
   (let (
-        ;(*stepping-enabled* t)
+        (*stepping-enabled* t)
         )
-    (test-fn-1 2)))
-(do-test-1)
+    (test-fn 2)))
+(format t "~%calling test-fn...")
+(do-test)
 
+#|
+ ; Direct call test. If use that, remove 
+ ;  (when (= call-kind 0)
+ ;      ; don't attempt to step direct calls as they
+ ;      ; use stack in some other way. 
+ ;   (return-from call-steppable-p nil))
+ ; at the beginning of call-steppable-p 
+
+(compile `(defun test-fnd ()
+            (funcall ,#'subroutine-with-no-args)
+            ))
+
+(stepize-fn 'test-fnd)
+(test-fnd)
+|#
 
 
 ; some useful staff
