@@ -60,7 +60,7 @@
   "If true, step points are printed")
 
 (defvar *stepping-enabled* t
-  "If this is true, every step point breaks")
+  "Enable/disable stepping. If this is true and *step-into-flag* is t, then step points break execution.")
   
 (defvar *in-my-do-break* nil "Bound to t in a call to (break) made inside my-do-break")
 (defvar *stepped-source-is-shown-already-in-the-debugger* nil
@@ -68,26 +68,32 @@
 ;(defvar *stepper-call-from* nil)
 (defvar *stepper-call-to* nil)
 ;(defvar *stepper-call-args* nil)
-(defvar *step-into-flag* nil "is set to t inside (break)<-(my-do-break) to step into call")
+(defvar *step-into-flag* t "Controls stepping of a distinct function. It is bound to nil around (apply call-to ...) inside (my-do-break) to avoid stepping into call, and can be set to t in (step-into)")
 (defvar *my-do-break-call-done* nil "is set to t to avoid double calling of call-to from my-do-break")
 
+(eval-when (:compile-toplevel :execute)
+  (pushnew '(:so step-over "step over")
+           DBG::*default-debugger-commands*
+           :test 'equalp))
 
 (defun my-do-break (call-from call-to call-args)
   (when *tracing-enabled*
     (format t "~%native stepper break, from ~S into ~S, args=~S" call-from call-to call-args))
   (cond
-   (*stepping-enabled*
+   ((and *stepping-enabled* *step-into-flag*)
     (let ( ; bindings for both break and apply
           (*step-into-flag* nil)
+          ; (*stepping-enabled* nil) ; so that :c is a continue
           ) 
       (let ( ; bindings for break only
             (DBG::*hidden-symbols*
              (append '(break my-do-break invoke-debugger make-breakpoint) DBG::*hidden-symbols*))
             (DBG::*default-debugger-commands*
              (append 
-              '((:so step-over "step over")
+              '(
                 (:sc step-continue "continue")
                 (:si step-into "step into")
+                ; (:so step-over "step over") is added permanently
                 )
               DBG::*default-debugger-commands*))
           ;(DBG:*print-invisible-frames* nil)
@@ -154,6 +160,7 @@
 
 
 (defun call-steppable-p (call-into call-kind)
+  "Can we stop at this call"
   (when (= call-kind 0)
        ; don't attempt to step direct calls as they
        ; use stack in some other way. 
@@ -194,18 +201,24 @@
 
 (defstruct breaker-info fn offset old-called kind)
 
+(defun make-long-living-symbol (name)
+  "See 10.5.3 Allocation of interned symbols and packages"
+  (allocation-in-gen-num *symbol-alloc-gen-num*
+    (make-symbol name)))
+
+
 (defun make-breakpoint (fn offset old-called kind)
   "breakpoint is indeed a closure and a change in a function code and constants. 
   Only function calls can be used as a breakpoint locations, otherwise debugger
   is unable to find source location so the entire mechanism becomes useless"
   (let* ((breaker-symbol
           (if (symbolp old-called)
-              (make-symbol (concatenate 'string
+              (make-long-living-symbol (concatenate 'string
                                         "stepper-call-"
                                         (package-name (symbol-package old-called))
                                         "::"
                                         (symbol-name old-called)))
-            (gensym) ; we can include printable representation of function here, but we need to strip away address of it
+            (make-long-living-symbol "stepper-direct-call") ; we can include printable representation of function here, but we need to strip away address of it
             )
           )
          (breaker ; lambda call to which is places instead of original call
@@ -225,6 +238,7 @@
 
 
 (defun breaker-symbol-p (x)
+  "breaker symbol names a function which is substituted instead of original function in a code"
   (and (symbolp x)
        (typep (get x 'breaker-info) 'breaker-info)))
 
@@ -545,7 +559,7 @@
        (r initial-frame (slot-value r 'dbg::prev)))
       ((null r) this)))
 
-(defun dbg-find-stepped-code ()
+#|(defun dbg-find-stepped-code ()
   "When called from a debugger, returns toplevel stepped code frame"
   (error "Unlikely to be correct")
   (let ((initial-frame (dbg-top-frame)))
@@ -558,27 +572,48 @@
                 (slot-value frame 'dbg::function-name)))
           (when (equalp function-name '(subfunction 1 make-breakpoint))
             (return-from dbg-find-stepped-code
-              (slot-value frame 'dbg::%next))))))))
+              (slot-value frame 'dbg::%next))))))))|#
       
-  
-
 ;;;;;;;;;;;; Tune the IDE  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defadvice (lispworks-tools::debugger-select-frame find-source-just-at-select-frame-time :before) (frame self &optional update-backtrace)
   (declare (ignore update-backtrace))
-  (when (and *in-my-do-break* *stepping-enabled*
-             (not *stepped-source-is-shown-already-in-the-debugger*))
-    (let ((stepped-code-frame
-           (dbg-find-topmost-stepizible-frame (dbg-top-frame frame))
-           ; (dbg-find-stepped-code frame)
-           ))
-      (when stepped-code-frame
-        (setf *stepped-source-is-shown-already-in-the-debugger* t)
-        (ignore-errors
-          (SYSTEM::DBG-EDIT-FRAME-INTERNAL stepped-code-frame self))
-        ))))
+  ;(print `(select-frame ,frame ,*stepped-source-is-shown-already-in-the-debugger*
+   ;        ,*stepping-enabled*
+   ;        ,*in-my-do-break*
+   ;        ,*in-stepper-trap-frame-break*))
+  (unless *stepped-source-is-shown-already-in-the-debugger*
+    (when *stepping-enabled* 
+      (when (or *in-my-do-break* *in-stepper-trap-frame-break*)
+        (setf frame
+              (or frame (dbg-get-some-frame)))
+        (let ((stepped-code-frame
+               (find-supposed-stepped-frame frame))
+              )
+          (when stepped-code-frame
+            (setf *stepped-source-is-shown-already-in-the-debugger* t)
+            (format t "~%let's watch at ~S~%" stepped-code-frame)
+            (ignore-errors
+              (SYSTEM::DBG-EDIT-FRAME-INTERNAL stepped-code-frame self))
+            ))))))
         
 (defadvice (DBG::DEBUG-TO-LISTENER-P dont-debug-to-listener :around) (condition)
-  (if *in-my-do-break* nil (call-next-advice condition)))
+  (if ; *in-my-do-break*
+      *stepping-enabled*
+      nil (call-next-advice condition)))
+
+
+(defvar *in-stepper-trap-frame-break* nil "When stepping is enabled, we think that all traps are parts of stepper, so we bind the variable to know if we are in the trap. Note that traps set by user will be ignored one step-continue (:sc) command is issued")
+
+(defadvice (DBG::dbg-trap-frame-break skip-if-not-stepping :around) (values function-name)
+  (cond
+   ((not (and *stepping-enabled* *step-into-flag*))
+    (format t "~%Ignoring trap on exit of ~S~%" function-name)
+    nil ; swallow trap silently
+    )
+   (t
+    (let ((*in-stepper-trap-frame-break* t)
+          (*stepped-source-is-shown-already-in-the-debugger* nil))
+      (call-next-advice values function-name)))))
 
 ;;;; IDE commands for stepper ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defun step-continue (&rest ignore)
@@ -604,7 +639,18 @@
     nil))
 
 (defun dbg-never-stop-complex-name-p (name)
-  (equalp name '(subfunction 1 make-breakpoint)))
+  "Some forms are parts of stepper. Never stop on them, 
+  never show their source"
+  (and
+   (consp name)
+   (or
+    (equalp name '(subfunction 1 make-breakpoint))
+    (equalp name '(subfunction 1 compiler::get-encapsulator))
+    (member 'DBG::dbg-trap-frame-break name)
+    (and
+     (consp (third name))
+     (member 'DBG::dbg-trap-frame-break (third name))
+    ))))
 
 (defun dbg-stepizible-frame-p (frame)
   (when (slot-exists-p frame 'dbg::function-name)
@@ -625,6 +671,29 @@
   (stepize-fn (slot-value frame 'DBG::function-name)))
 
 
+(defun install-break-on-leaving-a-frame (frame)
+  "Ensure break when a given frame is being exited"
+  (let ((next-stepizible-frame
+         (dbg-find-topmost-stepizible-frame frame)))
+    ;(when next-stepizible-frame
+    ;  ; this handle only normal exit so is insufficient
+    ;  (dbg-stepize-stepizible-frame next-stepizible-frame))
+    (declare (ignore next-stepizible-frame))
+    (DBG::in-dbg-trap-on-exit frame))) 
+
+(defun find-supposed-stepped-frame (any-frame-in-stack)
+  "Find a frame we are likely to step. Down-from should be top of the stack"
+  (let ((our-frame
+         (dbg-find-topmost-stepizible-frame (dbg-top-frame any-frame-in-stack))
+              ; this is currently stepped frame as *in-my-do-break* is t, hence (my-do-break)->(break) is on the stack
+         ))
+    (when (and our-frame *in-stepper-trap-frame-break*)
+      (setf our-frame
+            (dbg-find-topmost-stepizible-frame our-frame))) ; do it twice: frame exited is hidden
+    our-frame
+    ))
+
+
 (defun step-over (&rest ignore)
   "Step current function not entering the calls"
   ; должна быть переменная "текущая шагаемая функция" и в зависимости от неё мы останавливаемся на step-поинтах или не останавливаемся. Но переменной мы её не можем сделать, т.к. не знаем способа указать на точку в стеке. Вместо этого можем завести special переменную и искать на стеке её биндинги. А вообще, может быть и ничего. Если мы пришли в step-point, то она и есть вершина видимого стека.
@@ -632,20 +701,16 @@
   (assert DBG::*debugger-stack*)
   (let ((frame (dbg-get-some-frame)))
     (cond
-     (*in-my-do-break* ; we're already at step-point break
-      
-      ; what about stepping out? FIXME - cover only a case of normal return to next frame
-      ; non-local transfers and exceptions are not covered
-      (let* ((our-frame
-              (dbg-find-topmost-stepizible-frame (dbg-top-frame frame))
-              ; this is currently stepped frame as *in-my-do-break* is t, hence (my-do-break)->(break) is on the stack
-              )
-             (next-stepizible-frame
-              (dbg-find-topmost-stepizible-frame our-frame)
-              ))
-        (when next-stepizible-frame 
-          (dbg-stepize-stepizible-frame next-stepizible-frame)))
+     ((or *in-my-do-break* *in-stepper-trap-frame-break*) ; we're already at step-point break
+      (let ((our-frame (find-supposed-stepped-frame frame)))
+        (cond
+         (our-frame
+          (install-break-on-leaving-a-frame our-frame))
+         (t
+          (CAPI:display-message "step-over: looks like a bug: no stepizible frame in my-do-break")
+          )))
       (setf *step-into-flag* nil)
+      ; (setf *stepped-source-is-shown-already-in-the-debugger* nil) ; for the trap
       (dbg::dbg-continue)
       )
      ((dbg-stepizible-frame-p frame)
@@ -653,6 +718,8 @@
       (stepize-fn (slot-value frame 'DBG::function-name))
       (setf *stepping-enabled* t)
       (setf *step-into-flag* nil)
+      (install-break-on-leaving-a-frame frame)
+      ; (setf *stepped-source-is-shown-already-in-the-debugger* nil) ; for the trap
       (dbg::dbg-continue))
      (t ; ent
       (capi:display-message "Selected frame is not steppable"))
@@ -668,6 +735,8 @@
      ((stepizible-function-name-p *stepper-call-to*)
       (stepize-fn *stepper-call-to*)
       (setf *step-into-flag* t)
+      (setf *stepping-enabled* t)
+      ; (setf *stepped-source-is-shown-already-in-the-debugger* nil) ; for the trap
       (DBG::dbg-continue))
      (t
       (capi:display-message "function ~S is not steppable" *stepper-call-to*)
@@ -710,6 +779,7 @@
 
 (disassemble #'test-fn)
 (stepize-fn #'test-fn)
+(clean-down)
 (disassemble #'test-fn)
 
 (defun do-test ()
