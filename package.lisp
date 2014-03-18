@@ -84,6 +84,8 @@
    def-merge-packages:string-upcase-ascii
    def-merge-packages:string-downcase-ascii
    def-merge-packages:all-ascii-chars-in-same-case-p
+   def-merge-packages:unintern-all-internal-symbols-of-package
+
 
    budden-tools:str+ ; concatenate strings
    budden-tools:str++ ; converts anything to string with format ~A

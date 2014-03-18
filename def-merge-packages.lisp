@@ -70,9 +70,11 @@ defpackage-autoimport-2 (obsolete) prefers to use packages and shadowing-import 
    #:string-downcase-ascii
 
    #:all-ascii-chars-in-same-case-p
+
+   #:unintern-all-internal-symbols-of-package
    ))
 
-(in-package :merge-packages-simple)
+(in-package :def-merge-packages)
 
 #|(cl-user::portably-without-package-locks
   (when (find-package :merge-packages-simple.forbidden-symbols)
@@ -813,3 +815,10 @@ and explain if we can't"
   )
 
 
+(defun unintern-all-internal-symbols-of-package (package)
+  "Some cleanup of package. Useful after renaming of things to ensure no references to old names can be created. 
+  Beware of type names, variables, advices and so. You should export them if you want predictable behaviour"
+  (let ((package (find-package package)))
+    (do-symbols (s package)
+      (when (eq (symbol-package s) package)
+        (unintern s package)))))
