@@ -26,7 +26,9 @@
 ;    im
 ;  
 
-;  Bad features
+;  Bad features/bugs
+;  - source is not unhighlighted as execution lives the frame
+;  - separate :sc continue command distinct from :c command. 
 ;  - stepper uses traps ("Break on return from frame"),
 ;    so if you set traps manually they will work incorrectly
 ;  - unable (currently) to step lambdas (undefined consequences)
@@ -42,10 +44,8 @@
 (eval-when (:execute)
   (error "Use compile-load sequence to run the concept"))
 
-; enable this to get verbose printing and more exports
-(eval-when
-    (:compile-toplevel :load-toplevel)
-  (pushnew :ncsdbg *features*))
+; enable next line to get verbose printing and more exports
+;(eval-when (:compile-toplevel :load-toplevel) (pushnew :ncsdbg *features*))
 
 (eval-when (:load-toplevel)
   #-(or :lispworks-32bit :lispworks6.1 :win32 :mswindows)
@@ -130,6 +130,8 @@
 (defvar *step-over-flag* nil "If it is set after brek, next step point in a caller is fired")
 
 (defvar *in-stepper-trap-frame-break* nil "When stepping is enabled, we think that all traps are parts of stepper, so we bind the variable to know if we are in the trap. Note that traps set by user will be ignored one step-continue (:sc) command is issued")
+
+(defvar *trace-break-function* nil "Bound in the scope of our advice to compiler::trace-break")
 
 ; FIXME this is a trash! Replace with a weak hash-table where weak key is a stepped function object and value is nil
 (defvar *active-steppoints* nil "list of created breakpoints")
@@ -540,7 +542,7 @@
              (append 
               '(
                 (:sc step-continue "continue")
-                (:si step-into "step into")
+                ; (:si step-into "step into") is added permanently
                 ; (:so step-over "step over") is added permanently
                 )
               DBG::*default-debugger-commands*))
@@ -702,6 +704,37 @@
     )
    )
   (dbg::dbg-continue))
+
+
+;;-------------------------------------------------------
+;;-------- DEALING WITH VARIOUS KINDS OF BREAKS  --------
+;;-------------------------------------------------------
+(defadvice (DBG::dbg-trap-frame-break skip-if-not-stepping :around) (values function-name)
+  "Stepper can set up traps on return to support stepping out of the function. Handle this"
+  (format t "~%Entering advice for DBG::dbg-trap-frame-break with ~S~%" function-name)
+  (cond
+   ((not *stepping-enabled*)
+    (format t "~%Ignoring trap on exit of ~S~%" function-name)
+    nil ; swallow trap silently. This intereferes normal operation of traps - they
+        ; will not work anymore unless in stepper.
+    )
+   (t
+    (setf-*stepping-enabled* nil)
+    (setf *step-over-flag* nil)
+    (setf *step-into-flag* nil) 
+    (let ((*in-stepper-trap-frame-break* t)
+          (*stepped-source-is-shown-already-in-the-debugger* nil))
+      (format t "~%Calling next-advice for DBG::dbg-trap-frame-break with ~S~%" function-name)
+      (call-next-advice values function-name)))))
+
+
+(defadvice (compiler::trace-break trace-break-stepper-advice :around) (function args where)
+  "Support switching from trace with break into stepping"
+  (let ((*trace-break-function* function))
+    (call-next-advice function args where)))
+
+
+
 
 ;;-------------------------------------------------------
 ;;-------- TUNE THE IDE  --------------------------------
@@ -730,23 +763,6 @@
       nil (call-next-advice condition)))
 
 
-
-(defadvice (DBG::dbg-trap-frame-break skip-if-not-stepping :around) (values function-name)
-  (format t "~%Entering advice for DBG::dbg-trap-frame-break with ~S~%" function-name)
-  (cond
-   ((not *stepping-enabled*)
-    (format t "~%Ignoring trap on exit of ~S~%" function-name)
-    nil ; swallow trap silently. This intereferes normal operation of traps - they
-        ; will not work anymore unless in stepper.
-    )
-   (t
-    (setf-*stepping-enabled* nil)
-    (setf *step-over-flag* nil)
-    (setf *step-into-flag* nil) 
-    (let ((*in-stepper-trap-frame-break* t)
-          (*stepped-source-is-shown-already-in-the-debugger* nil))
-      (format t "~%Calling next-advice for DBG::dbg-trap-frame-break with ~S~%" function-name)
-      (call-next-advice values function-name)))))
 
 ;;-------------------------------------------------------
 ;;--- IDE COMMANDS FOR STEPPER --------------------------
@@ -810,7 +826,7 @@
        (maybe-steppable-frame
         (stepize-and-step-frame maybe-steppable-frame))
        (t ; FIXME separate this into function stepper-message
-        (display-stepper-message "step-over: no  stepping is possible here. Choose step-continue command (:sc or F9)")
+        (display-stepper-message "step-over: no stepizible frame found. Choose step-continue command in the listener (:sc or F9)")
         ))
       )
      ((frm-stepizible-frame-p frame)
@@ -826,27 +842,56 @@
 
 (eval-when (:load-toplevel)
   ; step over allows us to try to initiate stepping at any entry to the debugger.
-  (pushnew '(:so step-over "step over")
+  (pushnew '(:so step-over "Step over")
+           DBG::*default-debugger-commands*
+           :test 'equalp)
+  (pushnew '(:si step-into "Step into")
            DBG::*default-debugger-commands*
            :test 'equalp)
   )
+
+
+(defun begin-stepping-into-from-stepping (fn)
+  "We are at debugger, inside (run-steppoint). User wants to step into some function"
+  (cond
+   ((stepizible-function-name-p fn)
+    (stepize-fn fn)
+    (setf *step-into-flag* t)
+    (setf *step-over-flag* nil)
+      ; (setf *stepped-source-is-shown-already-in-the-debugger* nil) ; for the trap
+    (DBG::dbg-continue))
+   (t
+    (display-stepper-message "function ~S is not steppable" fn)
+    )
+   ))
+
+
+(defun begin-stepping-into-from-non-stepping (fn)
+  "We are at debugger, but not inside (run-steppoint). User wants to step into some function"
+  (cond
+   ((stepizible-function-name-p fn)
+    (stepize-fn fn)
+    (setf *stepping-enabled* t)
+    (dbg::dbg-continue))
+   (t
+    (display-stepper-message "function ~S is not steppable" fn)
+    )))
 
 (defun step-into (&rest ignore)
   (declare (ignore ignore))
   (cond
    (*in-run-steppoint*
-    (cond
+    ; already in step mode
+    (cond 
      ((null *stepper-call-to*)
       (DISPLAY-STEPPER-MESSAGE "Looks like a bug: *stepper-call-into* is nil while *in-run-steppoint* is t"))
-     ((stepizible-function-name-p *stepper-call-to*)
-      (stepize-fn *stepper-call-to*)
-      (setf *step-into-flag* t)
-      (setf *step-over-flag* nil)
-      ; (setf *stepped-source-is-shown-already-in-the-debugger* nil) ; for the trap
-      (DBG::dbg-continue))
      (t
-      (display-stepper-message "function ~S is not steppable" *stepper-call-to*)
-      )))          
+      (begin-stepping-into-from-stepping *stepper-call-to*))
+     ))          
+   (*trace-break-function*
+    ; trying to enter step mode from trace with break
+    (begin-stepping-into-from-non-stepping *trace-break-function*)
+    )
    (t
     (print "step-into: misses")
     (step-over)))
@@ -898,13 +943,13 @@
     (apply function args)))
 
 
+(defun stop-stepping ()
+  (setf *stepping-enabled* nil))
+
 
 ;;-------------------------------------------------------
 ;;-------------------------------- TESTS ----------------
 ;;-------------------------------------------------------
-
-
-#-ncsdbg(capi:display-message "As GUI debugger occurs for the first time, place debugger and editor windows so that they will be visible simultaneously")
 
 (defun sub-of-x-and-y (x &key y)
   "test function"
@@ -923,43 +968,9 @@
   (print "sub-with-no-args is running"))
 
 
-(defun tfn1 (x)
-  (+ (sub-of-x-and-y x :y 1.1)
+#-ncsdbg(capi:display-message "As GUI debugger occurs for the first time, place debugger and editor windows so that they will be visible simultaneously")
 
-     ; you can step into sub-of-x
-     (sub-of-x 2)
-     ; you can step into sub-of-x
-     
-     )
-  )
-
-(defun test1 ()
-  #-ncsdbg(capi:display-message "test1 - an example of switching into stepping from the (break). Just press F8 in a debugger when (break) occurs")
-  (tfn1 2)
-  )
-
-#-ncsdbg(test1)
-
-
-(defun tfn2 ()
-  (cons (sub-of-x 2)
-        (sub-of-x 3)))
-
-
-(defun test2 ()
-  ;(capi:display-message "test1 - an example of switching into stepping from (trace (:break t). Just press F8 as trace invokes (break)")
-  (trace (tfn2 :break t))
-  (tfn2))
-
-(test2)
-                        
-
-
-; FIXME - unable to stop stepping unless user issuses :sc command
-; So we need to reset *stepping-enabled* to avoid further stepping through
-; loading process
-(setf *stepping-enabled* nil) 
-
+; testfact - explicit call to stepper -----------
 (defun fact (x)
   (cond
    ((= x 0) 1)
@@ -971,6 +982,47 @@
   (! 'fact 1))
 
 #-ncsdbg(testfact)
+
+
+; test-break - turn to stepping from (break) -----------
+(defun tfn-break (x)
+  (+ (sub-of-x-and-y x :y 1.1)
+
+     ; you can step into sub-of-x
+     (sub-of-x 2)
+     ; you can step into sub-of-x
+     
+     )
+  )
+
+(defun test-break ()
+  #-ncsdbg(capi:display-message "test-break - an example of switching into stepping from the (break). Just press F8 in a debugger when (break) occurs")
+  (tfn-break 2)
+  )
+
+#-ncsdbg(test-break)
+
+  ; FIXME - unable to stop stepping unless user issuses :sc command
+  ; So we need to reset *stepping-enabled* to avoid further stepping through
+  ; loading process
+#-ncsdbg(stop-stepping)
+
+
+; test-trace-break - turn to stepping from (trace break) -------
+(defun tfn-trace-break ()
+  (cons (sub-of-x 2)
+        (sub-of-x 3)))
+
+(defun test-trace-break ()
+  #-ncsdbg(capi:display-message "test-trace-break - an example of switching into stepping from (trace (:break t). Just enter :si (F4) in debug listener when trace invokes (break)")
+  (trace (tfn-trace-break :break t))
+  (tfn-trace-break)
+  )
+
+(test-trace-break)
+(stop-stepping)
+
+
   
 
 #|
