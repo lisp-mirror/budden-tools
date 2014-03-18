@@ -22,7 +22,6 @@
      #:*tracing-enabled*
      #:*stepping-enabled*
      #:stepize-fn
-     #:unstepize-fn
      )
     ))
 
@@ -87,7 +86,7 @@
           ) 
       (let ( ; bindings for break only
             (DBG::*hidden-symbols*
-             (append '(break my-do-break invoke-debugger make-breakpoint) DBG::*hidden-symbols*))
+             (append '(break my-do-break invoke-debugger make-breakpoints) DBG::*hidden-symbols*))
             (DBG::*default-debugger-commands*
              (append 
               '(
@@ -102,7 +101,7 @@
             ;(*stepper-call-args* call-args)
             (*in-my-do-break* t)
             (*stepped-source-is-shown-already-in-the-debugger* nil))
-        (break "Stepper break before call from ~S into ~S with args=~S~%Current source should be highlighted in the editor.~%type :so for step over, :si for step in,:sc for continue" call-from call-to call-args)
+        (break "Stepper break before call from ~S into ~S with args=~S~%Current source should be highlighted in the editor.~%type :si (F4) for step in, :so (F8) for step over, :sc (F9) for continue" call-from call-to call-args)
         ; step-* functions are called from break that may stepize other functions 
         ; and/or set *step-into-flag*
         )
@@ -199,64 +198,68 @@
    (t t)))
 
 
-(defstruct breaker-info fn offset old-called kind)
+(defstruct breaker-info fn offsets old-called kind)
 
+
+(defpackage :bstp (:nicknames :breaker-symbols-temporary-package) (:use))
+
+(defvar *my-gensym-counter* 0)
 (defun make-long-living-symbol (name)
   "See 10.5.3 Allocation of interned symbols and packages"
   (allocation-in-gen-num *symbol-alloc-gen-num*
-    (make-symbol name)))
+    (let ((symbol (intern (format nil "~A~A" name (incf *my-gensym-counter*))
+                          :breaker-symbols-temporary-package)))
+      ; (unintern symbol :breaker-symbols-temporary-package)
+      symbol)))
 
 
-(defun make-breakpoint (fn offset old-called kind)
+(defun make-one-more-breakpoint-from-same-breaker-symbol (fn offset existing-breaker-symbol kind)
+  (let* ((breaker-symbol existing-breaker-symbol)
+         ;(breaker (function existing-breaker-symbol))
+         (info (get breaker-symbol 'breaker-info)))
+    (unless
+        (= (breaker-info-kind info) kind)
+      (cerror "Don't stepize that call" "There are direct and indirect calls to the same functions in ~S. Unable to stepize it")
+      (return-from make-one-more-breakpoint-from-same-breaker-symbol nil))
+    (push offset (breaker-info-offset info))
+    (set-breakpoint-in-function fn offset existing-breaker-symbol kind (breaker-info-old-called info))
+    ))
+
+
+
+
+(defun make-breakpoints (fn offsets old-called kind)
   "breakpoint is indeed a closure and a change in a function code and constants. 
   Only function calls can be used as a breakpoint locations, otherwise debugger
   is unable to find source location so the entire mechanism becomes useless"
-  (let* ((breaker-symbol
-          (if (symbolp old-called)
-              (make-long-living-symbol (concatenate 'string
-                                        "stepper-call-"
-                                        (package-name (symbol-package old-called))
-                                        "::"
-                                        (symbol-name old-called)))
-            (make-long-living-symbol "stepper-direct-call") ; we can include printable representation of function here, but we need to strip away address of it
-            )
-          )
-         (breaker ; lambda call to which is places instead of original call
+  (allocation-in-gen-num 2
+    (let*
+        ((breaker-symbol
           (cond
-           ;((eq old-called #'system::*%+$any-stub)
-           ; (my-do-break-2 fn old-called args)
-           ; )
-           (t
-            (lambda (&rest args)
-              (my-do-break fn old-called args))))))
-    (setf (get breaker-symbol 'breaker-info)
-          (make-breaker-info :fn fn :offset offset :old-called old-called :kind kind))
-    (setf (symbol-function breaker-symbol) breaker)
-    (set-breakpoint-in-function fn offset breaker-symbol kind old-called)
-    (push breaker-symbol *active-steppoints*)
-    (values old-called breaker)))
+           ((symbolp old-called)
+            (make-long-living-symbol (concatenate 'string
+                                                  "stepper-call-"
+                                                  (package-name (symbol-package old-called))
+                                                  "::"
+                                                  (symbol-name old-called))))
+           (t              
+            (make-long-living-symbol "stepper-direct-call") ; we can include printable representation of function here, but we need to strip away address of it
+            )))
+         (breaker ; lambda call to which is places instead of original call
+          (lambda (&rest args)
+            (my-do-break fn old-called args))))
+      (setf (get breaker-symbol 'breaker-info)
+            (make-breaker-info :fn fn :offsets offsets :old-called old-called :kind kind))
+      (setf (symbol-function breaker-symbol) breaker)
+      (set-breakpoints-in-function fn offsets breaker-symbol kind old-called)
+      (push breaker-symbol *active-steppoints*)
+      (values old-called breaker))))
 
 
 (defun breaker-symbol-p (x)
   "breaker symbol names a function which is substituted instead of original function in a code"
   (and (symbolp x)
        (typep (get x 'breaker-info) 'breaker-info)))
-
-(defun delete-breakpoint (breaker-symbol)
-  "Delete a breakpoint. It must be really a breakpoint. "
-  (assert (member breaker-symbol *active-steppoints*) ()
-    "Breakpoint handler ~S is not on a breakpoint list" breaker-symbol)
-  (let* ((info (get breaker-symbol 'breaker-info))
-         ; (breaker-fn (symbol-function breaker-symbol))
-         )
-    (assert (breaker-info-p info) ()
-                            "~S is not a breakpoint handler function name" breaker-symbol)
-    (with-slots (fn offset old-called kind) info
-      (set-breakpoint-in-function fn offset old-called kind breaker-symbol)
-      (setf *active-steppoints*
-            (delete breaker-symbol *active-steppoints*))
-      nil)))
-
 
 (defun extract-address-from-function (function)
   "Возвращает адрес по объекту функции. Lame: extracts address from printed representation"
@@ -394,31 +397,32 @@
 
 (defun replace-fn-reference (fn new-fn call-kind old-fn)
   "Changes fn's reference from old-fn to new-fn in an fn's reference table. Call-kind must be of old-fn"
-  (let* ((code-size (extract-code-size-from-function fn))
-         (references (extract-function-references fn))
-         (pos (position old-fn references))
-         (gc-done (do-gc))
-         (fn-address (extract-address-from-function fn))
-         (table-address (+ fn-address code-size +magic-reference-table-offset+))
-         (new-value (object-to-entry-in-reference-table new-fn call-kind))
-         (check-old-value (object-to-entry-in-reference-table old-fn call-kind))
-         entry-address
-         real-old-value)
-    (declare (ignore gc-done))
-    (unless pos
-      (return-from replace-fn-reference nil) ; changed already or something's wrong
-      )
-    (setf entry-address (+ table-address (* pos +magic-word-size+)))
-    (setf real-old-value (peek-unsigned entry-address))
-    (assert (= real-old-value check-old-value) () "Didn't find correct old value in reference table")
-    (poke-unsigned entry-address new-value)
-    (do-gc)
+  (allocation-in-gen-num 2
+    (let* ((code-size (extract-code-size-from-function fn))
+           (references (extract-function-references fn))
+           (pos (position old-fn references))
+           (gc-done (do-gc))
+           (fn-address (extract-address-from-function fn))
+           (table-address (+ fn-address code-size +magic-reference-table-offset+))
+           (new-value (object-to-entry-in-reference-table new-fn call-kind))
+           (check-old-value (object-to-entry-in-reference-table old-fn call-kind))
+           entry-address
+           real-old-value)
+      (declare (ignore gc-done))
+      (unless pos
+        (return-from replace-fn-reference nil) ; changed already or something's wrong
+        )
+      (setf entry-address (+ table-address (* pos +magic-word-size+)))
+      (setf real-old-value (peek-unsigned entry-address))
+      (assert (= real-old-value check-old-value) () "Didn't find correct old value in reference table")
+      (poke-unsigned entry-address new-value)
+      (do-gc)
     ; (assert (= new-value (extract-address-from-function fn)) () "Your image is likely to be smashed (0)")
-    (format t "~%Old entry in a reference table: ~X" real-old-value)
-    (format t "~%code-size=~D,pos=~S,table-address=~X" code-size pos table-address)
+      (format t "~%Old entry in a reference table: ~X" real-old-value)
+      (format t "~%code-size=~D,pos=~S,table-address=~X" code-size pos table-address)
     
     ; do nothing, just imitate
-    ))
+      )))
     
 
 (defun temp-breaker (&rest ignore)
@@ -426,58 +430,75 @@
   (declare (ignore ignore))
   (print "I'm temp-breaker"))
 
-(defun set-breakpoint-in-function (fn offset breaker-symbol call-kind old-called)
-  "Подменяет вызов на функцию. offset at function name must point to call, either direct or indirect"
-  (progn ; with-other-threads-disabled
-    (let* ((fn (coerce fn 'function))
-           (breaker-fn (symbol-function breaker-symbol))
-           fn-address
-           new-opcode
-           replace-to-address
-           )
-      (assert (functionp fn))
+(defun set-breakpoints-in-function (fn offsets breaker-symbol call-kind old-called)
+  "Подменяет вызов на функцию. offsets is a list of offsets as returned by SYSTEM::compute-callable-constants"
+  (allocation-in-gen-num 2
+    (progn ; with-other-threads-disabled
+      (let* ((fn (coerce fn 'function))
+             (breaker-fn (symbol-function breaker-symbol))
+             fn-address
+             new-opcode
+             replace-to-address
+             )
+        (assert (functionp fn))
       ; (gc-generation t)
       ; (setf fn-address (extract-address-from-function fn))
-      (setf new-opcode
-          (ecase call-kind
-           (1 ; call [symbol]
+        (assert (or (functionp old-called) (and (symbolp old-called)
+                                                (fboundp old-called))))
+        ; replace reference 
+        (ecase call-kind
+          (1 ; call [symbol]
                    ; если funcall (car list) превращается в call [адрес (car list)], мы сломаемся. FIXME проверить
-            (assert (symbolp old-called) () "Can't handle other indirect calls than from a symbol")
-            (do-gc)
-            (replace-fn-reference fn breaker-symbol 1 old-called)
-            ;(setf breaker #'temp-breaker)
-            (do-gc)
-            (setf fn-address (extract-address-from-function fn))
-            (setf replace-to-address (+ (object-address breaker-symbol) +hackish-symbol-value-offset+))
-            replace-to-address
-            )
-           (0
-            (do-gc)
-            (replace-fn-reference fn breaker-fn 0 old-called)
-            (do-gc)
-            (setf fn-address (extract-address-from-function fn))
-            (setf replace-to-address (extract-address-from-function breaker-fn))
-            (calc-call-offset (+ (extract-address-from-function fn) offset -1) replace-to-address)
-           )))
+           (assert (symbolp old-called) () "Can't handle other indirect calls than from a symbol")
+           (do-gc)
+           (replace-fn-reference fn breaker-symbol 1 old-called)
+           )
+          (0
+           (do-gc)
+           (replace-fn-reference fn breaker-fn 0 old-called)
+           ))
+        ; replace opcodes
+        (dolist (offset offsets)
+          (setf new-opcode
+                (ecase call-kind
+                  (1 ; call [symbol]
+                   ; если funcall (car list) превращается в call [адрес (car list)], мы сломаемся. FIXME проверить
+                   (assert (symbolp old-called) () "Can't handle other indirect calls than from a symbol")
+                   (do-gc)
+                   (replace-fn-reference fn breaker-symbol 1 old-called)
+                   ;(setf breaker #'temp-breaker)
+                   (do-gc)
+                   (setf fn-address (extract-address-from-function fn))
+                   (setf replace-to-address (+ (object-address breaker-symbol) +hackish-symbol-value-offset+))
+                   replace-to-address
+                   )
+                  (0
+                   (do-gc)
+                   (replace-fn-reference fn breaker-fn 0 old-called)
+                   (do-gc)
+                   (setf fn-address (extract-address-from-function fn))
+                   (setf replace-to-address (extract-address-from-function breaker-fn))
+                   (calc-call-offset (+ (extract-address-from-function fn) offset -1) replace-to-address)
+                   )))
     ;(format t "~%fn-address=~X, replace-to-address=~X, current-call=~S"
     ;        fn-address replace-to-address current-call)
       ;(poke-opcode fn offset new-opcode)
-      (poke-unsigned (+ fn-address offset) new-opcode)
-      (assert (= (extract-address-from-function fn) fn-address)
-          () "your image is likely smashed (1)")
-      (ecase call-kind
-       (1
-        (assert (= (+ (object-address breaker-symbol) +hackish-symbol-value-offset+) replace-to-address)
-            () "your image is likely smashed (2)"))
-       (0
-        (assert (= (extract-address-from-function breaker-fn) replace-to-address)
-            () "your image is likely smashed (3)")))
-      (assert (or (functionp old-called) (and (symbolp old-called)
-                                              (fboundp old-called))))
+          (poke-unsigned (+ fn-address offset) new-opcode)
+          (assert (= (extract-address-from-function fn) fn-address)
+              () "your image is likely smashed (1)")
+          (ecase call-kind
+            (1
+             (assert (= (+ (object-address breaker-symbol) +hackish-symbol-value-offset+) replace-to-address)
+                 () "your image is likely smashed (2)"))
+            (0
+             (assert (= (extract-address-from-function breaker-fn) replace-to-address)
+                 () "your image is likely smashed (3)")))
+          )
+          
       ;(print new-opcode)
-      old-called
+        old-called
     ;(normal-gc)
-      )))
+        ))))
 
 
 (defun extract-function-references (function-object)
@@ -504,6 +525,24 @@
     result))|#
   
 
+(defun get-offsets-of-name-in-callable-constants (fn callable-constants a-name)
+  "callable-constants as returned by SYSTEM::compute-callable-constants. Returns list of offsets of a-name"
+  (let (result
+        a-call-kind
+        (first-time-p t))
+    (dolist (rec callable-constants)
+      (destructuring-bind (offset name call-kind) rec
+        (when (eq a-name name)
+          (when first-time-p
+            (setf a-call-kind call-kind)
+            (setf first-time-p nil))
+          (unless (eql call-kind a-call-kind)
+            (break)
+            (warn "Both direct and indirect calls of ~S from ~S, unable to stepize that calls" a-name fn)
+            (return-from get-offsets-of-name-in-callable-constants nil))
+          (push offset result))))
+    (values (nreverse result) a-call-kind)))
+         
 
 (defun stepize-fn (function-or-name)
   "Extract all steppable points from compiled function and set breakpoints on them"
@@ -515,25 +554,23 @@
     )
    (t
     (let* ((fn (coerce function-or-name 'function))
-           (constants (SYSTEM::compute-callable-constants fn)))
+           (constants (SYSTEM::compute-callable-constants fn))
+           (names-only (cdr (SYSTEM::function-constants fn))) ; names without duplicates
+           )
       (format t "~%stepizing ~S~%constants=~S~%" fn constants)
-      (dolist (rec constants)
-        (destructuring-bind (offset call-into call-kind) rec
-          (when (call-steppable-p call-into call-kind)
-            (make-breakpoint fn offset call-into call-kind))))))))
-  
-
-(defun unstepize-fn (function-or-name)
-  "Remove all steppable points from fn"
-  (let* ((fn (coerce function-or-name 'function))
-         (constants (SYSTEM::compute-callable-constants fn)))
-    (dolist (rec constants)
-      (destructuring-bind (offset call-into call-kind) rec
-        (declare (ignore offset call-kind))
-        (when (breaker-symbol-p call-into)
-          (delete-breakpoint call-into))))))
-      
-    
+      (dolist (call-into names-only)
+        (multiple-value-bind (offsets call-kind)
+            (get-offsets-of-name-in-callable-constants fn constants call-into)
+          (cond
+           ((null offsets)
+            ; do nothing
+            )
+           ((call-steppable-p call-into call-kind)
+            (make-breakpoints fn offsets call-into call-kind))
+           (t
+            ; do nothing
+            ))))))))
+              
   
 (defun poke-int3 (function offset &optional (count-of-nops 0))
   (assert (functionp function))
@@ -575,12 +612,11 @@
               (slot-value frame 'dbg::%next))))))))|#
       
 ;;;;;;;;;;;; Tune the IDE  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(defvar *in-stepper-trap-frame-break* nil "When stepping is enabled, we think that all traps are parts of stepper, so we bind the variable to know if we are in the trap. Note that traps set by user will be ignored one step-continue (:sc) command is issued")
+
+
 (defadvice (lispworks-tools::debugger-select-frame find-source-just-at-select-frame-time :before) (frame self &optional update-backtrace)
   (declare (ignore update-backtrace))
-  ;(print `(select-frame ,frame ,*stepped-source-is-shown-already-in-the-debugger*
-   ;        ,*stepping-enabled*
-   ;        ,*in-my-do-break*
-   ;        ,*in-stepper-trap-frame-break*))
   (unless *stepped-source-is-shown-already-in-the-debugger*
     (when *stepping-enabled* 
       (when (or *in-my-do-break* *in-stepper-trap-frame-break*)
@@ -602,7 +638,6 @@
       nil (call-next-advice condition)))
 
 
-(defvar *in-stepper-trap-frame-break* nil "When stepping is enabled, we think that all traps are parts of stepper, so we bind the variable to know if we are in the trap. Note that traps set by user will be ignored one step-continue (:sc) command is issued")
 
 (defadvice (DBG::dbg-trap-frame-break skip-if-not-stepping :around) (values function-name)
   (cond
@@ -644,7 +679,7 @@
   (and
    (consp name)
    (or
-    (equalp name '(subfunction 1 make-breakpoint))
+    (equalp name '(subfunction 1 make-breakpoints))
     (equalp name '(subfunction 1 compiler::get-encapsulator))
     (member 'DBG::dbg-trap-frame-break name)
     (and
@@ -679,7 +714,8 @@
     ;  ; this handle only normal exit so is insufficient
     ;  (dbg-stepize-stepizible-frame next-stepizible-frame))
     (declare (ignore next-stepizible-frame))
-    (DBG::in-dbg-trap-on-exit frame))) 
+    (DBG::in-dbg-trap-on-exit frame)
+    ))
 
 (defun find-supposed-stepped-frame (any-frame-in-stack)
   "Find a frame we are likely to step. Down-from should be top of the stack"
@@ -710,6 +746,7 @@
           (CAPI:display-message "step-over: looks like a bug: no stepizible frame in my-do-break")
           )))
       (setf *step-into-flag* nil)
+      (setf *stepping-enabled* t)
       ; (setf *stepped-source-is-shown-already-in-the-debugger* nil) ; for the trap
       (dbg::dbg-continue)
       )
@@ -742,6 +779,7 @@
       (capi:display-message "function ~S is not steppable" *stepper-call-to*)
       )))          
    (t
+    (print "step-into: misses")
     (step-over)))
   )
 ;  "Step into function to call"
@@ -749,7 +787,40 @@
 ;   ((breaker-symbol-p 
 ;    (
   
+
+(editor:defcommand "Step Into" (p)
+     "Step Into (native code)"
+     "Step Into (native code)"
+  (declare (ignore p))
+  (editor::execute-listener-command 'editor::execute-debugger-option
+                                    ''step-into
+                                    nil))
+
+(EDITOR:bind-key "Step Into" "F4")
+
     
+(editor:defcommand "Step Over" (p)
+     "Step Over (native code)"
+     "Step Over (native code)"
+  (declare (ignore p))
+  (editor::execute-listener-command 'editor::execute-debugger-option
+                                    ''step-over
+                                    nil))
+
+(EDITOR:bind-key "Step Over" "F8")
+
+(editor:defcommand "Step Continue" (p)
+     "Step Continue (native code)"
+     "Step Continue (native code)"
+  (declare (ignore p))
+  (editor::execute-listener-command 'editor::execute-debugger-option
+                                    ''step-continue
+                                    nil))
+
+(EDITOR:bind-key "Step Continue" "F9")
+
+
+
 ;;;;  -------------------------------- TESTS -------------------------------------------------
 
 (defun subroutine-of-x-and-y (x &key y)
@@ -773,18 +844,18 @@
    ((eq x 2)
     (+ (test-fn (+ x 1)) 3))
    (t 
-    (subroutine-of-x-and-y x :y 1)
+    (subroutine-of-x-and-y x :y 1.1)
     ))
   )
 
-(disassemble #'test-fn)
+;(disassemble #'test-fn)
 (stepize-fn #'test-fn)
-(clean-down)
-(disassemble #'test-fn)
+;(disassemble #'test-fn)
 
 (defun do-test ()
   (let (
         (*stepping-enabled* t)
+        (*step-into-flag* t)
         )
     (test-fn 2)))
 (format t "~%calling test-fn...")
