@@ -3,42 +3,43 @@
 ;  Native code stepper Proof Of Concept
 ; 
 ;  Tested as 32-bit LW for Windows 
-;  The code is not GC-safe and may crash at every time. Some check to diagnose
-;  possible damage are introduced, but no guarantee. 
+;  The code is not GC-safe and may crash.
+;  Some check to diagnose possible damage are introduced, 
+;  but no guarantee. 
 ; 
-;  Ask your Lisp vendor to implement it correctly.
-;  Advantages over stepper:
-;  No need for recompilation or "restart frame stepping"
-;  Can modify function currently on stack so that 
-;  Can work in a conjunction with "break on return from frame" 
-;  Close to VS experience
-;  Disadvantages: less verbose. Essential de-optimization is required
-;  to have sufficient amount of step points in a function. Ask your Lisp
-;  vendor to imlement it as Debug = 4 or so. 
-
-
 ;  Advantages over interpreting Lispworks stepper
 ;  - you can enter step mode from ordinary call to (break), trace with break, 
 ;    in a compiled code, 
 ;    no need to recompile or restart frame. This is not the case in interpreting
 ;     Lispworks stepper
 ;  - as you return from stepped function, you can continue stepping the caller. This is
-;    im
-;  
+;    impossible in interpreting stepper unless you set a breakpoint in a caller prior
+;    to call
 
-;  Bad features/bugs
+
+;  Bad features/bugs/TODO's
+;  - unable to set breakpoints as interpreting Lispworks stepper does. 
+;    This can be fixed, but I have no time for this. Use (break),(cerror) or
+;    (trace with break) as the stepper entry points
 ;  - source is not unhighlighted as execution lives the frame
 ;  - separate :sc continue command distinct from :c command. 
 ;  - stepper uses traps ("Break on return from frame"),
 ;    so if you set traps manually they will work incorrectly
 ;  - unable (currently) to step lambdas (undefined consequences)
 ;  - can only (currently) step one thread. 
-;  - unable to set breakpoints as interpreting Lispworks stepper does
-;    this can be fixed, but I have no time for this. So use (break) when
-;    you need to start stepping from inside the function
+
+
+;  How to use? 
+;  - compile and load file into IDE
+;  Run at external :native-code-stepper test functions
+
+;  DISCLAIMER
+;  This is just a proof of concept, not a finished tool.
+;  It is likely to crash on any of your own examples. 
+;  Ask your Lisp vendor to implement it correctly.
 
 ;  Version 0.4 budden - 2014-03-18
-
+;  Public Domain unless covered by other parties copyright
 
 
 (eval-when (:execute)
@@ -58,6 +59,11 @@
     (:shadowing-import-from #:system #:with-fast-lock)
     (:export
      #:! ; step given function with args
+
+     #:test-explicit-stepping-entry
+     #:test-break
+     #:test-trace-break
+
      #+ncsdbg #:*tracing-enabled*
      #+ncsdbg #:*stepping-enabled*
      #+ncsdbg #:stepize-fn
@@ -148,7 +154,7 @@
   "Functions call to which we don't touch while making function steppable")
 
 (defvar *non-stepizable-fns*
-  '(run-steppoint !)
+  '(run-steppoint ! stop-stepping)
   "Functions we never trying to stepize in additional to functions in protected packages")
 
 (defparameter *packages-of-non-stepizable-functions*
@@ -893,8 +899,8 @@
     (begin-stepping-into-from-non-stepping *trace-break-function*)
     )
    (t
-    (print "step-into: misses")
-    (step-over)))
+    (display-stepper-message "Unable to step into")
+    ))
   )
 
 
@@ -955,6 +961,7 @@
   "test function"
   (format t "~%sub-of-x-and-y is running. Args: ~S,~S~%" x y)
   (print "Calling break")
+  ; cerror would work here as well
   (break "This is a simple call to (break). Type :so or (F8) in debug listener to enter stepping mode, or :c to avoid stepping")
   (+ y x))
 
@@ -968,21 +975,18 @@
   (print "sub-with-no-args is running"))
 
 
-#-ncsdbg(capi:display-message "As GUI debugger occurs for the first time, place debugger and editor windows so that they will be visible simultaneously")
+#-ncsdbg(capi:display-message "Now you can run tests (see package definition).~%As GUI debugger occurs for the first time, place debugger and editor windows so that they will be visible simultaneously")
 
-; testfact - explicit call to stepper -----------
+; test-explicit-stepping-entry - explicit call to stepper -----------
 (defun fact (x)
   (cond
    ((= x 0) 1)
    ((> x 0) (* x (fact (- x 1))))
    (t (error "wrong argument ~S for tst-fact" x))))
   
-(defun testfact ()
+(defun test-explicit-stepping-entry ()
   #-ncsdbg(capi:display-message "do-test-fact - step tst-fact with the help of native-code-stepper:!")
   (! 'fact 1))
-
-#-ncsdbg(testfact)
-
 
 ; test-break - turn to stepping from (break) -----------
 (defun tfn-break (x)
@@ -1000,14 +1004,6 @@
   (tfn-break 2)
   )
 
-#-ncsdbg(test-break)
-
-  ; FIXME - unable to stop stepping unless user issuses :sc command
-  ; So we need to reset *stepping-enabled* to avoid further stepping through
-  ; loading process
-#-ncsdbg(stop-stepping)
-
-
 ; test-trace-break - turn to stepping from (trace break) -------
 (defun tfn-trace-break ()
   (cons (sub-of-x 2)
@@ -1019,11 +1015,7 @@
   (tfn-trace-break)
   )
 
-(test-trace-break)
-(stop-stepping)
-
-
-  
+ 
 
 #|
  ; Direct call test. If use that, remove 
