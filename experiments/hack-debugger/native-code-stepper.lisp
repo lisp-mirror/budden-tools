@@ -14,23 +14,33 @@
 ;  Disadvantages: less verbose
 
 
+; enable this to get verbose printing and more exports
+; #.(pushnew :ncsdbg *features*)
+
+(eval-when (:execute)
+  (error "Use compile-load sequence to run the concept"))
+
+(eval-when (:load-toplevel)
+  #-(or :lispworks-32bit :lispworks6.1 :win32 :mswindows)
+  (cerror "Code was only tested at lispworks 6.1 32 bit at 32 bit windows. You can continue at your own risk")
+  )
+  
 (eval-when (:compile-toplevel :load-toplevel :execute)
   (defpackage :native-code-stepper
     (:use :cl :hcl :lispworks :mp :system)
     (:shadowing-import-from #:system #:with-fast-lock)
     (:export
      #:! ; step given function with args
-     #:*tracing-enabled*
-     #:*stepping-enabled*
-     #:stepize-fn
-     #:find-source-just-at-select-frame-time
-     #:dont-debug-to-listener
-     #:skip-if-not-stepping
+     #+ncsdbg #:*tracing-enabled*
+     #+ncsdbg #:*stepping-enabled*
+     #+ncsdbg #:stepize-fn
+     #+ncsdbg #:find-source-just-at-select-frame-time
+     #+ncsdbg #:dont-debug-to-listener
+     #+ncsdbg #:skip-if-not-stepping
      )
     ))
 
-(eval-when (:execute)
-  (error "Use compile-load sequence to run the concept"))
+
 
 (in-package :native-code-stepper)
 
@@ -39,17 +49,14 @@
 (proclaim '(optimize (space 0) (speed 0) (debug 3) (fixnum-safety 3)))
 
 
-;;;;  DE-OPTIMIZING MATHS
+;;;;  DE-OPTIMIZING MATHS ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (eval-when (:compile-toplevel :load-toplevel)
-
-  (defun remove-some-optimizations ()
+ (defun remove-some-optimizations ()
     "Remove transforms so that to get more steppable points"
     (dolist (fn-name '(+ - * / = eq))
       (dolist (property '(COMPILER::lwx86-fndefs compiler::%lwx86-p2-transforms compiler::lwx86-syslisp-primitive))
         (setf (get fn-name property) nil))))
-
   (remove-some-optimizations)
-
   )
 
 
