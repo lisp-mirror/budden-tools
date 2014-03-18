@@ -52,6 +52,9 @@
   #-(or :lispworks-32bit :lispworks6.1 :win32 :mswindows)
   (cerror "Code was only tested at lispworks 6.1 32 bit at 32 bit windows. You can continue at your own risk")
   )
+
+(eval-when (:load-toplevel)
+  (setf *enter-debugger-directly* t))
   
 (eval-when (:compile-toplevel :load-toplevel)
   (defpackage :native-code-stepper
