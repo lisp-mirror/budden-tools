@@ -156,14 +156,17 @@ defpackage-autoimport-2 (obsolete) prefers to use packages and shadowing-import 
      (t nil))))
 
 (defun search-and-replace-seq (type seq subseq newseq &key all (test #'equalp))
-  (let ((num-matches 0))
+  (let ((num-matches 0)
+        (start2 0))
     (loop 
-     (let ((found (search subseq seq :test test)))  
+     (let ((found (search subseq seq :test test :start2 start2)))  
        (when found 
-         (setf seq (concatenate type 
-                                (subseq seq 0 found)
-                                newseq
-                                (subseq seq (+ found (length subseq)) (length seq))))
+         (setf seq (concatenate
+                    type 
+                    (subseq seq 0 found)
+                    newseq
+                    (subseq seq (+ found (length subseq)) (length seq))))
+         (setf start2 (+ found (length newseq)))
          (incf num-matches))
        (when (or (not found) (not all))
          (return))))
