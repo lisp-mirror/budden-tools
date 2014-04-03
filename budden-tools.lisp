@@ -351,17 +351,22 @@ if to-alist is true, to ((a . b) (c . d) ...)"
 (unexport 'flat-assoc) ; deprecate it. 
 
 
-(defun assoc-getf* (list thing &rest keyargs &key key test test-not) 
-  "Just like assoc, but operates on flat lists rather than on alists, (:a 1 :b 2) instead of ((:a . 1) (:b . 2)).
-Returns sublist starting from key found. If not found, returns nil"
+(defun assoc-getf* (list thing &rest keyargs &key key test test-not mandatory) 
+  "Just like assoc, but operates on flat lists rather than on alists, (:a 1 :b 2) instead of ((:a . 1) (:b . 2)). Returns sublist starting from key found. If not found and mandtory is true, errs. If not found and mandatory is null, returns nil"
   (declare (ignore key test test-not))
-  (iter (:for x :initially list :then (cddr x))
-    (unless x
-      (return nil))
-    (when (apply #'find thing x :end 1 keyargs)
-      (return x))
-    )
-  )
+  (let ((keyargs-copy (copy-list keyargs)))
+    (remf keyargs-copy :mandatory)
+    (do ((x list (cddr x)))
+        ((null x)
+         (cond
+          (mandatory
+           (error "In a list ~S, can't find ~S" list thing))
+          (t
+           nil)))
+      (when (apply #'find thing x :end 1 keyargs-copy)
+        (return x))
+      )))
+
  
 (def-trivial-test::! assoc-getf*.work
                      (assoc-getf* '(1 2 3 4) 1)
@@ -377,24 +382,32 @@ Returns sublist starting from key found. If not found, returns nil"
                      (assoc-getf* '(1 2 3 4) 5)
                      nil)
 
-(defun getf* (list thing &rest keyargs &key default key test test-not) 
-  "Getf with extended arguments. Setf expander is defined too. It pushes new key and value to list when key is
-not found (unless :key is specified, which is a error) and returns value"
-  (declare (ignore key test test-not))
+(def-trivial-test::! assoc-getf*.check
+                     (typep 
+                      (nth-value
+                       1
+                       (ignore-errors 
+                         (assoc-getf* '(1 2 3 4) 5 :mandatory t)))
+                      'error)
+                     t)
+
+(defun getf* (list thing &rest keyargs &key default key test test-not mandatory) 
+  "Getf with extended arguments. If mandatory is true and key is not found, error is signalled. Setf expander is defined too"
+  (declare (ignore key test test-not mandatory)) ; they're used via keyargs indeed
   (let*
-      ((KeyargsCopy (copy-list keyargs))
+      ((keyargs-copy (copy-list keyargs))
        place)
-    (remf KeyargsCopy :default)
-    (setf place (apply 'assoc-getf* list thing KeyargsCopy))
+    (remf keyargs-copy :default)
+    (setf place (apply #'assoc-getf* list thing keyargs-copy))
     (cond
      (place
       (cadr place))
      (t
       default))))
 
-(define-setf-expander getf* (place the-key &environment env &rest keyargs &key key test test-not)
-  "Described in getf* docstring"
-  (declare (ignore key test test-not))
+(define-setf-expander getf* (place the-key &environment env &rest keyargs &key key test test-not mandatory)
+  "It pushes new key and value to list when key is not found (unless :key is specified, which is a error) and returns value. Mandatory means that the-key must already exist in the list stored in place."
+  (declare (ignore key test test-not mandatory))
   (multiple-value-bind (dummies vals newval setter getter)
       (get-setf-expansion place env)
     (declare (ignore newval))
@@ -402,7 +415,7 @@ not found (unless :key is specified, which is a error) and returns value"
       (values (cons p dummies)
 	      vals
 	      `(,store)
-	      `(let ((,p (assoc-getf* ,place ,the-key ,@keyargs))) 
+	      `(let* ((,p (assoc-getf* ,place ,the-key ,@keyargs))) 
 		(cond (,p (setf (cadr ,p) ,store) ,p)
 		      (t (push ,store ,place) 
 			 (push ,the-key ,place)
@@ -414,7 +427,8 @@ not found (unless :key is specified, which is a error) and returns value"
 (def-trivial-test::! getf*.work
                      (getf* '(("a") "b" ("c") "d") "C"
                             :test 'string-equal
-                            :key 'car)
+                            :key 'car
+                            :mandatory t)
                      "d")
 
 (def-trivial-test::! getf*.default
@@ -423,10 +437,20 @@ not found (unless :key is specified, which is a error) and returns value"
 
 (def-trivial-test::! setf-getf*.1
                      (let ((l '(1 2 3 4)))
-                       (setf (getf* l 1) 5)
+                       (setf (getf* l 1 :mandatory t) 5)
                        (setf (getf* l 0) 6)
                        l)
                      '(0 6 1 5 3 4))
+
+(def-trivial-test::! setf-getf*.check
+                     (block b
+                       (handler-bind
+                           ((simple-error #'(lambda (x) (declare (ignore x))
+                                              (return-from b 234))))
+                         (let ((l '(1 2 3 4)))
+                           (setf (getf* l 5 :mandatory t) 6)
+                           nil)))
+                     234)
 
 
 (defun collect-duplicates (list &rest key-args &key key test test-not)
