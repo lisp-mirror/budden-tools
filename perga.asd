@@ -1,3 +1,4 @@
+﻿;;; -*- Encoding: utf-8;  Mode: Lisp  -*-
 (in-package #:asdf)
 
 (defsystem :perga
