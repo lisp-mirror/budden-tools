@@ -1,3 +1,4 @@
+﻿;;; -*- Encoding: utf-8; -*-
 (eval-when (:compile-toplevel :load-toplevel :execute)
   (defpackage :protect-listener-text 
     (:use :cl :lispworks :editor)

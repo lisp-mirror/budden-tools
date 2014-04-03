@@ -1,3 +1,4 @@
+﻿;;; -*- Encoding: utf-8; -*-
 ;; Lispworks IDE is unable to find source of toplevel forms, e.g. when errors happen at load-time
 ;; Let's fix it.
 ;; With this small utility, now instead of just (/ (read-from-string "0")) one can write 

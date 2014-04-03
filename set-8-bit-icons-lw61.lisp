@@ -1,3 +1,4 @@
+﻿;;; -*- Encoding: utf-8; -*-
 ;;---------------------------------------------------
 ;; This was intended to be a part of Budden's tools for 
 ;; Lispworks
