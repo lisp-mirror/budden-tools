@@ -178,10 +178,9 @@ it is essential from ap5 viewpoint"
 код с getf* для поиска value. Ключи сравниваются с помощью string-equal"
   (unless body (warn "with-proplist-carat: empty body"))
   `(with-custom-carat-implementation 
-    (,var (o f &rest mo) 
-          `(prog1
-               (getf* ,o ,f :test 'string-equal)
-             (assert (assoc-getf* ,o ,f :test 'string-equal))))
+    (,var (o f &rest mo)
+          `(getf* ,o ,f :test 'string-equal :mandatory t)
+          )
     ,@body))
 
 (setf (get 'with-proplist-carat 'proga-implementation::proga-transformer) 
