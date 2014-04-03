@@ -173,7 +173,7 @@
   Вызывает eval!!!"
   (eval `(setf (,function-name ,@args) ',new-value)))
 
-(defsetf runtime^ (object field-name &rest args &environment env) (new-value)
+(defsetf runtime^ (object field-name &rest args) (new-value)
   "Вызывает eval в runtime!"
   ;(assert (constantp object env))
   (with-gensyms (o target-function-symbol class)
