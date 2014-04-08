@@ -618,15 +618,21 @@ if you undefsystem it"
 (defmethod perform ((op load-op) (c dependable-file)) (print "loaded resolved_types.h") nil)
 
 
-(defun load-system-by-asd-file (asd-pathname)
+(defun load-system-by-asd-file (asd-pathname &key (add-path-to-central-registry t))
   (flet ((path-to-a-file (filename) "d:/foo/file.ext --> d:/foo/" 
            (let ((p (pathname filename)))
              (make-pathname 
               :host (pathname-host p) 
               :directory (pathname-directory p)))))
-    (let* ((dir (path-to-a-file asd-pathname))
-           (asdf:*central-registry* (cons dir asdf:*central-registry*)))
-      (! (pathname-name asd-pathname)))))
+    (let ((dir (path-to-a-file asd-pathname))
+          (name (pathname-name asd-pathname)))
+      (cond
+       (add-path-to-central-registry
+        (pushnew dir *central-registry* :test 'equalp)
+        (load-system name))
+       (t
+        (let ((*central-registry* (cons dir *central-registry*)))
+          (load-system name)))))))
 
 (defclass package-file (cl-source-file) 
   (
