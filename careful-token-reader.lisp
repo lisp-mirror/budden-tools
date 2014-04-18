@@ -317,7 +317,7 @@ iii) if symbol is found more than once then first-symbol-found,list of packages,
     ))
 
 (defun budden-tools-find-symbol (name p)
-  "Untested! Intended to be used instead of normal find-symbol. Transforms readtable case, and does not 'find' forbidden symbols.
+  "Should be used instead of normal find-symbol with buddens readtable extensions. Transforms readtable case, and does not 'find' forbidden symbols.
 FIXME shadow find-symbol? FIXME rename"
   (proga
     (let p (or p *package*))
