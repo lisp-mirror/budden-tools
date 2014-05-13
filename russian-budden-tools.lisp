@@ -264,9 +264,10 @@
        (compile 'dos-string-to-lisp)
        )))
 
-(defmacro define-open-pipe-character-translators-by-sample (sample x-to-lisp lisp-to-x)
+(defmacro define-open-pipe-character-translators-by-sample (sample x-to-lisp lisp-to-x &key x-accepts-base-char-only)
   "Получили из источника представление строки, понятное этому источнику (concatenate 'string (append bu::*cyrillic-characters* '(#\№))). 
-   Определим ф-ю x-to-lisp, чтобы прочитать строку из этого источника и lisp-to-x, чтобы записать в источник"
+   Определим ф-ю x-to-lisp, чтобы прочитать строку из этого источника и lisp-to-x, чтобы записать в источник.
+   x-accepts-base-char-only - все буквы, не являющиеся base-char, преобразуем в знак вопроса."
   (let ((lisp->x (make-hash-table :test #'eql :size 256))
         (x->lisp (make-hash-table :test #'eql :size 256))
         (character-list (append *cyrillic-characters* '(#\№))))
@@ -287,7 +288,14 @@
              (:for i from 0)
              (:for c in-string s)
              (:for ou = (gethash c ,lisp->x))
-             (when ou (setf (aref s i) ou)))
+             (cond
+              (ou (setf (aref s i) ou))
+              ,@(when x-accepts-base-char-only
+                  '(((not (typep c 'base-char))
+                     (setf (aref s i) #\?))))
+              )
+             ;(when ou (setf (aref s i) ou))
+             )
            s))
        (defun ,x-to-lisp (s)
          (declare (optimize (speed 3) (safety 0) (debug 0)))
