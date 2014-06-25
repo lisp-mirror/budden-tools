@@ -31,8 +31,15 @@
    #+lispworks6.1 (:file "lw-macro-friendly-dbg-vars-and-macros" :description "find frame source correction for debugger")
    #+lispworks6.1 (:file "lw-macro-friendly-dbg" :description "find frame source correction for debugger")
    #+lispworks6.1 (:file "res-fun-with-keyargs-in-a-debugger" :description ":restart-with-keywords-risky debugger command - restart frames with &key args")
-   (:file "proga" :description "DEPRECATED") 
+   (:file "proga" :description "DEPRECATED")
    (:file "proga-test" :description "DEPRECATED") 
+
+   ; inlining perga system to simplify build
+   (:file "perga-implementation-package")
+   (:file "perga-vars-and-macros")
+   (:file "perga-aux-funs")
+   (:file "perga")
+
    (:file "iterate-extensions" :description "some iterate drivers")
    (:file "defun-to-file" :description "When named function is created, it can be saved to a file in order to find-source to work")
    #+lispworks
