@@ -100,7 +100,13 @@ srcpl - symbol-readmacro. Прочитать объект и запрограм�
   (SWANK-BACKEND:MAKE-WEAK-KEY-HASH-TABLE :test 'eq)
   "Делегаты потоков")
 
-(defvar *record-locations* t)
+(defvar *record-locations* t "Если истина, то fbody, fsel и родственники генерируют код, позволяющий отследить исходники")
+
+
+(defun track-locations ()
+  "Эта ф-я возвращает истину, если мы хотим в рантайме использовать информацию об исходниках. Поиск исходника sql не будет работать, если эта ф-я возвращает nil. Также он не будет работать, если соотвтствующий код был создан в то время, когда *record-locations* была связана в nil. Пока для простоты задействуем одну и ту же переменную *record-locations* и для записи исходников, и для использования уже записанных исходников"
+  *record-locations*)
+
 
 (defstruct olm ; карта исходников для объкта 
   ses-list ; упорядоченный список структур ses
@@ -157,59 +163,63 @@ srcpl - symbol-readmacro. Прочитать объект и запрограм�
 (defun l/pass-from-stream-to-file (stream)
   "данные были связаны с потоком. Ассоциируем их с файлом"
 ;  (declare (optimize speed))
-  (let1 delegate (get-stream-location-map-delegate stream)
-    (setf (gethash (namestring (extract-source-filename-from-stream stream))
-                   *nplf)
-          (simplify-object-location-map delegate))
-    (remhash delegate *nplm))
-  nil)      
+  (when (track-locations)
+    (let1 delegate (get-stream-location-map-delegate stream)
+      (setf (gethash (namestring (extract-source-filename-from-stream stream))
+                     *nplf)
+            (simplify-object-location-map delegate))
+      (remhash delegate *nplm))
+    nil))
 
 (defun l/add-to-location-map (delegate dst-beg dst-end object)
 ;  (declare (optimize speed))
-  (let* ((oli (gethash object *nplm))
-         (dli (gethash delegate *nplm))
-         (result nil)
-         )
-    (when oli
-      (unless dli
-        (setf dli 
-              (setf (gethash delegate *nplm)
-                    (make-olm))))
-      (setf result (make-ses :beg dst-beg :end dst-end :sources (list oli)))
-      (push result (olm-ses-list dli)))
-    result
-    )
-  )
+  (when (track-locations) 
+    (let* ((oli (gethash object *nplm))
+           (dli (gethash delegate *nplm))
+           (result nil)
+           )
+      (when oli
+        (unless dli
+          (setf dli 
+                (setf (gethash delegate *nplm)
+                      (make-olm))))
+        (setf result (make-ses :beg dst-beg :end dst-end :sources (list oli)))
+        (push result (olm-ses-list dli)))
+      result
+      )
+    ))
 
 (defun l/subseq (string start &optional end (simplify t))
   "Только во временном хранении"
 ;  (declare (optimize speed))
-  (proga
-    (let map (if simplify
-                 (simplify-object-location-map string)
-               (get-non-persistent-object-locations string)))
+  (perga-implementation:perga 
     (let result (subseq string start end))
-    (when map
+    (when (track-locations)
+      (let map
+        (if simplify
+            (simplify-object-location-map string)
+          (get-non-persistent-object-locations string)))
+      (when map
       ; карта отсортирована. Начало и конец могут быть обрезаны
-      (the* olm map)
-      (_f copy-olm map) ; копируем карту, ведь для подпоследовательности она будет другой      
-      (let len (length string))
-      (setf end (if end (min end len) len))
-      (let-with-conc-type map olm map
-        (iter
-          (:for sub in map.ses-list)
-          (let-with-conc-type sub ses sub
-            (cond
-             ((or (> start sub.end) (< end sub.beg) ; no intersection
-                  ))
-             (t
-              (let ((new-sub (copy-ses sub)))
-                (setf (ses-beg new-sub) (max (- sub.beg start) 0)
-                      (ses-end new-sub) (- (min sub.end end) start))
-                (:collect new-sub into new-ses-list)))))
-          (:finally (setf map.ses-list new-ses-list))))
-      (setf (get-non-persistent-object-locations result) map)
-      )
+        (the* olm map)
+        (_f copy-olm map) ; копируем карту, ведь для подпоследовательности она будет другой      
+        (let len (length string))
+        (setf end (if end (min end len) len))
+        (let-with-conc-type map olm map
+          (iter
+            (:for sub in map.ses-list)
+            (let-with-conc-type sub ses sub
+              (cond
+               ((or (> start sub.end) (< end sub.beg) ; no intersection
+                    ))
+               (t
+                (let ((new-sub (copy-ses sub)))
+                  (setf (ses-beg new-sub) (max (- sub.beg start) 0)
+                        (ses-end new-sub) (- (min sub.end end) start))
+                  (:collect new-sub into new-ses-list)))))
+            (:finally (setf map.ses-list new-ses-list))))
+        (setf (get-non-persistent-object-locations result) map)
+        ))
     result))
 
 
@@ -367,16 +377,19 @@ srcpl - symbol-readmacro. Прочитать объект и запрограм�
 (defun l/princ (object &optional (stream *standard-output*))
 ;  (declare (optimize speed))
   (let*
-      ((dst-beg (extract-file-position stream))
-       (delegate (get-stream-location-map-delegate stream)))
+      ((track-locations-value (track-locations))
+       (dst-beg (and track-locations-value (extract-file-position stream)))
+       (delegate (and track-locations-value (get-stream-location-map-delegate stream)))
+       )
     (prog1
         (typecase object
           (string (write-string object stream))
           (t (princ object stream)))
-      (let* ((dst-end (extract-file-position stream)))
-        (when delegate 
-          (l/add-to-location-map delegate dst-beg dst-end object)))
-      )))
+      (when track-locations-value
+        (let* ((dst-end (extract-file-position stream)))
+          (when delegate 
+            (l/add-to-location-map delegate dst-beg dst-end object)))
+        ))))
 
 (defun l/str+ (&rest objects)
   "Могут быть какие-то отличия, т.к. (string x) в обычном str+ может отличаться от (princ-to-string x) здесь. Тогда нужно подправить."
@@ -385,7 +398,7 @@ srcpl - symbol-readmacro. Прочитать объект и запрограм�
       (l/with-output-to-string (ss) 
         (mapcar (lambda (x) (l/princ x ss)) objects)
         )
-    (simplify-object-location-map res)
+    (when (track-locations) (simplify-object-location-map res))
     res))
  
 (defun get-stream-location-map-delegate (stream &key if-not-exists)
@@ -525,27 +538,29 @@ srcpl - symbol-readmacro. Прочитать объект и запрограм�
 (defun l/rorl (obj position)
 ;   (print (list obj source beg end))
   "l/return-object-recording-location"
-  (let (source beg end)
-    (when position
-      (dsetq (source beg end) position))
-    (setf beg (row-col-offset-to-buffer-offset beg))
-    (setf end (row-col-offset-to-buffer-offset beg))
-    (when source
-      "Здесь нам нужен нелёгкий выбор. Если объект уже имеет данные о своём расположении, 
+  (when (track-locations)
+    (let (source beg end)
+      (when position
+        (dsetq (source beg end) position))
+      (setf beg (row-col-offset-to-buffer-offset beg))
+      (setf end (row-col-offset-to-buffer-offset beg))
+      (when source
+        "Здесь нам нужен нелёгкий выбор. Если объект уже имеет данные о своём расположении, 
 мы предпочитаем взять их. Хотя, на самом-то деле, нам нужно взять все и сделать
 набор команд, чтобы можно было ходить по ним по всем. Поскольку мы не умеем ходить
 по всем, мы не можем даже выбрать один из них, мы просто берём самый специфичный"
-      (assert (>= end beg))
-      (cond 
-       ((symbolp obj) ; символ запоминает своё место навсегда, это плохо. В контексте можно более-менее избавиться от этого, но если символ встречается много раз подряд, то всё равно будет плохо
+        (assert (>= end beg))
+        (cond 
+         ((symbolp obj) ; символ запоминает своё место навсегда, это плохо. В контексте можно более-менее избавиться от этого, но если символ встречается много раз подряд, то всё равно будет плохо
       ; мы могли бы копировать символ в этом месте, но это, наверняка, ещё хуже!
-        (make-slo :source source :beg beg :end end))
-       (t       
-        (let ((locs (get-non-persistent-object-locations obj)))
-          (or locs 
-              (setf (get-non-persistent-object-locations obj) (make-slo :source source :beg beg :end end)))))))
-    obj
-    ))
+          (make-slo :source source :beg beg :end end))
+         (t       
+          (let ((locs (get-non-persistent-object-locations obj)))
+            (or locs 
+                (setf (get-non-persistent-object-locations obj) (make-slo :source source :beg beg :end end)))))))
+      ))
+  obj
+  )
 
 (defun l/substitute-subseq (seq sub rep &key (start 0) end
                           (test #'eql) (key #'identity))
