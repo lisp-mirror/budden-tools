@@ -267,10 +267,10 @@
           :do (setf res (concatenate 'string res (format nil "~%") x))))) |#
 
 
-(defun read-file-into-string (filename)
-  (with-open-file (in filename :direction :input)
+(defun read-file-into-string (filename #+lispworks &key #+lispworks (external-format :default))
+  (with-open-file (in filename :direction :input #+lispworks :external-format #+lispworks  external-format)
     (with-output-to-string (result)
-      (iter (:for line :in-file in :using #'read-line)
+      (iter (:for line :in-stream in :using #'read-line)
         (princ line result)
         (terpri result)))))
 
