@@ -154,10 +154,11 @@ srcpl - symbol-readmacro. Прочитать объект и запрограм�
 (defun l/pass-from-delegate-to-object (object delegate)
   "delegate может быть nil. Возвращает объект"
 ;  (declare (optimize speed))
-  (unless (eq delegate object)
-    (setf (gethash object *nplm) (simplify-location-map (gethash delegate *nplm)))
-    (remhash delegate *nplm)
-    )
+  (when (track-locations)
+    (unless (eq delegate object)
+      (setf (gethash object *nplm) (simplify-location-map (gethash delegate *nplm)))
+      (remhash delegate *nplm)
+      ))
   object)
 
 (defun l/pass-from-stream-to-file (stream)
@@ -404,16 +405,17 @@ srcpl - symbol-readmacro. Прочитать объект и запрограм�
 (defun get-stream-location-map-delegate (stream &key if-not-exists)
 ;  (declare (optimize speed))
    
-  (etypecase stream
-    #+lispworks (editor::editor-region-stream stream)
-    (stream::file-stream stream)
-    #+lispworks (stream::ef-file-stream stream)
-    (stream 
-     (ecase if-not-exists
-       (:create (nth-value 0 (ensure-gethash-2 stream *slmd (gensym "LOCATION-DELEGATE"))))
-       ((nil) (gethash stream *slmd))
-       )))
-  )
+  (when (track-locations)
+    (etypecase stream
+      #+lispworks (editor::editor-region-stream stream)
+      (stream::file-stream stream)
+      #+lispworks (stream::ef-file-stream stream)
+      (stream 
+       (ecase if-not-exists
+         (:create (nth-value 0 (ensure-gethash-2 stream *slmd (gensym "LOCATION-DELEGATE"))))
+         ((nil) (gethash stream *slmd))
+         )))
+    ))
 
 (defun extract-source-filename-from-stream (stream)
   "Посмотреть в SLIME"
