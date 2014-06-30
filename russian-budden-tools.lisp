@@ -225,49 +225,10 @@
 
 )
 
-;; преобразование русских символов для чтения-записи в open-pipe
-#+(and lispworks (or windows win32))
-(defmacro define-open-pipe-character-translators ()
-  (let ((lisp->dos (make-hash-table :test #'eql :size 256))
-        (dos->lisp (make-hash-table :test #'eql :size 256)))
-    (iter 
-      (:for c in (append *cyrillic-characters* '(#\№)))
-      (:for sou = 
-       (with-output-to-string (ou) 
-         (system:call-system-showing-output
-          (format nil "echo ~A" c) :prefix "" :show-cmd nil :output-stream ou)))
-      (:for ou = (elt sou 0))
-      (setf (gethash c lisp->dos) ou)
-      (setf (gethash ou dos->lisp) c)
-      )
-    ; (iter (:for (a b) :in-hashtable lisp->dos) (print `(,a ,(char-code b))))
-    `(progn
-       (defun lisp-string-to-dos (s)
-         (declare (optimize (speed 3) (safety 0) (debug 0)))
-         (let1 s (copy-seq s)
-           (iter 
-             (:for i from 0)
-             (:for c in-string s)
-             (:for ou = (gethash c ,lisp->dos))
-             (when ou (setf (aref s i) ou)))
-           s))
-       (defun dos-string-to-lisp (s)
-         (declare (optimize (speed 3) (safety 0) (debug 0)))
-         (let1 dest (make-string (length s) :element-type 'lispworks:simple-char)
-           (iter 
-             (:for i from 0)
-             (:for c in-string s)
-             (:for ou = (gethash c ,dos->lisp))
-             (setf (aref dest i) (or ou c)))
-           dest))
-       (compile 'lisp-string-to-dos)
-       (compile 'dos-string-to-lisp)
-       )))
-
 (defmacro define-open-pipe-character-translators-by-sample (sample x-to-lisp lisp-to-x &key x-accepts-base-char-only)
   "Получили из источника представление строки, понятное этому источнику (concatenate 'string (append bu::*cyrillic-characters* '(#\№))). 
    Определим ф-ю x-to-lisp, чтобы прочитать строку из этого источника и lisp-to-x, чтобы записать в источник.
-   x-accepts-base-char-only - все буквы, не являющиеся base-char, преобразуем в знак вопроса."
+   x-accepts-base-char-only - все буквы, не являющиеся base-char, преобразуем в знак вопроса. См. также 866.lisp"
   (let ((lisp->x (make-hash-table :test #'eql :size 256))
         (x->lisp (make-hash-table :test #'eql :size 256))
         (character-list (append *cyrillic-characters* '(#\№))))
