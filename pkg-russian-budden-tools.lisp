@@ -38,6 +38,9 @@
 
    russian-budden-tools:define-open-pipe-character-translators 
    russian-budden-tools:define-open-pipe-character-translators-by-sample
+
+   russian-budden-tools:lisp-string-to-dos-for-pipe
+   russian-budden-tools:dos-string-to-lisp-for-pipe
    "
    ))
 
