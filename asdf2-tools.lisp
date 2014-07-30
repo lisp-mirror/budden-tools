@@ -234,9 +234,10 @@ returns (VALUES string-output error-output exit-status)"
     (error "COMMAND-OUTPUT not implemented for this Lisp")
     ))
 
+#+(and (not asdf2) (or (and lispworks win32) (and allegro microsoft-32) (and ccl windows)))
 (defparameter *sysdef-central-registry-search-by-lnk-files-memo* nil)
 
-#+(or (and lispworks win32) (and allegro microsoft-32) (and ccl windows))
+#+(and (not asdf2) (or (and lispworks win32) (and allegro microsoft-32) (and ccl windows)))
 (defun sysdef-central-registry-search-by-lnk-files (system)
   "Finds a system.asd.lnk in a central registry directories resolves symlink with gnu readlink to a system name"
   (let*
@@ -271,7 +272,6 @@ returns (VALUES string-output error-output exit-status)"
         (push (cons name result) *sysdef-central-registry-search-by-lnk-files-memo*)
         result))))
 
-
 ; make sure asdf-install:sysdef-source-dir-search is not here!
 #+(and (not asdf2) (or (and lispworks win32) (and allegro microsoft-32) (and ccl windows)))
 (pushnew 'sysdef-central-registry-search-by-lnk-files *system-definition-search-functions*)
@@ -289,7 +289,6 @@ returns (VALUES string-output error-output exit-status)"
 
 (defun delete-fasls-on-system (system-name fasl-type)
   "Deletes all fasl files of system (w/o dependents)"
-  (break "don't run me. I'm harmful")
   (unless (member system-name *tabooed-system-names* :test 'equalp)
     (let ((dir (make-pathname :directory 
                               (butlast 
@@ -297,8 +296,10 @@ returns (VALUES string-output error-output exit-status)"
       #+ignore (cl-fad:walk-directory dir (lambda (n) (when (cl-fad:directory-pathname-p n) (print n)))
                              :directories t 
                              :test (lambda (p) (string= (pathname-type p) fasl-type)))
-      (cl-fad:walk-directory dir 'print       :directories t :test (lambda (p) (string= (pathname-type p) fasl-type)))
-      #+ignore (cl-fad:walk-directory dir 'delete-file :directories t :test (lambda (p) (string= (pathname-type p) fasl-type))))))
+      (when 
+          (cl-fad:walk-directory dir 'print       :directories t :test (lambda (p) (string= (pathname-type p) fasl-type)))
+        (break "Continue if you believe list of fasls is correct")
+        (cl-fad:walk-directory dir 'delete-file :directories t :test (lambda (p) (string= (pathname-type p) fasl-type)))))))
 
 (defun delete-fasls-in-directory (directory fasl-type)
   "Sometimes it looks more safe than recursive deletion of fasls on system"

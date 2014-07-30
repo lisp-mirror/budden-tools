@@ -6,7 +6,7 @@
 
 (defsystem :budden-tools  
   :serial t
-  :description "Some utilities by Budden, public domain"
+  :description "Some utilities by Budden, mostly public domain"
   :depends-on 
   (:alexandria :cl-fad :split-sequence :cl-utilities :named-readtables
    :cl-ppcre		
