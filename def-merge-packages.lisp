@@ -449,7 +449,7 @@ as 'forbidden'. Error occurs on an attempt to read these symbols unqualified in 
 It also allows for additional clauses. Currently every additional clause can only occur once. 
 \(:forbid . string-designators) - explicitly forbid some symbol names with addition to clashes
 \(:print-defpackage-form [ t | nil ]) - if t, print defpackage form
-\(:local-nicknames :nick1 :package1 :nick2 :package2 ...) - Refer to package1 as nick1, package2 as nick2 from package being defined.
+\(:local-nicknames :nick1 :package1 :nick2 :package2 ...) - Refer to package1 as nick1, package2 as nick2 from package being defined. package1, package2 can be undefined at the time of ! form evaluation
 \(:always [ t | nil ]) - if always, everything is wrapped into (eval-when (:compile-toplevel :load-toplevel :execute))
 \(:allow-qualified-intern [ t | nil ]) - with buddens readtable extensions, by default you can't intern bar to foo typing foo::bar. Set allow-qualified-intern to allow this.
 \(:custom-token-parsers custom-token-parser-spec1 ...) where 
