@@ -7,7 +7,8 @@
   setter)
 
 (defmacro byref (place &environment environment)
-  "Pass place to a function as a parameter. E.g. (my-modifier (byref var)). Callee must use with-byref-params"
+  "Imitates 'var' parameter in Pascal. Use with-byref-params to declare parameter as var, byref to pass that parameter. See test.
+   Note that returning var parameters is arranged to occur in cleanup forms of unwind-protect. So if your routine exits abnormally due to a condition, var parameter might change anyway." 
   (with-gensyms (box new-value)
     (assert (not (constantp place environment)))
     `(let ((,box (make-reference-box :v ,place
@@ -19,7 +20,8 @@
     ))
 
 (defmacro with-byref-params (symbols &body body)
-  "Handles parameter passed by reference. See test"
+  "Imitates 'var' parameter in Pascal. Use with-byref-params to declare parameter as var, byref to pass that parameter. See test.
+   Note that returning var parameters is arranged to occur in cleanup forms of unwind-protect. So if your routine exits abnormally due to a condition, var parameter might change anyway." 
   (assert (typep symbols '(or (cons symbol) null)) () "with-byref-params: ~S должно было быть списком символов или nil-ом"
     symbols)
   (iter 
