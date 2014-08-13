@@ -13,4 +13,4 @@
   :depends-on (:budden-tools)
   :components
   ((:file "perga-test-1")
-   (:file "perga-test-2")))
+   (:file "perga-test-2" :description "outdated. Does not work")))
