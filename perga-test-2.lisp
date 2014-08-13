@@ -149,16 +149,11 @@
     a))
 
 
-(defmacro finally-do (cleanup &body body)
-  `(unwind-protect
-       (perga ,@body)
-     ,cleanup))
-
 (def-trivial-test::! perga.finally-do
                      (macroexpand 
                       '(perga all
                          (:lett x fixnum 1)
-                         (:@ finally-do (return-from all x))
+                         (:@ with-unwind (return-from all x))
                          (:lett y fixnum x)
                          (setf x (+ y 1))
                          ))

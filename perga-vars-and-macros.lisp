@@ -63,7 +63,11 @@
          first value should be a processed form, no further processing of body occurs.
    if second value is nil, clause is kept intact forms-after-clause are processed. 
    Consider some standard transformers: open-up-if-3, open-up-if-4, wind-up-tail-if-3,
-   wind-up-tail-if-second-is-atom, open-up"
+   wind-up-tail-if-second-is-atom, open-up.
+
+   Most of the time you don't need def-perga-clause in your code. Use just
+   (perga ... (:@ your-macro ...rest-of-macro-call-header...) ...forms-of-body...)
+   "
   #+lispworks
    `(dspec:def ,symbol
       (def-perga-clause-fun ',symbol ,transformer (dspec:location))
@@ -72,7 +76,10 @@
    `(def-perga-clause-fun ',symbol ,transformer)
    )
 
- 
-
+(defmacro with-unwind (cleanup &body body)
+  "Use (:@ with-unwind cleanup-form) perga clause to push cleanup form to dynamic stack"
+  `(unwind-protect
+       (perga ,@body)
+     ,cleanup))
 
 
