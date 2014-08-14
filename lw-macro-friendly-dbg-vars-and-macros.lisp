@@ -28,7 +28,8 @@ State of the code is alpha. Feedback is greatly appreciated.
      lw-macro-friendly-dbg:END-SOURCE-LOCATION-SUBSTITUTIONS-FN
      lw-macro-friendly-dbg:BEGIN-SOURCE-LOCATION-SUBSTITUTIONS-FN
      lw-macro-friendly-dbg:*with-source-location-substitutions-level*
-     lw-macro-friendly-dbg:*COMPILE-TIME-SUBSTITUTION-TABLE*"
+     lw-macro-friendly-dbg:*COMPILE-TIME-SUBSTITUTION-TABLE*
+     lw-macro-friendly-dbg:*disable-set-source-location-substitution-warning*"
      ))
 
 (in-package :lw-macro-friendly-dbg)

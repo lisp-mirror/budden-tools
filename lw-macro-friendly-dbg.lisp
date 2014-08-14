@@ -15,6 +15,8 @@
   (gethash source *w-table*)) 
 
 
+(defvar *disable-set-source-location-substitution-warning* nil)
+
 (defun set-source-location-substitution (source-place real-code)
   "source-place - место в настоящем исходнике, 
    real-code - форма, к-рая будет там показывться.
@@ -26,7 +28,8 @@
        t
        ))
     (t
-     (warn "set-source-location-substitution is out of with-source-location-substitutions scope")
+     (unless *disable-set-source-location-substitution-warning*
+       (warn "set-source-location-substitution is out of with-source-location-substitutions scope"))
      nil)
     )
   )
