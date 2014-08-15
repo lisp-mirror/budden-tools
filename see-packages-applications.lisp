@@ -29,33 +29,6 @@
        (symbol-name symbol-or-string)))))
 
 
-
-#+nil (defun ^-reader-internal (stream read-object object)
-  "Если read-object=nil, то мы уже считали объект и читаем только то, что идёт после него"
-  (let* ((object (if read-object (read stream t) object))
-         (field-name (read-symbol-name stream))
-         (args (read-delimited-list #\) stream t))) ; дерьмо вот здесь, и никак не решить. 
-    (unread-char #\) stream) ; очень сомнительно.
-    `(|^| ,object ,field-name ,@args)))
-
-
-#|ф-я была только для примера (defun guess-where-i-am (object)
-  "Делает так, что при закрытии скобки пишется сообщение, является ли этот объект каром списка.
-  Если объект читается вне скобок, то ничего не происходит"
-  (when *reading-parens* 
-    (budden-tools::push-function-to-call-when-paren-is-closing
-     (lambda (result stream)
-       (assert (consp result) () 
-         "Something wrong with symbol readmacro: list reader on ~S returned atom ~S" stream result)
-       (cond ((eq object (car result)) 
-              (format *trace-output* "~S: I am a car" object)
-              result)
-             (t 
-              (format *trace-output* "~S: i am not a car" object)
-              result))
-       )))
-  object)|#
-
 (defun splice-later-if-a-car (object)
   "При закрытии скобки, если этот объект является каром списка, то ожидает, что он сам является списком. 
 Сплайсит в его хвост хвост прочитанного списка и поднимает на один уровень. Например 
@@ -75,6 +48,43 @@
               result ; вернём при закрытии скобки
               )))))
   object)
+
+
+(defun closing-paren-splice-cdr-into-car (readmacro-returned)
+  "Для symbol-readmacro, допускающего дополнительные данные после себя до закрытия скобки. 
+symbol-readmacro должен вернуть список. cdr считанного списка вставляется в хвост того
+списка, который вернул symbol-readmacro."
+  ;(assert (null *functions-to-call-when-paren-is-closing*)
+  ;    () "Wrong call to closing-paren-splice-cdr-into-car")
+  (push-function-to-call-when-paren-is-closing 
+        (lambda (list stream)
+          (declare (ignore stream))
+          (let1 car (car list)
+            (assert (eq car readmacro-returned) () "Symbol-readmacro is not in the first position in a list ~S" list)
+            (append car (cdr list))
+            )))
+  readmacro-returned)
+
+
+
+#|ф-я была только для примера (defun guess-where-i-am (object)
+  "Делает так, что при закрытии скобки пишется сообщение, является ли этот объект каром списка.
+  Если объект читается вне скобок, то ничего не происходит"
+  (when *reading-parens* 
+    (budden-tools::push-function-to-call-when-paren-is-closing
+     (lambda (result stream)
+       (assert (consp result) () 
+         "Something wrong with symbol readmacro: list reader on ~S returned atom ~S" stream result)
+       (cond ((eq object (car result)) 
+              (format *trace-output* "~S: I am a car" object)
+              result)
+             (t 
+              (format *trace-output* "~S: i am not a car" object)
+              result))
+       )))
+  object)|#
+
+
 
 
 (defun ^-reader-internal-2 (stream read-object object read-field-name field-name)
@@ -97,20 +107,7 @@
     (list '|^| object field-name)))
 
 
-(defun closing-paren-splice-cdr-into-car (readmacro-returned)
-  "Для symbol-readmacro, допускающего дополнительные данные после себя до закрытия скобки. 
-symbol-readmacro должен вернуть список. cdr считанного списка вставляется в хвост того
-списка, который вернул symbol-readmacro."
-  ;(assert (null *functions-to-call-when-paren-is-closing*)
-  ;    () "Wrong call to closing-paren-splice-cdr-into-car")
-  (push-function-to-call-when-paren-is-closing 
-        (lambda (list stream)
-          (declare (ignore stream))
-          (let1 car (car list)
-            (assert (eq car readmacro-returned) () "Symbol-readmacro is not in the first position in a list ~S" list)
-            (append car (cdr list))
-            )))
-  readmacro-returned)
+
   
 
 ;; FIXME при печати-чтении ^ выполняется повторно. Переименовать ^ во что-то, если это опасно 
@@ -144,6 +141,8 @@ symbol-readmacro должен вернуть список. cdr считанно�
 Можно ещё попробовать:
 make-load-form
 анализ, в какой части списка мы находимся. 
+
+Также не работает (cond (a^b operator) ()) - вместо этого приходится писать (cond ((a^b) operator) ())
 "
   (let* ((p (position #\^ symbol-name :from-end t)))
     (cond 
@@ -158,6 +157,7 @@ make-load-form
                              t nil 
                              nil end))
                   t))))))
+
 
 ; (setf (get-custom-token-parsers-for-package :budden) nil)
 ; (pushnew 'convert-carat-to-^ (get-custom-token-parsers-for-package :budden))
