@@ -126,7 +126,7 @@ is already an altered readtable, simply returns it"
 
 
 (defun my-print-symbol (o s)
-  "see also print-symbol-string-with-advanced-readtable-case"
+  "see also print-symbol-string-with-advanced-readtable-case, system::output-cased-symbol"
   (proga
     ;(let str (string o))
     ;(mlvl-bind (found status)
