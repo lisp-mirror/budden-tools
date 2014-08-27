@@ -53,6 +53,7 @@ defpackage-autoimport-2 (obsolete) prefers to use packages and shadowing-import 
    #:extract-clause ; extract one clause of def... form (e.g. defpackage) by its head
    ;#:reexport ; For every symbol in to-package2 which is external in 
    ;           ; package1, export it from to-package2
+   #:reexport-clause-for-package ; for every expternal symbol in package, write an export clause
    #:force-find-package ; force-find-package. If package not found, it is a cerror
    #:group-similar-items ; group-similar-items
                   ; Given a list of items, groups similar (in sence of key-args) items into sublists
@@ -185,7 +186,7 @@ defpackage-autoimport-2 (obsolete) prefers to use packages and shadowing-import 
 
 
 (defun merge-packages-simple::export-clause (nickname string)
-  "Generates :export clause from string containing qualified symbol names and comments. 
+  "DEPRECATED. Generates :export clause from string containing qualified symbol names and comments. 
    nickname: is replaced with #:. So, you can safely navigate to it via 
    your 'find-definition' command. E.g.
   (defpackage pack
@@ -232,7 +233,17 @@ defpackage-autoimport-2 (obsolete) prefers to use packages and shadowing-import 
         (when (cdr bucket)
           (:collect (nreverse bucket))))))))
 
-
+(defun reexport-clause-for-package (package)
+  (let* 
+      ((p (find-package package))
+       (export-string 
+        (let* ((*package* (find-package :keyword))
+               (indent-string "    "))
+          (with-output-to-string (str)
+            (iter (:for sym :in-package p :external-only t)
+              (format str "~%~A~S" indent-string sym))
+            (format str "~%~A" indent-string)))))
+    `(:export ,export-string)))
 
 (defmacro reexport (from-package &optional (to-package *package*))
   "For every symbol in to-package which is external in from-package, export it
