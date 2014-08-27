@@ -201,18 +201,18 @@
    budden-tools:*readtable-alist*
    budden-tools:unregister-readtable
 
-   ; we do not export it anymore, use def-merge-packages::!4 budden-tools:get-custom-reader-for-package ; use your own reader in package context instead of common lisp reader, 
+   ; we do not export it anymore, use def-merge-packages::! budden-tools:get-custom-reader-for-package ; use your own reader in package context instead of common lisp reader, 
                                               ; e.g. you can do so that dat1:2011-01-01 would read a localtime:timestamp value
-   ; we do not export it anymore, use def-merge-packages::!4 budden-tools:get-custom-token-parsers-for-package ; parse tokens read with custom parsers (which can, but not encouaraged to have side-effects on stream
+   ; we do not export it anymore, use def-merge-packages::! budden-tools:get-custom-token-parsers-for-package ; parse tokens read with custom parsers (which can, but not encouaraged to have side-effects on stream
    budden-tools:symbol-readmacro ; function of two arguments: symbol and a stream. setf symbol-readmacro to reader switched by the symbol
    budden-tools:def-symbol-readmacro ; Navigation does not work
    budden-tools:it-is-a-car-symbol-readmacro ; put this at the first line of your symbol-readmacro definition
    budden-tools:*print-normalize-seen-symbols*
 
    ; budden-tools:defpackage-autoimport ; obsolete
-   budden-tools:export-clause
-   budden-tools:find-symbol-in-packages
-   budden-tools:package-doctor
+   ; budden-tools:export-clause ; obsolete. See DEF-MERGE-PACKAGES:reexport-clause-for-package (name might change further)
+   budden-tools:find-symbol-in-packages ; consider using find-all-symbols
+   budden-tools:package-doctor ; see also :smart-resolve-export-conflict debugger command for lispworks
 
 ;; alternative-backquoting
    |`|
