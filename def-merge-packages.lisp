@@ -397,6 +397,7 @@ from to-package too"
     (keyword package-designator)
     (package (intern (package-name package-designator) :keyword))
     (symbol (keywordize package-designator))
+    (string (keywordize-package-designator (find-package package-designator)))
     ))
 
 (defun ensure-package-metadata (package-designator)
