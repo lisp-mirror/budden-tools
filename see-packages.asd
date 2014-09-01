@@ -21,6 +21,7 @@
         (:file "lispworks60-def-symbol-readmacro")
         (:file "package-aliases")	
 	(:file "locations")
+        (:file "cons-to-source" :description "Alternative to ~{ ~} format to product source code from conses")
 	;2012-12-19 (:russian-file "see-packages-test")
         #+(and lispworks6 win32) (:file "test-sbcl-reader-budden-tools-lispworks")
 	)
