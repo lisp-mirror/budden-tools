@@ -79,7 +79,8 @@
       #+lispworks6 (let *print-circle* t *print-readably* t *print-pretty* t)
 ;      (let *print-circle* t *print-pretty* t)
       #-lispworks6 (let *print-pretty* t)
-      (print `(in-package ,(keywordize (package-name *package*))) out)
+      (print `(in-package ,(def-merge-packages:keywordize-package-designator
+                            (package-name *package*))) out)
       (print `(in-readtable :buddens-readtable-a) out)
       (print `(defun ,name ,@more) out)
       )
