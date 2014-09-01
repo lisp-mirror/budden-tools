@@ -19,7 +19,8 @@
        ,box)
     ))
 
-(defmacro with-byref-params (symbols &body body)
+
+(defmacro with-byref-params (symbols &body perga-body)
   "Imitates 'var' parameter in Pascal. Use with-byref-params to declare parameter as var, byref to pass that parameter. See test.
    Note that returning var parameters is arranged to occur in cleanup forms of unwind-protect. So if your routine exits abnormally due to a condition, var parameter might change anyway." 
   (assert (typep symbols '(or (cons symbol) null)) () "with-byref-params: ~S должно было быть списком символов или nil-ом"
@@ -40,7 +41,30 @@
          ,@checks
          (let ,inits
            (unwind-protect 
-               (proga ,@body)
+               (perga ,@perga-body)
+             ,@cleanup)))))))
+
+(defmacro with-byref-params-proga (symbols &body proga-body)
+  "Deprecated version of with-byref-params. Body is wrapped inside proga. Use with-byref-params instead" 
+  (assert (typep symbols '(or (cons symbol) null)) () "with-byref-params: ~S должно было быть списком символов или nil-ом"
+    symbols)
+  (iter 
+    (:for symbol in symbols)
+    (:for setter-new-name = (make-symbol (str+ symbol "-setter")))
+    (assert (symbolp symbol))
+    (:collect `(assert (reference-box-p ,symbol)) :into checks)
+    (:appending
+     `((,setter-new-name (reference-box-setter ,symbol))
+       (,symbol (funcall (reference-box-getter ,symbol))))
+     :into inits)
+    (:collecting `(funcall ,setter-new-name ,symbol) :into cleanup)
+    (:finally
+     (return 
+      `(progn
+         ,@checks
+         (let ,inits
+           (unwind-protect 
+               (proga ,@proga-body)
              ,@cleanup)))))))
 
 
@@ -52,7 +76,7 @@
 
 
 (def-trivial-test::! pass-by-ref.1 
-                     (proga
+                     (PERGA-IMPLEMENTATION:perga
                        (flet incf-arg (arg)
                          (with-byref-params (arg)
                            (incf arg)))
