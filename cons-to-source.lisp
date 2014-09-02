@@ -32,17 +32,33 @@
 |#
 ;(asdf::of-system :budden-tools)
 
+(def-merge-packages::! :cons-to-source-formatters
+  (:documentation "Separate package to list all formatters. Import whatever formatters you need")
+  (:use)
+  (:always t)
+  (:export "
+   CONS-TO-SOURCE-FORMATTERS:*PASCAL*
+   CONS-TO-SOURCE-FORMATTERS:*FIREBIRD-SQL-NO-UTF*
+   CONS-TO-SOURCE-FORMATTERS:*sql*
+   CONS-TO-SOURCE-FORMATTERS:*c-formatter*
+   CONS-TO-SOURCE-FORMATTERS:*nod-formatter*
+   CONS-TO-SOURCE-FORMATTERS:*csv-formatter*
+   "))
+   
+
+
 (def-merge-packages::! :cons-to-source
                        (:documentation "cons formatting - code generation from lisp trees")
                        (:nicknames :case1)
-                       (:use :cl :budden-tools :iterate-keywords)
+                       (:use :cl :cons-to-source-formatters
+                        :budden-tools :iterate-keywords)
                        (:local-nicknames :bu :budden-tools)
                        (:always t)
                        (:export "
                         CONS-TO-SOURCE:PD
                         CONS-TO-SOURCE:PDS
                         CONS-TO-SOURCE:*CODEGEN-STREAM*
-                        CONS-TO-SOURCE:|.|
+                        ; CONS-TO-SOURCE:|.|
                         CONS-TO-SOURCE:EMIT-FUNCALL
                         CONS-TO-SOURCE:LONG-COMMENT
                         CONS-TO-SOURCE:SHORT-COMMENT
@@ -53,10 +69,6 @@
                         CONS-TO-SOURCE:WITH-FORMATTER-STACK
                         CONS-TO-SOURCE:NATURAL-CLOSE-BOUNDARY
                         CONS-TO-SOURCE:*CODEGEN-STREAM*
-
-                        CONS-TO-SOURCE:*PASCAL*
-                        CONS-TO-SOURCE:*FIREBIRD-SQL-NO-UTF*
-
                         " 
                             )
                        )
@@ -515,8 +527,8 @@ Examples:
         (when (< indentation 0) (setf indentation 0))))
      ((member (car code) '(l :|l| :|L|))
       (print-data `(" " ,@(cdr code))))
-     ((member (car code) '(\. :\.))
-      (print-data `("." ,@(cdr code))))
+     ;((member (car code) '(\. :\.))
+     ; (print-data `("." ,@(cdr code))))
      ((eq (car code) :progn) (print-data (eval `(progn ,@(cdr code)))))
      ((symbolp (car code))
       (print-data (symbol-processor-wrapper (car code) (cdr code))))
