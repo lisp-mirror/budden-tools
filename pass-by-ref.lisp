@@ -41,7 +41,7 @@
          ,@checks
          (let ,inits
            (unwind-protect 
-               (perga ,@perga-body)
+               (perga-implementation:perga ,@perga-body)
              ,@cleanup)))))))
 
 (defmacro with-byref-params-proga (symbols &body proga-body)

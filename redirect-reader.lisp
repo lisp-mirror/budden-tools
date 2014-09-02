@@ -125,21 +125,6 @@ is already an altered readtable, simply returns it"
 )
 
 
-(defun my-print-symbol (o s)
-  "see also print-symbol-string-with-advanced-readtable-case, system::output-cased-symbol"
-  (proga
-    ;(let str (string o))
-    ;(mlvl-bind (found status)
-    ;    (symbol-is-in-package o *package* nil))
-    ;(cond
-    ; (found
-    ;  (
-    (let *print-escape* nil)
-    (let *print-readably* nil)
-    (let *readtable* *xrt*)
-    (print o s)))
-
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; Change printer if needed ;;;;;;;;;;;;;;;;;;;;;;;;
 #+lispworks6 
 (decorate-function::PORTABLY-WITHOUT-PACKAGE-LOCKS
