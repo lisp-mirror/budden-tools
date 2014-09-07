@@ -2,7 +2,7 @@
 ;;; Written by Denis Budyak, 2009. This code is in public domain
 ;; requires iterate-keywords. 
 
-(cl:require :iterate-keywords)
+;; (cl:require :iterate-keywords)
 
 ;; разобраться с удалением символа. Например, написать ещё функции: разэкспортировать 
 ;; символ отовсюду, удалить символ вообще. 
@@ -16,18 +16,12 @@
     (setf *readtable* (copy-readtable nil))
     nil)
 
-(cl:defpackage :def-merge-packages
+(cl:defpackage :defpackage-budden
   (:documentation "
 See ! docstring for docs. ! is unexported to avoid any symbol clashes, but this is the
-function you most likely want to use. 
-
-defpackage-autoimport (obsolete) makes new package. It  
-resolves symbol clashes automatically in packages it uses. It selects some non-clashing
-set of symbols from interesting packages and import them symbol-by-symbol.
-defpackage-autoimport-2 (obsolete) prefers to use packages and shadowing-import clashes.
-"   
+function you most likely want to use."   
    )
-  (:nicknames :merge-packages-simple)
+  (:nicknames :def-merge-packages)
   (:use :cl ;:org.tfeb.hax.hierarchical-packages
    )
   (:import-from :iterate-keywords #:iter #:keywordize)
@@ -75,14 +69,7 @@ defpackage-autoimport-2 (obsolete) prefers to use packages and shadowing-import 
    #:unintern-all-internal-symbols-of-package
    ))
 
-(in-package :def-merge-packages)
-
-#|(cl-user::portably-without-package-locks
-  (when (find-package :merge-packages-simple.forbidden-symbols)
-    (delete-package :merge-packages-simple.forbidden-symbols))
-  (cl:make-package :merge-packages-simple.forbidden-symbols :use nil)
-  )|#
-
+(in-package :defpackage-budden)
 
 (defparameter *ascii-letters* 
   (let ((lowercase-ascii-letters
@@ -185,7 +172,7 @@ defpackage-autoimport-2 (obsolete) prefers to use packages and shadowing-import 
     ))
 
 
-(defun merge-packages-simple::export-clause (nickname string)
+(defun export-clause (nickname string)
   "DEPRECATED. Generates :export clause from string containing qualified symbol names and comments. 
    nickname: is replaced with #:. So, you can safely navigate to it via 
    your 'find-definition' command. E.g.

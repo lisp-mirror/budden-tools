@@ -26,7 +26,7 @@
    budden-tools:subseq* 
    budden-tools:rmsubseq
    budden-tools:subseq1 ; does not err when run out of sequence, returns emptyness instead
-   budden-tools:search-and-replace-seq ; reexported from :merge-packages-simple
+   budden-tools:search-and-replace-seq ; reexported from :defpackage-budden
    budden-tools:replace-subseq
    budden-tools:split-sequence ; reexported from :split-sequence
 

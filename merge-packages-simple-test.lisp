@@ -10,15 +10,15 @@
     (assert (null (set-exclusive-or externals list)))))
 
 ;;; Should warn here as p1:sym and p2:sym clash
-(merge-packages-simple:! :p1+p2 (:p1 :p2))
+(defpackage-budden:! :p1+p2 (:p1 :p2))
 (p1::?? :p1+p2 '(p1:s1 p2:s2 cl:nth))
 
 ;;; There is a way to suppress a warning: 
-(merge-packages-simple:! :p1+p2 (:p1 :p2) :dont-warn-on (:sym))
+(defpackage-budden:! :p1+p2 (:p1 :p2) :dont-warn-on (:sym))
 (p1::?? :p1+p2 '(p1:s1 p2:s2 cl:nth))
 
 ;;;
-(merge-packages-simple:! :p1+p2 (:p1 :p2) :use-first-duplicate t)
+(defpackage-budden:! :p1+p2 (:p1 :p2) :use-first-duplicate t)
 (p1::?? :p1+p2 '(p1:s1 p2:s2 cl:nth p1:sym))
 
 ;;; Now an example of greater flexibility
@@ -26,7 +26,7 @@
 ;;; Also we want to export p2:sym. So, 
 
 ; define intermediate package.
-(merge-packages-simple:! :intermediate (:p1 :p2) :dont-warn-on (:sym))
+(defpackage-budden:! :intermediate (:p1 :p2) :dont-warn-on (:sym))
 
 (p1::?? :intermediate '(p1:s1 p2:s2))
 
@@ -40,7 +40,7 @@
 
 ; now we may reepxport all symbols which were imported 
 ; from intermediate package
-(merge-packages-simple:reexport :intermediate :p1+p2-with-sym-from-p1)
+(defpackage-budden:reexport :intermediate :p1+p2-with-sym-from-p1)
 
 (p1::?? :p1+p2-with-sym-from-p1 '(p1:s1 p2:s2 cl:nth p2:sym))
 
