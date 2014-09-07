@@ -633,7 +633,9 @@ With buddens readtable extensions enabled, when reader finds \"that-package:\" i
                          ,package-definition
                        ,process-local-nicknames-form
                        ,custom-token-parsers-form
-                       ,@forbid-symbols-forms))
+                       ,@forbid-symbols-forms
+                       ,allow-qualified-intern-form
+                       ,custom-reader-form))
                 `(prog1
                      ,package-definition
                    (eval-when (:load-toplevel :execute)
