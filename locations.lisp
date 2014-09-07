@@ -524,7 +524,8 @@ srcpl - symbol-readmacro. Прочитать объект и запрограм�
 
 #| (trivial-deftest:deftest 
        non-persistent-locations-work 
-       (not (null (with-open-file (in "l:/lisp/lib/cl-fix/see-packages.asd")
+       (not (null (with-open-file
+                      (in "c:/lisp/lisp/lib/budden-tools/see-packages.asd")
                     (let* ((line (read-line in)))
                       (record-non-persistent-location in 0 line)
                       (get-non-persistent-object-locations line)

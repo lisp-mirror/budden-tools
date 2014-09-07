@@ -22,5 +22,6 @@ lispworks-6.1 personal for windows. Considered beta.
 
 Bugs
 ----
-Report bugs to comp.lang.lisp to a budden
+Report bugs to comp.lang.lisp to a budden, 
+or to lisper.ru
 
