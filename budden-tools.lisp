@@ -234,6 +234,9 @@
 (defun path-to-a-file (filename) "d:/foo/file.ext --> d:/foo/"
   (make-pathname :defaults (pathname filename) :name nil :type nil))
 
+(defun name-and-type-of-a-file (filename) "d:/foo/file.ext --> file.ext"
+  (make-pathname :defaults (pathname filename) :host nil :device nil :directory nil))
+
 (defun quit-lisp ()
   (let ((quit-symbol (or (find-symbol "QUIT" "CL-USER")
                          (find-symbol "EXIT" "CL-USER"))))

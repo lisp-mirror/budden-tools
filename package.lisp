@@ -172,6 +172,8 @@
 ;; system environment
    budden-tools:map-dir 
    budden-tools:path-to-a-file
+   budden-tools:name-and-type-of-a-file
+
    budden-tools:maybe-add-slash ; got a directory name. Make sure it ends with slash
    budden-tools:up-dir
    budden-tools:pathname-to-filename ; from swank-backend
