@@ -6,7 +6,7 @@
 (defmacro print-environment (&optional break &ENVIRONMENT env) (print env) (if break (break)))
 
 (defun variable-type-or-class (VAR ENV) 
-  "Возвращает тип ИЛИ класс значения"
+  "Возвращает тип ИЛИ класс значения. Непонятно, зачем нужен класс - наверняка всегда достаточно типа для ^ (FIXME)"
   #+:LISPWORKS4.4
   (cond
    ((constantp VAR ENV)
