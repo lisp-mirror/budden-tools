@@ -1,0 +1,15 @@
+--- iterate.lisp	2006-05-06 08:55:38.000000000 -0700
++++ /home/ilya/.sbcl/site/iterate-1.4.3/iterate.lisp	2008-11-21 14:05:42.000000000 -0800
+@@ -3150,7 +3150,11 @@
+ 		    expr
+ 		    (make-application end-operation collect-var expr)))))
+       (if (eq place 'start)
+-	  (return-code :body `((setq ,collect-var ,op-expr)))
++	  (return-code :body `((setq ,collect-var ,op-expr))
++                       :final (if (eq result-type 'list)
++                                  nil
++                                  `((setq ,collect-var 
++                                          (coerce ,collect-var ',result-type)))))
+ 	  (with-temporary temp-var
+ 	    ;; In the update code, must test if collect-var is null to allow
+ 	    ;; for other clauses to collect into same var.  This code
