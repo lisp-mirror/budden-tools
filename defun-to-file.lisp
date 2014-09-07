@@ -70,15 +70,16 @@
 Имя функции должно быть допустимым именем файла и не должно содержать всяких мерзких символов. 
 Нужно бы добавить сюда ещё имя пакета, но пока не сделано. Для лиспворкс 4 в функции не могут быть gensyms, т.к. они криво
 печатаются (что, в общем-то сводит всю идею на нет). Возвращает два значения - имя функции и имя файла"
-  (proga 
+  (perga-implementation:perga
     (assert (every (lambda (!1) (not (find !1 "\\/.?* "))) (string name)))
     (let filename (str+ (namestring *defun-to-file-directory*) name))
-    (proga
-      (with-open-file out (str+ filename ".lisp") :direction :output
-        :if-does-not-exist :create :if-exists :supersede)
+    (perga-implementation:perga
+      (:@ with-open-file (out (str+ filename ".lisp") :direction :output
+        :if-does-not-exist :create :if-exists :supersede))
       #+lispworks6 (let *print-circle* t *print-readably* t *print-pretty* t)
 ;      (let *print-circle* t *print-pretty* t)
       #-lispworks6 (let *print-pretty* t)
+      #+lispworks6 (format out ";;; generated with budden-tools::defun-to-file from ~S~%" (LISPWORKS:current-pathname))
       (print `(in-package ,(def-merge-packages:keywordize-package-designator
                             (package-name *package*))) out)
       (print `(in-readtable :buddens-readtable-a) out)
