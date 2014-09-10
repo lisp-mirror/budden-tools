@@ -46,7 +46,7 @@
   (error "Use compile-load sequence to run the concept"))
 
 ; enable next line to get verbose printing and more exports
-;(eval-when (:compile-toplevel :load-toplevel) (pushnew :ncsdbg *features*))
+(eval-when (:compile-toplevel :load-toplevel) (pushnew :ncsdbg *features*))
 
 (eval-when (:load-toplevel)
   #-(or :lispworks-32bit :lispworks6.1 :win32 :mswindows)
@@ -192,8 +192,12 @@
   "Can we stop at this call"
   (when (= call-kind 0)
        ; don't attempt to step direct calls as they
-       ; use stack in some other way. 
-    (return-from call-steppable-p nil))
+       ; use stack in some other way.
+    (return-from call-steppable-p
+      (cond
+       ((search "subfunction of lambda-fact" (format nil "~A" call-into)) t)
+       ((search "sub-with-no-args" (format nil "~A" call-into)) t)
+       (t nil))))
   (typecase call-into
     (symbol
      (and 
@@ -203,7 +207,7 @@
      (not (member (coerce call-into 'function) *non-steppable-calls* :key (lambda (x) (coerce x 'function)))))
     (t ; other constants, e.g. numbers. 
      nil)))
-
+    
 
 (defun package-is-not-for-stepping-p (p)
   "Accepts nil, package, or package name"
@@ -1018,9 +1022,15 @@
   (tfn-trace-break)
   )
 
+
+(defun lambda-fact (n)
+  (labels ((fact (i)
+             (cond ((= i 0) 1)
+                   (t (* i (fact (- i 1)))))))
+    (fact n)))
  
 
-#|
+
  ; Direct call test. If use that, remove 
  ;  (when (= call-kind 0)
  ;      ; don't attempt to step direct calls as they
@@ -1033,8 +1043,8 @@
             ))
 
 (stepize-fn 'test-fnd)
-(test-fnd)
-|#
+(! 'test-fnd)
+
 
 ; some potentialy useful staff
 ; SYSTEM::disassembly-objetc-find-reference-for-offset 
