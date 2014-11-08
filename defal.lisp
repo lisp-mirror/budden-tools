@@ -15,4 +15,5 @@
 (in-package :defal)
 
 (defmacro ! (&rest attributes)
+  "Например, (defal:! \"-*- mode : lisp; другие ваши переменные -*-\")"
   (declare (ignore attributes)))
