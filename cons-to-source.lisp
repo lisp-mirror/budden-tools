@@ -423,6 +423,13 @@ Examples:
   (format nil "~F" p)
   )
 
+
+(defun replace-dot-with-comma (s)
+  (substitute #\, #\. s))
+
+(defmethod x-to-syn ((p float) (formatter (eql *csv-formatter*)))
+  (replace-dot-with-comma (format nil "~F" p)))
+
 (defmethod symbol-processor ((s (eql 'progn)) fnm ta)
   (case fnm
     ((*firebird-sql-no-utf* *pascal*)
