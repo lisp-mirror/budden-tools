@@ -219,17 +219,30 @@
      (declare (type ,type ,var))
      ,@body))|#
 
+#+lispworks6.1
+(defun assert-special-subtype-for-with-the1 (var env new-type) 
+  "If variable is special, checks that with-the1 does not redeclare it with incompatible subtype"
+  (multiple-value-bind (kind localp decls) (hcl:variable-information var env)
+    (declare (ignore localp))
+    (when (eq kind :special)
+      (let ((global-declared-type (cdr (assoc 'type decls))))
+        (when global-declared-type
+          (assert (subtypep new-type global-declared-type)
+              ()
+            "Special variable ~S was declared as having type ~S in surrounding scope, but is being bound to incompatible type ~S"
+            var global-declared-type new-type))))))
 
-(defmacro with-the1 (var type object &body body)
+
+(defmacro with-the1 (var type object &body body &environment env)
   "Combines type declaration, type check and binding. See also :lett perga clause" 
   (let ((the-symbol (gensym (format nil "~A" var))))
-
-  `(let ((,var
-          (let ((,the-symbol ,object)) ; expanded `(the* ,type ,object)
-            (assert (typep ,the-symbol ',type))
-            (the ,type ,the-symbol))))
-     (declare (type ,type ,var))
-     ,@body)))
+    (assert-special-subtype-for-with-the1 var env type)
+    `(let ((,var
+            (let ((,the-symbol ,object)) ; expanded `(the* ,type ,object)
+              (assert (typep ,the-symbol ',type))
+              (the ,type ,the-symbol))))
+       (declare (type ,type ,var))
+       ,@body)))
 
 
 (setf (get 'with-the1 'proga-implementation::proga-transformer) 
@@ -286,3 +299,34 @@
 
 
         
+(defmacro deftvar (var type &key documentation (initial-value nil initial-value-supplied-p))
+  "def-typed-var. variable is proclaimed to have a type give. 
+  In Lispworks the following facts would hold:
+  1. Setting or binding to an incompatible type in a compiled code would give a runtime error (may vary dependent on safety compiler setting). 
+     No checks in interpreted code. 
+  2. with-the1 won't allow rebinding with another type. let + declare would allow. 
+  If this is an insufficient protection, consider giving variable a functional form. E.g. 
+  
+  (defmacro def-pseudo-var (name inner-name)
+    `(progn
+       (defvar ,inner-name)
+       (defconstant ,name nil)
+       (defun ,name () ,inner-name)
+       (defun setname (new-value) (do-check-type) (setf ,inner-name new-value))
+       (defsetf ,name setname)))
+  "  
+  `(progn
+     (defvar ,var ,@(when initial-value-supplied-p `((the* ,type ,initial-value))))
+     (proclaim '(type ,type ,var))
+     ,@(when documentation `((setf (documentation ',var 'variable) ,documentation)))))
+
+#+lispworks6
+(dspec:define-dspec-alias deftvar (name) `(defvar ,name))
+
+; example 
+(deftvar *test1* integer :initial-value 123 :documentation "asfd")
+
+(defun foo () (with-the1 *test1* symbol 'asdf 123))
+(defun bar () (setf *test1* 'asdf) 123)
+(defun baz () (let ((*test1* 'asdf)) 123))
+

@@ -139,6 +139,7 @@
    budden-tools:with-conc-name  ; obsolete
    budden-tools:let-with-conc-type ; obsolete?
    budden-tools:with-the1
+   budden-tools:deftvar ; in compiled code, with-the1 and (:lett ) will be protected from re-binding with another type
 
    budden-tools:^ #| There is lispy form (^ A B) and infix form A^B.
        ^ can be considered as a \"dot\" in languages such as C,Java or Basic.
