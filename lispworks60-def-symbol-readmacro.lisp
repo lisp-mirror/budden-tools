@@ -1,4 +1,4 @@
-;;; -*- Encoding: utf-8; -*-
+;;; -*- Encoding: utf-8; system :see-packages -*-
 ; patching lispworks tools for def-symbol-readmacro reader extensions
 
 (in-package :budden-tools)
@@ -39,8 +39,8 @@
 (defun symbol-is-in-package (symbol package external-only)
   "Возвращает два значения: 1. t, если данный символ доступен в данном пакете. Если external-only, то возвращает t, только если он внешний в данном пакете
    2. статус из find-symbol, если символ доступен"
-  (proga
-    (multiple-value-bind (other-symbol status) (find-symbol (symbol-name symbol) package))
+  (perga-implementation:perga
+    (:@ mlvl-bind (other-symbol status) (find-symbol (symbol-name symbol) package))
     (cond
      ((null symbol)
       (cond ((null other-symbol) (values t status))
@@ -52,7 +52,7 @@
      (t nil))))
 
 (defun may-symbol-complete-symbol (symbol default-package partial-name external-only all-chars-in-same-case-p)
-  (proga
+  (perga-implementation:perga
     (cond
      ((not (symbol-is-in-package symbol default-package external-only))
            nil)
@@ -136,7 +136,7 @@ NIL
 (decorate-function 'editor::symbol-string-at-point #'decorated-symbol-string-at-point)
 
 (defun extract-symbol-string-from-point-with-range (pnt)
-  (proga function
+  (perga-implementation:perga function
     (let string (editor::i-read-symbol-from-point pnt t nil t))
     (let offset (length (editor::i-read-symbol-from-point pnt t t t)))
     (let beg (editor::copy-point pnt :kind :temporary))
@@ -153,7 +153,7 @@ NIL
 
 (defun do-fix-case-of-symbol-at-point (pnt)
   "To be called from editor command only"
-  (proga
+  (perga-implementation:perga
     (mlvl-bind (string beg end) (extract-symbol-string-from-point-with-range pnt))
     ;(show-expr `(,string ,beg ,end))
     (editor:delete-between-points beg end)
@@ -596,7 +596,7 @@ Str - входная строка, для которой необходимо з
 
 (defun decorated-intern-symbol-from-string (fn string &optional default-package)
   (declare (ignore fn))
-  (proga function 
+  (perga-implementation:perga function 
     (let res 
       (let ((*package* (or default-package *package*)))
         (read-from-string string nil "")))
@@ -635,7 +635,7 @@ Str - входная строка, для которой необходимо з
 (editor::defcommand "Complete Package Name"
      (p) "Complete package at point" "Complete package at point"
   (declare (ignorable p))
-  (proga all
+  (perga-implementation:perga all
     (let package (editor::buffer-package-to-use (editor:current-point)))
     (flet last-elt (sequence) 
       (let len (length sequence))
