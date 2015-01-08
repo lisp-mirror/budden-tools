@@ -615,6 +615,23 @@ Str - входная строка, для которой необходимо з
   (declare (ignorable p))
   (setf *readtable* (copy-readtable nil)))
 
+
+(defun list-all-packages-with-nicknames ()
+  (let (result)
+    (dolist (p (list-all-packages))
+      (push p result)
+      (dolist (n (package-nicknames p))
+        (push (cons n p) result))
+      )
+    (nreverse result)
+    ))
+
+(defun package-string-or-symbol-to-string (x)
+  (etypecase x
+    (package (package-name x))
+    (string x)
+    (symbol (string x))))
+
 (editor::defcommand "Complete Package Name"
      (p) "Complete package at point" "Complete package at point"
   (declare (ignorable p))
@@ -641,10 +658,10 @@ Str - входная строка, для которой необходимо з
     (mlvl-bind (titles prefixes)
         (iter 
           (:for p in (append (gethash package *per-package-alias-table*)
-                             (list-all-packages)))
+                             (list-all-packages-with-nicknames)))
           (:for title = (typecase p 
                           (cons 
-                           (str++ (car p) '= (cdr p)))
+                           (str++ (car p) '= (package-string-or-symbol-to-string (cdr p))))
                           (package (package-name p))))
           (:for prefix = (typecase p
                            (cons (string (car p)))
@@ -658,7 +675,9 @@ Str - входная строка, для которой необходимо з
       (cond ((= (length titles) 0) 
              (editor:message "No package names to complete ~A" partial-name)
              nil)
-            ((= (length titles) 1) (first titles))
+            ((and (= (length titles) 1)
+                  (string= (first titles) (first prefixes)))
+             (first titles))
             (t
              (capi:prompt-with-list
               titles
