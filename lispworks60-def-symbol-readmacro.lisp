@@ -692,7 +692,7 @@ Str - входная строка, для которой необходимо з
                           (string-downcase 
                            (str++ prefix (if starts-with-colon "" ":"))))))
      
-(editor::bind-key "Complete Package Name" "control-meta-j")
+; (editor::bind-key "Complete Package Name" "control-meta-j")
 
 
 #| 
