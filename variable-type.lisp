@@ -318,15 +318,25 @@
   `(progn
      (defvar ,var ,@(when initial-value-supplied-p `((the* ,type ,initial-value))))
      (proclaim '(type ,type ,var))
-     ,@(when documentation `((setf (documentation ',var 'variable) ,documentation)))))
+     ,@(when documentation `((setf (documentation ',var 'variable) ,documentation)))
+     ',var))
 
 #+lispworks6
 (dspec:define-dspec-alias deftvar (name) `(defvar ,name))
 
-; example 
-(deftvar *test1* integer :initial-value 123 :documentation "asfd")
+(defmacro deftparameter (var type &key documentation (initial-value nil initial-value-supplied-p))
+  "def-typed-parameter. See detfvar"  
+  `(progn
+     (defparameter ,var ,@(when initial-value-supplied-p `((the* ,type ,initial-value))))
+     (proclaim '(type ,type ,var))
+     ,@(when documentation `((setf (documentation ',var 'variable) ,documentation)))
+     ',var))
 
-(defun foo () (with-the1 *test1* symbol 'asdf 123))
-(defun bar () (setf *test1* 'asdf) 123)
-(defun baz () (let ((*test1* 'asdf)) 123))
+#+lispworks6
+(dspec:define-dspec-alias deftparameter (name) `(defvar ,name))
+
+
+
+; example (deftvar *test1* integer :initial-value 123 :documentation "asfd")
+
 
