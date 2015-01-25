@@ -7,7 +7,7 @@
 
 (defsystem :see-packages
 	:serial t
-        :depends-on (:cl-utilities :budden-tools :swank :decorate-function)	
+        :depends-on (:cl-utilities :budden-tools :swank :decorate-function :iterate-keywords)	
 	:components
         (
 	(:file "see-packages-vars-and-macros")
@@ -24,6 +24,7 @@
         (:file "cons-to-source" :description "Alternative to ~{ ~} format to product source code from conses")
 	;2012-12-19 (:russian-file "see-packages-test")
         #+(and lispworks6 win32) (:file "test-sbcl-reader-budden-tools-lispworks")
+        (:file "here-document" :description "Alternative string syntax - like here documents in shell")
 	)
 	)
 

@@ -26,8 +26,8 @@
         'of-system ; declare that file is in system
         )
 
-(eval-when (:compile-toplevel)
-  (error "load this file as a source, don't compile it!"))
+;(eval-when (:compile-toplevel)
+;  (error "load this file as a source, don't compile it!"))
 
 'mark-operation-done ; let's put this symbol here temporary
 
@@ -148,15 +148,6 @@ Find a path to fasls
         (format out "~A~%" line)))))
  
 
-
-(oos 'load-op :md5)
-(oos 'load-op :cl-fad)
-
-(defparameter *tabooed-system-names*
-  #+sbcl '(:asdf-install :sb-aclrepl :sb-bsd-sockets :sb-cltl2 #+ignore :sb-cover :sb-grovel :sb-md5 :sb-posix :sb-rotate-byte :sb-rt :sb-simple-streams)
-  #-sbcl nil
-  "Systems which should never be undefined as they're part of implemetation source")
-
 #| :asdf2 does not work with cache (defun delete-fasls-on-system (system-name fasl-type)
   "Deletes all fasl files of system (w/o dependents)"
   (unless (member system-name *tabooed-system-names* :test 'equalp)
@@ -170,12 +161,6 @@ Find a path to fasls
           (cl-fad:walk-directory dir 'print       :directories t :test (lambda (p) (string= (pathname-type p) fasl-type)))
         (break "Continue if you believe list of fasls is correct")
         (cl-fad:walk-directory dir 'delete-file :directories t :test (lambda (p) (string= (pathname-type p) fasl-type))))))) |#
-
-(defun delete-fasls-in-directory (directory fasl-type)
-  "Sometimes it looks more safe than recursive deletion of fasls on system"
-  (cl-fad:walk-directory directory 'print :directories t :test (lambda (p) (string= (pathname-type p) fasl-type)))
-  (cl-fad:walk-directory directory 'delete-file :directories t :test (lambda (p) (string= (pathname-type p) fasl-type)))
-  )
 
 #| :asdf3.1 - was not used, needs more testing
 (defclass stat-op (operation) ()
@@ -265,6 +250,10 @@ To call, do (operate 'walk-op :am-util :force t :walk-function (lambda (x y) (pr
   (format *debug-io* "Still don't know how to edit ~S source" c))
 (define-symbol-macro e (edit-component-source *current-component*))
 (define-symbol-macro ep (edit-component-source (component-parent *current-component*)))
+
+
+#+asdf3.1
+(defvar *current-component*)
 
 #+asdf3.1
 (defmethod perform-with-restarts :around (operation component)
