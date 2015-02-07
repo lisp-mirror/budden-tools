@@ -1112,21 +1112,25 @@ variables to allow for nested and thread safe reading."
 
         (let ((symbol
                (block nil
-                 (if (or (zerop colons) (= colons 2) (eq found *keyword-package*))
-                     (if (= colons 2)
-                         (return (budden-tools::intern-check-forbidden (subseq *read-buffer* 0 *ouch-ptr*) found stream))
-                       (return (intern* *read-buffer* *ouch-ptr* found)))
+                 (cond
+                  ((= colons 2)
+                   (return (budden-tools::intern-check-forbidden (subseq *read-buffer* 0 *ouch-ptr*) found stream t)))
+                  ((eq found *keyword-package*)
+                   (return (intern* *read-buffer* *ouch-ptr* found)))
+                  ((zerop colons)
+                   (return (budden-tools::intern-check-forbidden (subseq *read-buffer* 0 *ouch-ptr*) found stream nil)))
+                  (t 
                    (multiple-value-bind (symbol test)
                        (find-symbol* *read-buffer* *ouch-ptr* found)
                      (when (eq test :external) (return symbol))
                      (let ((name (read-buffer-to-string)))
                        (with-simple-restart (continue "Use symbol anyway.")
                          (simple-reader-error stream (if test
-                                                  "The symbol ~S is not external in the ~A package."
-                                                "Symbol ~S not found in the ~A package.")
+                                                         "The symbol ~S is not external in the ~A package."
+                                                       "Symbol ~S not found in the ~A package.")
                                               name (package-name found)
                                               ))
-                       (return (intern name found))))))))
+                       (return (intern name found)))))))))
           (when (not seen-multiple-escapes)
           (let ((readmacro (budden-tools::symbol-readmacro symbol)))
             (when (and readmacro (not budden-tools::*inhibit-readmacro*))
