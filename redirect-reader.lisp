@@ -124,13 +124,13 @@ is already an altered readtable, simply returns it"
   )
 )
 
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; Change printer if needed ;;;;;;;;;;;;;;;;;;;;;;;;
 #+lispworks6 
 (decorate-function::PORTABLY-WITHOUT-PACKAGE-LOCKS
 
 ; non-toplevel
 (defmethod print-object :around ((o symbol) s)
+  ;(format s (string o))
     (cond
      (*print-readably*
       (let ((*readtable* *cached-default-readtable*)
@@ -181,13 +181,28 @@ is already an altered readtable, simply returns it"
     ;(with-good-readtable-2 (:ensure-this-is-a-bad-one nil)
       (call-next-method)))) |#
 
-#+lispworks6
-(decorate-function::PORTABLY-WITHOUT-PACKAGE-LOCKS
+#| #+lispworks6
+ (decorate-function::PORTABLY-WITHOUT-PACKAGE-LOCKS
   (defmethod print-object :around ((o structure-object) s)
-    "Lispworks6 prints '|ASDF| as \\A\\S\\D\\F in our readtables. As a quick fix,
-     we just set up 'good' readtable around printing"
-    (let1 *readtable* *cached-default-readtable* 
-      (call-next-method)
-      )
-    ))
+    "Lispworks6 prints '|ASDF| as \\A\\S\\D\\F in our readtables. Try to bind
+     system:*print-symbols-using-bars*"
+    (call-next-method)
+    ;(let ((SYSTEM:*print-symbols-using-bars* t))
+    ;  (call-next-method))
+    ;old (let1 *readtable* *cached-default-readtable* 
+    ;old  (call-next-method)
+    ;old  )
+    )) |#
+
+#+lispworks6
+(lispworks:defadvice (SYSTEM::write-symbol-as-keyword fix-keyword-printing-for-our-readtables :around)
+    (symbol output-stream)
+  (cond
+   ((eq (readtable-name *readtable*) :buddens-readtable-a)
+    (write (keywordize symbol) :stream output-stream))
+   (t
+    (LISPWORKS:call-next-advice symbol output-stream)
+    )))
+    
+
 
