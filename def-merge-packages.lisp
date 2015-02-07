@@ -183,13 +183,14 @@ function you most likely want to use."
       other-pack:reexported ; this won't be replaced
       \"))
   " 
-  (let ((nickname (string nickname)))
+  (let* ((nickname (string nickname))
+         (expr1 (concatenate 'string nickname "::")) ; package::
+         (expr2 (concatenate 'string nickname ":")) ; package:
+         (processed1 (search-and-replace-seq 'string string expr1 "#:" :all t :test 'equalp))
+         (processed2 (search-and-replace-seq 'string processed1 expr2 "#:" :all t :test 'equalp))
+         (clause-string (concatenate 'string "(" processed2 ")")))
     `(:export
-      ,@(with-input-from-string (s (concatenate 'string
-                                                "(" 
-                                                (search-and-replace-seq 
-                                                 'string string 
-                                                 (concatenate 'string nickname ":") "#:" :all t :test 'equalp) ")"))
+      ,@(with-input-from-string (s clause-string)
           (export2-reader s nil)))))
 
 (defun set-package-lock-portably (package lock)
