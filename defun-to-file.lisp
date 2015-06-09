@@ -69,17 +69,23 @@
   #+russian "Определяет функцию с таким исходником в файле с именем *defun-to-file-directory*/имя-функции.
 Имя функции должно быть допустимым именем файла и не должно содержать всяких мерзких символов. 
 Нужно бы добавить сюда ещё имя пакета, но пока не сделано. Для лиспворкс 4 в функции не могут быть gensyms, т.к. они криво
-печатаются (что, в общем-то сводит всю идею на нет). Возвращает два значения - имя функции и имя файла"
+печатаются (что, в общем-то сводит всю идею на нет). Возвращает два значения - имя функции и имя файла. Если определить таким способом ф-ю CamelCase, а затем CAMELCASE, то определение CamelCase пропадёт, поскольку имена файлов в Windows нечувствительны к регистру."
+  #-russian "Works like defun, but writes source to file named *defun-to-file-directory*/function-name. 
+ Function name must be a valid filename. Returns two values: function name and filename. Beware lowercase vs uppercase
+ problem: if you defun-to-file CamelCase function and then CAMELCASE, first function will be overwritten as filenames coincide in Windows" 
   (perga-implementation:perga
     (assert (every (lambda (!1) (not (find !1 "\\/.?* "))) (string name)))
     (let filename (str+ (namestring *defun-to-file-directory*) name))
     (perga-implementation:perga
       (:@ with-open-file (out (str+ filename ".lisp") :direction :output
-        :if-does-not-exist :create :if-exists :supersede))
+        :if-does-not-exist :create :if-exists :supersede
+        :external-format :utf-8))
       #+lispworks6 (let *print-circle* t *print-readably* t *print-pretty* t)
 ;      (let *print-circle* t *print-pretty* t)
       #-lispworks6 (let *print-pretty* t)
-      #+lispworks6 (format out ";;; generated with budden-tools::defun-to-file from ~S~%" (LISPWORKS:current-pathname))
+      #+lispworks6 (format out
+                           ";;; -*- Encoding: utf-8; -*-~%;;; generated with budden-tools::defun-to-file from ~S~%"
+                           (LISPWORKS:current-pathname))
       (print `(in-package ,(def-merge-packages:keywordize-package-designator
                             (package-name *package*))) out)
       (print `(in-readtable :buddens-readtable-a) out)
