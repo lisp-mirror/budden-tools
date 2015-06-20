@@ -22,6 +22,7 @@
 ;    This can be fixed, but I have no time for this. Use (break),(cerror) or
 ;    (trace with break) as the stepper entry points
 ;  - source is not unhighlighted as execution lives the frame
+;     try (EDITOR::delete-highlight-points buffer)
 ;  - separate :sc continue command distinct from :c command. 
 ;  - stepper uses traps ("Break on return from frame"),
 ;    so if you set traps manually they will work incorrectly
@@ -951,6 +952,7 @@
 ;;-------------------------------- INTERFACE ------------
 ;;-------------------------------------------------------
 (defun ! (function &rest args)
+  "Step function with args"
   (stepize-fn function)
   (let ((*stepping-enabled* t))
     (apply function args)))
