@@ -182,7 +182,7 @@
                     stream::ef-file-stream
                     stream::file-stream))
            (return-from function
-             (edit-stream-position (slot-value dbg::*debug-condition* 'stream) nil t))))
+             (edit-stream-position (slot-value dbg::*debug-condition* 'stream) nil nil))))
          ((and (pathnamep cur-pathname)
                (not (LISPWORKS:file-directory-p cur-pathname))
                (not (member (pathname-type cur-pathname)
@@ -202,11 +202,11 @@
       (let all-positions 
         (append (list close) opens))
       (let filename (budden-tools::extract-source-filename-from-stream stream))
-      (when (typep stream '(or stream::ef-file-stream stream::file-stream))
+      #|(when (typep stream '(or stream::ef-file-stream stream::file-stream))
         (setf all-positions
               (mapcar (lambda (x) 
                         (EDITOR-BUDDEN-TOOLS::fix-offset-2 filename x))
-                      all-positions)))
+                      all-positions)))|#
       (unless all-positions
         (setf *error-browser-context* nil)
         (princ "No positions to browse")

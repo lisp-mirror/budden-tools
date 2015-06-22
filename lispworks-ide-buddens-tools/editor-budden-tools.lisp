@@ -430,13 +430,16 @@ end.
 
 (defun real-point-offset (point) 
   "offset of the point is not an offset indeed. Trying to calculate real offset relative to buffer start"
+  #+lispworks
   (let ((result 
          (+ (point-offset point) (slot-value (editor::point-bigline point) 'editor::start-char))))
     (unless (= result (editor::find-point-offset (point-buffer point) point))
       (cerror "продолжить"
        "нашёл функцию в редакторе, к-рая делает то же самое, что и real-point-offset. Надеялся, что они одинаковы")
       )
-    result))
+    result)
+  #-lispworks
+  (error "not implemented in this lisp"))
 
 #|(defcommand "hg" (p) "Calls hg on current file"
      (declare (ignorable p))
@@ -697,8 +700,11 @@ end.
 
 (defun fix-offset-2 (pathname offset)
   "Имеется числовой offset, к-рый вернул file-position. Давайте попробуем превратить его в 
-  row-col-offset"
-  (perga
+  row-col-offset. См. также BUDDEN-TOOLS::input-stream-position-in-chars"
+  (with-open-file (stream pathname)
+    (let ((map (budden-tools::ensure-file-position-to-char-position-for-stream stream)))
+       (budden-tools::file-position-and-map-to-char-position offset map)))
+  #|(perga
     (when (typep offset 'row-col-offset)
       (warn "fix-offset-2: attempted to fix row-col-offset")
       (return-from fix-offset-2 offset))
@@ -728,18 +734,16 @@ end.
              (warn "fix-offset-2: got Return character!"))
             (t
              (incf b-offset)
-             (incf col)))))))))
+             (incf col))))))))|#)
 
       
 
 (DEFUN GOTO-OFFSET (PATHNAME OFFSET &KEY KILL-BUFFER (set-foreground-window t) subtract-no-of-newlines)
-  "Offset измеряется неизвестно в чём. Иногда бывает, что его нужно поправить
- на количетсво символов (code-char 10), входящих в файл, т.к. конец строки - это две буквы в файле, но одна буква в потоке или в буфере, или чёрт его разберёт где. 
+  "Offset может быть:
+  - структурой row-col-offset
+  - смещением в буквах
+  - file-position. В этом случае нужно передать аргумент subtract-no-of-newlines
 
-  Неизвестен лучший способ внести поправку, если она нужна, чем посчитать все буквы
-  конца строки. Если вы хотите, чтоыб поправка была внесена, передайте
-  subtract-no-of-newlines t. 
-  offset также может быть структурой row-col-offset.
   См. также editor::count-lines, editor::what-line-command
   
   Данная команда не сработает при отсутствии редактора. При kill-buffer опасно, т.к. закрывает файл без изменений. 
@@ -853,7 +857,6 @@ end.
       )
      (t
       (values nil nil)))))
-
 
        
 (lw:defadvice (editor::get-symbol-from-point get-symbol-from-point-around-advice :around)
@@ -1168,20 +1171,6 @@ end of buffer. Returns 0 if it found neither start nor end, 1 if it found start,
                         name2 "This is the system of this buffer")
     (update-buffer-modelines buffer)))
 
-
-#| Есть сомнения в нужности этого
-
- (editor::define-file-option "Readtable" (buffer value)
-  (perga
-    (mlvl-bind (p name) (starts-with-subseq ":" value :return-suffix t))
-    (:lett name2 string (if p name value))
-    (editor::def-ed-var 'readtable
-                        :buffer buffer
-                        name2 "This is the readtable of this buffer")
-    (update-buffer-modelines buffer)))
-
-|#
-
   #|
   (set-buffer-current-package buffer
    (let ((form (ignore-errors (read-from-string value nil nil))))
@@ -1212,19 +1201,10 @@ end of buffer. Returns 0 if it found neither start nor end, 1 if it found start,
            (buffer (buffer-value buffer 'system))
            (t nil)))
          (system-str
-          (if system (str+ "     s " system) ""))
-         #|(readtable
-          (cond
-           (buffer (buffer-value buffer 'readtable))
-           (t nil)))
-         (readtable-str
-          (if readtable (str+ " rt " readtable) ""))|#
-         )
+          (if system (str+ "     s " system) "")))
     (setf (nth 3 res)
           (str++ "p " (nth 3 res)
-                 system-str
-                 ;readtable-str
-                 ))
+                 system-str))
     (apply 'values res)))
  
       
