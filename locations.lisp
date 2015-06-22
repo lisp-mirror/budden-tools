@@ -379,7 +379,7 @@ srcpl - symbol-readmacro. Прочитать объект и запрограм�
 ;  (declare (optimize speed))
   (let*
       ((track-locations-value (track-locations))
-       (dst-beg (and track-locations-value (extract-file-position stream)))
+       (dst-beg (and track-locations-value (input-stream-position-in-chars stream)))
        (delegate (and track-locations-value (get-stream-location-map-delegate stream)))
        )
     (prog1
@@ -420,7 +420,8 @@ srcpl - symbol-readmacro. Прочитать объект и запрограм�
 (defun extract-source-filename-from-stream (stream)
   "Посмотреть в SLIME"
 ;  (declare (optimize speed))
-  #-lispworks (error "Not implemented")
+  #-(or lispworks sbcl)
+  (note-not-implemented-for-this-lisp extract-source-filename-from-stream)
   #+lispworks
   (etypecase stream
     (editor::editor-region-stream
@@ -428,13 +429,18 @@ srcpl - symbol-readmacro. Прочитать объект и запрограм�
     (stream::ef-file-stream (slot-value (slot-value stream 'stream::underlying-stream) 'stream::path))
     (stream::file-stream (slot-value stream 'stream::path))
     (string-stream nil)
-    ))
+    )
+  #+sbcl
+  (etypecase stream
+    (file-stream (slot-value stream 'file))
+    (string-stream nil))
+  )
 
 (defun real-point-offset (point) 
   "Дубль аналогичной функции из editor-budden-tools"
   #+lispworks
   (+ (editor::point-offset point) (slot-value (editor::point-bigline point) 'editor::start-char))
-  #-lispworks 
+  #-lispworks
   (error "Not implemented"))
 
 (defvar *stream-line-count* 
@@ -457,10 +463,16 @@ srcpl - symbol-readmacro. Прочитать объект и запрограм�
   (gethash stream *stream-line-count* 0)
   )
 
+(defstruct string-hider "Structure for hiding strings when printing" string)
+(defmethod print-object ((x string-hider) stream)
+  (print-unreadable-object (x stream :type t :identity t) 
+    ))
 
-(defstruct row-col-offset "Хранит положение в файле. 
-  Строки и колонки начинаются с 1 (надо отметить, что в EMACS колонки начинаются с 0). Может опционально хранить offset в буфере или файле"
-  (row 0) (col 0) b-offset f-offset)
+; FIXME rename в file-source-offset или что-нибудь в этом роде
+(defstruct row-col-offset "Хранит положение в файле"
+  (row 0) (col 0)
+  b-offset ; положение в буквах
+  )
 
 #+lispworks 
 (defun buffer-offset-to-row-col-offset (buffer offset-or-point)
@@ -492,29 +504,177 @@ srcpl - symbol-readmacro. Прочитать объект и запрограм�
     (row-col-offset
      (row-col-offset-b-offset offset-or-row-col-offset)
      )))
-      
-      
-#+lispworks 
-(defun point-file-offset (point)
-  (let* ((buffer (editor::point-buffer point))
-         (lineno (editor::count-lines (editor::buffers-start buffer) point)))
-    (+ (real-point-offset point) lineno)))
 
 
+(defmacro note-not-implemented-for-this-lisp (symbol)
+  "Issues warning at compile-time and error at runtime"
+  (let ((format "~A not implemented for this lisp"))
+    (warn format symbol)
+    `(error ,format ',symbol)))      
+     
 ; Здесь переделать в row-col-offset и проследить, где используется, там заменить.
 
-(defun extract-file-position (stream)
-  "Возвращает текущую позицию в потоке. Для editor-region-stream - в виде row-col-offset, иначе - число - смещение в файле" 
-  (typecase stream
+(defun buffer-extract-string (buffer)
+  "Возвращает весь текст из буфера как одну строку"
+  #+lispworks
+  (perga-implementation:perga
+    (let start (editor:buffers-start buffer))
+    (let end (editor:buffers-end buffer))
+    (EDITOR:points-to-string start end))
+  #-lispworks
+  (error "editor-entire-buffer-as-string not implemented for this lisp")
+  )
+
+(defun string-stream-extract-string (stream)
+  "Крадёт строку из входящего потока чтения из строки"
+  #+lispworks
+  (let ((s (the* SYSTEM::string-input-stream stream)))
+    (slot-value (slot-value s 'stream::buffer-state) 'stream::input-buffer))
+  #+sbcl
+  (let ((s (the* sb-impl::string-input-stream stream)))
+    (slot-value (slot-value s 'string)))
+  #-(or sbcl lispworks)
+  (note-not-implemented-for-this-lisp string-stream-extract-string)
+  )
+
+(defun file-stream-extract-encoding (stream)
+  #+lispworks
+  (etypecase stream
+    (STREAM::ef-file-stream
+     (slot-value
+      (slot-value stream 'STREAM::ef-details)
+      'stream::ef-spec
+      )))
+  #+sbcl
+  (etypecase stream
+    (sb-sys::fd-stream
+     (slot-value stream 'sb-impl::external-format)))
+  #-(or lispworks sbcl)
+  (note-not-implemented-for-this-lisp file-stream-extract-encoding)
+  )
+
+
+(defun file-stream-extract-string (stream)
+  (break "untested and unused!")
+  (let* ((filename (extract-source-filename-from-stream stream))
+         (ef (file-stream-extract-encoding stream)))
+    (assert filename)
+    (read-file-into-string filename :external-format ef)))
+
+(defun extract-entire-string-from-stream (stream)
+  "Предназначено для потоков известного содержимого (т.е. не получаемых из сети), а именно, потоков, получаемых из файла, строки или редактора. Возвращает все данные потока (в т.ч. и будущие целиком в виде строки"
+  (break "untested and unused!")
+  (etypecase stream
+    #+lispworks
+    (editor::editor-region-stream
+     (buffer-extract-string (editor:point-buffer (slot-value stream 'editor::point))))
+    (file-stream
+     (file-stream-extract-string stream))
+    (string-stream
+     (string-stream-extract-string stream))
+    ))
+
+
+(defun fp-half-divide-to-floor (f field)
+  "Ищет в двумерном массиве field Nx2 по первому эл-ту второй. Находит вхождение, где первый эл-т, меньше или равен f. Если несколько эл-тов одинаковы, выберет какой-то из них. Если эл-т меньше минимального, то это ошибка. Если больше максимального - вернёт максимальный"
+  (perga-implementation:perga function
+    (let len (array-dimension field 0))
+    (let a 0)
+    (let b (- len 1))
+    (let f_a (aref field a 0))
+    (let f_b (aref field b 0))
+    (flet do-return (x f_x)
+      (return-from function (values x f_x (aref field x 1))))
+    (loop
+     ;(when (= b a)
+     ;  (return-from function (values a f_a (aref field a 1))))
+     (cond
+      ((not (<= f_a f))
+       (error "hp-half-divide: out of range"))
+      ((<= f f_a) (do-return a f_a))
+      ((<= f_b f) (do-return b f_b))
+      ((> (+ a 2) b) (do-return a f_a))
+      )
+     (let xm (ceiling (/ (+ a b) 2)))
+     (let f_xm (aref field xm 0))
+     (cond
+      ((<= f f_xm)
+       (setf b xm f_b f_xm))
+      ((<= f_xm f) 
+       (setf a xm f_a f_xm))
+      (t
+       (error "something is wrong")))
+     ;(print xm)
+     )))
+
+(defun build-file-position-to-char-position-map (stream)
+  "Возвращает nil либо 2-мерный массив соответствий, по к-рому нужно искать двоичным поиском"
+  (perga-implementation:perga
+    (:lett stream file-stream stream)
+    (let map-list nil)
+    (let cur-char-position 0)
+    (let filename (extract-source-filename-from-stream stream))
+    (let ef (file-stream-extract-encoding stream))
+    (:@ with-open-file (in filename :external-format ef))
+    (push (cons 0 0) map-list)
+    (loop
+     (let line (read-line in nil nil))
+     (unless line (return))
+     (_f + cur-char-position (length line) 1)
+     (push (cons (file-position in) cur-char-position) map-list)
+     )
+    (_f nreverse map-list)
+    (let map-size (length map-list))
+    (let result (make-array (list map-size 2)))
+    (let i 0)
+    (dolist (l map-list)
+      (setf (aref result i 0) (car l))
+      (setf (aref result i 1) (cdr l))
+      (incf i))
+    result))
+
+(defun file-position-and-map-to-char-position (file-position map)
+  "map получаем из build-file-position-to-char-position-map"
+  (perga-implementation:perga
+    (:@ mlvl-bind (index start-file-offset start-char-offset)
+     (fp-half-divide-to-floor file-position map))
+    (ignored index)
+    (+ file-position (- start-file-offset) start-char-offset)))
+
+
+(defvar *stream-to-file-position-to-char-position-maps*
+  (SWANK-BACKEND:make-weak-key-hash-table :test 'eq)
+  "Потоку сопоставляем карту соответствий между file-position и char-position")
+
+(defun ensure-file-position-to-char-position-for-stream (stream)
+  (perga-implementation:perga
+    (:lett stream file-stream stream)
+    (let res (gethash stream *stream-to-file-position-to-char-position-maps*))
+    (unless res
+      (setf res (build-file-position-to-char-position-map stream))
+      (setf (gethash stream *stream-to-file-position-to-char-position-maps*) res))
+    res))
+
+(defun input-stream-position-in-chars (stream)
+  "Возвращает текущую позицию в потоке в буквах. В отличие от обычного file-position, к-рый извлекает её в буквах исходного файла - может отличаться на cr/lf. 
+  См. также EDITOR-BUDDEN-TOOLS::fix-offset-2"
+  (etypecase stream
+    (string-stream (file-position stream))
+    (file-stream
+     (let ((map (ensure-file-position-to-char-position-for-stream stream)))
+       (file-position-and-map-to-char-position (file-position stream) map)))
     #+lispworks
     (editor::editor-region-stream
      (let ((point (slot-value stream 'editor::point)))
        (buffer-offset-to-row-col-offset
         (EDITOR:point-buffer point)
-        point)))
-    (t (file-position stream))))
- 
-        
+        point)))))
+
+; FIXME Deprecated - используй input-stream-position-in-chars 
+(defun extract-file-position (stream)
+  "Возвращает текущую позицию в потоке в буквах. В отличие от обычного file-position, к-рый извлекает её в буквах исходного файла - может отличаться на cr/lf. " 
+  (input-stream-position-in-chars stream))
+       
 ;;; сделать аналогично для лексемы. 
 ;;; потом сделаем слияние-упрощение
 
@@ -597,3 +757,18 @@ srcpl - symbol-readmacro. Прочитать объект и запрограм�
 
 
 (setf (symbol-readmacro (intern "SRCPL" :budden-tools)) #'srcpl-reader)
+
+(defun do-my-sanity-check ()
+  (let ((ss (open #.*compile-file-truename*)))
+    (assert (= (input-stream-position-in-chars ss) 0))
+    (read-line ss)
+    (read-line ss)
+    (show-expr (input-stream-position-in-chars ss))
+    (show-expr (file-position ss))
+    (assert (= (input-stream-position-in-chars ss) 61))
+    (print "sanity check ok")
+    ))
+
+(do-my-sanity-check)
+    
+      
