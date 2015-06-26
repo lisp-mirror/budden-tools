@@ -1,1 +1,81 @@
-Maybe will write it later.
+----- ENSLISH -------------------
+
+- Local package nicknames.
+
+- automatic and safe duplicate symbols resolution. When you define new package with def-merge-packages::!, conflicting symbols from used packages do not break execution. Their names become forbidden in new package by default so you just can't read them through the reader. You can overwrite the default with shadowing-import as usual and use either of conflicting symbols.
+
+- You can also explicitly declare some symbol names as forbidden, useful to combat trash symbols.
+
+- symbol-readmacros. Now you can attach special reader functions to symbols. So, you can have foo:[ ... ] and bar:[ ... ] special readers with different sence and with no conflicts, so you can combine several DSLs without problems
+
+- named-readtables are included - address your readtables by their name
+
+- iterate-keywords - use keywords in iterate (iter (:for ...) (:collect ...)) - useful to avoid symbol names conflicts
+
+- alternative lispy syntax for lisp. Use less parens and less nesting levels for the same code, e.g. write (perga (let x 1) x) instead of (let ((x 1)) x)
+
+- compact typed bindings (perga (:lett x fixnum 1) x)
+
+- #L from iterate to write #L(cons !1 !2) instead of (lambda (x y) (cons x y))
+
+- compact code to access structure slots. Write var^slot instead of (mystruct-slot var)
+
+- lispworks specific: protect listener text before current prompt so that it can't be removed (which is a very confusing experience)
+
+- lispworks specific: concept of alternative stepper which is better integrated with debugger and does not recompile function as IDE's default stepper does.
+
+- lispworks specific: use :restart-with-keywords-risky command in a debugger to restart frames with keyword arguments
+
+- lispworks specific: use :smart-resolve-export-conflict debugger command to unintern a trash symbol conflicting with a non-trash symbol you trying to export from other package.
+
+- lispworks: concept of native code stepper. 
+
+- some asdf tools. E.g. when compilation or loading of file breaks while loading a system, you can edit the file or its system. Put (asdf::of-system) form into your file to know which system it belongs to.
+
+- misc: pass-by-reference for a places, readable printing of hash-tables, cyrillic upper/lower case conversions, map-directory, etc.
+
+------ RUSSIAN ---------------------------------
+
+Библиотека различных функций. В настоящее время совместима с Lispworks 6.
+
+- локальные псевдонимы пакетов, зависящие от текущего пакета
+
+- lispworks: completion символа с учётом локальных псевдонимов
+
+- def-symbol-readmacro - ридмакросы, привязанные не к сочетаниям букв, а к символам. Устраняют проблему дефицита букв для ридмакросов. Позволяют решать конфликты между ридмакросами, поскольку символ можно вызывать с префиксом пакета. Например, можно назначить разные смыслы для package1:[ ... ] и package2:[ ... ] и, включая в пакет тот из двух символов, который чаще используется, вызывать в том же коде и второй с префиксом пакета. В итоге на весь проект хватает одной таблицы чтения, её не нужно переключать.
+
+- автоматическое разрешение конфликтов при создании нового пакета. Если пакет :user использует :lib1 и :lib2 и между ними есть конфликт имени символа SYM, выдаётся warning, а не cerror. При этом, автоматически делается так, что в пакете :user попытка чтения неквалифицированного имени SYM будет вызывать ошибку чтения. Эта политика является более мягкой, чем обычная, и, в то же время, достаточно надёжной. Можно выбрать для :user тот или иной SYM с помощью :shadowing-import-from, тогда предупреждения не будет (и станет чуть менее понятно), а можно явно декларировать SYM как запрещённый, тогда не будет предупреждения при создании пакета.
+
+- пишем x^slot вместо (struct-slot x) - значительное сокращение объёма кода при интенсивном использовании структур.
+
+- обобщённый "крышечный" синтаксис. Можно придать выражению a^b произвольный смысл для заданной переменной a или для заданного типа значения a. Определение смысла может происходить статически (по декларированному типу переменной) или динамически (по типу объекта во время выполнения).
+
+- def-merge-packages::! - макрос для определения пакетов, интегрирующий перечисленные возможности. Помимо этого, позволяет задавать экспорт в виде user:symbol, а не #:symbol, что позволяет сразу от определения пакета перейти к определению символа. При этом, не плодит мусорных символов.
+
+- новый вариант :readtable-case. Символы, набранные в одинаковом регистре, приводятся к верхнему регистру, а идентификаторы camelCase читаются как есть. Практика показывает, что этот вариант хорошо совместим с существующим кодом и, в то же время, удобен для разработки нового кода.
+
+- iterate-keywords: версия iterate, где можно писать (iter (:for ...)) вместо (iter (for ...)) - устраняются все конфликты имён, связанные с использованием пакета iterate, и нет необходимости в (iter (iter:for ...))
+
+- lispworks: защита текста в листенере, чтобы нельзя было стереть подсказку и то, что перед ней (такое стирание приводит к большой путанице)
+
+- lispworks: с помощью команды отладчика :restart-with-keywords-risky можно перезапустить кадр стека с &key параметрами
+
+- lispworks: команда отладчика :smart-resolve-export-conflict убирает мусорный символ, конфликтующий с символом другого пакета, который мы пытаемся экспортировать. IDE не предлагает такой полезной возможности.
+
+- мелочи для asdf: например, если при компиляции или загрузке файла через asdf происходит ошибка, можно перейти к редактированию файла или его системы (псевдокоманды asdf::e, asdf::ep в отладчике). Помещайте форму (asdf::of-system) в ваши файлы, чтобы декларировать, к какой системе он принадлежит. Помещайте ; -*- ... ; System :m -*- в первой строчке файла, чтобы имя системы отображалось в окне сообщений редактора, а команда Find Current System Definition скакала к определению системы.
+
+- мелочи: имитация передачи параметров по ссылке, печать хеш-таблиц readably, работа с регистром букв кириллицы, map по дереву каталогов и т.п.
+
+- lispworks: если в файле может содержится команда (in-readtable имя), то команды Compile Defun, Evaluate Defun, Evaluate Last Form, Evaluate Region, Compile Region будут использовать эту таблицу чтения. Если такой команды в файле нет, таблица чтения будет привязана к значению (named-readtables:find-readtable nil). Для возможности писать (in-readtable) до (in-package), символ 'named-readtables:in-readtable импортирован в пакет :cl-user
+
+- lispworks: если используется таблица чтения :buddens-readtable-a, то при ошибке чтения во время компиляции нажмите в отладчике :e и с большой вероятностью откроется место в файле, где произошла ошибка. Буфер будет раскрашен цветами согласно вложенности вызовов (read)
+
+- lispworks: при компиляции файла в редакторе ofasl создаётся во временном каталоге. Тепрь ofasl-ы больше не будут мешаться под ногами в каталоге исходников
+
+- lispworks: поправлено расположение окошек в дебаггере - больше места для сообщений, меньше - для стека
+
+- lispworks: статус бар для листенера и его заполнение произвольной информацией (в нашем случае - в нём отображается текущая таблица чтения и т.п.)
+
+- lispworks: запрос перед закрытием листенера с любым вашим сообщением 
+
+- lispworks: концепт пошагового отладчика нативного кода
