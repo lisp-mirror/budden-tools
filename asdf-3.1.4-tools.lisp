@@ -239,7 +239,8 @@ To call, do (operate 'walk-op :am-util :force t :walk-function (lambda (x y) (pr
 
 (defun edit-file (filename)
   #+lispworks (editor:find-file-command nil filename)
-  #-lispworks (format *debug-io* "Still don't know how to open file for editing in this CL implementation")
+  #+sbcl (swank:ed-in-emacs filename)
+  #-(or lispworks sbcl) (format *debug-io* "Still don't know how to open file for editing in this CL implementation")
   )
 (defgeneric edit-component-source (c))
 (defmethod edit-component-source ((c source-file)) (edit-file (slot-value c 'absolute-pathname)))
