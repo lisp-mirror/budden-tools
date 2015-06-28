@@ -1,4 +1,4 @@
-﻿;;; -*- Encoding: utf-8; -*-
+;;; -*- Encoding: utf-8; -*-
 
 (in-package :budden-tools)
 
@@ -640,7 +640,7 @@ modifying form, e.g. @code{(_f + a b) @equiv{} (incf a b)}. See also __f. Modife
 
 
 
-(dspec:define-dspec-alias defparameter-always (x) `(defparameter ,x))
+#+lispworks (dspec:define-dspec-alias defparameter-always (x) `(defparameter ,x))
 
 (defmacro defparameter-always (name initial-value &optional (documentation nil docp))
   `(eval-when (:compile-toplevel :load-toplevel :execute)
