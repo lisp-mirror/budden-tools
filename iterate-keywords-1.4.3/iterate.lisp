@@ -83,7 +83,6 @@
 ;;;  - reducing and accum: RESULT-TYPE
 ;;;  - rethink types 
 ;;;  - how to type result var?
-;;;  - *list-end-test* should work with functions as well.
 ;;;  - (for var concatenate (from 1 to 10) (in '(a b c)) (next (gensym)))
 ;;;  -       (if (< var 10) 
 ;;;		 (next [from-to])
@@ -165,16 +164,6 @@
 ;;; This is like (declare (declare-variables)).
 
 (defvar *always-declare-variables* nil)
-
-;;; This is so the advanced user can choose how the end of a list is checked
-;;; for. 
-;;; There are three choices for termination predicate in FOR...ON and
-;;; FOR...IN, differing in their behavior on lists with a non-nil cdr:
-;;;    NULL: If lucky, will get an error when taking the cdr.  Bad choice.
-;;;    ATOM: Will terminate correctly with no error.
-;;;    ENDP: Will give an appropriate error message.
-
-(defparameter *list-end-test* 'atom)
 
 ;;; *result-var* is bound to a gensym before the clauses of an iterate
 ;;; form are processed.  In the generated code, the gensym is bound
@@ -310,7 +299,7 @@
     (return-from . 	    walk-cddr)
     (setq . 		    walk-setq)
     (symbol-macrolet . 	    walk-cddr-with-declarations)
-    (tagbody . 		    walk-cdr)
+    (tagbody . 		    walk-tagbody)
     (the . 		    walk-cddr)
     (throw . 		    walk-cdr) 
     (unwind-protect . 	    walk-cdr)
@@ -399,7 +388,6 @@
 
 (defvar *loop-body-wrappers*)
 
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 
@@ -454,6 +442,14 @@
 
 ) ;end eval-when
 
+(eval-when (:compile-toplevel :load-toplevel :execute)
+
+(defun list-of-forms? (x)
+  (and (consp x) (consp (car x))
+       (not (eq (caar x) 'lambda))))
+
+) ;end eval-when
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; SharpL. 
 ;;;
@@ -465,44 +461,45 @@
 ;;; e.g. #L(list !2 !3 !5) is equivalent to:
 ;;;      (lambda (!1 !2 !3 !4 !5) (declare (ignore !1 !4)) (list !2 !3 !5))
 
-(eval-when (:compile-toplevel :load-toplevel :execute)
-
-  (defvar *old-sharpL-func* (get-dispatch-macro-character #\# #\L))
+(eval-when (:compile-toplevel :execute)
 
   (defun sharpL-reader (stream subchar n-args)
     (declare (ignore subchar))
+    ;; Depending how an implementation chooses to expand `(,!1 (get-free-temp))
+    ;; at read-time, it might be a macro that must be expanded before groveling
+    ;; the resultant sexpr. Here it gets expanded in the null environment for
+    ;; lack of anything better. If the macro is sensitive to its lexical
+    ;; environment, it suggests perhaps an inappropriate use of #L.
+    ;; However, to support unforseen cases, we will use the original form as
+    ;; read for the resulting lambda's body. Moreover, rather than stuff new
+    ;; atoms into the body which is impossible if the representation is opaque,
+    ;; redirect "!" vars onto gensyms using SYMBOL-MACROLET.
     (let* ((form (read stream t nil t))
-	   (bang-vars (sort (bang-vars form) #'< :key #'bang-var-num))
-	   (bang-var-nums (mapcar #'bang-var-num bang-vars))
-	   (max-bv-num (if bang-vars
-			   (reduce #'max bang-var-nums :initial-value 0)
-			   0)))
-      (cond 
-	((null n-args)
-	 (setq n-args max-bv-num))
-	((< n-args max-bv-num)
-	 (error "#L: digit-string ~d specifies too few arguments" n-args)))
-      (let* ((bvars (let ((temp nil))
-		      (dotimes (i n-args (nreverse temp))
-			(push (make-bang-var (1+ i)) temp))))
-	     (args (mapcar #'(lambda (x) (declare (ignore x)) (gensym))
-			   bvars))
-	     (ignores (set-difference bvars bang-vars))
-	     (decl (if ignores `(declare (ignore .,ignores)) nil))
-	     (body (if (list-of-forms? form)
-		       (if decl (cons decl form) form)
-		       (if decl (list decl form) (list form))))
-	     (subbed-body (sublis (pairlis bvars args) body)))
-	`#'(lambda ,args ,.subbed-body))))
-  
-  (set-dispatch-macro-character #\# #\L #'sharpL-reader)
+	   (refd-!vars (sort (bang-vars (macroexpand form))
+                             #'< :key #'bang-var-num))
+	   (bang-var-nums (mapcar #'bang-var-num refd-!vars))
+	   (max-bv-num (if refd-!vars (car (last bang-var-nums)) 0)))
+      (cond ((null n-args)
+             (setq n-args max-bv-num))
+            ((< n-args max-bv-num)
+             (error "#L: digit-string ~d specifies too few arguments" n-args)))
+      (let* ((all-!vars (loop for i from 1 to n-args collect (make-bang-var i)))
+	     (formals (mapcar (lambda (x) (declare (ignore x)) (gensym))
+                              all-!vars)))
+	`#'(lambda ,formals
+             ,@(let ((ignore (mapcan (lambda (!var tempvar)
+                                       (unless (member !var refd-!vars)
+                                         (list tempvar)))
+                                     all-!vars formals)))
+                 (if ignore `((declare (ignore ,@ignore)))))
+             (symbol-macrolet ,(mapcan (lambda (!var tempvar)
+                                         (when (member !var refd-!vars)
+                                           (list (list !var tempvar))))
+                                       all-!vars formals)
+               ,@(if (list-of-forms? form) form (list form)))))))
 
   (defun make-bang-var (n)
     (intern (format nil "!~d" n)))
-
-  (defun list-of-forms? (x)
-    (and (consp x) (consp (car x))
-	 (not (eq (caar x) 'lambda))))
 
   (defun bang-vars (form)
     (delete-duplicates (bang-vars-1 form '()) :test #'eq))
@@ -524,7 +521,24 @@
 	  (error "#L: ~a is not a valid variable specifier" sym)
 	  num)))
 
-  )					;end eval-when
+  (defun enable-sharpL-reader ()
+    (set-dispatch-macro-character #\# #\L #'sharpL-reader))
+
+  ;; According to CLHS, *readtable* must be rebound when compiling
+  ;; so we are free to reassign it to a copy and modify that copy.
+  (setf *readtable* (copy-readtable *readtable*))
+  (enable-sharpL-reader)
+
+  ) ; end eval-when
+
+#|
+;; Optionally set up Slime so that C-c C-c works with #L
+#+#.(cl:when (cl:find-package "SWANK") '(:and))
+(unless (assoc "ITERATE" swank:*readtable-alist* :test #'string=)
+  (bind ((*readtable* (copy-readtable *readtable*)))
+    (enable-sharpL-reader)
+    (push (cons "ITERATE" *readtable*) swank:*readtable-alist*)))
+;|#
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; The ITERATE macro.
@@ -573,14 +587,14 @@ Evaluate (iterk:display-iterate-clauses) for an overview of clauses"
       (prepend (default-driver-code) body)
       (let ((it-bod `(block ,*block-name*
 		      (tagbody
-			 ,.init-code
+			 (progn ,.init-code)
 			 ,*loop-top*
-			 ,.body
+			 (progn ,.body)
 			 ,.(if *loop-step-used?* (list *loop-step*))
-			 ,.steppers
+			 (progn ,.steppers)
 			 (go ,*loop-top*)
 			 ,.(if *loop-end-used?* (list *loop-end*))
-			 ,.final-code)
+			 (progn ,.final-code))
 		      ,(if (member *result-var* *bindings* :key #'car)
 			   *result-var*
 			   nil))))
@@ -980,6 +994,21 @@ Evaluate (iterk:display-iterate-clauses) for an overview of clauses"
     (return-code-modifying-body #'walk-arglist forms
 				#L(list (cons first (cons second (nconc decls !1)))))))
 
+(defun walk-tagbody (tagbody &rest statements)
+  (flet ((walk-statements (statements)
+	   (walk-list-nconcing
+	    statements
+	    #L(if (atom !1) (list !1) (walk !1))
+	    #'(lambda (form body)
+		(cond ((atom form) body)
+		      ;; wrap statements which expand into an atom
+		      ((typep body '(cons atom null))
+		       (list (cons 'progn body)))
+		      (t body))))))
+    (let ((*top-level?* nil))
+      (return-code-modifying-body
+       #'walk-statements statements
+       #L(list (cons tagbody !1))))))
 
 (defun walk-macrolet (form-name &rest stuff)
   (declare (ignore stuff))
@@ -1080,7 +1109,6 @@ Evaluate (iterk:display-iterate-clauses) for an overview of clauses"
 
 (defun symbol-synonym (symbol)
   (or (get symbol 'synonym) symbol))
-
 
 (eval-when (:compile-toplevel :load-toplevel :execute)
 
@@ -1312,9 +1340,13 @@ Evaluate (iterk:display-iterate-clauses) for an overview of clauses"
 	    (kw2 (clause-info-keywords ci2)))
 	(if (= insert-n 2)
 	    (rotatef kw1 kw2))
-	(error "Iterate: Inserting clause ~a would create ~
+	(restart-case
+            (error "Iterate: Inserting clause ~a would create ~
   an ambiguity with clause ~a"
-	       kw1 kw2))))
+                   kw1 kw2)
+          (delete-conflict ()
+            :report "Delete the original clause"
+            (remove-clause kw2))))))
 
 
 (defun ambiguous-clauses? (ci1 ci2)
@@ -1544,8 +1576,8 @@ Evaluate (iterk:display-iterate-clauses) for an overview of clauses"
 			 ,index-doc-string
 			 (cond 
 			  (with-index
-			   (clause-error "WITH-INDEX keyword should not ~
-  be specified for this clause"))
+			   (clause-error
+			    "WITH-INDEX should not be specified for this clause"))
 			  (t
 			   (setq with-index var)
 			   (return-sequence-code
@@ -2356,16 +2388,23 @@ e.g. (DSETQ (VALUES (a . b) nil c) form)"
   (mapc #'local-binding-check forms)
   (return-code :final-protected (copy-list forms)))
 
-;;; (if (FIRST-TIME-P) ...) returns true for the first time it is evaluated
-(def-special-clause FIRST-TIME-P ()
-  (let ((first-time-var (make-var-and-binding 'first-time t :type 'boolean)))
-    (return-code :body `(if ,first-time-var
-                         (progn
-                           (setf ,first-time-var nil)
-                           t)))))
+;;; (IF-FIRST-TIME then &optional else)
+(def-special-clause if-first-time (then &optional else)
+  "Evaluate branch depending on whether this clause is met for the first time"
+  (return-code :body (list
+		      (if-1st-time (list (walk-expr then))
+				   (if else (list (walk-expr else)))))))
 
-;;; (if (FIRST-ITERATION-P) ...) returns true in the first iteration of the loop
+;;; (FIRST-TIME-P)
+(def-special-clause FIRST-TIME-P ()
+  "True when evaluated for the first time"
+  (return-code :body (list (if-1st-time '(t)))))
+
+;;; (FIRST-ITERATION-P)
 (def-special-clause FIRST-ITERATION-P ()
+  "True within first iteration through the body"
+  ;; Like (with ,var = t) (after-each (setq ,var nil))
+  ;; except all these clauses shares a single binding.
   (let* ((entry (make-shared-binding 'first-iteration t :type 'boolean))
          (step-body nil)
          (first-usage (not (cddr entry)))
@@ -2518,12 +2557,10 @@ e.g. (DSETQ (VALUES (a . b) nil c) form)"
 (defclause-driver (for var on list &optional by (step ''cdr))
   "Sublists of a list"
   (top-level-check)
-  (let* ((list-var (make-var-and-default-binding 'list
-		    ;; Handle dotted lists unless *list-end-test* is NULLp
-		    :type (if (eq 'null *list-end-test*) 'list)))
+  (let* ((list-var (make-var-and-default-binding 'list))
+	 ;; Handle dotted lists, so type declaration is not possible
 	 (setqs (do-dsetq var list-var t 'list))
-	 ;; declaring type cons would be incompatible with initial value nil
-	 (test `(if (,*list-end-test* ,list-var) (go ,*loop-end*))))
+	 (test `(if (atom ,list-var) (go ,*loop-end*))))
     (setq *loop-end-used?* t)
     (return-driver-code :initial `((setq ,list-var ,list))
 			:next (list test
@@ -2536,10 +2573,9 @@ e.g. (DSETQ (VALUES (a . b) nil c) form)"
 (defclause-driver (for var in list &optional by (step ''cdr))
   "Elements of a list"
   (top-level-check)
-  (let* ((on-var (make-var-and-default-binding 'list :type 'list
-		    :type (if (eq 'null *list-end-test*) 'list 't)))
+  (let* ((on-var (make-var-and-default-binding 'list :type 'list))
 	 (setqs (do-dsetq var `(car ,on-var)))
-	 (test `(if (,*list-end-test* ,on-var) (go ,*loop-end*))))
+	 (test `(if (endp ,on-var) (go ,*loop-end*))))
     (setq *loop-end-used?* t)
     (return-driver-code :initial `((setq ,on-var ,list))
 			:next (list test
@@ -2718,16 +2754,16 @@ e.g. (DSETQ (VALUES (a . b) nil c) form)"
 ;
 ;(FOR var FROM n TO m) => (initially (setq var (- n 1)) (setq limit (- m 1)))
 ;                         (FOR var NEXT (if (> var limit) (finish) (1+ var))
-;					 
+;
 ;
 ;(FOR var ON list)  =>    (initially (setq temp list))
-;                         (FOR var NEXT (if (null temp) 
+;                         (FOR var NEXT (if (atom temp)
 ;					   (finish)
 ;					   (progn (setq temp (cdr temp))
 ;						  temp)))
 ;
 ;(FOR var IN list) =>    (initially (setq temp list))
-;			(FOR var NEXT (if (null temp)
+;			(FOR var NEXT (if (endp temp)
 ;					  (finish)
 ;					  (pop temp)))
 ;
@@ -2948,30 +2984,27 @@ e.g. (DSETQ (VALUES (a . b) nil c) form)"
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; Control flow.
 
-;;; (LEAVE &optional)
-(def-special-clause leave (&optional expr)
-  "Exit the loop without running the epilogue code"
-  `((return-from ,*block-name* ,expr)))
-
-;;; (FINISH)
-(def-special-clause finish ()
+;;; (FIMISH)
+(defmacro finish ()
   "Leave the loop gracefully, executing the epilogue"
   (setq *loop-end-used?* t)
-  `((go ,*loop-end*)))
+  `(go ,*loop-end*))
 
 ;;; (TERMINATE)
-(def-special-clause terminate () ; recommended for use with FOR ... NEXT
+(defmacro terminate () ; recommended for use with FOR ... NEXT
   "Use within FOR ... DO-/NEXT clause to end the iteration"
-  (setq *loop-end-used?* t)
-  `((go ,*loop-end*)))
-
+  '(finish))
 
 ;;; (NEXT-ITERATION)
-(def-special-clause next-iteration ()
+(defmacro next-iteration ()
   "Begin the next iteration"
   (setq *loop-step-used?* t)
-  `((go ,*loop-step*)))
+  `(go ,*loop-step*))
 
+;;; (LEAVE &optional)
+(defmacro leave (&optional value)
+  "Exit the loop without running the epilogue code"
+  `(return-from ,*block-name* ,value))
 
 ;;; (WHILE)
 (defclause (while expr)
@@ -3180,11 +3213,10 @@ e.g. (DSETQ (VALUES (a . b) nil c) form)"
 		    expr
 		    (make-application end-operation collect-var expr)))))
       (if (eq place 'start)
-	  (return-code :body `((setq ,collect-var ,op-expr))
-                       :final (if (eq result-type 'list)
-                                  nil
-                                  `((setq ,collect-var 
-                                          (coerce ,collect-var ',result-type)))))
+          (return-code :body `((setq ,collect-var ,op-expr))
+                       :final (unless (eq result-type 'list)
+                                `((setq ,collect-var
+                                        (coerce ,collect-var ',result-type)))))
 	  (with-temporary temp-var
 	    ;; In the update code, must test if collect-var is null to allow
 	    ;; for other clauses to collect into same var.  This code
@@ -3357,14 +3389,16 @@ e.g. (DSETQ (VALUES (a . b) nil c) form)"
 ;;; generator, the best we can do is use a flag for the first time.
 
 ;;; (FOR PREVIOUS &optional INITIALLY BACK)
-(defclause (for pvar previous var &optional initially (default nil default?)
-					    back (n-expr 1))
+(defclause (for pvar-spec previous var &optional
+		initially (default nil default?) back (n-expr 1))
   "Previous value of a variable"
   ;; Set each save variable to the default in the initialization.
   (top-level-check)
   (if (not (constantp n-expr))
       (clause-error "~a should be a compile-time constant" n-expr))
-  (let ((n (eval n-expr))) ; Is this okay? It should be.
+
+  (let ((pvar (extract-var pvar-spec))
+	(n    (eval n-expr))) ; Is this okay? It should be.
     (if (not (and (integerp n) (> n 0)))
 	(clause-error "~a should be a positive integer" n-expr)
 	;; Here, n is a positive integer.
@@ -3377,7 +3411,7 @@ e.g. (DSETQ (VALUES (a . b) nil c) form)"
 	       (save-vars (cons pvar (make-save-vars var (1- n))))
 	       (inits (mapcar #L`(setq ,!1 ,iv-ref) save-vars)))
 	  (if temp (push `(setq ,temp ,init-val) inits))
-	  (make-default-binding pvar)
+	  (make-default-binding pvar-spec)
 	  (push (make-save-info :save-var pvar
 				:iv-ref iv-ref
 				:save-vars save-vars)
@@ -3629,12 +3663,6 @@ e.g. (DSETQ (VALUES (a . b) nil c) form)"
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; Junk.
 
-;;; Obsolete, use (if (first-time-p) ...)
-;;; (IF-FIRST-TIME then &optional else)
-(def-special-clause if-first-time (then &optional else)
-  (warn "if-first-time is obsolete, use (if (first-time-p) ...) instead")
-  (return-code :body (list (if-1st-time (list (walk-expr then))
-                                        (list (walk-expr else))))))
 
 ;;;;;;; For Gnu Emacs ;;;;;;;
 ;;; Local variables:
@@ -3642,5 +3670,3 @@ e.g. (DSETQ (VALUES (a . b) nil c) form)"
 ;;; kept-new-versions: 5
 ;;; kept-old-versions: 0
 ;;; end:
-
-
