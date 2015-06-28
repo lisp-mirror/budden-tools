@@ -380,6 +380,17 @@
 	  (:while (< (length (:collect i)) 2)))
   (1 2))
 
+(deftest else.1
+    (iter (:repeat 0)
+	  (:else (return 1)))
+  1)
+
+(deftest else.2
+    (iter (:for i below -3)
+	  (:else (return 2)))
+  2)
+
+
 ;;; tests :for my examples:
 
 (eval-when (:compile-toplevel :load-toplevel :execute)
@@ -614,6 +625,13 @@
 	  (if (:next x) (:collect i)))
   (0 3))
 
+(deftest if.2
+    (iter (:generate x in-vector '#(t nil nil t) with-index i)
+	  (if (:next x) (:collect i)))
+  (0 3))
+
+
+
 (deftest k.or.1
     (iter (:generate x :in '(a nil nil 1))
 	  (:generate y in-vector '#(2 #\c #\d))
@@ -821,6 +839,14 @@
 	  (:collecting p))
   (9 9 0 1))
 
+
+(deftest for.previous.var-with-type-declaration
+    (iter (:for i from 1 to 5)
+          (:for (the fixnum i-prev) previous i)
+	  (:collect i-prev))
+  (nil 1 2 3 4))
+
+
 (deftest k.for.first.1
     (iter (:for num :in '(20 19 18 17 16))
 	  (:for i first num then (1+ i))
@@ -905,6 +931,15 @@
     (iter (:generate i index-of-vector '#(0 1 2 3 4) downto 0 by 2)
 	  (:collect (:next i)))
   (4 2 0))
+
+(deftest first-time-p.0
+    (with-output-to-string (*standard-output*)
+      (iter (:for el in '(nil 1 2 nil 3))
+	    (when el
+	      (unless (:first-time-p)
+		(princ ", "))
+	      (princ el))))
+  "1, 2, 3")
 
 (deftest k.if-first-time.1
     (with-output-to-string (*standard-output*)
@@ -1149,6 +1184,29 @@
 	  (:summing (:always i) into x)
 	  (:finally (return x)))
   -8)
+
+(deftest dotted.1
+    (iter (:for l on '(1 2 . 3))
+	  (:collect l))
+  ((1 2 . 3) (2 . 3)))
+
+(deftest dotted.2
+    (iter (:for (e) on '(1 2 . 3))
+	  (:collect e))
+  (1 2))
+
+(deftest dotted.3
+    (values (ignore-errors (iter (:for i in '(1 2 . 3)) (:count t))))
+  nil)
+
+(deftest dotted.4
+    (iter (:for i in '(1 1 2 3 . 3)) (:thereis (evenp i)))
+  t)
+
+(deftest dotted.5
+    (iter (:for i in '(1 2 . 3)) (:thereis (evenp i)))
+  t)
+
 
 (deftest k.walk.multiple-value-bind
     (string-upcase
@@ -1614,6 +1672,14 @@
 			    (foo))))
   1)
 
+(deftest bug/collect-at-beginning
+    (iterate
+      (:for i from 1 to 10)
+      (if (oddp i)
+          (:collect i :at :beginning)
+          (:collect i)))
+  (9 7 5 3 1 2 4 6 8 10))
+
 ;; Hashtable iterators are specified to be defined as macrolets.
 ;; But we handle these by special-casing with-hash-table/package-iterator
 (deftest k.nested-hashtable.1
@@ -1669,26 +1735,51 @@
 		do (loop-finish)))
   nil)
 
+(defmacro problem-because-i-return-nil (&rest args)
+  (declare (ignore args))
+  nil)
 
-(deftest k.result-type-at-beginning.1
-         (iter (:for i below 2) 
-           (:collect i at beginning result-type vector))
-  #(1 0))
+(deftest tagbody.nil-tags
+;;  Allegro (correctly) won't compile when a tag (typically NIL) is used more than once in a tagbody.
+    (labels ((find-tagbody (form)
+               (cond
+                 ((and (consp form)
+                       (eq (first form)
+                           'tagbody))
+                  form)
+                 ((consp form)
+                  (iter (:for x in (rest form))
+                        (:thereis (find-tagbody x))))
+                 (t nil)))
+             (all-tagbody-tags (form)
+               (iter (:for tag-or-form in (rest (find-tagbody form)))
+                     (when (symbolp tag-or-form)
+                       (:collect tag-or-form)))))
+      (let* ((form (macroexpand '
+                    (iter (for x in '(1 2 3))
+                          (problem-because-i-return-nil)
+                          (+ x x)
+                          (problem-because-i-return-nil))))
+             (tags (all-tagbody-tags form)))
+         (iter (:for tag in tags)
+              ;; invoke cl:count, not the Iterate clause:
+              (:always (= 1 (funcall #'count tag tags :from-end nil))))))
+  t)
 
-(deftest k.result-type-at-beginning.2
-         (iter (:for i below 2) 
-           (:collect i at beginning result-type list))
-  (1 0))
 
-(deftest k.result-type-at-beginning.2a
-         (iter (:for i below 2) 
-           (:collect i at beginning))
-  (1 0))
+(deftest walk.tagbody.1
+    (iter (tagbody
+	     (problem-because-i-return-nil)
+	     3
+	     (problem-because-i-return-nil)
+	     (:leave 2)))
+  2)
 
-(deftest k.result-type-at-beginning.3
-         (iter (:for c in-string "ab") 
-           (:collect c at beginning result-type string))
-  "ba")
+(deftest walk.tagbody.2
+    (symbol-macrolet ((error-out (error "do not expand me")))
+      (iter (tagbody error-out
+	       (:leave 2))))
+  2)
          
 
 
