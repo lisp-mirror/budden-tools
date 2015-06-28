@@ -566,7 +566,7 @@ With buddens readtable extensions enabled, when reader finds \"that-package:\" i
               `(defpackage ,name
                  ,@(when forbidden-symbol-names 
                      `((:shadow ,@forbidden-symbol-names)))
-                 ,@(when use `((:use ,@use)))
+                 ,@`((:use ,@use))
                  ,@generated-import-clauses
                  ,@(iter (:for cl in shadowing-import-from-s) (:collect `(:shadowing-import-from ,@cl)))
                  ,@processed-export-s
