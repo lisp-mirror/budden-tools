@@ -2984,27 +2984,30 @@ e.g. (DSETQ (VALUES (a . b) nil c) form)"
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; Control flow.
 
-;;; (FIMISH)
-(defmacro finish ()
+;;; (LEAVE &optional)
+(def-special-clause leave (&optional expr)
+  "Exit the loop without running the epilogue code"
+  `((return-from ,*block-name* ,expr)))
+
+;;; (FINISH)
+(def-special-clause finish ()
   "Leave the loop gracefully, executing the epilogue"
   (setq *loop-end-used?* t)
-  `(go ,*loop-end*))
+  `((go ,*loop-end*)))
 
 ;;; (TERMINATE)
-(defmacro terminate () ; recommended for use with FOR ... NEXT
+(def-special-clause terminate () ; recommended for use with FOR ... NEXT
   "Use within FOR ... DO-/NEXT clause to end the iteration"
-  '(finish))
+  (setq *loop-end-used?* t)
+  `((go ,*loop-end*)))
+
 
 ;;; (NEXT-ITERATION)
-(defmacro next-iteration ()
+(def-special-clause next-iteration ()
   "Begin the next iteration"
   (setq *loop-step-used?* t)
-  `(go ,*loop-step*))
+  `((go ,*loop-step*)))
 
-;;; (LEAVE &optional)
-(defmacro leave (&optional value)
-  "Exit the loop without running the epilogue code"
-  `(return-from ,*block-name* ,value))
 
 ;;; (WHILE)
 (defclause (while expr)

@@ -2,7 +2,8 @@
 ;;; this file intentionnaly contains no in-package form
 ;;; see lw-macro-friendly-stepper
 
-(defun process-clause (clause)
+;; this was commented out as something have changed in iterate itself
+#| (defun process-clause (clause)
    "Redefined in lw-macro-friendly-stepper-iterate-patch.lisp. 
 difference is that souce is smashed into result so that you can set lispworks stepper
     breakpoint at the clause"
@@ -38,7 +39,7 @@ difference is that souce is smashed into result so that you can set lispworks st
         (values-list result)))
 
 
-(defun walk-expr (expr)
+ (defun walk-expr (expr)
   "Redefined in lw-macro-friendly-stepper-iterate-patch.lisp. Smashes expr with result"
   (let* ((dont-smash (and (consp expr)
                           (starts-clause? (symbol-synonym (car expr)))
@@ -61,7 +62,7 @@ difference is that souce is smashed into result so that you can set lispworks st
            result
            ))
         result)
-      )))
+      ))) |#
 
 
 
