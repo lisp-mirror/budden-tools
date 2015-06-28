@@ -2998,7 +2998,9 @@ e.g. (DSETQ (VALUES (a . b) nil c) form)"
 ;;; (TERMINATE)
 (def-special-clause terminate () ; recommended for use with FOR ... NEXT
   "Use within FOR ... DO-/NEXT clause to end the iteration"
-  '(finish))
+  (setq *loop-end-used?* t)
+  `((go ,*loop-end*)))
+
 
 ;;; (NEXT-ITERATION)
 (def-special-clause next-iteration ()
