@@ -7,6 +7,21 @@
 
 (defun variable-type-or-class (VAR ENV) 
   "Возвращает тип ИЛИ класс значения. Непонятно, зачем нужен класс - наверняка всегда достаточно типа для ^ (FIXME)"
+  #+sbcl 
+  (cond
+   ((constantp var env)
+    (type-of var)) ; в лиспворксе здесь возвращается класс... 
+   (env
+    (assert (typep env 'sb-kernel:lexenv))
+    (let* ((vars (sb-c::lexenv-vars env))
+           (this-var (cdr (assoc var vars))))
+      (when this-var
+        (assert (typep this-var 'sb-c::lambda-var))
+        (let ((result (sb-c::lambda-var-type this-var)))
+          (print result)
+          ;(break)
+          result
+          )))))
   #+:LISPWORKS4.4
   (cond
    ((constantp VAR ENV)
@@ -35,8 +50,9 @@
                           ,(slot-value venv 'type))))
           (cadr (assoc var variable-types))))))
    );cond
-  #-(or :LISPWORKS4.4 :lispworks6)
-  (when (constantp var env) (class-of var)))
+  #-(or :LISPWORKS4.4 :lispworks6 sbcl)
+  (when (constantp var env) (class-of var))
+  )
 
 
 (defmacro kind-of-variable-via-augmented-environment (VAR &ENVIRONMENT ENV)
@@ -219,10 +235,14 @@
      (declare (type ,type ,var))
      ,@body))|#
 
-#+lispworks6.1
 (defun assert-special-subtype-for-with-the1 (var env new-type) 
   "If variable is special, checks that with-the1 does not redeclare it with incompatible subtype"
-  (multiple-value-bind (kind localp decls) (hcl:variable-information var env)
+  (multiple-value-bind (kind localp decls)
+      (#+lispworks
+       hcl:variable-information
+       #+sbcl
+       sb-cltl2:variable-information
+       var env)
     (declare (ignore localp))
     (when (eq kind :special)
       (let ((global-declared-type (cdr (assoc 'type decls))))
@@ -231,6 +251,14 @@
               ()
             "Special variable ~S was declared as having type ~S in surrounding scope, but is being bound to incompatible type ~S"
             var global-declared-type new-type))))))
+
+
+#|
+SBCL
+sb-c::lambda-var - параметр таков и локальная перемненая тоже
+sb-c::global-var :kind :special - связанная глоб.перем
+но у нас есть и sb-cltl2:variable-information
+|#
 
 
 (defmacro with-the1 (var type object &body body &environment env)

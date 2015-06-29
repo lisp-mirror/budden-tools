@@ -145,7 +145,7 @@
 (defun perga-add-character-test ()
   (perga
     (:@ with-input-from-string (var "0"))
-    (let a (read-from-string var))
+    (let a (read var))
     a))
 
 

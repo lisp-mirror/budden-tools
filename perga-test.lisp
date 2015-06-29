@@ -1,4 +1,4 @@
-﻿;;; -*- Encoding: utf-8; -*-
+;; -*- Encoding: utf-8; -*-
 #|
 Отличия perga от proga.
 Цель нововведений:
@@ -191,7 +191,7 @@
 (defun perga-add-character-test ()
   (perga
     (:@ with-input-from-string (var "0"))
-    (let a (read-from-string var))
+    (let a (read var))
     a))
 
 

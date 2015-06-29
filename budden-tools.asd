@@ -42,7 +42,6 @@
 
    (:file "iterate-extensions" :description "some iterate drivers")
    (:file "defun-to-file" :description "When named function is created, it can be saved to a file in order to find-source to work")
-   #+lispworks
    (:file "variable-type" :description "Compilation environment related stuff"
    )
    (:file "pass-by-ref" :description "Pass place to a function by reference"

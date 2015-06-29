@@ -45,10 +45,11 @@
   Например, (symbol-macrolet x y) a b => 
   (symbol-macrolet ((x y)) a b)"
   (declare (ignore body))
+  #-lispworks (declare (ignore clause))
   (let* ((result
           `(,head ,tail ,.(perga-body-expander forms-after-clause))))
-    (set-source-location-substitution clause result)
-    (put-source-cons-at-macroexpansion-result clause result)
+    #+lispworks (set-source-location-substitution clause result)
+    #+lispworks (put-source-cons-at-macroexpansion-result clause result)
     (list result)
     ))
 
@@ -57,10 +58,11 @@
   "всё, что за формой, нужно внести в скобки формы после формы. Например, 
   (block u) x y => (block u x y)"
   (declare (ignore body))
+  #-lispworks (declare (ignore clause))
   (let ((result
          `((,head ,@tail ,@(perga-body-expander forms-after-clause)))))
-    (set-source-location-substitution clause (car result))
-    (put-source-cons-at-macroexpansion-result clause result car)
+    #+lispworks (set-source-location-substitution clause (car result))
+    #+lispworks (put-source-cons-at-macroexpansion-result clause result car)
     (values
      result
      t)
@@ -72,7 +74,7 @@
   "форму мы не поняли, считаем, что это вычисление" 
   (declare (ignore body head tail))
   (let* ((result `(,clause ,.(perga-body-expander forms-after-clause))))
-    (set-source-location-substitution clause (car result))
+    #+lispworks (set-source-location-substitution clause (car result))
   ;(smash-cons clause result)
   ;(setf (cdr body) nil)
   ;body
@@ -199,11 +201,10 @@
     ))
 
 (defun flet-perga-transformer-inner (body clause head tail forms-after-clause &key allow-one-only process-labels-bodies)
-  (declare (ignore process-labels-clause-body))
   (let ((processed-head
          (cond 
            ((member head '(flet labels macrolet)) head)
-           (:labels 'labels)
+           ((eq head :labels)'labels) 
            (t "wrong call to flet-perga-transformer-inner"))))
     (cond
      ((atom (second clause))
@@ -247,9 +248,10 @@
 (def-perga-clause block
                   #'(lambda (body clause head tail forms-after-clause)
                       (declare (ignore body))
+                       #-lispworks (declare (ignore clause))
                       (let ((result `((,head ,(car tail) ,@(perga-body-expander (cdr tail))) ,@(perga-body-expander forms-after-clause))))
-                        (set-source-location-substitution clause (car result))
-                        (put-source-cons-at-macroexpansion-result clause result car)
+                        #+lispworks (set-source-location-substitution clause (car result))
+                        #+lispworks (put-source-cons-at-macroexpansion-result clause result car)
                         (values
                          result
                          t))))
@@ -261,10 +263,11 @@
 (def-perga-clause tagbody
                   #'(lambda (body clause head tail forms-after-clause)
                       (declare (ignore body ))
+                       #-lispworks (declare (ignore clause))
                       (let ((result `((,head ,@(perga-body-expander tail)) 
                          ,@(perga-body-expander forms-after-clause))))
-                        (set-source-location-substitution clause (car result))
-                        (put-source-cons-at-macroexpansion-result clause result car)
+                        #+lispworks (set-source-location-substitution clause (car result))
+                        #+lispworks (put-source-cons-at-macroexpansion-result clause result car)
                       (values
                        result
                        t)
@@ -319,11 +322,12 @@
                                    tail
                                    forms-after-clause)
   (declare (ignore body ))
-  (let ((result `((,head ,@(perga-body-expander tail))
+   #-lispworks (declare (ignore clause))
+ (let ((result `((,head ,@(perga-body-expander tail))
                   ,@(perga-body-expander forms-after-clause)
      )))
-    (set-source-location-substitution clause (car result))
-    (put-source-cons-at-macroexpansion-result clause result car)
+    #+lispworks (set-source-location-substitution clause (car result))
+    #+lispworks (put-source-cons-at-macroexpansion-result clause result car)
     (values
      result
      t
@@ -339,6 +343,7 @@
                                     tail
                                     forms-after-clause)
   "do пишется так же, как обычно, но тело обрабатывается. return-forms не обрабатаываются"
+  #-lispworks (declare (ignore clause))
   (declare (ignore body))
   (destructuring-bind (bind-step-forms (end-test-form &rest result-forms) &body body-of-do)
       tail
@@ -346,8 +351,8 @@
                            ,@(perga-body-expander body-of-do))
                     ,@(perga-body-expander forms-after-clause))
                   ))
-      (set-source-location-substitution clause (car result))
-      (put-source-cons-at-macroexpansion-result clause result car)
+      #+lispworks (set-source-location-substitution clause (car result))
+      #+lispworks (put-source-cons-at-macroexpansion-result clause result car)
       (values
        result
        t
@@ -360,7 +365,8 @@
                                     tail
                                     forms-after-clause)
   (declare (ignore body))
-  (let ((result
+   #-lispworks (declare (ignore clause))
+ (let ((result
          `((,head
             ,@(mapcar 
                (lambda (cond-clause)
@@ -369,8 +375,8 @@
                    `(,cc-test ,@(perga-body-expander cc-exprs))))
                tail))
             ,@(perga-body-expander forms-after-clause))))
-    (set-source-location-substitution clause (car result))
-    (put-source-cons-at-macroexpansion-result clause result car)
+    #+lispworks (set-source-location-substitution clause (car result))
+    #+lispworks (put-source-cons-at-macroexpansion-result clause result car)
     (values
      result
      t
@@ -382,6 +388,7 @@
                                     tail
                                     forms-after-clause)
   (declare (ignore body))
+  #-lispworks (declare (ignore clause))
   (let (result)
     (destructuring-bind (keyform . case-clauses) tail
       (setf result
@@ -393,8 +400,8 @@
                         case-clauses)
                      )
               ,@(perga-body-expander forms-after-clause)))
-      (set-source-location-substitution clause (car result))
-      (put-source-cons-at-macroexpansion-result clause result car)
+      #+lispworks (set-source-location-substitution clause (car result))
+      #+lispworks (put-source-cons-at-macroexpansion-result clause result car)
       (values
        result
        t))))
@@ -434,14 +441,15 @@ forms-after-clause - уже обработанные формы после claus
     (with-open-file var filename ...)
     (read var))"
   (declare (ignore body))
+  #-lispworks (declare (ignore clause))
   (assert (not (constantp head)) () "Only symbol or list is allowed at second place in ~S" 
     `(,head ,tail))
   (let (result)
     (typecase (car tail)
       (symbol
        (setf result `((,head ,tail ,@(perga-body-expander forms-after-clause))))
-       (set-source-location-substitution clause (car result))
-       (put-source-cons-at-macroexpansion-result clause result car)
+       #+lispworks (set-source-location-substitution clause (car result))
+       #+lispworks (put-source-cons-at-macroexpansion-result clause result car)
        (values result t))
       (t nil)
       )))
@@ -457,12 +465,13 @@ forms-after-clause - уже обработанные формы после claus
     (let ((a 1))
       a))"
   (declare (ignore body))
+   #-lispworks (declare (ignore clause))
   (assert (eq head :@))
   (let (result)
     (setf result
           `((,@tail ,@(perga-body-expander forms-after-clause))))
-    (set-source-location-substitution clause (car result))
-    (put-source-cons-at-macroexpansion-result clause result car)
+    #+lispworks (set-source-location-substitution clause (car result))
+    #+lispworks (put-source-cons-at-macroexpansion-result clause result car)
     (values result t)
   ))
 
@@ -479,13 +488,14 @@ forms-after-clause - уже обработанные формы после claus
     (let ((a 1))
       a))"
   (declare (ignore body))
+  #-lispworks (declare (ignore clause))
   (assert (eq head :&))
   (let (result)
     (setf result
           `((,(car tail) ,(cdr tail)
                          ,@(perga-body-expander forms-after-clause))))
-    (set-source-location-substitution clause (car result))
-    (put-source-cons-at-macroexpansion-result clause result car)
+    #+lispworks (set-source-location-substitution clause (car result))
+    #+lispworks (put-source-cons-at-macroexpansion-result clause result car)
     (values result t)
   ))
   
@@ -496,6 +506,7 @@ forms-after-clause - уже обработанные формы после claus
 (defun wind-up-tail-if-3 (body clause head tail forms-after-clause)
   "Если форма `(,head ,@tail) состоит из трёх элементов, то tail заключается в скобки, а остальное вносится внутрь"
   (declare (ignore body))
+  #-lispworks (declare (ignore clause))
   (assert (not (constantp head)) () "Only symbol or list is allowed at second place in ~S" 
     `(,head ,tail))
   (let (result)
@@ -503,8 +514,8 @@ forms-after-clause - уже обработанные формы после claus
      ((= 2 (length tail))
       (setf result 
             `((,head ,tail ,@(perga-body-expander forms-after-clause))))
-      (set-source-location-substitution clause (car result))
-      (put-source-cons-at-macroexpansion-result clause result car)
+      #+lispworks (set-source-location-substitution clause (car result))
+      #+lispworks (put-source-cons-at-macroexpansion-result clause result car)
       (values t result)
       )
      (t nil))
@@ -543,7 +554,7 @@ forms-after-clause - уже обработанные формы после claus
                            'budden-tools:with-the1
                            tail forms-after-clause)
                         (when processed
-                          (set-source-location-substitution
+                          #+lispworks (set-source-location-substitution
                            clause (car result)))
                         (values result processed))))
                         

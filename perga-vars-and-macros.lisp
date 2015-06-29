@@ -5,11 +5,12 @@
   ; вместо неё, исходник хранится в локальной переменной
   ; ф-ии stepize и поэтому недоступен
 
-(defmacro print-source-level-form-table ()
+#+lispworks (defmacro print-source-level-form-table ()
   (print COMPILER::*SOURCE-LEVEL-FORM-TABLE*))
 (defmacro compiler-break ()
-  (break "compiler-break ~A" COMPILER:*function-name*))
-(defmacro capture-source-level-form-table ()
+  (break "compiler-break ~A" #+lispworks COMPILER:*function-name* #-sbcl nil ))
+
+#+lispworks (defmacro capture-source-level-form-table ()
   (setf -source-level-form-table- COMPILER::*SOURCE-LEVEL-FORM-TABLE*) nil)
 
 
@@ -20,15 +21,23 @@
       (perga-expander form)
     (DBG17::END-SOURCE-LOCATION-SUBSTITUTIONS-FN)))|#
 
+#+lispworks 
 (defmacro inner-perga (&whole form &body body)
   (declare (ignore body))
   (PERGA-EXPANDER form))
   
 
+#+lispworks 
 (defmacro perga (&whole form &body body)
   (declare (ignorable body form))
   `(lw-macro-friendly-dbg:with-source-location-substitutions
     (inner-perga ,@body)))
+
+#-lispworks
+(defmacro perga (&whole form &body body)
+  (declare (ignore body))
+  (PERGA-EXPANDER form))
+
   
 ;  (PERGA-EXPANDER form))
           
