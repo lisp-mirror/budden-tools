@@ -52,6 +52,7 @@
                        (:nicknames :case1)
                        (:use :cl :cons-to-source-formatters
                         :budden-tools :iterate-keywords)
+                       (:import-from :alexandria alexandria:define-constant)
                        (:local-nicknames :bu :budden-tools)
                        (:always t)
                        (:export "
@@ -185,7 +186,10 @@
   `(let1 *formatter-stack* (list ,formatter)
      ,@body))
 
+#+lispworks 
 (defconstant eol (format nil "~A" #\newline))
+#-lispworks
+(define-constant eol (format nil "~A" #\newline) :test 'equalp)
 
 (defparameter *natural-close-boundaries* 
   '(
@@ -201,7 +205,7 @@
 (defgeneric x-to-syn (x formatter)
   (:documentation 
    "пусть в дереве для print-data (также известном как pd,pds) попался некий объект. Если не заданы другие способы печати, а задан метод x-to-syn, то данный объект преобразуется в дерево, которое печатается вместо объекта. В частности, в fbody и pbody x-to-syn отвечает за преобразование ~~лисп-объект. См. также budden::x-to-inline-sql"
-   ()))
+   ))
 
 (defmethod x-to-syn ((x syntree) formatter) (syntree-expr x))
 
@@ -501,7 +505,7 @@ Examples:
 
 
 (defun print-data (code)
-  (declare (special *print-right-margin*))
+  #+lispworks (declare (special *print-right-margin*)) ; зачем это???
   ;(assert (member (car *formatter-stack*) `(,*firebird-sql-no-utf* ,*sql-no-N-string* ,*long-sql-comment*)))
   (let1 *print-right-margin* nil
     (cond 

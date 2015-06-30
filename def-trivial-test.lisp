@@ -2,7 +2,7 @@
 ;; Written by Denis Budyak. 
 ;; Code is in public domain
 
-(in-package :trivial-deftest)
+(in-package :def-trivial-test)
 
 ;;; Trivial test suite. Define tests in the
 ;;; source file, run them on loading. Tests 

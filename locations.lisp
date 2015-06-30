@@ -408,8 +408,9 @@ srcpl - symbol-readmacro. Прочитать объект и запрограм�
   (when (track-locations)
     (etypecase stream
       #+lispworks (editor::editor-region-stream stream)
-      (stream::file-stream stream)
+      #+lispworks (stream::file-stream stream)
       #+lispworks (stream::ef-file-stream stream)
+      #+sbcl (t (break "add sbcl code to get-stream-location-map-delegate"))
       (stream 
        (ecase if-not-exists
          (:create (nth-value 0 (ensure-gethash-2 stream *slmd (gensym "LOCATION-DELEGATE"))))
@@ -432,7 +433,9 @@ srcpl - symbol-readmacro. Прочитать объект и запрограм�
     )
   #+sbcl
   (etypecase stream
-    (file-stream (slot-value stream 'file))
+    (sb-impl::fd-stream (sb-impl::fd-stream-file stream))
+    (file-stream (break "fix extract-source-filename-from-stream") ; (slot-value stream 'file)
+                 )
     (string-stream nil))
   )
 
@@ -532,10 +535,18 @@ srcpl - symbol-readmacro. Прочитать объект и запрограм�
     (slot-value (slot-value s 'stream::buffer-state) 'stream::input-buffer))
   #+sbcl
   (let ((s (the* sb-impl::string-input-stream stream)))
-    (slot-value (slot-value s 'string)))
+    (slot-value s 'string))
   #-(or sbcl lispworks)
   (note-not-implemented-for-this-lisp string-stream-extract-string)
   )
+
+(def-trivial-test::! string-stream-extract-string.1
+                     (with-input-from-string (s "asdf")
+                       (read-char s)
+                       (string-stream-extract-string s))
+                     "asdf"
+                     :test 'string=)
+                     
 
 (defun file-stream-extract-encoding (stream)
   #+lispworks
@@ -641,6 +652,7 @@ srcpl - symbol-readmacro. Прочитать объект и запрограм�
     (ignored index)
     (+ file-position (- start-file-offset) start-char-offset)))
 
+(trace file-position-and-map-to-char-position)
 
 (defvar *stream-to-file-position-to-char-position-maps*
   (SWANK-BACKEND:make-weak-key-hash-table :test 'eq)
@@ -759,13 +771,17 @@ srcpl - symbol-readmacro. Прочитать объект и запрограм�
 (setf (symbol-readmacro (intern "SRCPL" :budden-tools)) #'srcpl-reader)
 
 (defun do-my-sanity-check ()
-  (let ((ss (open #.*compile-file-truename*)))
+  (let ((ss (open #. *compile-file-truename*)))
     (assert (= (input-stream-position-in-chars ss) 0))
     (read-line ss)
     (read-line ss)
     (show-expr (input-stream-position-in-chars ss))
     (show-expr (file-position ss))
-    (assert (= (input-stream-position-in-chars ss) 61))
+    (assert (= (input-stream-position-in-chars ss)
+               #+(and sbcl win32) 63
+               #+(and lispworks win32) 61
+               #-(or (and sbcl win32) (and lispworks win32)) -1000 ; write me
+               ))
     (print "sanity check ok")
     ))
 
