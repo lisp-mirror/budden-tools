@@ -652,8 +652,6 @@ srcpl - symbol-readmacro. Прочитать объект и запрограм�
     (ignored index)
     (+ file-position (- start-file-offset) start-char-offset)))
 
-(trace file-position-and-map-to-char-position)
-
 (defvar *stream-to-file-position-to-char-position-maps*
   (SWANK-BACKEND:make-weak-key-hash-table :test 'eq)
   "Потоку сопоставляем карту соответствий между file-position и char-position")

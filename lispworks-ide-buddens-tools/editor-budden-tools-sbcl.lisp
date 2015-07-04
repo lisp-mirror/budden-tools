@@ -3,149 +3,45 @@
 (in-package :editor-budden-tools)
 (asdf::of-system :editor-budden-tools)
 
-#+new-projects-structure 
-(defun this-system-dir ()
-  (component-pathname (component-system (load-time-value *current-component*))))
+;lw(defvar *aux-editor*)
+;lw(editor::set-vector-value
+;lw (slot-value editor::*default-syntax-table* 'editor::table) '(#\[ #\{) 2)
+;lw(editor::set-vector-value 
+;lw (slot-value editor::*default-syntax-table* 'editor::table) '(#\] #\}) 3)
 
-(defvar *aux-editor* #+ignore (capi:contain
-              (make-instance 'capi:editor-pane
-                             :text "abc")))
-(editor::set-vector-value
- (slot-value editor::*default-syntax-table* 'editor::table) '(#\[ #\{) 2)
-(editor::set-vector-value 
- (slot-value editor::*default-syntax-table* 'editor::table) '(#\] #\}) 3)
-
-#|(defun get-some-editor-0 () 
-  (loop for x in capi-win32-lib::*top-level-windows* 
-              for elt = (slot-value x 'win32::element) 
-              when (starts-with-subseq "Editor " (slot-value elt 'capi::title))
-              do (return (slot-value elt #+lispworks4 'capi:editor-pane #+lispworks6 'lispworks-tools::definition-name-pane))))|#
-
-#-lispworks6.1
-(defun get-some-editor () 
-  (loop for x in capi-win32-lib::*top-level-windows* 
-              for elt = (slot-value x 'win32::element) 
-              when (starts-with-subseq "Editor " (slot-value elt 'capi::title))
-              do (return #+lispworks4 (slot-value elt 'capi:editor-pane) #+lispworks6 elt)))
-
-#+lispworks6.1
-(defun get-some-editor ()
-  "Ensures editor, activates and returns it"
-  (or (CAPI:locate-interface 'lispworks-tools:editor)
-      (CAPI:find-interface 'lispworks-tools:editor :display-state :iconic))
-  #|(let* ((interfaces (slot-value (car capi-win32-lib::*screens*) 'capi::interfaces)))
-    (assert interfaces () "the-listener: unable to find interfaces")
-    (let ((editor
-           (find 'lispworks-tools:editor interfaces :key 'type-of)))
-      editor))|#
-  )
+;lw(defun get-some-editor ()) 
   
-(defun set-aux-editor () 
+#|lw(defun set-aux-editor () 
   (declare (special *aux-editor*))
   (setf *aux-editor* (get-some-editor)
         ))
 
 
-(eval-when (:load-toplevel) 
+ (eval-when (:load-toplevel) 
   (unless (set-aux-editor)
     (warn "Нет редактора в editor-budden-tools::set-aux-editor")))
 
   
-(defparameter *my-command-result* nil)
-(defparameter *my-command-fn* nil)
+ (defparameter *my-command-result* nil)
+ (defparameter *my-command-fn* nil)
 
 
-(defun current-buffer-window () 
+ (defun current-buffer-window () 
   "Окон может быть несколько, возвращает одно из"
-  (car (slot-value (editor:current-buffer) 'editor::windows)))
+  (car (slot-value (editor:current-buffer) 'editor::windows)))|#
 
 (defmacro do-in-editor-command (buffer &body body)
-  "Выполняет body внутри команды. Задействованы переменные *aux-exitor* и *my-command-result*. 
-   Создает block nil
+  "Выполняет body внутри команды. Задействованы переменные *aux-exitor* и *my-command-result*. Создает block nil
   "
-  (declare (special *aux-editor*))
-  (declare (special *my-command-result*))
-  (with-gensyms () ; (buffer2 fn)
-    `(proga
-       (set-aux-editor)
-       (setf *my-command-fn* 
-             (lambda () 
-               (use-buffer ,buffer
-                 (setf *my-command-result* (block nil (progn ,@body))))))
-       ; не thread-safe
-       (eval `(defcommand "come on" (p) "asdf" "Служебная команда из do-in-editor-command"
-                (funcall *my-command-fn*)))
-       (#+lispworks6 capi:execute-with-interface 
-                     #+lispworks4 capi:apply-in-pane-process
-                     *aux-editor* 'capi:call-editor *aux-editor* "come on")
-       *my-command-result*)))
-       
-                
-#|       
-  `(progn 
-     (let1 *my-command-result* nil
-       (eval
-        `(defcommand "come on" (p) "asdf" "Служебная команда" 
-           (declare (special *my-command-result*))
-           (use-buffer ,',buffer
-             (setf *my-command-result* (block nil (progn ,',@body)))
-             )))
-          (capi:apply-in-pane-process *aux-editor* 'capi:call-editor *aux-editor* "come on")
-          ;(capi:call-editor *aux-editor* "come on")
-       *my-command-result*))) |#
-
-
+  (declare (ignore buffer body))
+  '(break "not implemented")
+  )
+  
 (defun return-expr-points (buffer expr)
   "Находит выражение, начиная от текущей позиции в буфере и возвращает список из точки начала и точки конца.
    Двигает текущую позицию в конец. Если не находит, то возвращает null"
-  (declare (special *aux-editor*))
-  (eval
-   `(defcommand "come on" (p) "asdf" "Служебная команда" 
-      (declare (special *my-command-result*))
-      (setf *my-command-result* nil)
-      (use-buffer ,buffer
-        (let ((pnt (copy-point (current-point)))
-              (search-string ,expr))
-          (editor:forward-search-command nil search-string pnt)
-          (cond
-           ((editor:point< (current-point) pnt) ; something found
-            (let1 endpnt (copy-point pnt)
-              (editor:backward-search-command nil search-string pnt) ; search start
-              (move-point (current-point) endpnt) ; move to end
-              (setf *my-command-result* `(,pnt ,endpnt))))
-           (t (setf *my-command-result* nil)))))))
-;  (capi:apply-in-pane-process *aux-editor* 'capi:call-editor *aux-editor* "come on")
-  '(capi:call-editor *aux-editor* "come on")
-  *my-command-result*)
-
-; (defun return-regexp-points (buffer expr) такая функция почему-то не работает.
-; при поиске по рег. выражению курсор не всегда встает в конец выражения. 
-; отсюда мораль - нет возможности работать в лиспворкс с регулярными выражениями. Полдня убил!
-
-#|(defun write-between-points (buffer pnt1 pnt2 str)
-  "Заменить текст между точками на str"
-  (declare (special *aux-editor*))
-  (eval
-   `(defcommand "come on" (p) "asdf" "Служебная команда" 
-      (declare (special *my-command-result*))
-      (setf *my-command-result* nil)
-      (use-buffer ,buffer
-        (move-point (current-point) ,pnt1) ; make region
-        (set-current-mark ,pnt2)
-        (delete-region-command nil)
-        (insert-string (current-point) ,str))))
-   (capi:call-editor *aux-editor* "come on")
-  *my-command-result*)|#
-
-
-(defun save-and-close-buffer (filename)
-  "Должен быть открыт файл filename. Его сохраняет и закрывает"
-  (let1 buf (find-file-buffer (pathname filename))
-    (assert buf)
-    (format *debug-io* "saving ~A~%" filename) 
-    (save-file-command nil buf)
-    (editor::kill-buffer-no-confirm buf)))
-
+  (declare (ignore buffer expr))
+  (break "not implemented"))
  
 (defun replace-string-in-file (filename from to &key (test #'eql))
   "Редактор нормально не работает. Поэтому, нужно пользоваться регекспами, как в creatab2deftbl.lisp"
@@ -156,41 +52,12 @@
     
     
 (defun replace-once (filename from to)
-  "Заменяет from на to один раз, с текущей позиции. Функция устарела - нужно пользоваться 
-replace-string-in-file filename from to :close-file nil :times 1 :from-the-start nil.
-Возможное проблемное место - replace-string-in-file не двигает курсор вперед."
+  "Заменяет from на to один раз, с текущей позиции                                   . Функция устарела - нужно пользоваться 
+replace-string-in-file filename from to :close-file nil :times 1 :from-the-start nil . 
+Возможное проблемное место - replace-string-in-file не двигает курсор вперед         . "
   (declare (special *aux-editor*))
-  (eval
-   `(defcommand "come on" (p) "asdf" "..." 
-      (declare (special *my-command-result*))
-      (setf *my-command-result* nil)
-      (use-buffer (find-file-buffer (pathname ,filename))
-        (let ((pnt (copy-point (current-point)))
-              (search-string ,from))
-          (editor:forward-search-command nil search-string pnt)
-          (when (editor:point< (current-point) pnt) ; something found
-            (let1 endpnt (copy-point pnt)
-              (editor:backward-search-command nil search-string pnt) ; move pnt to start?
-              (move-point (current-point) pnt) ; make region
-              (set-current-mark endpnt)
-              (delete-region-command nil)
-              (insert-string (current-point) ,to)
-              (forward-character-command nil) ; ??? do we need it? where is current point?
-              (setf *my-command-result* t)))))))
-  (capi:call-editor *aux-editor* "come on")
-  *my-command-result*)
-
-
-#+ignore (defun replace-string-in-file (filename from to &key (from-the-start t) (close-file t) (times nil))
-  "Заменяет все вхождения. Сохраняет (если нужно) и закрывает файл. Устарело. Пользоваться регэкспами, creatab2deftbl.lisp"
-  (let ((buf (editor:find-file-buffer filename)))
-    (editor:use-buffer buf 
-      (when from-the-start (editor:beginning-of-buffer-command))
-      (editor:replace-string-command times from to)
-      (when (buffer-modified buf)
-        (save-file-command nil buf))
-      (when close-file (kill-buffer-command nil buf)))))
-
+  (declare (ignore filename from to))
+  (error "deprecated, us replace-string-in-file"))
 
 #|
 unit RusClipboard;
@@ -261,22 +128,34 @@ end.
 
 // место исходника - editor-budden-tools.lisp
 program putclip;
-// версия с поддержкой OEM
+// версия с поддержкой Unicode. Другую версию см. в сорсах lispworks, но она почему-то хуже работает в XP (в Lispworks тоже не на всех машинах). Видимо, был какой-то ключик в реестре или ещё какая-то тонкость, но она утрачена.
 {$APPTYPE CONSOLE}
 uses
   SysUtils,classes,clipbrd,windows,rusclipboard;
 
-(* function stringToOEM(s:string):string; 
-begin // http://delphiworld.narod.ru/base/rus_console.html
-Setlength(result,length(s)); 
-if not CharToOem(PChar(s),PChar(result)) then halt(177); 
-end;  *)
 
-var c:TClipboard;
+procedure SetClipboardText(const S: string);
+ var
+   wsz: PWideChar;
+   dwSize: Cardinal;
+   hData: Cardinal;
+ begin
+   if (Win32Platform = VER_PLATFORM_WIN32_NT) then begin
+
+     dwSize := (Length(S)+1) * SizeOf(WideChar);
+     hData := GlobalAlloc(GMEM_MOVEABLE or GMEM_DDESHARE, dwSize);
+     wsz := PWideChar(GlobalLock(hData));
+     StringToWideChar(S, wsz, Length(S)+1);
+     GlobalUnlock(hData);
+     Clipboard.SetAsHandle(CF_UNICODETEXT, hData);
+   end else
+     Clipboard.AsText := S;
+ end;
+
+var 
     l:TStringList;
     s:string;
 begin
-c:=Clipboard;
 l:=TStringList.Create;
 if pos('?',paramstr(1))<>0 then
   begin
@@ -295,12 +174,12 @@ if pos('?',paramstr(1))<>0 then
 else if paramstr(1)='-' then
   begin
   s:=CmdLine;
-  c.AsText:=copy(s,length(paramstr(0))+4,length(s));
+  SetClipboardText(s);
   end
 else if paramstr(1)<>'' then
   begin
   l.LoadFromFile(paramstr(1));
-  c.AsText:=l.text;
+  SetClipboardText(l.text);
   end
 else
   begin
@@ -309,69 +188,77 @@ else
     system.readln(s);
     l.add(s);
     end;
-  c.AsText:=l.text;
+  SetClipboardText(l.text);
   end;
 end.
+
 |#
 
 (defun text-to-clipboard (str &aux path-to-tempfile) "saves str to clipboard"
-  (setf path-to-tempfile (merge-pathnames "temp/putclip.temp" 
-                                          #+new-projects-structure (this-system-dir)
-                                          #-new-projects-structure cl-user::*lisp-root*))
-  (with-open-file (x path-to-tempfile :direction :output :if-exists :supersede :if-does-not-exist :create)
+  (setf path-to-tempfile (merge-pathnames "temp/putclip.temp" cl-user::*lisp-root*))
+  (with-open-file (x path-to-tempfile :direction :output :if-exists :supersede :if-does-not-exist :create :external-format :cp1251)
     (format x "~A" str))
-  (system:call-system-showing-output
-   #+ignore system:call-system-showing-output 
-   ; for XP 
-    (str+ "cmd /c putclip.exe " (namestring path-to-tempfile))
-    #+for-win-98 "putclip.exe l:/temp/putclip.temp" 
-    :show-cmd nil :wait t))
+  (let ((sb-impl::*default-external-format* :utf-8))
+    ; если здесь лисп завис, значит надо было запускать его не с помощью M-x slime, а запустить отдельно sbcl в консоли, затем (asdf:load-system :swank), (swank:create-server) и из емакса сделать M-x slime-connect
+
+    (sb-ext:run-program "putclip.exe"
+                       (list (sb-ext::native-namestring path-to-tempfile))
+                       :output nil
+                       :error nil
+                       :search t
+                       :wait t
+                       )
+    ; а нижеследующий кусок может пригодиться для
+    ; других команд, когда нужен ввод-вывод. Его можем
+    ; делать только через батник
+    #|(sb-ext:run-program "cmd.exe"
+                        (list
+                         "/c"
+                         "start"
+                         "/wait"
+                         "putclip"
+                         (sb-ext::native-namestring path-to-tempfile))
+                        :search t
+                        :input nil :output nil :error nil
+                        :wait t
+                        ; :external-format :utf-8
+                        :directory cl-user::*lisp-root*)|#
+    )
+  (finish-output *standard-output*) ; волшебство, без которого SLIME
+  ; перестаёт нормально работать при таком вызове
+  )
+
+(defun get-clipboard-text ()
+  #+(and lispworks win32)
+  (CAPI-WIN32-LIB::GET-CLIPBOARD-TEXT)
+  #-(and lispworks win32)
+  (error "Don't know how to get clipboard text"))
 
 
-
-
-
-#+ignore (bind-key "input russian" "Meta-`") ; для ввода русских букв надо нажать alt, и не отпуская его, дважды нажать shift
-
-(defconstant +whitespace+ 
+(define-constant +whitespace+ 
   (concatenate 'string '(#\Space #\Newline #\Tab #\Linefeed #\Return #\Page))
-  "Whitespace characters.")
+  :test 'string=
+  :documentation "Whitespace characters.")
 
-(defcommand "Copy current line" (p) "" "" 
-  (declare (ignore p))
-  (save-excursion
-    (proga
-      (beginning-of-line-command nil)
-      (let1 p1 (copy-point (current-point)))
-      (end-of-line-command nil)
-      (setf *my-command-result* 
-            (points-to-string p1 (current-point))))))
-
-(editor:defcommand "Paste Filename" (p) "Pastes and unixized filename from clipboard" "Pastes and unixized filename from clipboard"  
+;; for sbcl it is a emacs function paste-filename
+#+lispworks (editor:defcommand "Paste Filename" (p) "Pastes and unixized filename from clipboard" "Pastes and unixized filename from clipboard"  
   (declare (ignore p))
   #+ignore (editor:backward-kill-form-command p)
   (insert-string (current-point) 
                  (format nil "~S" 
                          (substitute 
                           #\/ #\\ 
-                          (string-trim +whitespace+ (CAPI-WIN32-LIB::GET-CLIPBOARD-TEXT))))))
+                          (string-trim +whitespace+ (get-clipboard-text))))))
 
-(editor:defcommand "Paste Windows Filename" (p) "Pastes and unixized filename from clipboard" "Pastes and unixized filename from clipboard"  
-  (declare (ignore p))
-  #+ignore (editor:backward-kill-form-command p)
-  (insert-string (current-point) 
-                 (format nil "~S" 
-                         (string-trim +whitespace+ (CAPI-WIN32-LIB::GET-CLIPBOARD-TEXT)))))
-
-(editor:defcommand "Insert string from clipboard" (p) "Pastes string from a clipboard as a lisp string"
+; в sbcl есть ф-я EMACS insert-string-from-clipboard
+#+lispworks (editor:defcommand "Insert string from clipboard" (p) "Pastes string from a clipboard as a lisp string"
      (declare (ignore p))
   (insert-string (current-point)
                  (format nil "~S"
                          (string-trim +whitespace+ (capi-win32-lib::get-clipboard-text)))))
 
-  
-
-(defcommand "Buffer Pathname To Clipboard" (p)
+; в sbcl - ф-я EMACS buffer-pathname-to-clipboard
+#+lispworks (defcommand "Buffer Pathname To Clipboard" (p)
      "Копирует имя файла (namestring) в буфер обмена"
      (declare (ignorable p))
      (proga 
@@ -381,24 +268,33 @@ end.
 
 (defun window-handle-by-buffer (buffer)
   "Возвращает handle первого окна данного буфера"
+  #-lispworks (declare (ignore buffer))
+  #-lispworks (break "not implemented")
+  #+lispworks
+  (progn
   (assert (typep buffer 'editor::buffer))
   (let1 window (car (editor:buffer-windows buffer))
     (let1 pane (slot-value window 'editor::text-pane)
       (let1 representation (slot-value pane 'capi-internals:representation)
-        (slot-value representation 'win32:hwnd)))))
+        (slot-value representation 'win32:hwnd))))))
 
-(defun goto-buffer-2 (buffer in-same-window &key (set-foreground-window t))
+#+lispworks (defun goto-buffer-2 (buffer in-same-window &key (set-foreground-window t))
   "Не только отображает буфер, но и показывет окно"
   (goto-buffer buffer in-same-window)
   (when set-foreground-window 
     (win32:set-foreground-window (window-handle-by-buffer buffer)))
   )
 
-(defun goto-or-create-xy (pathname row col &key kill-buffer (set-foreground-window t))
+#+lispworks (defun goto-or-create-xy (pathname row col &key kill-buffer (set-foreground-window t))
   (capi:find-interface 'lispworks-tools:editor)
   (goto-xy pathname row col :kill-buffer kill-buffer :set-foreground-window set-foreground-window))
 
-(DEFUN GOTO-XY (PATHNAME ROW COL &KEY KILL-BUFFER (set-foreground-window t))
+; для SBCL есть соотв. команда EMACS
+#+sbcl 
+(defun goto-xy (pathname row col)
+  (swank:eval-in-emacs `(goto-xy ,(namestring pathname) ,row ,col)))
+   
+#+lispworks (DEFUN GOTO-XY (PATHNAME ROW COL &KEY KILL-BUFFER (set-foreground-window t))
   "Не сработает при отсутствии редактора. При kill-buffer опасно, т.к. закрывает файл без изменений"
   (perga
     (let ED (get-some-editor))
@@ -483,7 +379,7 @@ end.
      (format nil "hgtk commit")
      :current-directory path)))|#
 
-(defun get-current-buffer-text-and-offset ()
+#+lispworks (defun get-current-buffer-text-and-offset ()
   "Возвращает два значения - полный текст из текущего окна и смещение точки"
   (proga function
     (let pnt (current-point))
@@ -492,45 +388,8 @@ end.
     (values text offset)
     ))
 
-(defparameter *last-identifier-sought* nil) 
-
-(defun do-identifier-search (skip-one-char)
-  (proga
-    (let pnt (current-point))
-    (let scanner (cl-ppcre:create-scanner 'ppcre-shortcuts:lisp-identifier))
-    (mlvl-bind (text offset) (get-current-buffer-text-and-offset))
-    (when skip-one-char (incf offset))
-    (cl-ppcre:do-matches (o1 o2 scanner text nil :start offset) ; ( scanner (subseq1 text offset))
-      (proga
-        (when (string-equal (subseq text o1 o2) *last-identifier-sought*)
-          (editor::push-buffer-point pnt)
-          (beginning-of-buffer-command nil)
-          (forward-character-command o1 #+nil (+ o1 offset))
-          (let target-point (copy-point (current-point)))
-          (forward-character-command (- o2 o1))
-      ;(editor::set-isearch-highlight target-point (current-point))
-          (set-current-mark (current-point))
-          (move-point (current-point) target-point)
-      ; (highlight-active-region (editor:current-window))
-          (editor::set-highlight-buffer-region t)
-          (return-from do-identifier-search t) ; from do-matches
-          )))
-    (editor:message "Identifier not found")
-    ))
-
-(defcommand "Identifier search" (p) "Finds lisp identifier"
-     (declare (ignorable p))
-  (setf *last-identifier-sought* (prompt-for-symbol nil :prompt "Find what?") #+nil (editor::prompt-for-target-string "Find what? "))
-  (do-identifier-search nil)
-  )
-
-(defcommand "Continue identifier search" (p) "Continues identifier search"
-     (declare (ignorable p))
-  (do-identifier-search t))
-
-
-
-(defun get-filename-at-point-and-prompt ()
+; в EMACS - команда find-file-at-point
+#+lispworks (defun get-filename-at-point-and-prompt ()
   "Подсказка для открытия файла, имя к-рого находится в текущей точке" 
   (perga function
     (let location (namestring (editor::buffer-default-directory (current-buffer))))
@@ -560,98 +419,16 @@ end.
     (return-from function result)
     ))
 
-(defcommand "WFind file at point" (p) "Читает с текущей точки нечто похожее на идентификатор лиспа и предлагает открыть такой файл" "" 
-  (declare (ignorable p))
-  (proga
-    (let pathname (get-filename-at-point-and-prompt))
-    (let buf (find-file-buffer pathname #'ignored))
-    (goto-buffer-2 buf t)
-    )
-  )
-
-
+#+lispworks
 (defvar *in-find-source* nil "is bound to t in find-source-command by defadvice")
 
+#+lispworks
 (lw:defadvice (find-source-command bind-in-find-source :around) (&rest args)
   (let ((*in-find-source* t))
     (apply #'lw:call-next-advice args)))
 
-
-#| Go Back работает лучше. 
-
-(defvar *find-definition-locations-stack* nil)
-
-(defcommand "Push location and Find Source" (p &rest more-args) "Remembers current location and calls \"Find Source\". Use \"Pop location from find source\" to go back. Do not call the command, call decorated \"Find source\" command instead"
-  (let* ((file-name (buffer-pathname (current-buffer)))
-         (pnt (current-point))
-         (offset (real-point-offset pnt)))
-    (when file-name
-      (push `(,file-name ,offset) *find-definition-locations-stack*))
-    (DECORATE-FUNCTION:apply-undecorated 'find-source-command (cons p more-args))))
-
-(DECORATE-FUNCTION:decorate-function
- 'find-source-command
- (lambda (fn &rest args)
-   (declare (ignore fn))
-   (apply 'push-location-and-find-source-command args)))
-
-
-(defcommand "Push location and Continue Tags Search" (p &rest more-args) "Remembers current location and calls \"Find Source\". Use \"Pop location from find source\" to go back. Do not call the command, call decorated \"Find source\" command instead"
-     (declare (ignorable p))
-  (let* ((file-name (buffer-pathname (current-buffer)))
-         (pnt (current-point))
-         (offset (real-point-offset pnt)))
-    (when file-name
-      (push `(,file-name ,offset) *find-definition-locations-stack*))
-    (DECORATE-FUNCTION:apply-undecorated 'continue-tags-search-command (cons p more-args))))
-
-(DECORATE-FUNCTION:decorate-function
- 'continue-tags-search-command
- (lambda (fn &rest args)
-   (declare (ignore fn))
-   (apply 'push-location-and-continue-tags-search-command args)))
-
-
-
-(defcommand "Pop location from find source" (p)
-     (declare (ignore p))
-     (let* ((cur-file-and-offset (pop *find-definition-locations-stack*))
-            (file-name (first cur-file-and-offset))
-            (where (second cur-file-and-offset))
-            )
-       (cond
-        (cur-file-and-offset
-         (goto-buffer (find-file-buffer file-name) t)
-         (beginning-of-buffer-command nil)
-         (EDITOR::move-buffer-point-to-offset (editor::current-buffer) where))
-        (t
-         (EDITOR::editor-beep))
-       )))
-
-|#
-
-(defcommand "My find source" (p) "Finds source with budden-tools machinery. See srcpl"
-     (declare (ignorable p))
-  (perga function
-    (let file (buffer-pathname (current-buffer)))
-    (unless file
-      (editor:message "No file is associated with the point")
-      (return-from function nil))
-    (let pnt (current-point))
-    (let offset (real-point-offset pnt))
-            ;(new-point (character-offset (copy-point pnt) 10))
-            ;(text (when new-point (points-to-string pnt new-point)))
-    (let targets (budden-tools::l/find-sources-in-file file offset :strict t))
-       ;(break)
-       ;(print `(,file ,text ,offset ,targets))
-    (when targets
-      (let* ((target (car targets))
-             (target-file (first target)) ; (meta-parse-firebird::lexem-pos-file-name target)??? FIXME Записывать позиции единообразно, например, с помощью olm. 
-             (offset (second target)))
-        (goto-offset target-file offset :kill-buffer nil)
-        ))))
-
-
+; для sbcl уже и так есть
+#+lispworks
 (defcommand "Find current package definition" (p) "Goto current p"
      (declare (ignorable p))
   (declare (ignorable p))
@@ -659,7 +436,6 @@ end.
    nil
    (list 'defpackage
          (package-name (editor::buffer-package-to-use (editor:current-buffer))))))
-
 
 (defcommand "Find current system definition" (p) "Goto current system from attribute line"
      (declare (ignorable p))

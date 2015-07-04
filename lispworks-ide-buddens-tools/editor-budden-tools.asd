@@ -7,7 +7,8 @@
   :serial t
   :components (
                (:file "editor-budden-tools-package")
-               (:file "editor-budden-tools") ; навигация по коду
+               #+lispworks (:file "editor-budden-tools") ; навигация по коду
+               #+sbcl (:file "editor-budden-tools-sbcl")
                (:file "ppcre-shortcuts") ; сокращения, удобные для работы с ppcre
                (:file "syntax-coloring-mpf") ; shift-f12 - раскрасить fbody
                (:file "message-area") ; подмена строки состояния в листенере и подсказки интерпретатора

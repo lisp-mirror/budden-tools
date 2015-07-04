@@ -1,7 +1,8 @@
+;; -*- Encoding : utf-8; -*- 
 
 (asdf::of-system :editor-budden-tools)
 
-(def-merge-packages::! :ppcre-shortcuts (:use :cl-ppcre :lisp :iterate-keywords)
+(def-merge-packages::! :ppcre-shortcuts (:use :cl-ppcre :cl :iterate-keywords)
   ; see "ppcre-shortcuts.lisp"
   ; see also obsolete cl-ppcre-idioms.lisp
   (:always t)
@@ -22,33 +23,40 @@
 
 (def-merge-packages::!
  :EDITOR-BUDDEN-TOOLS
- (:use :cl :editor :budden-tools :alexandria :ppcre-shortcuts :iterate-keywords)
+ (:use :cl
+       #+lispworks :editor
+       #-sbcl :swank
+       :budden-tools :alexandria :ppcre-shortcuts :iterate-keywords)
  (:shadowing-import-from :budden-tools #:READ-FILE-INTO-STRING)
- (:shadowing-import-from :lispworks #:defadvice)
+ #+lispworks (:shadowing-import-from :lispworks #:defadvice)
  (:import-from :perga-implementation perga-implementation:perga)
  (:import-from :asdf #:component-pathname #:component-system #:*current-component*)
- (:export 
+ #+lispworks
+ (:export
   "
-  EDITOR-BUDDEN-TOOLS:GOTO-BUFFER-2 ; перейти к буферу и вывести окно вперёд
-  EDITOR-BUDDEN-TOOLS:GOTO-XY ; перейти на заданную строку и колонку файла
-  EDITOR-BUDDEN-TOOLS:GOTO-OFFSET ; перейти на заданную позицию файла #\newline считается за один символ!
-  EDITOR-BUDDEN-TOOLS:REPLACE-STRING-IN-FILE 
   EDITOR-BUDDEN-TOOLS:COPY-CURRENT-LINE-COMMAND
   EDITOR-BUDDEN-TOOLS:*MY-COMMAND-RESULT*
-  EDITOR-BUDDEN-TOOLS:TEXT-TO-CLIPBOARD
-  EDITOR-BUDDEN-TOOLS:GET-THE-LISTENER-INTERFACE ; возвращает интерфейс по текущему процессу
-  EDITOR-BUDDEN-TOOLS:BUDDENS-LISTENER-MESSAGE ; мы умеем вставлять свою подсказку в строку состояния листенера
-  EDITOR-BUDDEN-TOOLS:DECORATED-PACKAGE-PROMPT ; и подменять подсказку листенера
-  EDITOR-BUDDEN-TOOLS:CLEAR-LEXEM-POSITION-CACHE
+  EDITOR-BUDDEN-TOOLS:GET-THE-LISTENER-INTERFACE ; РІРѕР·РІСЂР°С‰Р°РµС‚ РёРЅС‚РµСЂС„РµР№СЃ РїРѕ С‚РµРєСѓС‰РµРјСѓ РїСЂРѕС†РµСЃСЃСѓ
+  EDITOR-BUDDEN-TOOLS:BUDDENS-LISTENER-MESSAGE ; РјС‹ СѓРјРµРµРј РІСЃС‚Р°РІР»СЏС‚СЊ СЃРІРѕСЋ РїРѕРґСЃРєР°Р·РєСѓ РІ СЃС‚СЂРѕРєСѓ СЃРѕСЃС‚РѕСЏРЅРёСЏ Р»РёСЃС‚РµРЅРµСЂР°
+  EDITOR-BUDDEN-TOOLS:DECORATED-PACKAGE-PROMPT ; Рё РїРѕРґРјРµРЅСЏС‚СЊ РїРѕРґСЃРєР°Р·РєСѓ Р»РёСЃС‚РµРЅРµСЂР°
   EDITOR-BUDDEN-TOOLS:*sc-begin-fb-code-face*
   EDITOR-BUDDEN-TOOLS:*sc-end-fb-code-face*
   EDITOR-BUDDEN-TOOLS:*sc-firebird-macro-name-face*
-  EDITOR-BUDDEN-TOOLS:MPF-FACE ; имя свойства
+  EDITOR-BUDDEN-TOOLS:MPF-FACE ; РёРјСЏ СЃРІРѕР№СЃС‚РІР°
   EDITOR-BUDDEN-TOOLS:GET-SOME-EDITOR
-  EDITOR-BUDDEN-TOOLS:*IDE-CODE-SNIPPETS* ; полезные кусочки кода
+  EDITOR-BUDDEN-TOOLS:*IDE-CODE-SNIPPETS* ; РїРѕР»РµР·РЅС‹Рµ РєСѓСЃРѕС‡РєРё РєРѕРґР°
+  ")
+ (:export 
+  "
+  EDITOR-BUDDEN-TOOLS:GOTO-BUFFER-2 ; РїРµСЂРµР№С‚Рё Рє Р±СѓС„РµСЂСѓ Рё РІС‹РІРµСЃС‚Рё РѕРєРЅРѕ РІРїРµСЂС‘Рґ
+  EDITOR-BUDDEN-TOOLS:GOTO-XY ; РїРµСЂРµР№С‚Рё РЅР° Р·Р°РґР°РЅРЅСѓСЋ СЃС‚СЂРѕРєСѓ Рё РєРѕР»РѕРЅРєСѓ С„Р°Р№Р»Р°
+  EDITOR-BUDDEN-TOOLS:GOTO-OFFSET ; РїРµСЂРµР№С‚Рё РЅР° Р·Р°РґР°РЅРЅСѓСЋ РїРѕР·РёС†РёСЋ С„Р°Р№Р»Р° #\newline СЃС‡РёС‚Р°РµС‚СЃСЏ Р·Р° РѕРґРёРЅ СЃРёРјРІРѕР»!
+  EDITOR-BUDDEN-TOOLS:REPLACE-STRING-IN-FILE 
+  EDITOR-BUDDEN-TOOLS:TEXT-TO-CLIPBOARD
+  EDITOR-BUDDEN-TOOLS:CLEAR-LEXEM-POSITION-CACHE
   "
 
-  ; fixme - это должно работать и в нижнем регистре
+  ; fixme - СЌС‚Рѕ РґРѕР»Р¶РЅРѕ СЂР°Р±РѕС‚Р°С‚СЊ Рё РІ РЅРёР¶РЅРµРј СЂРµРіРёСЃС‚СЂРµ
   ))
 
 
