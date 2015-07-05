@@ -379,7 +379,7 @@ is meant in terms of load operation"
     *stat-op-files*)) |#
 
 #| seem to be unused 
-(defclass around-load-op-mixin () () 
+ (defclass around-load-op-mixin () () 
   (:documentation "Mixin to be able to do some actions around load-op")) 
 
 
@@ -391,7 +391,7 @@ is meant in terms of load operation"
 |#
 
 #| maybe-later
-(defmethod print-object ((c source-file) stream)
+ (defmethod print-object ((c source-file) stream)
   (print-unreadable-object (c stream :type t :identity t)
     (ignore-errors
       (format stream "~A ~S" (dump-component-asdf-path c) (component-pathname c))
@@ -413,7 +413,7 @@ if you undefsystem it"
 
 (defun lock-tabooed-systems () "Utility function which locks all tabooed systems"
   #+asdf3 (break "didn't tested in asdf3")
-  (dolist (name *tabooed-system-names*) (lock-system name)))
+  #-asdf3 (dolist (name *tabooed-system-names*) (lock-system name)))
 
 ;    (when (ignore-errors (find-system "sb-cover")) 
 ;      (lock-system name))))
@@ -423,28 +423,30 @@ if you undefsystem it"
 - you relocate your asd file
 - you change class of some component
 "
-;  (break "This function is completely untested. It deletes files! It is not too late to return")
+                                        ;  (break "This function is completely untested. It deletes files! It is not too late to return")
   #+asdf3 (break "didn't tested in asdf3")
-  (assert (not packages) () ":packages not implemented")
-  (assert (not dependents-too) () ":dependents-too not implemented") 
-  (assert (not (eq fasls 't)) () "undefsystem says: RTFM")
-  (when (member name *tabooed-system-names* :test 'equalp) (return-from undefsystem nil))
-  (let ((system (find-system name)))
-    (unless system
-      (warn "system ~S not found" name)
-      (return-from undefsystem nil))
-    (let ((system-asdf-name (component-name system))
-	  (system-kw (keywordize name)))
+  #-asdf3
+  (progn
+    (assert (not packages) () ":packages not implemented")
+    (assert (not dependents-too) () ":dependents-too not implemented") 
+    (assert (not (eq fasls 't)) () "undefsystem says: RTFM")
+    (when (member name *tabooed-system-names* :test 'equalp) (return-from undefsystem nil))
+    (let ((system (find-system name)))
+      (unless system
+        (warn "system ~S not found" name)
+        (return-from undefsystem nil))
+      (let ((system-asdf-name (component-name system))
+            (system-kw (keywordize name)))
 					;  (assert (not (eq *package* (find-package :sw))))
-      #+ignore
-      (when (find-package :sw)
-	(delete-package :sw)
-	)
-;      (when fasls (delete-fasls-on-system name fasls))
-      (when feature (setf *features* (delete system-kw *features*)))
-      (remhash system-asdf-name asdf::*defined-systems*)
-      (when reload (oos 'load-op name))
-      )))
+        #+ignore
+        (when (find-package :sw)
+          (delete-package :sw)
+          )
+                                        ;      (when fasls (delete-fasls-on-system name fasls))
+        (when feature (setf *features* (delete system-kw *features*)))
+        (remhash system-asdf-name asdf::*defined-systems*)
+        (when reload (oos 'load-op name))
+        ))))
 
 
 (defun run-shell-command-here (control-string &rest args) "In SBCL, run-shell-command ignores *default-pathname-defaults*. Let's fix it and also bind verbose-out to standard-output"
@@ -470,7 +472,7 @@ if you undefsystem it"
 
 
 #| asdf3.1; seem to be unused
-(defun load-system-by-asd-file (asd-pathname &key (add-path-to-central-registry t))
+ (defun load-system-by-asd-file (asd-pathname &key (add-path-to-central-registry t))
   (flet ((path-to-a-file (filename) "d:/foo/file.ext --> d:/foo/" 
            (let ((p (pathname filename)))
              (make-pathname 
@@ -530,6 +532,28 @@ if you undefsystem it"
            ,(lispworks:call-next-advice call environment))))
      (t     
       (lispworks:call-next-advice call environment)))))
+
+
+
+#+sbcl
+(defmacro decorate-defsystem (name &body options)
+  (let ((source-location-sym (make-symbol (string 'sb-c:source-location))))
+    `(prog1
+         (,(decorate-function::decorate-macro-get-undecorated-invoker 'defsystem)
+          ,name ,@options)
+       (let ((,source-location-sym (sb-c:source-location)))
+       (sb-c:with-source-location (,source-location-sym)
+         (setf (sb-c::info :source-location :constant ,(keywordize name)) ,source-location-sym))
+       ))))
+
+#+sbcl
+(decorate-function::decorate-macro 'defsystem 'decorate-defsystem)
+
+
+
+;(defmacro my-macro (x) `,x)
+;(defmacro decorate-
+
  ; `(call-next-advice ,name ,@options))
 
 

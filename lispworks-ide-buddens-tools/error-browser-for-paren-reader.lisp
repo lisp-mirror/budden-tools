@@ -1,4 +1,5 @@
-;; помощник для поиска ошибок чтения. Пример простого расширения отладчика
+; -*- Encoding : utf-8 ; -*- 
+;; РїРѕРјРѕС‰РЅРёРє РґР»СЏ РїРѕРёСЃРєР° РѕС€РёР±РѕРє С‡С‚РµРЅРёСЏ. РџСЂРёРјРµСЂ РїСЂРѕСЃС‚РѕРіРѕ СЂР°СЃС€РёСЂРµРЅРёСЏ РѕС‚Р»Р°РґС‡РёРєР°
 (asdf::of-system :editor-budden-tools)
 
 (def-merge-packages::!
@@ -61,7 +62,7 @@
 
 
 (defun point-at-offset (buffer offset)
-  "Возвращает точку в буфере по смещению в файле. FIXME трогает буфер, шмыркает окнами. Переписать"
+  "Р’РѕР·РІСЂР°С‰Р°РµС‚ С‚РѕС‡РєСѓ РІ Р±СѓС„РµСЂРµ РїРѕ СЃРјРµС‰РµРЅРёСЋ РІ С„Р°Р№Р»Рµ. FIXME С‚СЂРѕРіР°РµС‚ Р±СѓС„РµСЂ, С€РјС‹СЂРєР°РµС‚ РѕРєРЅР°РјРё. РџРµСЂРµРїРёСЃР°С‚СЊ"
   (proga
     (let filename (buffer-pathname buffer))
     (goto-offset filename offset :set-foreground-window t)
@@ -71,8 +72,8 @@
 
 
 (defun colorize-region-for-error-browser (buffer locations)
-  "Ошибка здесь в том, что fbody вызывается только при компиляции. По идее, ридер должен 
-вызываться при каждом редактировании, но пока не будем этого делать"
+  "РћС€РёР±РєР° Р·РґРµСЃСЊ РІ С‚РѕРј, С‡С‚Рѕ fbody РІС‹Р·С‹РІР°РµС‚СЃСЏ С‚РѕР»СЊРєРѕ РїСЂРё РєРѕРјРїРёР»СЏС†РёРё. РџРѕ РёРґРµРµ, СЂРёРґРµСЂ РґРѕР»Р¶РµРЅ 
+РІС‹Р·С‹РІР°С‚СЊСЃСЏ РїСЂРё РєР°Р¶РґРѕРј СЂРµРґР°РєС‚РёСЂРѕРІР°РЅРёРё, РЅРѕ РїРѕРєР° РЅРµ Р±СѓРґРµРј СЌС‚РѕРіРѕ РґРµР»Р°С‚СЊ"
   (proga
     (iter (:for l in (cons 1 (reverse locations)))
       (:for i :downfrom (+ 0 (length locations)))
@@ -103,7 +104,7 @@
 
 
 (defun smart-resolve-export-conflict (&optional ignore p)
-  "При конфликте во время экспорта убирает все символы, кроме экспортируемого"
+  "РџСЂРё РєРѕРЅС„Р»РёРєС‚Рµ РІРѕ РІСЂРµРјСЏ СЌРєСЃРїРѕСЂС‚Р° СѓР±РёСЂР°РµС‚ РІСЃРµ СЃРёРјРІРѕР»С‹, РєСЂРѕРјРµ СЌРєСЃРїРѕСЂС‚РёСЂСѓРµРјРѕРіРѕ"
   (declare (ignore ignore p))
   (perga-implementation:perga
     (let c DBG::*debug-condition*)
@@ -136,6 +137,8 @@
  '(:smart-resolve-export-conflict smart-resolve-export-conflict "Smart resolve export conflict") 
  dbg::*default-debugger-commands*)
 
+; РґР»СЏ SBCL - sb-debug::*debug-commands* - С‚Р°Рј Р¶Рµ РµСЃС‚СЊ !def-debug-command 
+
 (defun call-error-browser-from-debugger (&optional user-typed-command argument)
   (declare (ignore user-typed-command))
   (proga
@@ -145,13 +148,13 @@
      ((string-equal argument "?")
       (read-error-browser-again))
      ((eq argument :help)
-      (princ "Просмотровщик ошибок чтения
-  :e 0 - показать место ошибки (default)
-  :e 1 - показать самую последнюю открытую скобку          
-  :e 2 - показать предпоследнюю
-  ... и т.п. 
-  :e ? - меню для выбора скобки с указанием позиции в файле
-  :e :help - данная справка"
+      (princ "РџСЂРѕСЃРјРѕС‚СЂРѕРІС‰РёРє РѕС€РёР±РѕРє С‡С‚РµРЅРёСЏ
+  :e 0 - РїРѕРєР°Р·Р°С‚СЊ РјРµСЃС‚Рѕ РѕС€РёР±РєРё (default)
+  :e 1 - РїРѕРєР°Р·Р°С‚СЊ СЃР°РјСѓСЋ РїРѕСЃР»РµРґРЅСЋСЋ РѕС‚РєСЂС‹С‚СѓСЋ СЃРєРѕР±РєСѓ          
+  :e 2 - РїРѕРєР°Р·Р°С‚СЊ РїСЂРµРґРїРѕСЃР»РµРґРЅСЋСЋ
+  ... Рё С‚.Рї. 
+  :e ? - РјРµРЅСЋ РґР»СЏ РІС‹Р±РѕСЂР° СЃРєРѕР±РєРё СЃ СѓРєР°Р·Р°РЅРёРµРј РїРѕР·РёС†РёРё РІ С„Р°Р№Р»Рµ
+  :e :help - РґР°РЅРЅР°СЏ СЃРїСЂР°РІРєР°"
       )))))
 
 
@@ -219,8 +222,8 @@
       (read-error-browser-goto-selection)
       (values))))
 
-(defcommand "Read error browser" (p) "Показывает ошибки чтения - вызывать, когда чтение упало по ошибке"
-     "Требуются механизмы из budden-tools"
+(defcommand "Read error browser" (p) "РџРѕРєР°Р·С‹РІР°РµС‚ РѕС€РёР±РєРё С‡С‚РµРЅРёСЏ - РІС‹Р·С‹РІР°С‚СЊ, РєРѕРіРґР° С‡С‚РµРЅРёРµ СѓРїР°Р»Рѕ РїРѕ РѕС€РёР±РєРµ"
+     "РўСЂРµР±СѓСЋС‚СЃСЏ РјРµС…Р°РЅРёР·РјС‹ РёР· budden-tools"
   (declare (ignorable p))
   (editor:insert-string (current-point) "(error-browser-for-paren-reader:read-error-browser)")
   (editor:execute-or-insert-newline-or-yank-from-previous-prompt-command nil)

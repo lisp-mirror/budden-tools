@@ -10,11 +10,11 @@
                #+lispworks (:file "editor-budden-tools") ; навигация по коду
                #+sbcl (:file "editor-budden-tools-sbcl")
                (:file "ppcre-shortcuts") ; сокращения, удобные для работы с ppcre
-               (:file "syntax-coloring-mpf") ; shift-f12 - раскрасить fbody
-               (:file "message-area") ; подмена строки состояния в листенере и подсказки интерпретатора
-               (:file "error-browser-for-paren-reader") ; помощник для поиска ошибок чтения. Пример простого расширения отладчика
-               (:file "listener-confirm-destroy-function")
-               (:file "layout-debugger")
+               #+lispworks (:file "syntax-coloring-mpf") ; shift-f12 - раскрасить fbody
+               #+lispworks (:file "message-area") ; подмена строки состояния в листенере и подсказки интерпретатора
+               #+lispworks (:file "error-browser-for-paren-reader") ; помощник для поиска ошибок чтения. Пример простого расширения отладчика
+               #+lispworks (:file "listener-confirm-destroy-function")
+               #+lispworks (:file "layout-debugger")
                (:file "fasl-files-in-temp-dir")
                (:file "find-readtable-for-point")
                )

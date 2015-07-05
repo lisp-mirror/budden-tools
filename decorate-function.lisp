@@ -1,4 +1,4 @@
-;;; -*- Encoding: utf-8; -*-
+;;; -*- Encoding: utf-8; System :decorate-function -*-
 ;;; decorate-function:
 ;;; Что делает? Позволяет подменить symbol-function, удовлетворяя следующим условиям:
 ;;; 1. Имеется возможность вызвать исходную функцию из подменённой
@@ -18,7 +18,7 @@
      #:get-undecorated)
     (:use :cl)))
 
-(asdf:of-system :decorate-function)
+;(asdf:of-system :decorate-function) ; we are too early
 (in-package :decorate-function)
 
 ;;; Здесь нормально (с проверкой переопределения) сделаны макросы. Ф-ии надо переделать. 
@@ -56,10 +56,10 @@ progn
               (lambda (&rest args) (apply decorator-fn old-fn args)))))))
 
 
-(defun |decorateMacro-getUndecoratedInvoker| (symbol)
+(defun decorate-macro-get-undecorated-invoker (symbol)
   (car (gethash symbol *undecorated-macros*)))
 
-(defun |decorateMacro-checkRedefinition| (symbol)
+(defun decorate-macro-check-redefinition (symbol)
   "Checks if macro was redefined and errs if it was. Returns decoration entry"
   (let ((decoration-entry (gethash symbol *undecorated-macros*)))
     (cond
@@ -75,10 +75,10 @@ progn
      ))
   )
 
-(defun |decorateMacro| (symbol decorator-macro)
+(defun decorate-macro (symbol decorator-macro)
   "See example"
   (let (#+lispworks (lispworks:*handle-warn-on-redefinition* nil)
-                    (entry (|decorateMacro-checkRedefinition| symbol)))
+                    (entry (decorate-macro-check-redefinition symbol)))
     (macrolet ((mf (s) `(macro-function ,s)))
       (cond
        (entry 
@@ -92,8 +92,8 @@ progn
           (setf (mf symbol) (mf decorator-macro))))
        ))))
 
-(defun |undecorateMacro| (symbol)
-  (let ((decoration-entry (|decorateMacro-checkRedefinition| symbol)))
+(defun undecorate-macro (symbol)
+  (let ((decoration-entry (decorate-macro-check-redefinition symbol)))
     (when decoration-entry
       (setf (macro-function symbol) (macro-function (car decoration-entry)))
       (remhash symbol *undecorated-macros*))))
@@ -132,10 +132,10 @@ progn
 #+example
 (progn ; evaluate it, not compile
   (defmacro original (symbol) `',symbol)
-  (defmacro decorate-original (symbol) `(list :decorated (,(|decorateMacro-getUndecoratedInvoker| 'original) ,symbol)))
-  (|decorateMacro| 'original 'decorate-original)
+  (defmacro decorate-original (symbol) `(list :decorated (,(decorate-macro-get-undecorated-invoker 'original) ,symbol)))
+  (decorate-macro 'original 'decorate-original)
   (print (original 'asdf))
-  (|undecorateMacro| 'original)
+  (undecorate-macro 'original)
   )
 
 

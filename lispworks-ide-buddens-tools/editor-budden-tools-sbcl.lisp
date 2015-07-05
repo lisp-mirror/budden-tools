@@ -34,7 +34,7 @@
   "Выполняет body внутри команды. Задействованы переменные *aux-exitor* и *my-command-result*. Создает block nil
   "
   (declare (ignore buffer body))
-  '(break "not implemented")
+  #+sbcl (break "not implemented")
   )
   
 (defun return-expr-points (buffer expr)
@@ -333,6 +333,8 @@ end.
       )
     result)
   #-lispworks
+  (declare (ignore point))
+  #-lispworks
   (error "not implemented in this lisp"))
 
 #|(defcommand "hg" (p) "Calls hg on current file"
@@ -419,15 +421,14 @@ end.
     (return-from function result)
     ))
 
-#+lispworks
-(defvar *in-find-source* nil "is bound to t in find-source-command by defadvice")
+(defvar *in-find-source* nil "in lispworks, it is bound to t in find-source-command by defadvice")
 
 #+lispworks
 (lw:defadvice (find-source-command bind-in-find-source :around) (&rest args)
   (let ((*in-find-source* t))
     (apply #'lw:call-next-advice args)))
 
-; для sbcl уже и так есть
+; no need for that in lispworks with asdf-tools
 #+lispworks
 (defcommand "Find current package definition" (p) "Goto current p"
      (declare (ignorable p))
@@ -437,6 +438,8 @@ end.
    (list 'defpackage
          (package-name (editor::buffer-package-to-use (editor:current-buffer))))))
 
+; no need for that in lispworks with asdf-tools
+#+lispworks
 (defcommand "Find current system definition" (p) "Goto current system from attribute line"
      (declare (ignorable p))
   (declare (ignorable p))
@@ -456,7 +459,7 @@ end.
              system-sym))))))
 
 
-(defcommand "Grep symbol" (p) "Finds symbol with grep"
+#+lispworks (defcommand "Grep symbol" (p) "Finds symbol with grep"
      (declare (ignorable p))
   (let1 sym (prompt-for-symbol nil :prompt "What?")
     (setf lispworks:*grep-command-format* (str+ "~a ~a \"" sym "\" c:/project/sales_budden/*.pas c:/lisp/sw/fb2/wrapper.lisp"))
@@ -522,9 +525,10 @@ end.
   
   Данная команда не сработает при отсутствии редактора. При kill-buffer опасно, т.к. закрывает файл без изменений. 
    См. также modest-goto-offset"
+  #+sbcl (declare (ignore set-foreground-window kill-buffer))
   (perga
-    (let ed (get-some-editor))
-    (unless ed 
+    #+lispworks (let ed (get-some-editor))
+    #+lispworks (unless ed 
       (warn "goto-offset: Нет окна редактора! Не могу показать место ~S в файле ~S" offset pathname)
       (return-from goto-offset nil)
       )
@@ -554,8 +558,9 @@ end.
         (let ((newline-position (position #\Newline str :from-end t)))
           (- (length str) (if newline-position (+ newline-position 1) 0))))))
 
+    (goto-xy pathname line-count char-count)
   
-    (#+lispworks6 capi:execute-with-interface 
+    #+lispworks (#+lispworks6 capi:execute-with-interface 
                   #+lispworks4 capi:apply-in-pane-process
                   ED
                   (LAMBDA ()
@@ -574,7 +579,7 @@ end.
     
     ))
 
-
+#+lispworks
 (defun modest-goto-offset (point offset)
   "Находимся в команде. Есть точка в буфере. Переместить её на смещение p, где смещение имеется в виду
   по буквам. t, если успех, nil - если слишком далеко. См. также goto-offset, editor::goto-point-command"
@@ -606,6 +611,7 @@ end.
     (t nil)))
      
 
+#+lispworks
 (defun char-at-point (p)
   (perga
     (let pp (copy-point p :temporary))
@@ -633,6 +639,7 @@ end.
       (values nil nil)))))
 
        
+#+lispworks
 (lw:defadvice (editor::get-symbol-from-point get-symbol-from-point-around-advice :around)
     (POINT &REST keyargs &KEY (PREVIOUS T) (MAX-LENGTH 100) (MAX-NON-ALPHANUMERIC 15) (CREATE-NEW nil))
   "editor::get-symbol-from-point используется в редакторе, когда хотим забрать символ из текущей точки буфера. Что мы делаем в адвайсе?
@@ -740,7 +747,7 @@ end.
 
 ; #+lispworks6 (budden-tools::decorate-function 'editor::get-symbol-from-point 'decorated-get-symbol-from-point)
 
-(decorate-function:portably-without-package-locks
+#|(decorate-function:portably-without-package-locks
 ; non-toplevel
 (editor::defcommand "Function Argument List" (p) "Переопределил, т.к. глючило. Также покажет структуру"
      (declare (ignore p))
@@ -756,12 +763,34 @@ end.
          (prin1-to-string 
           `(defstruct ,sym ,@(STRUCTURE:structure-class-slot-names class))))))
      ) ; cond
-    )))
-
+    )))|#
 
 (defun select-symbol-from-list (symbols package message)
   "Returns two values: symbol returned and (t if choice accepted, nil if it is rejected)"
-  (let* ((items
+  #+(and (not lispworks) swank)
+  (let* (line
+         num
+         (text
+           (let ((*package* package)
+                 (n 1))
+             (with-output-to-string (out)
+               (dolist (sym symbols)
+                 (format out "~%~A = ~S" n sym)
+                 (incf n))
+               ))))
+    (format t "(zero or just RETURN to abort)~A~A~%?" message text)
+                                        
+      ; FIXME check the ability to do this call
+    (swank:eval-in-emacs `(progn (slime-repl) nil))
+    (setf line (let ((*read-eval* nil))
+                 (read-line *standard-input*)))
+    (setf num (parse-integer line :junk-allowed t))
+    (cond
+      ((or (= num 0) (null num))
+       (values nil nil))
+      (num
+       (values (elt symbols (- num 1)) t)))) 
+  #+lispworks (let* ((items
           (let ((*package* package))
             (mapcar 'prin1-to-string symbols))))
     (multiple-value-bind (choice success)
@@ -774,6 +803,15 @@ end.
        (t
         (values nil nil))))))
 
+
+#+(and sbcl swank)
+(defun editor-error (format-string &rest format-args)
+  (let ((message (apply #'format nil format-string format-args)))
+    (swank:eval-in-emacs `(message ,message))
+    (apply #'error format-string format-args)))
+    
+    
+    
 
 (defun try-to-choose-the-best-matching-symbol-in-find-source (casified-string package)
   (perga
@@ -833,7 +871,7 @@ end.
                   )))))))))))|#
 
 
-(defun my-get-defun-start-and-end-points (point start end)
+#|(defun my-get-defun-start-and-end-points (point start end)
   "Не тестировано, положил для коллекции. Changed clone of get-defun-start-and-end-points. If it fails to find end of defun, returns 
 end of buffer. Returns 0 if it found neither start nor end, 1 if it found start, 2 if it found both"
   (move-point start point)
@@ -845,10 +883,10 @@ end of buffer. Returns 0 if it found neither start nor end, 1 if it found start,
   (move-point end start)
   (if (form-offset end 1)
       2
-    1))
+    1))|#
 
 
-(defparameter EDITOR-BUDDEN-TOOLS:*ide-code-snippets* 
+#+lispworks (defparameter EDITOR-BUDDEN-TOOLS:*ide-code-snippets* 
  "
   Здесь будем хранить полезные знания о функциях среды
   IDE CODE SNIPPETS
@@ -860,7 +898,7 @@ end of buffer. Returns 0 if it found neither start nor end, 1 if it found start,
   ")
 
 
-(defmacro editor-do-registers ((name value &optional sorted) &rest body)
+#+lispworks (defmacro editor-do-registers ((name value &optional sorted) &rest body)
   "Re-birth of editor::do-registers"
   (if sorted
       (let ((sorted-regs (gensym))
@@ -881,51 +919,9 @@ end of buffer. Returns 0 if it found neither start nor end, 1 if it found start,
 
 
 
-
-(editor::defcommand "Goto Selected Register" (p)
-     "Не работает - does not work"
-     (declare (ignore p))
-     (declare (special editor::*registers*))
-     (let (items choice register-names choice-index)
-       (editor-do-registers
-        (name val :sorted)
-        (push 
-         (with-output-to-string (*standard-output*)
-          (editor::print-pretty-character name *standard-output*)
-          (write-string ":  ")
-          (etypecase val
-            (editor::point
-             (let ((buff (point-buffer val)))
-               (if (editor::good-point-p val)
-                   (format t "Line ~S, col ~S in buffer ~A~%"
-                           (count-lines  (editor::buffer-%start buff) val)
-                           (point-column val)
-                           (buffer-name buff)
-                           )
-                 (format t "Deleted from buffer ~A ~%" (buffer-name buff)))))
-            (cons
-             (let* ((str (editor::buffer-string-string (car val)))
-                    (nl (position #\newline str :test #'char=))
-                    (len (length str))
-                    (buff (cdr val)))
-               (format t "Text~@[ from buffer ~A~]~%   ~A~:[~;...~]~%"
-                       (if buff (buffer-name buff))
-                       (subseq str 0 (if nl (min 61 len nl) (min 61 len)))
-                       (> len 60))))))
-         items)
-        (push name register-names))
-       (setf items (nreverse items))
-       (setf choice
-             (CAPI:prompt-with-list items "Select a register"))
-       (when choice
-         (setf choice-index (position choice items :test 'string=))
-         (jump-to-register-command nil (elt register-names choice-index))
-        )))
-
-
 ;; stolen from 'portable hemlock' project which magically turned out to be
 ;; compatible with lispworks' editor
-(defmacro editor::define-file-option (name lambda-list &body body)
+#+lispworks (defmacro editor::define-file-option (name lambda-list &body body)
   "Define-File-Option Name (Buffer Value) {Form}*
    Defines a new file option to be user in the -*- line at the top of a file.
    The body is evaluated with Buffer bound to the buffer the file has been read
@@ -936,7 +932,7 @@ end of buffer. Returns 0 if it found neither start nor end, 1 if it found start,
 	   #'(lambda ,lambda-list ,@body))))
 
 
-(editor::define-file-option "System" (buffer value)
+#+lispworks (editor::define-file-option "System" (buffer value)
   (perga
     (mlvl-bind (p name) (starts-with-subseq ":" value :return-suffix t))
     (:lett name2 string (if p name value))
@@ -967,7 +963,7 @@ end of buffer. Returns 0 if it found neither start nor end, 1 if it found start,
 
 
 
-(defadvice (editor::default-modeline-function-function print-system-and-readtable :around) (window)
+#+lispworks (defadvice (editor::default-modeline-function-function print-system-and-readtable :around) (window)
   (let* ((res (multiple-value-list (lispworks:call-next-advice window)))
          (buffer (window-buffer window))
          (system
@@ -983,7 +979,7 @@ end of buffer. Returns 0 if it found neither start nor end, 1 if it found start,
  
       
 
-(defmacro crossref-command-nachinka (query-fn)
+#+lispworks (defmacro crossref-command-nachinka (query-fn)
   (with-gensyms (sym)
     `(let ((,sym (editor::get-symbol-from-point (editor::current-point) :previous nil :create-new nil)))
        (when ,sym 
@@ -994,32 +990,32 @@ end of buffer. Returns 0 if it found neither start nor end, 1 if it found start,
                 (print (,query-fn ,sym) stream))))
          ))))
   
-(editor:defcommand "Who References" (p) "" "" 
+#+lispworks (editor:defcommand "Who References" (p) "" "" 
   (declare (ignore p))
   (crossref-command-nachinka hcl:who-references))
 
 
-(editor:defcommand "References Who" (p) "" "" 
+#+lispworks (editor:defcommand "References Who" (p) "" "" 
   (declare (ignore p))
   (crossref-command-nachinka hcl:references-who)
   )
 
-(editor:defcommand "Who binds" (p) "" "" 
+#+lispworks (editor:defcommand "Who binds" (p) "" "" 
   (declare (ignore p))
   (crossref-command-nachinka hcl:who-binds)
   )
 
-(editor:defcommand "Binds who" (p) "" "" 
+#+lispworks (editor:defcommand "Binds who" (p) "" "" 
   (declare (ignore p))
   (crossref-command-nachinka hcl:binds-who)
   )
 
-(editor:defcommand "Sets who" (p) "" "" 
+#+lispworks (editor:defcommand "Sets who" (p) "" "" 
   (declare (ignore p))
   (crossref-command-nachinka hcl:sets-who)
   )
 
-(editor:defcommand "Who sets" (p) "" "" 
+#+lispworks (editor:defcommand "Who sets" (p) "" "" 
   (declare (ignore p))
   (crossref-command-nachinka hcl:who-sets)
   )
@@ -1051,7 +1047,7 @@ end of buffer. Returns 0 if it found neither start nor end, 1 if it found start,
     )))
 
 
-(defun maybe-print-name-of-dspec (dspec stream package &key exported-already-hash)
+#+lispworks (defun maybe-print-name-of-dspec (dspec stream package &key exported-already-hash)
   (cond
    ((and (hash-table-p exported-already-hash)
         (not (is-element-new-in-hash dspec exported-already-hash)))
@@ -1071,7 +1067,7 @@ end of buffer. Returns 0 if it found neither start nor end, 1 if it found start,
      
 
 
-(defun steal-definitions-from-file-for-export (filename)
+#+lispworks (defun steal-definitions-from-file-for-export (filename)
   (perga
     (:lett advice-name symbol (gensym "steal-definition-name"))
     (:lett exported-already hash-table (make-hash-table :test 'equal))
