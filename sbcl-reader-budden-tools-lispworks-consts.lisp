@@ -26,6 +26,7 @@
    sbcl-reader-budden-tools-lispworks:make-potential-symbol
    sbcl-reader-budden-tools-lispworks:potential-symbol-casified-name
    sbcl-reader-budden-tools-lispworks:potential-symbol-package
+   sbcl-reader-budden-tools-lispworks:potential-symbol-qualified
    sbcl-reader-budden-tools-lispworks:potential-symbol-p
  "
  ))

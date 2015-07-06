@@ -718,7 +718,7 @@ variables to allow for nested and thread safe reading."
              )))))
 
 ;brt
-(defstruct potential-symbol package casified-name)
+(defstruct potential-symbol package casified-name (qualified 0 :type (integer 0 2)))
 
 ;brt
 (defvar *return-package-and-symbol-name-from-read* nil
@@ -752,6 +752,7 @@ variables to allow for nested and thread safe reading."
         ;(attribute-hash-table (character-attribute-hash-table *readtable*))
         (package-designator nil)
         (colons 0)
+        (colons-in-symbol 0)
         (possibly-rational t)
         (seen-digit-or-expt nil)
         (possibly-float t)
@@ -1108,7 +1109,7 @@ variables to allow for nested and thread safe reading."
                 (return-from read-token (values result t))))))
 
         (when *return-package-and-symbol-name-from-read*
-          (return-from read-token (make-potential-symbol :package found :casified-name (subseq *read-buffer* 0 *ouch-ptr*))))
+          (return-from read-token (make-potential-symbol :package found :casified-name (subseq *read-buffer* 0 *ouch-ptr*) :qualified colons)))
 
         (let ((symbol
                (block nil
