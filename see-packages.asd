@@ -17,6 +17,7 @@
         (:file "sbcl-reader-budden-tools-lispworks")
 	(:file "redirect-reader")
 	(:file "see-packages-applications")
+        (:file "package-system-and-completion" :description "Изменения в системе пакетов, а также функции для завершения имени символа (completion)")
         #+(and lispworks6 win32)
         (:file "lispworks60-def-symbol-readmacro")
         (:file "package-aliases")	
