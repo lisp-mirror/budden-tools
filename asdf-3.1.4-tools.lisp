@@ -267,8 +267,8 @@ To call, do (operate 'walk-op :am-util :force t :walk-function (lambda (x y) (pr
            (lambda (s)
              (let ((parent (component-parent component)))
                (if parent
-                   (format s "~@<To edit ~A, type in asdf::e, to edit ~A, type in asdf::ep~@:>" (component-name component) (component-name parent))
-                 (format s "~@<To edit ~A, type in asdf::e~@:>" (component-name component))
+                   (format s "~@<To edit ~A, eval asdf::e, to edit ~A, eval asdf::ep~@:>" (component-name component) (component-name parent))
+                 (format s "~@<To edit ~A, eval asdf::e~@:>" (component-name component))
                  ))))
          #-lispworks (retry ()
                        :report
