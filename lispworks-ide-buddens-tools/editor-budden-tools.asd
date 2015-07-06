@@ -1,6 +1,6 @@
 ; -*- Encoding: utf-8;   -*- 
 ;;; Правильнее было бы назвать ide-budden-tools
-;;; Работа со средой лиспворкса
+;;; Работа со средой лиспворкса и немножко - с SBCL
 
 (asdf:defsystem :editor-budden-tools
   :depends-on (:cl-utilities :budden-tools :buddens-readtable)
@@ -15,9 +15,10 @@
                #+lispworks (:file "error-browser-for-paren-reader") ; помощник для поиска ошибок чтения. Пример простого расширения отладчика
                #+lispworks (:file "listener-confirm-destroy-function")
                #+lispworks (:file "layout-debugger")
-               (:file "fasl-files-in-temp-dir")
-               (:file "find-readtable-for-point")
+               #+lispworks (:file "fasl-files-in-temp-dir")
+               #+lispworks (:file "find-readtable-for-point")
                )
-  :perform (load-op :after (op c)
-                    (import 'named-readtables:in-readtable :cl-user)
-                    ))
+  ;:perform (load-op :after (op c)
+  ;                  (import 'named-readtables:in-readtable :cl-user)
+  ;                  )
+  )

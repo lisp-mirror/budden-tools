@@ -2,7 +2,9 @@
 
 (in-package :asdf)
 
-(defsystem :multipaste
+#+lispworks (defsystem :multipaste
   
   :components ((:file "multipaste"))
   )
+
+#-lispworks (error "multipaste.asd is lispworks-specific")
