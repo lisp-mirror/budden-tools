@@ -562,6 +562,16 @@ With buddens readtable extensions enabled, when reader finds \"that-package:\" i
                   (:collect (export-clause name (car clause))))
                  (t 
                   (:collect `(:export ,@clause))))))
+        #-sbcl
+        (setf process-local-nicknames-form 
+              (if local-nicknames
+                  `(setf (gethash (find-package ,name) *per-package-alias-table*) 
+                         ',(process-local-nicknames name local-nicknames :to-alist t))
+                  `(remhash (find-package ,name) *per-package-alias-table*)))
+        #+sbcl
+        (setf process-local-nicknames-form
+              (when local-nicknames
+                `((:local-nicknames ,@(process-local-nicknames name local-nicknames)))))                         
         (setf package-definition 
               `(defpackage ,name
                  ,@(when forbidden-symbol-names 
@@ -570,12 +580,8 @@ With buddens readtable extensions enabled, when reader finds \"that-package:\" i
                  ,@generated-import-clauses
                  ,@(iter (:for cl in shadowing-import-from-s) (:collect `(:shadowing-import-from ,@cl)))
                  ,@processed-export-s
-                 ,@clauses))
-        (setf process-local-nicknames-form 
-              (if local-nicknames
-                  `(setf (gethash (find-package ,name) *per-package-alias-table*) 
-                         ',(process-local-nicknames name local-nicknames :to-alist t))
-                `(remhash (find-package ,name) *per-package-alias-table*)))
+                 ,@clauses
+                 #+sbcl ,@process-local-nicknames-form))
         (setf forbid-symbols-forms
               `(; (setf (package-forbidden-symbol-names ,name) '(,@forbidden-symbol-names))
                 (setf (package-metadata-forbidden-symbol-names (ensure-package-metadata ,name)) (forbid-symbols-simple ',forbidden-symbol-names ,name)))
@@ -619,7 +625,7 @@ With buddens readtable extensions enabled, when reader finds \"that-package:\" i
                   `(eval-when (:compile-toplevel :load-toplevel :execute)
                      (prog1
                          ,package-definition
-                       ,process-local-nicknames-form
+                       #-sbcl ,process-local-nicknames-form
                        ,custom-token-parsers-form
                        ,@forbid-symbols-forms
                        ,allow-qualified-intern-form
@@ -627,7 +633,7 @@ With buddens readtable extensions enabled, when reader finds \"that-package:\" i
                 `(prog1
                      ,package-definition
                    (eval-when (:load-toplevel :execute)
-                     ,process-local-nicknames-form
+                     #-sbcl ,process-local-nicknames-form
                      ,custom-token-parsers-form
                      ,@forbid-symbols-forms
                      ,allow-qualified-intern-form
