@@ -37,7 +37,7 @@
      )))
 
 
-(defun do-complete-symbol-with-budden-tools (str editor-package editor-error-fn menu-from-list-fn)
+(defun do-complete-symbol-with-budden-tools (str editor-package editor-error-fn menu-from-list-fn &key (yes-or-no-p-fn 'yes-or-no-p))
   "Функция, позволяющая сделать завершение символа.
 Str - входная строка, для которой необходимо завершение.
 editor-package - текущий пакет в контексте редактора
@@ -175,7 +175,7 @@ editor-error-fn - ф-я, подобная error по сигнатуре, выз�
                           ((null prefix)
                            t)
                           ((eq rem-prefix :prompt)
-                           (yes-or-no-p "Символ ~S доступен в текущем пакете. Убрать префикс?" symbol))
+                           (funcall yes-or-no-p-fn "Символ ~S доступен в текущем пакете. Убрать префикс?" symbol))
                           (t rem-prefix))))
                 
                    (setf package-name
