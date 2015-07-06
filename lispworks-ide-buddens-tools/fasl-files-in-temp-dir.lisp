@@ -1,3 +1,5 @@
+; -*- Encoding : utf-8 ; -*- 
+
 (in-package :cl-user)
 
 (defvar *hide-fasl-files* nil)

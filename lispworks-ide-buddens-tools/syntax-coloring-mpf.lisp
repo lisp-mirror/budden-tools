@@ -1,7 +1,9 @@
+;; -*- Encoding : utf-8 ; -*- ;; 
+
 ;; -*- Mode: Lisp; rcs-header: "$Header: /hope/lwhope1-cam/hope.0/compound/23/LISPexamples/RCS/editor:syntax-coloring:syntax-coloring.lisp,v 1.3.8.1 2009/08/21 21:12:58 davef Exp $" -*-
 
 ;; Copyright (c) 1987--2010 LispWorks Ltd. All rights reserved.
-;; Взято из примеров редактора и внесены минимальные изменения для использования
+;; Р’Р·СЏС‚Рѕ РёР· РїСЂРёРјРµСЂРѕРІ СЂРµРґР°РєС‚РѕСЂР° Рё РІРЅРµСЃРµРЅС‹ РјРёРЅРёРјР°Р»СЊРЅС‹Рµ РёР·РјРµРЅРµРЅРёСЏ РґР»СЏ РёСЃРїРѕР»СЊР·РѕРІР°РЅРёСЏ
 ;; 
 
 (in-package :editor-budden-tools)
@@ -96,11 +98,11 @@
 
 
 
-#| этот код позволяет подменить стандартную раскраску на свою 
+#| СЌС‚РѕС‚ РєРѕРґ РїРѕР·РІРѕР»СЏРµС‚ РїРѕРґРјРµРЅРёС‚СЊ СЃС‚Р°РЅРґР°СЂС‚РЅСѓСЋ СЂР°СЃРєСЂР°СЃРєСѓ РЅР° СЃРІРѕСЋ 
 (editor::%set-variable-value 'EDITOR::FONT-LOCK-FONTIFY-SYNTACTICALLY-REGION-FUNCTION
                              :mode
                              "Common-Lisp"
                              'region-set-custom-face)
-; editor::lisp-font-lock-fontify-syntactically-region - умолчание
+; editor::lisp-font-lock-fontify-syntactically-region - СѓРјРѕР»С‡Р°РЅРёРµ
 |#
 

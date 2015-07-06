@@ -1,3 +1,6 @@
+;; -*- Encoding : utf-8 ; -*-
+
+
 (asdf::of-system :editor-budden-tools)
 
 (in-package :editor-budden-tools)
@@ -6,7 +9,7 @@
 
 (defun listener-confirm-destroy-function (listener)
   ;(declare (ignorable listener))
-  (let (ЭтоСерверПриложений)
+  (let (Р­С‚РѕРЎРµСЂРІРµСЂРџСЂРёР»РѕР¶РµРЅРёР№)
     (cond
      ((and (find-package :appserver)
            (budden-tools::budden-tools-find-symbol "*good-trace-output*"
@@ -18,11 +21,11 @@
           (setf ep (slot-value listener 'capi:editor-pane))
           (setf buffer-from-listener (slot-value ep 'capi::buffer))
           (when (eq buffer-from-listener buffer)
-            (setf ЭтоСерверПриложений t))))))
+            (setf Р­С‚РѕРЎРµСЂРІРµСЂРџСЂРёР»РѕР¶РµРЅРёР№ t))))))
     (y-or-n-p
-     (if ЭтоСерверПриложений
-         "В данном окне запущен сервер приложений. Если его закрыть, то приложения перестанут работать! Закрыть листенер?"
-       "Закрыть листенер?"
+     (if Р­С‚РѕРЎРµСЂРІРµСЂРџСЂРёР»РѕР¶РµРЅРёР№
+         "Р’ РґР°РЅРЅРѕРј РѕРєРЅРµ Р·Р°РїСѓС‰РµРЅ СЃРµСЂРІРµСЂ РїСЂРёР»РѕР¶РµРЅРёР№. Р•СЃР»Рё РµРіРѕ Р·Р°РєСЂС‹С‚СЊ, С‚Рѕ РїСЂРёР»РѕР¶РµРЅРёСЏ РїРµСЂРµСЃС‚Р°РЅСѓС‚ СЂР°Р±РѕС‚Р°С‚СЊ! Р—Р°РєСЂС‹С‚СЊ Р»РёСЃС‚РµРЅРµСЂ?"
+       "Р—Р°РєСЂС‹С‚СЊ Р»РёСЃС‚РµРЅРµСЂ?"
        )
      )))
 

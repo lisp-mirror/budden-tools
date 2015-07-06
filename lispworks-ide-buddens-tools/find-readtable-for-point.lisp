@@ -1,3 +1,4 @@
+;; -*- Encoding : utf-8 ; -*- 
 
 (in-package :editor)
 
@@ -91,9 +92,9 @@
             (print (list 'in-package name) *terminal-io*))
           name)))))
 
-; Не удалось использовать следующие ф-ии: 
+; РќРµ СѓРґР°Р»РѕСЃСЊ РёСЃРїРѕР»СЊР·РѕРІР°С‚СЊ СЃР»РµРґСѓСЋС‰РёРµ С„-РёРё: 
 ; compile-defun-command, compile-buffer-command, evaluate-defun-command, evaluate-last-form-command
-; они вызываются в процессе редактора, а компиляция - в background execute.
+; РѕРЅРё РІС‹Р·С‹РІР°СЋС‚СЃСЏ РІ РїСЂРѕС†РµСЃСЃРµ СЂРµРґР°РєС‚РѕСЂР°, Р° РєРѕРјРїРёР»СЏС†РёСЏ - РІ background execute.
 
 (defun find-readtable-or-lose (readtable-name-string)
   (etypecase readtable-name-string
@@ -112,14 +113,14 @@
     
 
 (defadvice (region-lisp-compile note-readtable-change :around) (buffer &rest rest)
-  "Также может представлять интерес region-compile"
+  "РўР°РєР¶Рµ РјРѕР¶РµС‚ РїСЂРµРґСЃС‚Р°РІР»СЏС‚СЊ РёРЅС‚РµСЂРµСЃ region-compile"
   (with-guessed-buffer-readtable buffer
     ; (budden-tools:show-expr `(region-lisp-compile ,*readtable*))
     (apply #'call-next-advice buffer rest)))
 
 
 (defadvice (region-lisp-eval note-readtable-change :around) (buffer &rest rest)
-  "Также может представлять интерес region-compile"
+  "РўР°РєР¶Рµ РјРѕР¶РµС‚ РїСЂРµРґСЃС‚Р°РІР»СЏС‚СЊ РёРЅС‚РµСЂРµСЃ region-compile"
   (with-guessed-buffer-readtable buffer
     ;(budden-tools:show-expr `(region-lisp-eval ,*readtable*))
     (apply #'call-next-advice buffer rest)))

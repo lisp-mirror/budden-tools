@@ -1,3 +1,5 @@
+;; -*- Encoding : utf-8 ; -*- 
+
 (asdf::of-system :editor-budden-tools)
 (in-package #+budden :editor-budden-tools #-budden :editor)
 
@@ -9,12 +11,12 @@
 
 ; Put the code in #||# at early stage of your Lispworks boot (before any listener is created);
 #| 
-;-------------для статус бара в листенере ---------------------------------------
-; это было для локальной подмны подсказки в листенере. но т.к. не смогли выцепить
-; из листенера его пакет и нормально показать на activate, решили оставить как есть
+;-------------РґР»СЏ СЃС‚Р°С‚СѓСЃ Р±Р°СЂР° РІ Р»РёСЃС‚РµРЅРµСЂРµ ---------------------------------------
+; СЌС‚Рѕ Р±С‹Р»Рѕ РґР»СЏ Р»РѕРєР°Р»СЊРЅРѕР№ РїРѕРґРјРЅС‹ РїРѕРґСЃРєР°Р·РєРё РІ Р»РёСЃС‚РµРЅРµСЂРµ. РЅРѕ С‚.Рє. РЅРµ СЃРјРѕРіР»Рё РІС‹С†РµРїРёС‚СЊ
+; РёР· Р»РёСЃС‚РµРЅРµСЂР° РµРіРѕ РїР°РєРµС‚ Рё РЅРѕСЂРјР°Р»СЊРЅРѕ РїРѕРєР°Р·Р°С‚СЊ РЅР° activate, СЂРµС€РёР»Рё РѕСЃС‚Р°РІРёС‚СЊ РєР°Рє РµСЃС‚СЊ
 #+nil (pushnew '(lispworks:*prompt* . lispworks:*prompt*) mp:*process-initial-bindings* :test 'equalp)
 
-; как можно раньше, желательно - в init.lisp
+; РєР°Рє РјРѕР¶РЅРѕ СЂР°РЅСЊС€Рµ, Р¶РµР»Р°С‚РµР»СЊРЅРѕ - РІ init.lisp
 (let ((LISPWORKS:*HANDLE-WARN-ON-REDEFINITION* nil))
   (defmethod initialize-instance :around ((i lispworks-tools:listener) &rest initargs) 
     (let* ((new-initargs (copy-list initargs))) 
@@ -70,7 +72,7 @@
   #.(error "wrong cl version in set-message-for-the-listener, see process-private-plist, maybe you need redefine set-right-message-for-the-listener")
   (let ((i (get-the-listener-interface))
         )
-    ; (set-the-editor-prompt) ; здесь предполагалась подмена подсказки, убрали, см. в начале файла
+    ; (set-the-editor-prompt) ; Р·РґРµСЃСЊ РїСЂРµРґРїРѕР»Р°РіР°Р»Р°СЃСЊ РїРѕРґРјРµРЅР° РїРѕРґСЃРєР°Р·РєРё, СѓР±СЂР°Р»Рё, СЃРј. РІ РЅР°С‡Р°Р»Рµ С„Р°Р№Р»Р°
     (unless (and (slot-boundp i 'capi::activate-callback)
                  (slot-value i 'capi::activate-callback))
       (setf (slot-value i 'capi::activate-callback) 'listener-activate-callback))
@@ -95,13 +97,13 @@ listener prompt is produced"
 
 
 #| Some comments for the future
-вот сюда надо повеситься?
+РІРѕС‚ СЃСЋРґР° РЅР°РґРѕ РїРѕРІРµСЃРёС‚СЊСЃСЏ?
 
 Call to (METHOD CAPI::UPDATE-REPRESENTATION :AFTER (CAPI:INTERFACE T)) (offset 482)
   CAPI::SELF : #<LISPWORKS-TOOLS:LISTENER "Listener 4" 2465AC04>
   CAPI::REP  : #<Representation WIN32:R-TOP-LEVEL-INTERFACE #<LISPWORKS-TOOLS:LISTENER "Listener 4" 2465AC04>>
 
-или есть ещё process-sleep-function 
+РёР»Рё РµСЃС‚СЊ РµС‰С‘ process-sleep-function 
 
 |#
 

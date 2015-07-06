@@ -1,3 +1,5 @@
+;; -*- Encoding : utf-8 ; -*- ;; 
+
 (def-merge-packages::!
  :multipaste
  (:always t)
