@@ -5,12 +5,24 @@
 
 (defmacro print-environment (&optional break &ENVIRONMENT env) (print env) (if break (break)))
 
+#+sbcl 
+(defun normalize-type (type)
+  (cond
+    ((SB-KERNEL:STRUCTURE-CLASSOID-P type)
+     (sb-kernel:classoid-name type))
+    ((sb-kernel:named-type-p type)
+     (sb-kernel:named-type-name type))
+    (t
+     type)))
+
+  
+
 (defun variable-type-or-class (VAR ENV) 
   "Возвращает тип ИЛИ класс значения. Непонятно, зачем нужен класс - наверняка всегда достаточно типа для ^ (FIXME)"
   #+sbcl 
   (cond
    ((constantp var env)
-    (type-of var)) ; в лиспворксе здесь возвращается класс... 
+    (normalize-type (type-of var))) ; в лиспворксе здесь возвращается класс... 
    (env
     (assert (typep env 'sb-kernel:lexenv))
     (let* ((vars (sb-c::lexenv-vars env))
@@ -18,9 +30,9 @@
       (when this-var
         (assert (typep this-var 'sb-c::lambda-var))
         (let ((result (sb-c::lambda-var-type this-var)))
-          (print result)
+          ;(print result)
           ;(break)
-          result
+          (normalize-type result)
           )))))
   #+:LISPWORKS4.4
   (cond
@@ -111,7 +123,8 @@
          (values type-or-class nil))
         (class ; это - класс
          (values (class-name type-or-class) type-or-class))
-        (t ; хм. 
+        (t ; хм.
+         (break)
          (error "can't derive conc-prefix for type ~S" type-or-class)))
     (conc-prefix-by-type-or-class-name type class)))
   
