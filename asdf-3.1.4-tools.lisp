@@ -30,15 +30,16 @@ to resolve circular references between systems"
 #+asdf3.1
 (defvar *current-component*)
 
-(defmacro of-system (keywordized-system-name)
+(defmacro of-system (system-name-designator)
   "Declares and asserts that file belongs to system"
-  `(eval-when (:compile-toplevel :load-toplevel)
-     (when (boundp '*current-component*)
-       (assert
-           (member ,keywordized-system-name
-                   (asdf::component-find-path asdf::*current-component*) :test 'string-equal)
-           ()
-         "current file must be loaded through ~S system" ,keywordized-system-name))))
+  (let ((nm (coerce-name system-name-designator)))
+    `(eval-when (:compile-toplevel :load-toplevel)
+       (when (boundp '*current-component*)
+         (assert
+          (member ,nm
+                  (asdf::component-find-path asdf::*current-component*) :test 'string=)
+          ()
+          "current file must be loaded through ~S system" ,nm)))))
 
 
 ;; Enable editing component source after compilation or load error
@@ -47,8 +48,9 @@ to resolve circular references between systems"
    #+lispworks (editor:find-file-command nil filename)
    #+sbcl (when (find-package "SWANK")
             (funcall (find-symbol "ED-IN-EMACS" "SWANK") ; swank:ed-in-emacs
+                     ; set _unsafe_ EMACS variable slime-enable-evaluate-in-emacs to t in order to make it work
                      filename))
-  (format *debug-io* "Still don't know how to open file for editing in this CL implementation")
+  (format *debug-io* "Still don't know how to open file for editing in this environment")
   ))
 
 (defgeneric edit-component-source (c))
