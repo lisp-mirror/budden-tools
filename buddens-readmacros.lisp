@@ -1,10 +1,10 @@
 ;;; -*- Encoding: utf-8; -*-
-;;; Loading of the file sets up #L readmacro 
+;;; Auxilary functions for #L readmacro used in :buddens-readtable-a
 (asdf:of-system :buddens-readtable)
 (in-package :buddens-readtable)
 
-;; SharpL 
-(defun sharpL-reader (stream subchar n-args)
+;; #L 
+(defun sharpl-reader (stream subchar n-args)
   (declare (ignore subchar))
   (let* ((form (read stream t nil t))
          (bang-vars (sort (bang-vars form) #'< :key #'bang-var-num))
