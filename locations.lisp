@@ -673,6 +673,8 @@ srcpl - symbol-readmacro. Прочитать объект и запрограм�
     (file-stream
      (let ((map (ensure-file-position-to-char-position-for-stream stream)))
        (file-position-and-map-to-char-position (file-position stream) map)))
+    #+sbcl
+    (two-way-stream 0)
     #+lispworks
     (editor::editor-region-stream
      (let ((point (slot-value stream 'editor::point)))
