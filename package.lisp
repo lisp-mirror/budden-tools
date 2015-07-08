@@ -191,9 +191,7 @@
    budden-tools:reset-to-standard-readtable ; undo enable-buddens-readtable-extensions and reset readtable to standar syntax
    budden-tools:*per-package-alias-table* ; stolen from \"hierarchical packages\"
    budden-tools:hp-find-package ; stolen from \"hierarchical packages\"
-   budden-tools:hp-in-package  ; stolen from \"hierarchical packages\"
    budden-tools:hp-alias-map   ; stolen from conduit packages
-   budden-tools:delete-hp-alias-map ; stolen from conduit packages
    budden-tools:*essential-binding-checkers* ; currently unused
 
    budden-tools:defreadtable ; stolen from named-readtables project

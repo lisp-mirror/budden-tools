@@ -24,6 +24,20 @@
      (t nil))))
 
 
+(defun printed-symbol-without-package-with-advanced-readtable-case (sym)
+  (perga-implementation:perga
+   (let* ((sp (symbol-package sym))
+          (string 
+            (let ((*package* (or sp (find-package :keyword))))
+              (prin1-to-string sym))))
+     (unless sp
+       (_f subseq string 2))
+     (when (and (eq *print-case* :downcase)
+                (all-ascii-chars-in-same-case-p string))
+       (_f string-downcase-ascii string))
+     string)))
+       
+
 (defun may-symbol-complete-symbol (symbol default-package partial-name external-only all-chars-in-same-case-p)
   (perga-implementation:perga
     (cond
@@ -56,6 +70,9 @@ editor-error-fn - ф-я, подобная error по сигнатуре, выз�
 4,5) Повтор пп. 2 и 3, где в качестве префикса указывается local-nickname пакет.
 6) Пакет указан, но в имени пакета есть ошибка, т.е. нельзя найти пакет по префиксу.
    Действуем по п.1, исключив префикс.
+
+
+Функция используется по-разному в зависимости от реализации. В Lispworks из неё вызывается интерактивное меню. В SLIME вместо вызова меню перехватывается и присваивается во внешнюю переменную список продолжений. Если продолжение только одно, то функция меню не вызывается, а сразу возвращается единственное продолжение. ПОэтому в случае SLIME анализируется и перехваченный список продолжений, и возвращаемое значение.
 "  
   (let* ((partial-name str)
          ;; Позиция первого двоеточия
@@ -134,7 +151,7 @@ editor-error-fn - ф-я, подобная error по сигнатуре, выз�
                 (:for storage = (nth-value 1 (find-symbol (string sym) pkg)))
                 (when (and ext (not (eq storage :external)))
                   (:next-iteration))
-                (:for name = (subseq (prin1-to-string (make-symbol (symbol-name sym))) 2))
+                (:for name = (printed-symbol-without-package-with-advanced-readtable-case sym))
                 (:for pkg2 = (symbol-package sym))
                 (when pkg2 ; can be inherited uninterned symbol so it has no home package
                   (:collect 

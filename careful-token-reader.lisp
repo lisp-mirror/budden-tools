@@ -139,15 +139,20 @@ so use stream parameter only to identify a reader. Return value of hook function
 
 (defun char-type (c) (elt *char-table* (char-code c)))
 
+
+;; sbcl has native local package nicknames support
 (defun hp-alias-map (p)
   "Finds alias map for a package. p is a package designator" 
   (declare (ignorable p))
+  #-sbcl
   (gethash 
    (the* not-null (apply-undecorated 'find-package (list p)))
    *per-package-alias-table*)
+  #+sbcl
+  (sb-ext::package-local-nicknames p)
   )
 
-(defun (setf hp-alias-map) (new p)
+#-sbcl (defun (setf hp-alias-map) (new p)
   "Example: (setf (budden-tools:hp-alias-map :lgrep) '((:p . :meta-parse))). TODO: check structure"
   ;; This one should never be called if HP is not loaded.
   (declare (ignorable new p))
@@ -158,7 +163,7 @@ so use stream parameter only to identify a reader. Return value of hook function
    new)
   )
 
-(defun delete-hp-alias-map (p)
+#-sbcl (defun delete-hp-alias-map (p)
   (declare (ignorable p))
   (remhash (the* not-null (apply-undecorated 'find-package (list p)))
            *per-package-alias-table*))
@@ -166,8 +171,10 @@ so use stream parameter only to identify a reader. Return value of hook function
 ;; redefining hp-find-package to know about qualified-package
 ;; note this was initially defined in hierarchial-packages with some conditionals
 ; 
+
 (defun hp-find-package
     (name/package &optional (relative-to-package *package*) real-find-package-fn) 
+    "For lispworks, find-package will be later decorated to this. For SBCL, they coexist"
     (declare (optimize speed))          ;this is critical code
     (let1 *package* *keyword-package* ; otherwise might crash on error messages
       (typecase name/package
@@ -184,22 +191,6 @@ so use stream parameter only to identify a reader. Return value of hook function
            (if real-find-package-fn (funcall real-find-package-fn  (or epn name/package))
              (apply-undecorated 'find-package (list (or epn name/package))))
            )))))
-
-
-(defmacro hp-in-package (name/package)
-  (let1 pack (hp-find-package name/package)
-    (assert pack () "(Relative/alias) Package ~A not found in package ~A" name/package *package*)
-    `(progn
-       (in-package ,(package-name pack))
-       (setf *readtable* ,(swank::guess-buffer-readtable pack))
-       (values *package* *readtable*))))
-
-
-(defun hp-relative-package-name-p (name)
-  "True if string designates a relative package name"
-  (and (> (length name) 0)
-       (char= #\. (elt (string name) 0))))
-
 
 
 ; find-symbol
@@ -389,10 +380,6 @@ FIXME shadow find-symbol? FIXME rename"
           (write-string (str+ (the* string s) "
 ") oo)))
 
-
-(defun hp-find-package-with-advanced-readtable-case (string starts-with-vertical-line)
-  (hp-find-package (if starts-with-vertical-line string (string-upcase string)) ; FIXME? 
-                   ))
 
 
 

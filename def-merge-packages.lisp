@@ -234,7 +234,7 @@ function you most likely want to use."
     `(:export ,export-string)))
 
 (defmacro reexport (from-package &optional (to-package *package*))
-  "For every symbol in to-package which is external in from-package, export it
+  "DEPRECATED. For every symbol in to-package which is external in from-package, export it
 from to-package too"
   (let ((s (gensym)))
   `(do-external-symbols (,s ,from-package)

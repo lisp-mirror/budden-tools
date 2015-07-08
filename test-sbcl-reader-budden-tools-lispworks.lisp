@@ -53,6 +53,22 @@
    ))
 
 
+(with-output-to-string (*error-output*) ; suppress warnings
+  (eval 
+   '(def-merge-packages::! :p-test-local-nicknames (:local-nicknames :r :cl-user))))
+
+
+(def-trivial-test::! local-nicknames.1
+                     (with-my-readtable (let ((*package* (find-package :p-test-local-nicknames))) (read-from-string "r::cons")))
+                     'cons)
+
+(def-trivial-test::! altered-find-package.1
+                     (let ((*package* (find-package :p-test-local-nicknames)))
+                       (find-package :r))
+                     (find-package :cl-user))
+                       
+
+
 (defmacro def-rd-test (name rd &key (test ''equalp))
   `(def-trivial-test::! ,name 
             (with-good-readtable (read-from-string ,rd))
@@ -66,7 +82,6 @@
             (eval (with-my-readtable (read-from-string ,rd)))
             :test ,test
             ))
-
 
 (defmacro def-rd-ignore-error-test (name rd &key (test ''equalp))
   `(def-trivial-test::! ,name 
@@ -196,7 +211,7 @@
 (setf (gethash (find-package :tst) org.tfeb.hax.hierarchical-packages:*per-package-alias-table*)
       `(("HP" . "ORG.TFEB.HAX.HIERARCHICAL-PACKAGES")))
 
-(def-trivial-test::!
+ (def-trivial-test::!
  per-package-aliases.1
  (with-my-readtable (let1 *package* (find-package :tst) (read-from-string "hp::foo")))
  'ORG.TFEB.HAX.HIERARCHICAL-PACKAGES::FOO) |#
@@ -217,10 +232,10 @@
 
 ; (import 'org.tfeb.hax.hierarchical-packages::hp-find-package)
 #|commented out 2012-09-03 as we're removing hp dependency
-(defpackage pp1)
-(defpackage pp1.pp2)
+ (defpackage pp1)
+ (defpackage pp1.pp2)
 
-(let1 *package* (find-package :pp1)
-  (print `(1 ,(hp-find-package :.pp2))))
+ (let1 *package* (find-package :pp1)
+   (print `(1 ,(hp-find-package :.pp2))))
 |#
 

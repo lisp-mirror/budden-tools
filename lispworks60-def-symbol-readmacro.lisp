@@ -19,10 +19,12 @@
 
 ;;; ВНИМАНИЕ! Это изменение необходимо для нормальной работы иерархических пакетов, 
 ;;; т.к. мы не можем назначить наш ридмакрос на #\.
+#-sbcl
 (defun decorated-find-package (fn name)
   (budden-tools::hp-find-package (if (stringp name) (string-upcase name) name)
                                  *package* fn))
 
+#-sbcl
 (decorate-function 'find-package #'decorated-find-package)
  
 
