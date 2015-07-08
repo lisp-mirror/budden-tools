@@ -295,7 +295,8 @@ from to-package too"
                  (if cdr
                      (:collect `(,car ,.(nreverse cdr)))
                    (:collect `(,car))))))))
-(defun process-local-nicknames (new-package-name list &key to-alist) 
+(defun process-local-nicknames (new-package-name list &key to-alist)
+  (assert (evenp (length list)) () "def-merge-packages::! : local package nicknames list must be of even length")
   (do ((a (pop list) (pop list)) 
        (b (pop list) (pop list))
        res) 
