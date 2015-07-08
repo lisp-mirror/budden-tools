@@ -21,7 +21,7 @@
         #+(and lispworks6 win32)
         (:file "lispworks60-def-symbol-readmacro")
         #+sbcl
-        (:file "slime-budden-tools-package-system-and-completion")
+        (:file "budden-tools-package-system-and-completion-swank")
         (:file "package-aliases")	
 	(:file "locations")
         (:file "cons-to-source" :description "Alternative to ~{ ~} format to product source code from conses")
