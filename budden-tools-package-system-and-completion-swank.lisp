@@ -1,4 +1,4 @@
-;;; -*- Encoding: utf-8; system :see-packages -*-
+;;; -*- Encoding: utf-8; system :see-packages;  -*-
 ;;; Some SWANK symbols are decorated here. This code may be sbcl-specific
  
 (in-package :budden-tools)
@@ -14,13 +14,14 @@
        (cond
          ((null ps)
           nil)
-         (t
+         ((sbcl-reader-budden-tools-lispworks::potential-symbol-p ps)
           ;(budden-tools:show-expr (sbcl-reader-budden-tools-lispworks:potential-symbol-qualified ps))
           (values
            (sbcl-reader-budden-tools-lispworks:potential-symbol-casified-name ps)
            (package-name (sbcl-reader-budden-tools-lispworks::potential-symbol-package ps))
            (/= 1 (sbcl-reader-budden-tools-lispworks:potential-symbol-qualified ps)))
-          ))))
+          )
+         (t (funcall fn string)))))
     (t
      (funcall fn string))))
 
@@ -55,7 +56,6 @@ INPUT is used to guess the preferred case."
        (let single-completion
          (do-complete-symbol-with-budden-tools
            name package 'error #'set-completions :yes-or-no-p-fn (constantly nil)))
-       (show-expr completions)
        (cond
          (single-completion
           (list single-completion))
