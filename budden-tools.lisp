@@ -123,7 +123,13 @@
   #+lispworks (multiple-value-bind (names values) (structure:structure-names-and-values s)
                 `((:type . ,(type-of s))
                    ,@(loop for x in names for y in values collect `(,x . ,y))))
-  #-lispworks (error "struct-to-alist not defined for this lisp version")
+  #+closer-mop
+  (let* ((slots (closer-mop:class-slots (class-of s)))
+         (names (mapcar 'closer-mop:slot-definition-name slots)))
+    (loop :for name :in names
+          :for value = (slot-value s name)
+          :collect `(,name . ,value)))
+  #-(or lispworks closer-mop) (error "struct-to-alist not defined for this lisp version")
   )
 
 (defun mandatory-slot (slot-name)
