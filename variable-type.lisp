@@ -28,11 +28,15 @@
     (let* ((vars (sb-c::lexenv-vars env))
            (this-var (cdr (assoc var vars))))
       (when this-var
-        (assert (typep this-var 'sb-c::lambda-var))
-        (let ((result (sb-c::lambda-var-type this-var)))
-          ;(print result)
-          ;(break)
-          (normalize-type result)
+        (etypecase this-var
+          (sb-c::lambda-var
+           (let ((result (sb-c::lambda-var-type this-var)))
+             (normalize-type result)))
+          (sb-c::global-var
+          ; there is sb-c::global-var-defined-type also
+           (let ((result (sb-c::global-var-type this-var)))
+             (normalize-type result)))
+           
           )))))
   #+:LISPWORKS4.4
   (cond
