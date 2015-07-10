@@ -49,7 +49,8 @@ to resolve circular references between systems"
    #+sbcl (when (find-package "SWANK")
             (funcall (find-symbol "ED-IN-EMACS" "SWANK") ; swank:ed-in-emacs
                      ; set _unsafe_ EMACS variable slime-enable-evaluate-in-emacs to t in order to make it work
-                     filename))
+                     filename)
+            t)
   (format *debug-io* "Still don't know how to open file for editing in this environment")
   ))
 
@@ -94,9 +95,6 @@ to resolve circular references between systems"
 
 ;; Enable finding system definitions from IDE
 
-(defun keywordize (symbol) "From iterate" ; see also careful-keywordize
-  (intern (symbol-name symbol) :keyword))
-
 #+lispworks
 (dspec:define-dspec-class defsystem nil 
   "Defined system"
@@ -127,28 +125,39 @@ to resolve circular references between systems"
   ;(print call)
   (let ((system-name (second call)))
     (cond
-     (system-name
-      `(dspec:def (defsystem ,system-name)
-         (progn
-           (dspec::record-definition `(defsystem ,',system-name)
-                                     (dspec:location))
-           ,(lispworks:call-next-advice call environment))))
-     (t     
-      (lispworks:call-next-advice call environment)))))
+      ((and system-name (not (stringp system-name)))
+       `(dspec:def (defsystem ,system-name)
+            (progn
+              (dspec::record-definition `(defsystem ,',system-name)
+                                        (dspec:location))
+              ,(lispworks:call-next-advice call environment))))
+      (t     
+       (lispworks:call-next-advice call environment)))))
 
-
+(defun keywordize-system-name (symbol)
+  "Convert symbol to keyword so that in standard readtable SLIME slime-edit-definition would work"
+  (check-type symbol symbol)
+  (intern (string-upcase (coerce-name symbol)) (find-package :keyword)))
+  
 
 #+sbcl
 (defmacro decorate-defsystem (name &body options)
   "Enable finding system definition with slime-edit-definition"
-  (let ((source-location-sym (make-symbol (string 'sb-c:source-location))))
-    `(prog1
-         (,(decorate-function::decorate-macro-get-undecorated-invoker 'defsystem)
-          ,name ,@options)
-       (let ((,source-location-sym (sb-c:source-location)))
-       (sb-c:with-source-location (,source-location-sym)
-         (setf (sb-c::info :source-location :constant ,(keywordize name)) ,source-location-sym))
-       ))))
+  (cond
+    ((not (stringp name)) ; definitions named by strings can't be navigated to properly 
+     (let ((source-location-sym (make-symbol (string 'sb-c:source-location))))
+       `(prog1
+            (,(decorate-function::decorate-macro-get-undecorated-invoker 'defsystem)
+             ,name ,@options)
+          (let ((,source-location-sym (sb-c:source-location)))
+            (sb-c:with-source-location (,source-location-sym)
+              (setf (sb-c::info
+                     :source-location
+                     :constant ,(keywordize-system-name name))
+                    ,source-location-sym)))
+          )))
+    (t `(,(decorate-function::decorate-macro-get-undecorated-invoker 'defsystem) ,name ,@options))))
+
 
 #+sbcl
 (decorate-function::decorate-macro 'defsystem 'decorate-defsystem)
