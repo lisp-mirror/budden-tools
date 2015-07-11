@@ -12,6 +12,8 @@
      (sb-kernel:classoid-name type))
     ((sb-kernel:named-type-p type)
      (sb-kernel:named-type-name type))
+    ((sb-kernel:union-type type)
+     (sb-kernel:type-specifier type))
     (t
      type)))
 
