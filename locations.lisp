@@ -410,7 +410,7 @@ srcpl - symbol-readmacro. Прочитать объект и запрограм�
       #+lispworks (editor::editor-region-stream stream)
       #+lispworks (stream::file-stream stream)
       #+lispworks (stream::ef-file-stream stream)
-      #+sbcl (t (break "add sbcl code to get-stream-location-map-delegate"))
+      ; #+sbcl (t (break "add sbcl code to get-stream-location-map-delegate"))
       (stream 
        (ecase if-not-exists
          (:create (nth-value 0 (ensure-gethash-2 stream *slmd (gensym "LOCATION-DELEGATE"))))
