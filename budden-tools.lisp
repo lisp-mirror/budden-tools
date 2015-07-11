@@ -126,11 +126,25 @@
   #+closer-mop
   (let* ((slots (closer-mop:class-slots (class-of s)))
          (names (mapcar 'closer-mop:slot-definition-name slots)))
-    (loop :for name :in names
-          :for value = (slot-value s name)
-          :collect `(,name . ,value)))
+    `((:type . ,(type-of s))
+      ,@(loop :for name :in names
+              :for value = (slot-value s name)
+              :collect `(,name . ,value))))
   #-(or lispworks closer-mop) (error "struct-to-alist not defined for this lisp version")
   )
+
+
+(def-trivial-test::! struct-to-alist.1
+                     (let (x)
+                       (defstruct struct-to-alist.test.struct a b c)
+                       (setf x (make-struct-to-alist.test.struct :a 5))
+                       (struct-to-alist x)
+                       )
+                     `((:type . struct-to-alist.test.struct)
+                       (a . 5)
+                       (b)
+                       (c)))
+                     
 
 (defun mandatory-slot (slot-name)
   (error "mandatory slot ~S in defstruct is not initialized" slot-name)) 
