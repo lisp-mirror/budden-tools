@@ -351,7 +351,7 @@
 
 
 
-(def-trivial-test::! all-ascii-chars-in-same-case-p 
+(def-trivial-test::! all-ascii-chars-in-same-case-p.test 
                      (list (budden-tools::all-ascii-chars-in-same-case-p "аУреки")
                            (budden-tools::all-ascii-chars-in-same-case-p "АУРЕКИ")
                            (budden-tools::all-ascii-chars-in-same-case-p "ауреки")
