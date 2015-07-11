@@ -41,10 +41,21 @@
 
 #+example (def-symbol-readmacro |JUST-READ| 'read)
 
-#-lispworks
-(defmacro def-symbol-readmacro (symbol reader)
-  `(setf (symbol-readmacro ',symbol) ,reader))
+#+sbcl
+(defmacro def-symbol-readmacro (symbol reader &key documentation)
+  (declare (ignore documentation))
+  (with-gensyms (source-location)
+    `(prog1
+         (setf (symbol-readmacro ',symbol) ,reader)      
+       (let ((,source-location (sb-c:source-location)))
+         (sb-c:with-source-location (,source-location)
+           (setf (sb-c::info :source-location :symbol-macro ',symbol)
+                 ,source-location))))))
 
+#-(or lispworks sbcl)
+(defmacro def-symbol-readmacro (symbol reader &key documentation)
+  (declare (ignore documentation))
+  `(setf (symbol-readmacro ',symbol) ,reader))
 
 (defmacro with-good-readtable-2 ((&key (ensure-this-is-a-bad-one t)) &body body)
   "переданная readtable должна быть получена с помощью see-packages-on"
