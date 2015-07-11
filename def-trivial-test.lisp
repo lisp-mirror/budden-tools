@@ -12,10 +12,12 @@
 
 #-lispworks
 (defmacro ! (name expr1 expr2 &rest keyargs &key (test ''equalp))
-  "Defines a test"
+  "Defines a test. Names are not uninterned, beware!"
   (when *run-tests*
-    (let* ((name (string name))
-           (current-fn-symbol (make-symbol name))
+    (let* ((current-fn-symbol
+             (cond
+               ((stringp name) (make-symbol name))
+               ((symbolp name) name)))
            (the-form 
             `(progn
                (defun ,current-fn-symbol ()
