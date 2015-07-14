@@ -123,7 +123,7 @@
   #+lispworks (multiple-value-bind (names values) (structure:structure-names-and-values s)
                 `((:type . ,(type-of s))
                    ,@(loop for x in names for y in values collect `(,x . ,y))))
-  #+closer-mop
+  #+(and closer-mop (not lispworks))
   (let* ((slots (closer-mop:class-slots (class-of s)))
          (names (mapcar 'closer-mop:slot-definition-name slots)))
     `((:type . ,(type-of s))
