@@ -1,4 +1,4 @@
-;;; -*- Encoding: utf-8; -*-
+﻿;;; -*- Encoding: utf-8; -*-
 
 ;  Native code stepper Proof Of Concept
 ; 
@@ -1044,8 +1044,8 @@
             (funcall ,#'sub-with-no-args)
             ))
 
-(stepize-fn 'test-fnd)
-(! 'test-fnd)
+; UNCOMMENT TO TEST AT LOAD TIME (stepize-fn 'test-fnd)
+; UNCOMMENT TO TEST AT LOAD TIME (! 'test-fnd)
 
 
 ; some potentialy useful staff
