@@ -12,10 +12,9 @@
 (in-package :defun-to-file)
 (in-readtable nil)
 
-(defparameter *defun-to-file-directory* #+win32 (budden-tools::pathname-as-directory (merge-pathnames
+(defparameter *defun-to-file-directory* (budden-tools::pathname-as-directory (merge-pathnames
                                                                         (budden-tools::pathname-as-directory *default-pathname-defaults*)
                                                                         "defun-to-file"))
-  #-win32 (error "Not defined *defun-to-file-directory* variable for not win32 systems")
   )
 
 (defun maybe-add-slash (string)
