@@ -107,7 +107,63 @@
             (push `(,item ,@(funcall fn item))
                   result)))
          )))
-    (nreverse result))) 
+    (nreverse result)))
+
+
+; (map-dir #'map-dir-example-fn "/s2/fc/" :subdirs :recurse)
+#| An example of using map-dir       
+ (defun sum-filesizes-grouped-by-extension (directory)
+  (let (listing ; list of types and sizes
+        (extension-to-total-size (make-hash-table :test 'equal))
+        result ; list of results
+        )
+    (labels
+        ((file-size (file) (with-open-file (stream file :element-type '(unsigned-byte 8))
+                             (file-length stream)))
+         (store-type-and-size (file)
+           (push
+            (list
+             :path file
+             :type (pathname-type (pathname file))
+             :size (file-size file)
+             )
+            listing))
+         (dir-filter (dir)
+           (let ((dirname (car (last (pathname-directory dir)))))
+             (not (member dirname '(".git") :test 'string=))
+             ))
+         )
+      (map-dir #'store-type-and-size directory
+               :dir-options '(:follow-symlinks nil)
+               :dir-test #'dir-filter
+               :subdirs :recurse)
+      )
+    (dolist (plist listing)
+      (let (type size entry)
+        (setf type (getf plist :type))
+        (setf size (getf plist :size))
+        (setf entry (gethash type extension-to-total-size (list :count 0 :size 0)))
+        (incf (getf entry :count))
+        (incf (getf entry :size) size)
+        (setf (gethash type extension-to-total-size) entry)))
+    
+    (maphash
+     (lambda (key val)
+       (push `(,key ,val) result))
+     extension-to-total-size
+     )
+    (_f sort result '>
+        :key (lambda (item)
+               (let ((entry (second item)))
+                 (getf entry :size))))
+    (dolist (x result)
+      (destructuring-bind (key entry) x
+        (format t "~%~A;~D;~D" key (getf entry :count) (getf entry :size))
+        ))
+    (values)
+    ))
+|#
+
 
 (defun replace-subseq (seq new-subseq &key (start 0) end (type 'list))
   #+russian "Заменяет подпоследовательность, определяемую start и end, другой
