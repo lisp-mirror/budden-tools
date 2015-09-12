@@ -778,10 +778,12 @@ srcpl - symbol-readmacro. Прочитать объект и запрограм�
     (show-expr (input-stream-position-in-chars ss))
     (show-expr (file-position ss))
     (assert (= (input-stream-position-in-chars ss)
-               #+(and sbcl win32) 63
-               #+(and lispworks win32) 61
-               #-(or (and sbcl win32) (and lispworks win32)) -1000 ; write me
-               ))
+               (or
+                #+(and sbcl win32) 63
+                #+(and lispworks win32) 61
+                #+(and sbcl unix) 63
+               -1000 ; write me
+               )))
     (print "sanity check ok")
     ))
 
