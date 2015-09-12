@@ -178,6 +178,8 @@
    budden-tools:maybe-add-slash ; got a directory name. Make sure it ends with slash
    budden-tools:up-dir
    budden-tools:pathname-to-filename ; from swank-backend
+   ;; see also sb-ext:native-namestring (sbcl) 
+
    budden-tools:filename-to-pathname ; from swank-backend
    budden-tools:quit-lisp ; thanks to Thomas A.Russ
    budden-tools:edit-stream-position ; trying to find out position in a file stream, open the file at the cursor and edit it
