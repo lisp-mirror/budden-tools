@@ -28,7 +28,8 @@
 (decorate-function:decorate-function 'swank::tokenize-symbol-thoroughly #'decorated-swank--tokenize-symbol-thoroughly)
 
 
-(defun decorated-swank--completion-output-case-converter (fn input &optional with-escaping-p)
+#| disabled do to simplification of SLIME setup. It is likely there is no function to decorate anymore
+ (defun decorated-swank--completion-output-case-converter (fn input &optional with-escaping-p)
   "Return a function to convert strings for the completion output.
 INPUT is used to guess the preferred case."
   (cond
@@ -44,10 +45,10 @@ INPUT is used to guess the preferred case."
      (funcall fn input with-escaping-p)
      )))
 
-(decorate-function:decorate-function 'swank::completion-output-case-converter
+ (decorate-function:decorate-function 'swank::completion-output-case-converter
                                      #'decorated-swank--completion-output-case-converter)
 
-(defun decorated-swank--symbol-completion-set (fn name package-name package internal-p matchp)
+ (defun decorated-swank--symbol-completion-set (fn name package-name package internal-p matchp)
   (perga-implementation:perga
     (let completions nil)
     (flet set-completions (x) (setf completions x) "")
@@ -64,9 +65,9 @@ INPUT is used to guess the preferred case."
        (funcall fn name package-name package internal-p matchp)))))
 
 
-(decorate-function:decorate-function 'swank::symbol-completion-set #'decorated-swank--symbol-completion-set)
+ (decorate-function:decorate-function 'swank::symbol-completion-set #'decorated-swank--symbol-completion-set)
 
-
+|#
 
 #|(defun decorated-swank--all-completions (fn prefix package)
   (perga-implementation:perga
