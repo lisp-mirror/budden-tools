@@ -75,11 +75,10 @@
   (let1 start (- (length sequence) n)
     (subseq sequence start)))
 
-(defun map-dir (fn pathname &key dir-options (file-test #'identity) (dir-test #'identity) subdirs) "Iterates over all files. :file-test and dir-test are pathname filters. Subdirs can be :recurse, :skip, :msp (fn is called for subdirs too) :map-and-recurse (fn is called and recursion occurs). Output format is ((pathname . (fn pathname)) ... (:subdir pathname ((pathname . (fn pathname)) ...))). directory structure should not be modified by fn except by deletion of pathname"
+(defun map-dir (fn pathname &key dir-options (file-test #'identity) (dir-test #'identity) subdirs) "Iterates over all files. List of files is acquired with cl-fad:list-directory and dir-options. :file-test and dir-test are pathname filters. Subdirs can be :recurse, :skip, :msp (fn is called for subdirs too) :map-and-recurse (fn is called and recursion occurs). Output format is ((pathname . (fn pathname)) ... (:subdir pathname ((pathname . (fn pathname)) ...))). directory structure should not be modified by fn except by deletion of pathname"
   (let1 result nil
-    (dolist (item (apply #'directory pathname dir-options))
-      (let1 subdir #+lispworks (lispworks:file-directory-p item)
-        #-lispworks (error "put file-directory-p predicat to map-dir definition")
+    (dolist (item (apply #'cl-fad:list-directory pathname dir-options))
+      (let1 subdir (cl-fad:directory-pathname-p item)
         (cond 
          (subdir 
           (when (funcall dir-test item)
