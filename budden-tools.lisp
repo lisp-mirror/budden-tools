@@ -711,7 +711,7 @@ modifying form, e.g. @code{(_f + a b) @equiv{} (incf a b)}. See also __f. Modife
       (dolist (x list) 
         (if firsttime (setf firsttime nil) (princ delimiter s))
         (princ x s)
-        )))) :budden-tools
+        ))))
 
 
 
