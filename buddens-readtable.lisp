@@ -1,5 +1,4 @@
-;;; -*- Encoding: utf-8; -*-
-(asdf:of-system :buddens-readtable)
+;;; -*- Encoding: utf-8; system :buddens-readtable ; -*-
 (in-package :buddens-readtable)
 
 ;(portably-without-package-locks

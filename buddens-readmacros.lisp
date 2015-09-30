@@ -1,6 +1,5 @@
-;;; -*- Encoding: utf-8; -*-
+;;; -*- Encoding: utf-8; system :buddens-readtable; -*-
 ;;; Auxilary functions for #L readmacro used in :buddens-readtable-a
-(asdf:of-system :buddens-readtable)
 (in-package :buddens-readtable)
 
 ;; #L 
