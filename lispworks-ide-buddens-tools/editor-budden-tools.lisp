@@ -81,20 +81,6 @@
        *my-command-result*)))
        
                 
-#|       
-  `(progn 
-     (let1 *my-command-result* nil
-       (eval
-        `(defcommand "come on" (p) "asdf" "Служебная команда" 
-           (declare (special *my-command-result*))
-           (use-buffer ,',buffer
-             (setf *my-command-result* (block nil (progn ,',@body)))
-             )))
-          (capi:apply-in-pane-process *aux-editor* 'capi:call-editor *aux-editor* "come on")
-          ;(capi:call-editor *aux-editor* "come on")
-       *my-command-result*))) |#
-
-
 (defun return-expr-points (buffer expr)
   "Находит выражение, начиная от текущей позиции в буфере и возвращает список из точки начала и точки конца.
    Двигает текущую позицию в конец. Если не находит, то возвращает null"
