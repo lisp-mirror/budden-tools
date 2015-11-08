@@ -41,6 +41,10 @@
 
    russian-budden-tools:lisp-string-to-dos-for-pipe
    russian-budden-tools:dos-string-to-lisp-for-pipe
+
+   russian-budden-tools:convert-file-code-page-to-utf
+   russian-budden-tools:convert-file-utf-remove-13
+   russian-budden-tools:convert-file-remove-utf-bom  
    "
    ))
 

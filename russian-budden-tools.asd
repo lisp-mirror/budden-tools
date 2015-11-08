@@ -13,5 +13,6 @@
   :components ( 
                (:package-file "pkg-russian-budden-tools")
                (:file "russian-budden-tools")
+               (:file "ru-bu-to-file-convertors")
                ) 
   )
