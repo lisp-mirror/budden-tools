@@ -294,11 +294,14 @@ end.
   (goto-xy pathname row col :kill-buffer kill-buffer :set-foreground-window set-foreground-window))
 
 ; для SBCL есть соотв. команда EMACS
-#+sbcl 
-(defun goto-xy (pathname row col)
+#+(and sbcl (not clcon))
+(defmethod goto-xy (pathname row col)
   (swank:eval-in-emacs `(goto-xy ,(namestring pathname) ,row ,col)))
+
+#+(and sbcl clcon)
+(defgeneric goto-xy (pathname row col))
    
-#+lispworks (DEFUN GOTO-XY (PATHNAME ROW COL &KEY KILL-BUFFER (set-foreground-window t))
+#+lispworks (defun GOTO-XY (PATHNAME ROW COL &KEY KILL-BUFFER (set-foreground-window t))
   "Не сработает при отсутствии редактора. При kill-buffer опасно, т.к. закрывает файл без изменений"
   (perga
     (let ED (get-some-editor))
