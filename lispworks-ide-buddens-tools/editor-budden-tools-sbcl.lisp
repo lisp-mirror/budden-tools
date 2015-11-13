@@ -3,6 +3,9 @@
 (in-package :editor-budden-tools)
 (asdf::of-system :editor-budden-tools)
 
+
+
+
 ;lw(defvar *aux-editor*)
 ;lw(editor::set-vector-value
 ;lw (slot-value editor::*default-syntax-table* 'editor::table) '(#\[ #\{) 2)
@@ -194,7 +197,8 @@ end.
 
 |#
 
-(defun text-to-clipboard (str &aux path-to-tempfile) "saves str to clipboard"
+#+lispworks (defun text-to-clipboard (str &aux path-to-tempfile) "saves str to clipboard"
+  #+clcon (error "You would like to rewrite it with tcl")
   (setf path-to-tempfile (merge-pathnames "temp/putclip.temp" cl-user::*lisp-root*))
   (with-open-file (x path-to-tempfile :direction :output :if-exists :supersede :if-does-not-exist :create :external-format :cp1251)
     (format x "~A" str))
@@ -290,11 +294,14 @@ end.
   (goto-xy pathname row col :kill-buffer kill-buffer :set-foreground-window set-foreground-window))
 
 ; для SBCL есть соотв. команда EMACS
-#+sbcl 
-(defun goto-xy (pathname row col)
+#+(and sbcl (not clcon))
+(defmethod goto-xy (pathname row col)
   (swank:eval-in-emacs `(goto-xy ,(namestring pathname) ,row ,col)))
+
+#+(and sbcl clcon)
+(defgeneric goto-xy (pathname row col))
    
-#+lispworks (DEFUN GOTO-XY (PATHNAME ROW COL &KEY KILL-BUFFER (set-foreground-window t))
+#+lispworks (defun GOTO-XY (PATHNAME ROW COL &KEY KILL-BUFFER (set-foreground-window t))
   "Не сработает при отсутствии редактора. При kill-buffer опасно, т.к. закрывает файл без изменений"
   (perga
     (let ED (get-some-editor))
@@ -327,7 +334,7 @@ end.
   #+lispworks
   (let ((result 
          (+ (point-offset point) (slot-value (editor::point-bigline point) 'editor::start-char))))
-    (unless (= result (editor::find-point-offset (point-buffer point) point))
+    (unless (= result (editor::find-point-offset (mark-buffer point) point))
       (cerror "продолжить"
        "нашёл функцию в редакторе, к-рая делает то же самое, что и real-point-offset. Надеялся, что они одинаковы")
       )
@@ -638,107 +645,6 @@ end.
      (t
       (values nil nil)))))
 
-       
-#+lispworks
-(lw:defadvice (editor::get-symbol-from-point get-symbol-from-point-around-advice :around)
-    (POINT &REST keyargs &KEY (PREVIOUS T) (MAX-LENGTH 100) (MAX-NON-ALPHANUMERIC 15) (CREATE-NEW nil))
-  "editor::get-symbol-from-point используется в редакторе, когда хотим забрать символ из текущей точки буфера. Что мы делаем в адвайсе?
-  Полностью подменяем команду. Читаем символ с помощью ридера, переключённого в спец. режим. 
-  Если с пакетом неясность, ищем все символы с таким именем и предлагаем пользователю выбор.   
-  Имеем возможность не создавать символ при попытке забрать его из буфера - это аккуратная политика. 
-  Выражение a^b рассматриваем как два символа a и b "
-  (declare (ignore fn previous max-non-alphanumeric))
-  (perga function
-    (unless (BUDDEN-TOOLS::packages-seen-p *readtable*)
-      (unless (member :create-new (splice-list keyargs) :key 'car)
-        (setf keyargs (append keyargs (list :create-new t))))
-      (return-from function (apply #'lw:call-next-advice point keyargs)))
-    (let p1 (copy-point point :temporary))
-    (let buf-beg (buffers-start (point-buffer point)))
-    (let buf-end (buffers-end (point-buffer point)))
-    (let rest-length (or max-length -1))
-    (let symbol-beginning nil)
-    ;(let symbol-end nil) 
-    (let v-in-symbol nil) ; истина, когда внутри символа
-    (let cur-in-symbol nil) ; истина, когда текущий char относится к символу
-    ; looking for a symbol at or before point
-    (do () ((not (and (> rest-length 0)
-                  (point> p1 buf-beg))) nil) 
-      (unless (point= p1 buf-end)
-        (setf cur-in-symbol (char-can-be-in-symbol (char-at-point p1))))
-      (when cur-in-symbol
-        (unless v-in-symbol
-           ;(setf symbol-end (copy-point p1 :temporary))
-          (setf v-in-symbol t)))
-      (when v-in-symbol
-        (unless cur-in-symbol
-          (character-offset p1 1)
-          (setf symbol-beginning (copy-point p1 :temporary))
-          (return nil)))
-      (character-offset p1 -1)
-      (incf rest-length -1)
-      )
-    ; find the end of the symbol
-    (when symbol-beginning
-      (let lookup-end (copy-point symbol-beginning :temporary))
-      (let lookup-end-count max-length)
-      (do () ((not (and (point< lookup-end buf-end)
-                        (or 
-                         (null max-length) 
-                         (> lookup-end-count 0)))) nil)
-        (character-offset lookup-end 1)
-        (incf lookup-end-count -1))
-      (let ss (points-to-string symbol-beginning lookup-end))
-      ;2012-12-19 (let *package* (editor::buffer-package-to-use (point-buffer point)))
-      ;(let pack *package*)
-      ;(show-expr *package*)
-      ;(let budden-tools::*inhibit-readmacro* t)
-      (let package (editor::buffer-package-to-use (point-buffer point)))
-      (cond
-       (create-new
-        (ignore-errors
-          (let ((budden-tools::*inhibit-readmacro* t)
-                (*package* package)
-                )
-            (read-from-string ss))))
-       (t 
-        (mlvl-bind (maybe-potential-symbol maybe-error)
-            (ignore-errors
-              ;(cond
-               ;((BUDDEN-TOOLS::packages-seen-p *readtable*)
-                (let ((sbcl-reader-budden-tools-lispworks:*return-package-and-symbol-name-from-read* t)
-                      (*package* package)
-                      (budden-tools::*inhibit-readmacro* t))
-                  (read-from-string ss))
-                ; )
-               #|(t
-                (mlvl-bind (a-package a-name)
-                    (editor::pathetic-parse-symbol ss package)
-                  (sbcl-reader-budden-tools-lispworks::make-potential-symbol :package a-package :casified-name a-name))
-                ))|# 
-                ))
-        (cond
-         ((typep maybe-error 'error) ; maybe-symbol can be nil, and read returns position. 
-                                     ; so we check if there is a error
-          (values nil nil) ; no symbol
-          )
-         ((sbcl-reader-budden-tools-lispworks:potential-symbol-p maybe-potential-symbol)
-          (process-potential-symbol maybe-potential-symbol package)
-          )
-           
-         ;((not (symbolp maybe-symbol))
-         ; (editor-error "~S is not a symbol name" maybe-symbol))
-         ((and (consp maybe-potential-symbol)
-               (eq (car maybe-potential-symbol) 'budden-tools:|^|)
-               (SBCL-READER-BUDDEN-TOOLS-LISPWORKS:potential-symbol-p (second maybe-potential-symbol)))
-          (process-potential-symbol (second maybe-potential-symbol) package))
-
-         (t ; in some modes we should not err
-          (values nil nil)
-          )
-         )
-        )
-       ))))
     
 ;  (setf max-non-alphanumeric 100)
 ;  (mlvl-bind (value error)

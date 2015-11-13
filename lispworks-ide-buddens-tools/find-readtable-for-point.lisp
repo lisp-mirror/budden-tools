@@ -22,6 +22,7 @@
 
 (defun find-readtable-name-for-point (buffer &key (direction :forward) point limit (cachep t) (search-head "(in-readtable")
                                            &allow-other-keys)
+  "For sbcl/clcon/oduvanchik, see oduvanchik::readtable-at-point instead"
   (let* ((p (copy-point (or point
                             (if (eq direction :forward)
                                 (buffer-%start buffer)
