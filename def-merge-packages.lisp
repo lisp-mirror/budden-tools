@@ -67,9 +67,18 @@ function you most likely want to use."
    #:all-ascii-chars-in-same-case-p
 
    #:unintern-all-internal-symbols-of-package
+
+   #:this-source-file-directory
    ))
 
 (in-package :defpackage-budden)
+
+(defun this-source-file-directory ()
+  "Use it like this: #.(this-source-file-directory)"
+  (let ((source (or *compile-file-truename* *load-truename*)))
+    (assert source)
+    (make-pathname :defaults source
+                   :name nil :type nil)))
 
 (defparameter *ascii-letters* 
   (let ((lowercase-ascii-letters
