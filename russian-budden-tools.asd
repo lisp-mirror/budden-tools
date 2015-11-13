@@ -11,7 +11,7 @@
   :depends-on 
   (:budden-tools)
   :components ( 
-               (:package-file "pkg-russian-budden-tools")
+               (asdf::package-file "pkg-russian-budden-tools")
                (:file "russian-budden-tools")
                (:file "ru-bu-to-file-convertors")
                ) 
