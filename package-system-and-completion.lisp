@@ -28,10 +28,13 @@
   (perga-implementation:perga
    (let* ((sp (symbol-package sym))
           (string 
-            (let ((*package* (or sp (find-package :keyword))))
-              (prin1-to-string sym))))
-     (unless sp
+           (let ((*package* (or sp *keyword-package*)))
+             (prin1-to-string sym))))
+     (cond
+      ((null sp)
        (_f subseq string 2))
+      ((eq sp *keyword-package*)
+       (_f subseq string 1)))
      (when (and (eq *print-case* :downcase)
                 (all-ascii-chars-in-same-case-p string))
        (_f string-downcase-ascii string))
@@ -136,14 +139,17 @@ internal - включать внутренние символы в случае,
           (not (def-merge-packages::all-ascii-chars-in-same-case-p suffix))))
 
 
-    (let ((raw-list ())
-          (list-of-completes ())
-          (show-list ())
-          (ext (cond (found-package external?)
-                     (t (not internal) t)))
-          (pkg (if found-package 
-                   found-package 
-                 editor-package)))
+    (let* ((raw-list ())
+           (list-of-completes ())
+           (show-list ())
+           (pkg (or found-package editor-package))
+           (ext (cond ; ((eq pkg *keyword-package*) nil)
+                      (found-package external?)
+                      (t (not internal))))
+           )
+
+      (show-expr found-package)
+      (show-expr editor-package)
 
       (setf raw-list
             (remove-duplicates 
@@ -157,6 +163,7 @@ internal - включать внутренние символы в случае,
                   (:next-iteration))
                 (:for name = (printed-symbol-without-package-with-advanced-readtable-case sym))
                 (:for pkg2 = (symbol-package sym))
+                ;(show-expr `("here with" ,sym ,pkg2))
                 (when pkg2 ; can be inherited uninterned symbol so it has no home package
                   (:collect 
                    (list name (package-name pkg2) storage sym))))
@@ -195,6 +202,8 @@ internal - включать внутренние символы в случае,
                          (cond
                           ((null prefix)
                            t)
+                          ((string= str "")
+                           t)
                           ((eq rem-prefix :prompt)
                            (funcall yes-or-no-p-fn "Символ ~S доступен в текущем пакете. Убрать префикс?" symbol))
                           (t rem-prefix))))
@@ -223,7 +232,7 @@ internal - включать внутренние символы в случае,
                            (if do-delete-prefix "" (if home-package (if fake-package? prefix home-package) package-name))
                            (cond
                             ((eq (symbol-package symbol) *keyword-package*)
-                             ":")
+                             "")
                             (do-delete-prefix "")
                             (home-package (if (eq status :external) ":" "::"))
                             (t colons))
