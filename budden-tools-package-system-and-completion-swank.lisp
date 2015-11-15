@@ -49,19 +49,19 @@ INPUT is used to guess the preferred case."
 
 (defun decorated-swank--symbol-completion-set (fn name package-name package internal-p matchp)
   (perga-implementation:perga
-    (let completions nil)
-    (flet set-completions (x) (setf completions x) "")
-    (cond
-      ((packages-seen-p *readtable*)
-       (let single-completion
-         (do-complete-symbol-with-budden-tools
-           name package 'error #'set-completions :yes-or-no-p-fn (constantly nil)))
-       (cond
-         (single-completion
-          (list single-completion))
-         (t completions)))
-      (t
-       (funcall fn name package-name package internal-p matchp)))))
+   (let completions nil)
+   (flet set-completions (x) (setf completions x) "")
+   (cond
+    ((packages-seen-p *readtable*)
+     (let single-completion
+       (do-complete-symbol-with-budden-tools
+        name package 'error #'set-completions :yes-or-no-p-fn (constantly nil) :internal internal-p))
+     (cond
+      (single-completion
+       (list single-completion))
+      (t completions)))
+    (t
+     (funcall fn name package-name package internal-p matchp)))))
 
 
 (decorate-function:decorate-function 'swank::symbol-completion-set #'decorated-swank--symbol-completion-set)
