@@ -51,11 +51,13 @@
      )))
 
 
-(defun do-complete-symbol-with-budden-tools (str editor-package editor-error-fn menu-from-list-fn &key (yes-or-no-p-fn 'yes-or-no-p))
+(defun do-complete-symbol-with-budden-tools (str editor-package editor-error-fn menu-from-list-fn &key (yes-or-no-p-fn 'yes-or-no-p) (internal nil))
   "Функция, позволяющая сделать завершение символа.
 Str - входная строка, для которой необходимо завершение.
 editor-package - текущий пакет в контексте редактора
 editor-error-fn - ф-я, подобная error по сигнатуре, вызывается в случае ошибки
+internal - включать внутренние символы в случае, если str - пустая строка.
+Иначе включаем только внешние.
 
 На выходе строка с завершенным символом или nil, если пользователь
 отказался от выбора (в случае неоднозначности).
@@ -101,7 +103,7 @@ editor-error-fn - ф-я, подобная error по сигнатуре, выз�
                                        0 2colon-pos))))
                    partial-name))
 
-         ;; Завершаемый символ внутренний?
+         ;; Завершаемый символ внутренний (только для случая с префиксом пакета)
          (external? (and colon-pos (not 2colon-pos)))
 
          ;; Имя пакета, в котором находится редактор (есть всегда)
@@ -133,10 +135,12 @@ editor-error-fn - ф-я, подобная error по сигнатуре, выз�
          (camel-case-suffix?
           (not (def-merge-packages::all-ascii-chars-in-same-case-p suffix))))
 
+
     (let ((raw-list ())
           (list-of-completes ())
           (show-list ())
-          (ext (if found-package external? nil))
+          (ext (cond (found-package external?)
+                     (t (not internal) t)))
           (pkg (if found-package 
                    found-package 
                  editor-package)))
