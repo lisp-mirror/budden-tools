@@ -146,6 +146,8 @@ internal - включать внутренние символы в случае,
            (ext (cond ; ((eq pkg *keyword-package*) nil)
                       (found-package external?)
                       (t (not internal))))
+           inner-matcher ; match functions to select
+           matcher       ; a completion from the list
            )
 
       (show-expr found-package)
@@ -240,17 +242,30 @@ internal - включать внутренние символы в случае,
                (format-item (x)
                  (do-format-item x nil nil)))
 
+        (setf inner-matcher 
+              (swank::make-compound-prefix-matcher
+               #\- :test (if camel-case-suffix?
+                             #'char= 
+                             #'char-equal)))
+        (setf matcher
+              (lambda (x)
+                (if 
+                 (funcall inner-matcher suffix (first x))
+                 x
+                 nil)))
+
         (setf list-of-completes
               (sort
                (remove-if #'null
-                          (mapcar #'(lambda (x)
+                          (mapcar #| #'(lambda (x)
                                       (if (alexandria:starts-with-subseq 
                                            suffix
                                            (first x)
                                            :test (if camel-case-suffix?
                                                      #'char= 
                                                    #'char-equal))
-                                          x nil))
+                                          x nil)) |#
+                                  matcher
                                   raw-list))
                #'string-lessp :key #'first))
 
