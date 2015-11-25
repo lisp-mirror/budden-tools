@@ -630,6 +630,7 @@ end.
   (not (find c '(#\  #\newline #\, #\^ #\' #\" #\` #\tab #\; #\( #\) #\@ #\| #\# #\\ #\>))))
 
 (defun process-potential-symbol (x package)
+  "returns either (symbol t), or (values nil nil) if there is no symbol"
   (perga
     (let found-package
       (sbcl-reader-budden-tools-lispworks:potential-symbol-package x))
@@ -638,9 +639,12 @@ end.
     (mlvl-bind (maybe-symbol storage)
         (find-symbol maybe-symbol-name found-package))
     (cond
-     (storage maybe-symbol)
+     (storage
+      (values maybe-symbol t))
      (*in-find-source*
-      (try-to-choose-the-best-matching-symbol-in-find-source maybe-symbol-name package)
+      (values
+       (try-to-choose-the-best-matching-symbol-in-find-source maybe-symbol-name package)
+       t)
       )
      (t
       (values nil nil)))))
@@ -720,6 +724,7 @@ end.
     
 
 (defun try-to-choose-the-best-matching-symbol-in-find-source (casified-string package)
+  "Returns symbol or errs"
   (perga
     (let all-matching (find-all-symbols casified-string))
     (cond
