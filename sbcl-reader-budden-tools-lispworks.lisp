@@ -722,7 +722,7 @@ variables to allow for nested and thread safe reading."
 
 ;brt
 (defvar *return-package-and-symbol-name-from-read* nil
-  "Side branch of read. If this var is t, potential-symbol structures are returned instead of symbols. Nothing is interned")
+  "Side branch of read. If this var is t, potential-symbol structures are returned instead of new symbols. Nothing is interned. Existing symbols may be returned as potential symbols are just as symbols")
 
 ;;; If the symbol named by the first LENGTH characters of NAME doesn't exist,
 ;;; then create it, special-casing the keyword package.
