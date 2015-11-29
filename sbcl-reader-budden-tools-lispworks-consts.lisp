@@ -13,25 +13,26 @@
 ;;; ;b is commented out by budden
 ;;; ;brt - buddens-readtable
 
-(def-merge-packages::!
- :sbcl-reader-budden-tools-lispworks
+(def-merge-packages::! :sbcl-reader-budden-tools
+ (:nicknames :sbcl-reader-budden-tools-lispworks)
  (:always t)
  (:use :cl 
   :budden-tools 
   )
  (:export "
-   sbcl-reader-budden-tools-lispworks:*return-package-and-symbol-name-from-read*
-   sbcl-reader-budden-tools-lispworks:read-token
-   sbcl-reader-budden-tools-lispworks:potential-symbol
-   sbcl-reader-budden-tools-lispworks:make-potential-symbol
-   sbcl-reader-budden-tools-lispworks:potential-symbol-casified-name
-   sbcl-reader-budden-tools-lispworks:potential-symbol-package
-   sbcl-reader-budden-tools-lispworks:potential-symbol-qualified
-   sbcl-reader-budden-tools-lispworks:potential-symbol-p
+   sbcl-reader-budden-tools:*return-package-and-symbol-name-from-read*
+   sbcl-reader-budden-tools:read-token
+   sbcl-reader-budden-tools:potential-symbol
+   sbcl-reader-budden-tools:make-potential-symbol
+   sbcl-reader-budden-tools:potential-symbol-casified-name
+   sbcl-reader-budden-tools:potential-symbol-package
+   sbcl-reader-budden-tools:potential-symbol-qualified
+   sbcl-reader-budden-tools:potential-symbol-p
+   sbcl-reader-budden-tools:constituentp
  "
  ))
 
-(in-package :sbcl-reader-budden-tools-lispworks)
+(in-package :sbcl-reader-budden-tools)
 
 (defparameter +char-attr-whitespace+ 0)
 (defparameter +char-attr-terminating-macro+ 1)
