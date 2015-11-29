@@ -18,15 +18,25 @@
              (cond
                ((stringp name) (make-symbol name))
                ((symbolp name) name)))
+           (x (gensym "X"))
+           (y (gensym "Y"))
+           (message (gensym "MESSAGE"))
            (the-form 
             `(progn
                (defun ,current-fn-symbol ()
                  "function for def-trivial-test::!"
-                 (unless (funcall ,test ,expr1 ,expr2)
-                 (if *break-on-test-failure* 
-                     (cerror "continue" "deftest failed: ~S" '(,current-fn-symbol ,expr1 ,expr2 ,@keyargs))
-                   (warn "deftest failed: ~S" '(,current-fn-symbol ,expr1 ,expr2 ,@keyargs))
-                   )))
+                 (let ((,x ,expr1)
+                       (,y ,expr2))
+                   (unless (funcall ,test ,x ,y)
+                     (let ((,message
+                            (format
+                             nil "deftest failed: ~S~%x=~S~%y=~S"
+                             '(,current-fn-symbol ,expr1 ,expr2 ,@keyargs)
+                             ,x ,y)))
+                       (if *break-on-test-failure* 
+                           (cerror "continue" "~A" ,message)
+                           (warn "~A" ,message))
+                       ))))
                (,current-fn-symbol)
                )))
       the-form)))
