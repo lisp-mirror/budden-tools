@@ -1,4 +1,35 @@
 ;;; -*- Encoding: utf-8; -*-
+
+#| Зародыш документации по perga.
+   Примеры см. в perga-test-1.lisp, perga-test-2.lisp. 
+   Как посмотреть, во что расширяется perga? 
+   macroexpand. 
+
+### macrolet, flet
+ (macroexpand '(perga
+                (macrolet m (x) (+ x 1))
+                (m 1)))
+=>
+ (macrolet ((m (x)
+             (+ x 1)))
+  (m 1))
+
+
+### symbol-macrolet
+  (macroexpand '(perga
+                 (symbol-macrolet c a)
+                 (let a 5)
+                 (let b (/ 4 c (read-from-string "0")))))
+  =>
+  (SYMBOL-MACROLET ((C A))
+  (LET ((A 5))
+    (LET ((B (/ 4 C (READ-FROM-STRING "0"))))
+      )))
+ 
+
+
+|#
+
 #|
 Отличия perga от proga.
 Цель нововведений:
