@@ -680,7 +680,9 @@ srcpl - symbol-readmacro. Прочитать объект и запрограм�
      (let ((point (slot-value stream 'editor::point)))
        (buffer-offset-to-row-col-offset
         (EDITOR:point-buffer point)
-        point)))))
+        point)))
+    (synonym-stream (input-stream-position-in-chars (symbol-value (synonym-stream-symbol stream))))
+    ))
 
 ; FIXME Deprecated - используй input-stream-position-in-chars 
 (defun extract-file-position (stream)
@@ -779,7 +781,7 @@ srcpl - symbol-readmacro. Прочитать объект и запрограм�
     (show-expr (file-position ss))
     (assert (= (input-stream-position-in-chars ss)
                (or
-                #+(and sbcl win32) 63
+                #+(and sbcl win32) 61
                 #+(and lispworks win32) 61
                 #+(and sbcl unix) 63
                -1000 ; write me
