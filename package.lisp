@@ -50,6 +50,7 @@
    budden-tools:nenqueue ; pushes item at the end of the list
    budden-tools:dotted-p ; check if list is dotted and 
               ; returns its parts in two values
+   budden-tools:full-outer-join ; similar to SQL's full outer join, but works on sets represented at lists. Has limitations, see docstring.
 
 ;; alists, plists, arglist dispatching
    budden-tools:list-to-alist 
