@@ -44,6 +44,7 @@
    (:file "defun-to-file" :description "When named function is created, it can be saved to a file in order to find-source to work")
    (:file "variable-type" :description "Compilation environment related stuff"
    )
+   (:file "full-outer-join" :description "Similar to full outer join in sql")
    (:file "pass-by-ref" :description "Pass place to a function by reference"
    )
    (:file "print-hash-table" :description "Print hashtable readably and other hash table utils"

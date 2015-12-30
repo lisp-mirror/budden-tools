@@ -634,7 +634,6 @@ As a short-hand, #\s means *STANDARD-OUTPUT*, #\t - *TRACE-OUTPUT*"
 
 (defun dotted-p (l) (values (last l 0) (butlast l 0)))
 
-
 (defun string-designator-p (x) (typep x 'string-designator))
 
 (deftype not-null () '(not null))
