@@ -14,7 +14,7 @@
  9. Обычный пакет не должен использовать "наш" пакет, иначе конфликты при defpackage могут вернуться.
  10. Регистр не преобразуется
 
-Концепция преобразования:
+Как менять зависимые пакеты без конфликтов?
 
 А. Совсем неоптимизированная:
 При изменении пакета идти по зависимостям и выполнять все зависимые определения.
@@ -68,6 +68,7 @@ function you most likely want to use."
    def-merge-packages:*per-package-metadata* 
    def-merge-packages:*per-package-alias-table*
    def-merge-packages:package-forbidden-symbol-names
+   def-merge-packages:get-package-metadata-or-nil
    def-merge-packages:ensure-package-metadata
    def-merge-packages:keywordize-package-designator
    def-merge-packages:extract-clause
@@ -252,6 +253,17 @@ custom-token-parser-spec is [ symbol | (:packages &rest package-designators) ] -
 ")
 
 
+(defstruct import-symbol-rec pkg s)
+
+(defun import-symbol-rec-same-symbol-p (isr1 isr2)
+  (eq (import-symbol-rec-s isr1)
+      (import-symbol-rec-s isr2)))
+
+(defun import-symbol-rec-clash-p (isr1 isr2)
+  (and (not (import-symbol-rec-same-symbol-p isr1 isr2))
+       (string= (import-symbol-rec-s isr1)
+                (import-symbol-rec-s isr2))))
+
 ; 111
 (defmacro ! (name &rest clauses) 
   "См. +!docstring+"
@@ -298,8 +310,9 @@ custom-token-parser-spec is [ symbol | (:packages &rest package-designators) ] -
       (length-is-1 allow-qualified-intern)
       (let* (; (dest (keywordize name))
              (sources-for-clashes (mapcar #'force-find-package use))
-             all-symbols-for-clashes
-             duplicates
+             all-symbols-for-clashes ; cons из пакета и символа
+             duplicates-as-list-of-list-of-import-symbol-recs
+             duplicates-as-list-of-names
              package-definition
              record-package-definition-to-metadata-forms
              forbidden-symbol-names forbid-symbols-forms
@@ -310,25 +323,22 @@ custom-token-parser-spec is [ symbol | (:packages &rest package-designators) ] -
              )
         (dolist (p sources-for-clashes)
           (do-external-symbols (s p)
-            (pushnew s all-symbols-for-clashes)))
+            (pushnew
+             (make-import-symbol-rec :pkg p :s s)
+             all-symbols-for-clashes
+             :test #'import-symbol-rec-same-symbol-p)))
     
-        (setf duplicates (collect-duplicates-into-sublists all-symbols-for-clashes :test 'string=))
-        ; duplicates is a list of lists of duplicate symbols
+        (setf duplicates-as-list-of-list-of-import-symbol-recs
+              (collect-duplicates-into-sublists all-symbols-for-clashes :test 'import-symbol-rec-clash-p))
 
-        ; remove explicitly shadowing-imported symbols from it
-        (let ((all-shadowing-import-names nil))
-          (setf duplicates 
-                (iter
-                  (:for dup in duplicates)
-                  (unless (member (car dup) all-shadowing-import-names :test 'string=)
-                    (:collect dup)))))
+        (dolist (list-of-import-symbol-recs duplicates-as-list-of-list-of-import-symbol-recs)
+          (push
+           (symbol-name (import-symbol-rec-s (first list-of-import-symbol-recs)))
+           duplicates-as-list-of-names))
 
-        ; в обычном def-merge-packages это есть, а нам вроде не нужно
-        ;(when duplicates
-        ;  (warn "defpackage-l2:! forbids clashing symbols ~S" duplicates))
         (setf forbidden-symbol-names 
               (iter 
-                (:for (dup) in (append duplicates (mapcar 'list forbid)))
+                (:for dup in (append duplicates-as-list-of-names forbid))
                 (assert (or (symbolp dup) (stringp dup)) () "forbidden-symbol-names clause must contain a list of string designators")
                 (:collect dup)))
         (setf processed-export-s
