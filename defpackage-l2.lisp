@@ -13,6 +13,23 @@
  8. При изменении пакета изменения передаются во все использующие пакеты, поэтому конфликты во время выполнения defpackage исключены.
  9. Обычный пакет не должен использовать "наш" пакет, иначе конфликты при defpackage могут вернуться.
  10. Регистр не преобразуется
+
+Концепция преобразования:
+А. Совсем неоптимизированная:
+При изменении пакета идти по зависимостям и выполнять все зависимые определения.
+Для этого нужно запомнить информацию, достаточную для повторного выполнения определения. 
+Б. Более-менее оптимизированная:
+Запомнить не только определение, но и множество символов с учётом того, какие должны откуда браться. При повторном определении вычислять новое множество символов и сравнивать новое со старым. Если ничего не поменялось, то и не нужно повторно вычислять определение. 
+
+Таким образом, определение нужно запомнить в любом случае.
+
+Избежание конфликтов при переопределении:
+1. Появился новый импортируемый символ или clash - нужно стереть внутренний символ, если он уже существовал. 
+2. Исчез clash - нужно его unintern.
+
+Минимизация утечек при переопределении:
+Перед удалением символа должен быть способ узнать, где он используется. Например, если он используется как данные, неплохо бы хотя бы предупредить о последствиях. 
+
 |#
 
 ;; разобраться с удалением символа. Например, написать ещё функции: разэкспортировать 
@@ -42,6 +59,8 @@ function you most likely want to use."
    def-merge-packages:package-metadata-custom-token-parsers ;slots 
    def-merge-packages:package-metadata-allow-qualified-intern
    def-merge-packages:package-metadata-interning-is-forbidden
+   def-merge-packages:package-metadata-last-definition-executed
+   def-merge-packages:package-metadata-l2-package-p
 
    def-merge-packages:set-package-lock-portably
    def-merge-packages:*per-package-metadata* 
@@ -67,6 +86,8 @@ function you most likely want to use."
    def-merge-packages:package-metadata-custom-token-parsers ;slots 
    def-merge-packages:package-metadata-allow-qualified-intern
    def-merge-packages:package-metadata-interning-is-forbidden
+   def-merge-packages:package-metadata-last-definition-executed
+   def-merge-packages:package-metadata-l2-package-p
 
    def-merge-packages:set-package-lock-portably
    def-merge-packages:*per-package-metadata* ; variable
@@ -315,16 +336,11 @@ custom-token-parser-spec is [ symbol | (:packages &rest package-designators) ] -
                   (:collect (export-clause name (car clause))))
                  (t 
                   (:collect `(:export ,@clause))))))
-        #-sbcl
         (setf process-local-nicknames-form 
               (if local-nicknames
                   `(setf (gethash (find-package ,name) *per-package-alias-table*) 
                          ',(process-local-nicknames name local-nicknames :to-alist t))
                   `(remhash (find-package ,name) *per-package-alias-table*)))
-        #+sbcl
-        (setf process-local-nicknames-form
-              (when local-nicknames
-                `((:local-nicknames ,@(process-local-nicknames name local-nicknames)))))                         
         (setf package-definition 
               `(defpackage ,name
                  ,@(when forbidden-symbol-names 
@@ -332,7 +348,7 @@ custom-token-parser-spec is [ symbol | (:packages &rest package-designators) ] -
                  ,@`((:use ,@use))
                  ,@processed-export-s
                  ,@clauses
-                 #+sbcl ,@process-local-nicknames-form))
+                 ))
         (setf forbid-symbols-forms
               `(; (setf (package-forbidden-symbol-names ,name) '(,@forbidden-symbol-names))
                 (setf (package-metadata-forbidden-symbol-names (ensure-package-metadata ,name)) (forbid-symbols-simple ',forbidden-symbol-names ,name)))
@@ -373,7 +389,7 @@ custom-token-parser-spec is [ symbol | (:packages &rest package-designators) ] -
                   `(eval-when (:compile-toplevel :load-toplevel :execute)
                      (prog1
                          ,package-definition
-                       #-sbcl ,process-local-nicknames-form
+                       ,process-local-nicknames-form
                        ,custom-token-parsers-form
                        ,@forbid-symbols-forms
                        ,allow-qualified-intern-form
@@ -381,7 +397,7 @@ custom-token-parser-spec is [ symbol | (:packages &rest package-designators) ] -
                 `(prog1
                      ,package-definition
                    (eval-when (:load-toplevel :execute)
-                     #-sbcl ,process-local-nicknames-form
+                     ,process-local-nicknames-form
                      ,custom-token-parsers-form
                      ,@forbid-symbols-forms
                      ,allow-qualified-intern-form

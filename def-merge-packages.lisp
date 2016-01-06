@@ -34,6 +34,8 @@ function you most likely want to use."
    #:package-metadata-custom-token-parsers ;slots 
    #:package-metadata-allow-qualified-intern
    #:package-metadata-interning-is-forbidden
+   #:package-metadata-last-definition-executed
+   #:package-metadata-l2-package-p
 
    #:set-package-lock-portably
    #:*per-package-metadata* ; variable
@@ -341,6 +343,8 @@ from to-package too. Была переведена в разряд устаре�
   allow-qualified-intern ; with buddens readtable extensions, by default, if package::symbol is being read for non-existent symbol, this is cerror. To return to default cl behaviour, set 
                          ; this variable to t. E.g. (setf (budden-tools::package-metadata-allow-qualified-intern (budden-tools::ensure-package-metadata :my-package)) t)
   interning-is-forbidden ; when this is true, interning via reading is prohibited for the package (in our readtable)
+  last-definition-executed ; последнее определение, к-рое мы выполняли
+  l2-package-p ; истина, если создан с помощью defpackage-l2::!
   )
 
 (defvar *per-package-metadata* (make-hash-table :test 'eq)
