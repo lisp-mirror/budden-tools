@@ -12,6 +12,7 @@
  7. Нет функций export, unintern, make-package, есть только defpackage
  8. При изменении пакета изменения передаются во все использующие пакеты, поэтому конфликты во время выполнения defpackage исключены.
  9. Обычный пакет не должен использовать "наш" пакет, иначе конфликты при defpackage могут вернуться.
+ 10. Регистр не преобразуется
 |#
 
 ;; разобраться с удалением символа. Например, написать ещё функции: разэкспортировать 
@@ -26,7 +27,7 @@
     (setf *readtable* (copy-readtable nil))
     nil)
 
-(cl:defpackage :defpackage-budden
+(cl:defpackage :defpackage-l2
   (:documentation "
 See ! docstring for docs. ! is unexported to avoid any symbol clashes, but this is the
 function you most likely want to use."   
@@ -78,7 +79,7 @@ function you most likely want to use."
    #:this-source-file-directory
    ))
 
-(in-package :defpackage-budden)
+(in-package :defpackage-l2)
 
 (defun this-source-file-directory ()
   "Use it like this: #.(this-source-file-directory)"
