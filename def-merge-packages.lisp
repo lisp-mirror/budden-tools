@@ -41,9 +41,6 @@ function you most likely want to use."
    #:package-forbidden-symbol-names ; place of package designator
    #:ensure-package-metadata ; makes sure that *per-package-metadata* entry for package exists
    #:keywordize-package-designator
-   ; #:defpackage-autoimport ; УСТАРЕЛ, не пользоваться. See package docstring. Note this symbol is exported to CL
-   ; #:defpackage-autoimport-2 ; ПОД ВОПРОСОМ.particular case of defpackage-autoimport. Uses all listed packages, shadowing-imports first of clashes. Exported to CL
-   ; пользоваться !4 .
    #:extract-clause ; extract one clause of def... form (e.g. defpackage) by its head
    ;#:reexport ; For every symbol in to-package2 which is external in 
    ;           ; package1, export it from to-package2
@@ -182,7 +179,7 @@ function you most likely want to use."
 
 
 (defun export-clause (nickname string)
-  "DEPRECATED. Generates :export clause from string containing qualified symbol names and comments. 
+  "Generates :export clause from string containing qualified symbol names and comments. 
    nickname: is replaced with #:. So, you can safely navigate to it via 
    your 'find-definition' command. E.g.
   (defpackage pack
@@ -191,7 +188,7 @@ function you most likely want to use."
       pack:sym2 ; this is the second one
       other-pack:reexported ; this won't be replaced
       \"))
-  " 
+  Не экспортируется. Используется внутри def-merge-packages::! , когда содержимое кляузы экспорта является строкой."
   (let* ((nickname (string nickname))
          (expr1 (concatenate 'string nickname "::")) ; package::
          (expr2 (concatenate 'string nickname ":")) ; package:
@@ -244,7 +241,7 @@ function you most likely want to use."
 
 (defmacro reexport (from-package &optional (to-package *package*))
   "DEPRECATED. For every symbol in to-package which is external in from-package, export it
-from to-package too"
+from to-package too. Была переведена в разряд устаревших, поскольку не декларативна и плохо согласуется с use"
   (let ((s (gensym)))
   `(do-external-symbols (,s ,from-package)
     (when (eq ,s (find-symbol (string ,s) ,to-package))
