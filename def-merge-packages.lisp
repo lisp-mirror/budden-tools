@@ -200,12 +200,14 @@ function you most likely want to use."
           (export2-reader s nil)))))
 
 (defun set-package-lock-portably (package lock)
-  "When t, package designator is locked. Designators are compared with string="
+  "When t, package designator is locked. Designators are compared with string= in lispworks. I don't know how they are compared in SBCL"
   #+lispworks (if lock 
                   (pushnew package hcl:*packages-for-warn-on-redefinition* :test 'string=)
                 (setf hcl:*packages-for-warn-on-redefinition* (remove package hcl:*packages-for-warn-on-redefinition* :test 'string=))
                 )
-  #-lispworks
+  #+sbcl
+  (if lock (sb-ext:lock-package package) (sb-ext:unlock-package package))
+  #-(or lispworks sbcl)
   (warn "set-package-lock-portably not implemented for your lisp")
   )
 

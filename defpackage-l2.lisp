@@ -129,12 +129,14 @@ function you most likely want to use."
           (export2-reader s nil)))))
 
 (defun set-package-lock-portably (package lock)
-  "When t, package designator is locked. Designators are compared with string="
+  "When t, package designator is locked. Designators are compared with string= in lispworks. I don't know how they are compared in SBCL"
   #+lispworks (if lock 
                   (pushnew package hcl:*packages-for-warn-on-redefinition* :test 'string=)
                 (setf hcl:*packages-for-warn-on-redefinition* (remove package hcl:*packages-for-warn-on-redefinition* :test 'string=))
                 )
-  #-lispworks
+  #+sbcl
+  (if lock (sb-ext:lock-package package) (sb-ext:unlock-package package))
+  #-(or lispworks sbcl)
   (warn "set-package-lock-portably not implemented for your lisp")
   )
 
@@ -404,8 +406,8 @@ custom-token-parser-spec is [ symbol | (:packages &rest package-designators) ] -
 
 
 
-(defmacro ! (name &rest clauses) ; Best variant.: err on non-existing packages
-  "see docstring above"
+(defmacro ! (name &rest clauses) 
+  "См. +!docstring+"
   (macrolet ((get-clause (name)
                `(multiple-value-setq (,name clauses) (extract-clause clauses ,(keywordize name))))
              (length-is-1 (name)
@@ -421,10 +423,11 @@ custom-token-parser-spec is [ symbol | (:packages &rest package-designators) ] -
                          ;  non-hosted-symbols 
           local-nicknames
           always
-          shadowing-import-from-s
           export-s
           allow-qualified-intern
           custom-token-parsers
+          import-from-s
+          intern-s
           (clauses clauses))
       (get-clause use)
       (get-clause print-defpackage-form)
@@ -433,20 +436,24 @@ custom-token-parser-spec is [ symbol | (:packages &rest package-designators) ] -
       (get-clause allow-qualified-intern)
       (get-clause forbid)
       (get-clause custom-token-parsers)
-      (multiple-value-setq (shadowing-import-from-s clauses) (extract-several-clauses clauses :shadowing-import-from))
       (multiple-value-setq (export-s clauses) (extract-several-clauses clauses :export))
+      (multiple-value-setq (import-from-s clauses) (extract-several-clauses clauses :import-from))
+
+      (when import-from-s
+        (error "кляуза :import-from запрещена в defpackage-l2::! при попытке определения ~S" name))
+      (multiple-value-setq (intern-s clauses) (extract-several-clauses clauses :intern))
+      (when intern-s
+        (error "кляуза :intern запрещена в defpackage-l2::! при попытке определения ~S (хотя, возможно, она ничему и не мешает)" name))
+
       (length-is-1 print-defpackage-form)
       (length-is-1 always)
       (length-is-1 allow-qualified-intern)
       (let* (; (dest (keywordize name))
              (sources-for-clashes (mapcar #'force-find-package use))
-             (sources-for-import nil)
              all-symbols-for-clashes
-             all-symbols-for-import
              duplicates
              package-definition
              forbidden-symbol-names forbid-symbols-forms
-             generated-import-clauses
              process-local-nicknames-form
              processed-export-s 
              allow-qualified-intern-form
@@ -460,7 +467,7 @@ custom-token-parser-spec is [ symbol | (:packages &rest package-designators) ] -
         ; duplicates is a list of lists of duplicate symbols
 
         ; remove explicitly shadowing-imported symbols from it
-        (let ((all-shadowing-import-names (apply 'append shadowing-import-from-s)))
+        (let ((all-shadowing-import-names nil))
           (setf duplicates 
                 (iter
                   (:for dup in duplicates)
@@ -469,29 +476,11 @@ custom-token-parser-spec is [ symbol | (:packages &rest package-designators) ] -
 
         (when duplicates
           (warn "defpackage-l2:! forbids clashing symbols ~S" duplicates))
-        (dolist (p sources-for-import)
-          (do-external-symbols (s p)
-            (unless (member s duplicates :key 'car :test 'string=)
-              (pushnew s all-symbols-for-import))))
         (setf forbidden-symbol-names 
               (iter 
                 (:for (dup) in (append duplicates (mapcar 'list forbid)))
                 (assert (or (symbolp dup) (stringp dup)) () "forbidden-symbol-names clause must contain a list of string designators")
                 (:collect dup)))
-        (setf generated-import-clauses
-              (iter 
-                (:for p :in sources-for-import)
-                     (:for maybe-import = 
-                      (iter
-                        (:for s :in-package p :external-only t)
-                        (unless (find s duplicates :test 'string= :key 'car)
-                          (:collect (make-symbol (string s))))))
-                     (when maybe-import
-                       (:collect `(:import-from
-                                   ,(package-name p)
-                                   ,@(sort maybe-import 'string<)) 
-                        ))
-                     ))
         (setf processed-export-s
               (iter
                 (:for clause in export-s)
@@ -516,8 +505,6 @@ custom-token-parser-spec is [ symbol | (:packages &rest package-designators) ] -
                  ,@(when forbidden-symbol-names 
                      `((:shadow ,@forbidden-symbol-names)))
                  ,@`((:use ,@use))
-                 ,@generated-import-clauses
-                 ,@(iter (:for cl in shadowing-import-from-s) (:collect `(:shadowing-import-from ,@cl)))
                  ,@processed-export-s
                  ,@clauses
                  #+sbcl ,@process-local-nicknames-form))
