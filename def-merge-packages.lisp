@@ -461,7 +461,21 @@ Returns list of symbols.
             (define-symbol-macro ,s (error "symbol ~S is forbidden in ~S" ,s ,p)) 
             (defmacro ,s (&rest ignore) (declare (ignore ignore)) (error "symbol ~S is forbidden in ~S" ,(symbol-name s) ,p))))))
     symbols-to-forbid))
-    
+
+
+(defun append-package-forbidden-symbol-names (package-designator symbols)
+  "symbols - возврат forbid-symbols-simple, т.е. список символов, которые уже фактически являются запретными по своим свойствам. Добавляет символы к списку запрещённых"
+  (let ((md (ensure-package-metadata package-designator)))
+    (with-slots ((fsn forbidden-symbol-names)) md
+      (setf fsn (remove-duplicates (append fsn symbols))))))
+
+
+(defun assign-package-forbidden-symbol-names (package-designator symbols)
+  "symbols - возврат forbid-symbols-simple, т.е. список символов, которые уже фактически являются запретными по своим свойствам. Добавляет символы к списку запрещённых"
+  (let ((md (ensure-package-metadata package-designator)))
+    (with-slots ((fsn forbidden-symbol-names)) md
+      (setf fsn (remove-duplicates symbols)))))
+
 
 (defparameter +!docstring+ "This form is like defpackage and it has some additional features. 
 If some symbols from used packages clash, they are shadowed instead and referred
@@ -526,7 +540,7 @@ With buddens readtable extensions enabled, when reader finds \"that-package:\" i
              all-symbols-for-import
              duplicates
              package-definition
-             forbidden-symbol-names forbid-symbols-forms
+             forbidden-symbol-names forbid-symbols-form
              generated-import-clauses
              process-local-nicknames-form
              processed-export-s 
@@ -604,10 +618,8 @@ With buddens readtable extensions enabled, when reader finds \"that-package:\" i
                  ,@clauses
                  #+(and sbcl careful-token-reader-via-native-package-local-nicknames)
                  ,@process-local-nicknames-form))
-        (setf forbid-symbols-forms
-              `(; (setf (package-forbidden-symbol-names ,name) '(,@forbidden-symbol-names))
-                (setf (package-metadata-forbidden-symbol-names (ensure-package-metadata ,name)) (forbid-symbols-simple ',forbidden-symbol-names ,name)))
-                )
+        (setf forbid-symbols-form
+              `(assign-package-forbidden-symbol-names ,name (forbid-symbols-simple ',forbidden-symbol-names ,name)))
         (setf allow-qualified-intern-form `(setf (package-metadata-allow-qualified-intern (ensure-package-metadata ,name)) ,allow-qualified-intern))
         (setf custom-token-parsers-form nil)
         (let ((custom-token-parser-list
@@ -649,7 +661,7 @@ With buddens readtable extensions enabled, when reader finds \"that-package:\" i
                          ,package-definition
                        #-(and sbcl careful-token-reader-via-native-package-local-nicknames) ,process-local-nicknames-form
                        ,custom-token-parsers-form
-                       ,@forbid-symbols-forms
+                       ,forbid-symbols-form
                        ,allow-qualified-intern-form
                        ,custom-reader-form))
                 `(prog1
@@ -658,7 +670,7 @@ With buddens readtable extensions enabled, when reader finds \"that-package:\" i
                      #-(and sbcl careful-token-reader-via-native-package-local-nicknames)
                      ,process-local-nicknames-form
                      ,custom-token-parsers-form
-                     ,@forbid-symbols-forms
+                     ,forbid-symbols-form
                      ,allow-qualified-intern-form
                      ,custom-reader-form))))
         (when print-defpackage-form
