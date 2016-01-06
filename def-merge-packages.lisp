@@ -41,6 +41,7 @@ function you most likely want to use."
    #:*per-package-metadata* ; variable
    #:*per-package-alias-table* ; variable, stolen from hierarchical-packages
    #:package-forbidden-symbol-names ; place of package designator
+   #:get-package-metadata-or-nil
    #:ensure-package-metadata ; makes sure that *per-package-metadata* entry for package exists
    #:keywordize-package-designator
    #:extract-clause ; extract one clause of def... form (e.g. defpackage) by its head
@@ -401,6 +402,12 @@ from to-package too. Была переведена в разряд устаре�
     (symbol (keywordize package-designator))
     (string (keywordize-package-designator (find-package package-designator)))
     ))
+
+
+(defun get-package-metadata-or-nil (package-designator)
+  "Function just for export. Returns nil if no metadata found"
+  (let ((d (keywordize-package-designator package-designator)))
+    (gethash d *per-package-metadata*)))
 
 (defun ensure-package-metadata (package-designator)
   "Gets package metadata. Creates one if there is no metadata"
