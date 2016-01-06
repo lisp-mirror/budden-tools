@@ -2,12 +2,12 @@
 
 (declaim (optimize debug))
 
-(def-merge-packages::! :merge-packages-simple-test
+(def-merge-packages::! :def-merge-packages-test
                        (:always t)
                        (:use :cl)
                        (:shadow #:??))
 
-(in-package :merge-packages-simple-test)
+(in-package :def-merge-packages-test)
 
 (def-merge-packages::! :p1 (:always t) (:use :cl) (:export :sym :s1 :nth))
 (def-merge-packages::! :p2 (:always t) (:use :cl) (:export :sym :s2 :nth))
