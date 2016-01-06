@@ -42,6 +42,7 @@ function you most likely want to use."
    #:ensure-package-metadata ; makes sure that *per-package-metadata* entry for package exists
    #:keywordize-package-designator
    #:extract-clause ; extract one clause of def... form (e.g. defpackage) by its head
+   #:extract-several-clauses ; extract one clause of def... form (e.g. defpackage) by its head
    ;#:reexport ; For every symbol in to-package2 which is external in 
    ;           ; package1, export it from to-package2
    #:reexport-clause-for-package ; for every expternal symbol in package, write an export clause
