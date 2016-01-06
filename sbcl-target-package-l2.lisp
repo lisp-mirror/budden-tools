@@ -1126,6 +1126,24 @@ implementation it is ~S." *default-package-use-list*)
           (error 'name-conflict :package package :symbols symbols
                                 :function function :datum datum)
         ;; USE-PACKAGE and EXPORT
+        (forbid-it ()
+          :report (lambda (s)
+                    (ecase function
+                      (export
+                       (format s "Заменить ~S одноимённым запретным символом в ~A (он затенит ~S)"
+                              (old-symbol) pname datum))
+                      (use-package
+                       (format s "Запретить новые символы в ~A (затенением)"
+                                   pname))))
+          :test use-or-export-p
+
+; в оригинале было так: (setf (package-metadata-forbidden-symbol-names (ensure-package-metadata ,name)) (forbid-symbols-simple ',forbidden-symbol-names ,name)))
+
+          (dolist (s (remove-duplicates symbols :test #'string=))
+            (def-merge-packages::append-package-forbidden-symbol-names
+                pname
+                (def-merge-packages::forbid-symbols-simple (list s) pname))
+            ))
         (keep-old ()
           :report (lambda (s)
                     (ecase function
