@@ -36,7 +36,7 @@ function you most likely want to use."
    )
   (:import-from :iterate-keywords #:iter #:keywordize)
   (:export 
-   #:def-merge-packages ; exported name for !. ! itself is unexported
+   #:декл_пакет_л2 ; exported name for !. ! itself is unexported
    ; #:export2 ; smart export clause
    #:package-metadata ; structure 
    #:package-metadata-forbidden-symbol-names ; and
@@ -117,7 +117,7 @@ function you most likely want to use."
       pack:sym2 ; this is the second one
       other-pack:reexported ; this won't be replaced
       \"))
-  Не экспортируется. Используется внутри def-merge-packages::! , когда содержимое кляузы экспорта является строкой."
+  Не экспортируется. Используется внутри defpackage-l2::! , когда содержимое кляузы экспорта является строкой."
   (let* ((nickname (string nickname))
          (expr1 (concatenate 'string nickname "::")) ; package::
          (expr2 (concatenate 'string nickname ":")) ; package:
@@ -231,7 +231,7 @@ from to-package too. Была переведена в разряд устаре�
                      (:collect `(,car ,.(nreverse cdr)))
                    (:collect `(,car))))))))
 (defun process-local-nicknames (new-package-name list &key to-alist)
-  (assert (evenp (length list)) () "def-merge-packages::! : local package nicknames list must be of even length")
+  (assert (evenp (length list)) () "defpackage-l2::! : local package nicknames list must be of even length")
   (do ((a (pop list) (pop list)) 
        (b (pop list) (pop list))
        res) 
@@ -468,7 +468,7 @@ custom-token-parser-spec is [ symbol | (:packages &rest package-designators) ] -
                     (:collect dup)))))
 
         (when duplicates
-          (warn "def-merge-packages:! forbids clashing symbols ~S" duplicates))
+          (warn "defpackage-l2:! forbids clashing symbols ~S" duplicates))
         (dolist (p sources-for-import)
           (do-external-symbols (s p)
             (unless (member s duplicates :key 'car :test 'string=)
@@ -579,18 +579,18 @@ custom-token-parser-spec is [ symbol | (:packages &rest package-designators) ] -
         package-definition
         ))))
 
-(setf (documentation 'def-merge-packages 'function)
+(setf (documentation 'декл_пакет_л2 'function)
       +!docstring+)
 
 
-(defmacro def-merge-packages (name &rest clauses)
+(defmacro декл_пакет_л2 (name &rest clauses)
   "see docstring below"
   `(! ,name ,@clauses)
   )
 
-(setf (documentation 'def-merge-packages 'function)
-      (concatenate 'string "This form is identical to def-merge-packages::! . I recommend use def-merge-packages::! whenewer possible,
-as it is less verbose. But def-merge-packages is exported so that one could find it easily.
+(setf (documentation 'декл_пакет_л2 'function)
+      (concatenate 'string "This form is identical to defpackage-l2::! . I recommend use defpackage-l2::! whenewer possible,
+as it is less verbose. But defpackage-l2 is exported so that one could find it easily.
 "
                  +!docstring+))
 
