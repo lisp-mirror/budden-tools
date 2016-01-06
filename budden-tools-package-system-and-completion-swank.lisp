@@ -1,5 +1,5 @@
 ;;; -*- Encoding: utf-8; system :see-packages;  -*-
-;;; Some SWANK symbols are decorated here. This code may be sbcl-specific
+;;; Some SWANK symbols are decorated here. This code may be sbcl-specific. А также пытаемся декорировать find-package
  
 (in-package :budden-tools)
 (in-readtable nil)
@@ -65,6 +65,18 @@ INPUT is used to guess the preferred case."
 
 
 (decorate-function:decorate-function 'swank::symbol-completion-set #'decorated-swank--symbol-completion-set)
+
+
+#+(and sbcl (not careful-token-reader-via-native-package-local-nicknames))
+(DECORATE-FUNCTION:PORTABLY-WITHOUT-PACKAGE-LOCKS
+ (defun decorated-find-package (fn name)
+   (budden-tools::hp-find-package (if (stringp name) (string-upcase name) name)
+                                  *package* fn)))
+
+#+(and sbcl (not careful-token-reader-via-native-package-local-nicknames))
+(DECORATE-FUNCTION:PORTABLY-WITHOUT-PACKAGE-LOCKS
+ (decorate-function 'find-package #'decorated-find-package))
+
 
 
 #|(defun decorated-swank--all-completions (fn prefix package)

@@ -134,16 +134,6 @@
 ;            (t (let ((b 7)) b))))
 
 
-#+see-packages
- (def-trivial-test::! proga.19.let-with-conc-type
-          (proga 
-            (let-with-conc-type x package (find-package :lisp))
-            x.name
-            )
-          "COMMON-LISP"
-          :test 'string=)
-
-
 #+see-packages 
 (def-trivial-test::! #:let-with-conc-type.1
                     (proga (let-with-conc-type x string "asdf") 

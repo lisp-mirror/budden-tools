@@ -104,7 +104,7 @@
                            (with-my-readtable
                              (read-from-string "\\`"))))
 
-(def-rd-test symbol.3.5 "\\'") 
+(def-rd-test symbol.3.6 "\\'") 
 
 (def-rd-test symbol.4 "|I love Russia|")
 (def-rd-test symbol.5 "asdf::defsystem")

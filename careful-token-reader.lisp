@@ -155,15 +155,16 @@ so use stream parameter only to identify a reader. Return value of hook function
 (defun hp-alias-map (p)
   "Finds alias map for a package. p is a package designator" 
   (declare (ignorable p))
-  #-sbcl
+  #-(and sbcl careful-token-reader-via-native-package-local-nicknames)
   (gethash 
    (the* not-null (apply-undecorated 'find-package (list p)))
    *per-package-alias-table*)
-  #+sbcl
+  #+(and sbcl careful-token-reader-via-native-package-local-nicknames)
   (sb-ext::package-local-nicknames p)
   )
 
-#-sbcl (defun (setf hp-alias-map) (new p)
+#-(and sbcl careful-token-reader-via-native-package-local-nicknames)
+(defun (setf hp-alias-map) (new p)
   "Example: (setf (budden-tools:hp-alias-map :lgrep) '((:p . :meta-parse))). TODO: check structure"
   ;; This one should never be called if HP is not loaded.
   (declare (ignorable new p))
@@ -174,7 +175,8 @@ so use stream parameter only to identify a reader. Return value of hook function
    new)
   )
 
-#-sbcl (defun delete-hp-alias-map (p)
+#-(and sbcl careful-token-reader-via-native-package-local-nicknames)
+(defun delete-hp-alias-map (p)
   (declare (ignorable p))
   (remhash (the* not-null (apply-undecorated 'find-package (list p)))
            *per-package-alias-table*))
