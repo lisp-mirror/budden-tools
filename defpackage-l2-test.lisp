@@ -1,5 +1,6 @@
 ;;; -*- Encoding: utf-8; -*-
-;; Этот файл - не часть системы, его надо запускать руками
+;; Этот файл - не часть системы, его надо запускать руками, желательно, при наличии
+;; :buddens-readtable-a
 
 (declaim (optimize debug))
 
@@ -47,4 +48,23 @@
 
 (?? 't4 :intermediate '(p1:s1 p2:s2))
 
+(defun got-buddens-readtable-a ()
+  (and (find-package :budden-tools)
+       (find-package :named-readtables)
+       (eval
+        (read-from-string
+         "(and
+            (named-readtables:find-readtable :buddens-readtable-a)
+            (budden-tools::packages-seen-p :buddens-readtable-a))"))))
 
+(when (got-buddens-readtable-a)
+  (def-trivial-test::! local-nicknames.1
+    (progn
+      (defpackage-l2::! :pckg-with-loc-nick
+                        (:always t)
+        (:local-nicknames :but :budden-tools)
+        )
+      (let ((*readtable* (budden-tools:find-readtable :buddens-readtable-a))
+            (*package* (find-package :pckg-with-loc-nick)))
+        (read-from-string "but:byref")))
+    'budden-tools:byref))
