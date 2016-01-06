@@ -378,21 +378,28 @@ Returns list of symbols.
     symbols-to-forbid))
     
 
-(defparameter +!docstring+ "This form is like defpackage and it has some additional features. 
-If some symbols from used packages clash, they are shadowed instead and referred
-as 'forbidden'. Error occurs on an attempt to read these symbols unqualified in package created.
+(defparameter +!docstring+ "This form is like defpackage, но у неё кое-что убрано и кое-что добавлено. Убрано:
 
-It also allows for additional clauses. Currently every additional clause can only occur once. 
+- import
+- shadowing-import
+- shadow
+
+Добавлено:
+
+- Совпадающие символы автоматически запрещаются. Вместо них присутствует символ-заместитель с таким же именем, но он называется запрещённым и его нельзя считать читателем лиспа. 
+
+\(:local-nicknames :nick1 :package1 :nick2 :package2 ...) - Refer to package1 as nick1, package2 as nick2 from package being defined. package1, package2 can be undefined at the time of ! form evaluation
+
+ При изменении пакета изменения передаются во все использующие пакеты, поэтому конфликты во время выполнения defpackage исключены.
+ Обычный пакет не должен использовать пакет, определённый этим макросом, иначе конфликты при defpackage могут вернуться.
+
 \(:forbid . string-designators) - explicitly forbid some symbol names with addition to clashes
 \(:print-defpackage-form [ t | nil ]) - if t, print defpackage form
-\(:local-nicknames :nick1 :package1 :nick2 :package2 ...) - Refer to package1 as nick1, package2 as nick2 from package being defined. package1, package2 can be undefined at the time of ! form evaluation
 \(:always [ t | nil ]) - if always, everything is wrapped into (eval-when (:compile-toplevel :load-toplevel :execute))
 \(:allow-qualified-intern [ t | nil ]) - with buddens readtable extensions, by default you can't intern bar to foo typing foo::bar. Set allow-qualified-intern to allow this.
 \(:custom-token-parsers custom-token-parser-spec1 ...) where 
 custom-token-parser-spec is [ symbol | (:packages &rest package-designators) ] - define custom token parsers for the package. Symbols should be from another package and should be names of functions (stream symbol-name package) => (values processed-value processed-p). Custom token parser functions (including inherited ones) are applied from left to right to any new symbol token just before it is interned. If it processed-p is t, then processed-value is inserted into reader output instead of creating symbol named by token. (:packages &rest package-designator) spec
  causes all custom-token-parsers from the package named to be copied to the package being defined. 
-\(:custom-reader symbol) - define custom token reader. 
-With buddens readtable extensions enabled, when reader finds \"that-package:\" in the stream, function named by custom-token-reader is invoked with the same signature as READ. 
 ")
 
 
@@ -418,7 +425,6 @@ With buddens readtable extensions enabled, when reader finds \"that-package:\" i
           export-s
           allow-qualified-intern
           custom-token-parsers
-          custom-reader
           (clauses clauses))
       (get-clause use)
       (get-clause print-defpackage-form)
@@ -427,13 +433,11 @@ With buddens readtable extensions enabled, when reader finds \"that-package:\" i
       (get-clause allow-qualified-intern)
       (get-clause forbid)
       (get-clause custom-token-parsers)
-      (get-clause custom-reader)
       (multiple-value-setq (shadowing-import-from-s clauses) (extract-several-clauses clauses :shadowing-import-from))
       (multiple-value-setq (export-s clauses) (extract-several-clauses clauses :export))
       (length-is-1 print-defpackage-form)
       (length-is-1 always)
       (length-is-1 allow-qualified-intern)
-      (length-is-1 custom-reader)
       (let* (; (dest (keywordize name))
              (sources-for-clashes (mapcar #'force-find-package use))
              (sources-for-import nil)
@@ -447,7 +451,6 @@ With buddens readtable extensions enabled, when reader finds \"that-package:\" i
              processed-export-s 
              allow-qualified-intern-form
              custom-token-parsers-form
-             custom-reader-form
              )
         (dolist (p sources-for-clashes)
           (do-external-symbols (s p)
@@ -553,9 +556,6 @@ With buddens readtable extensions enabled, when reader finds \"that-package:\" i
           (setf custom-token-parsers-form
                 `(setf (get-custom-token-parsers-for-package ,name) ',custom-token-parser-list))
           ); let ((custom-token-parser-list ...))
-        (assert (symbolp custom-reader))
-        (setf custom-reader-form 
-              `(setf (package-metadata-custom-reader (ensure-package-metadata ,name)) ',custom-reader))
         (setf package-definition 
               (if always 
                   `(eval-when (:compile-toplevel :load-toplevel :execute)
@@ -565,7 +565,7 @@ With buddens readtable extensions enabled, when reader finds \"that-package:\" i
                        ,custom-token-parsers-form
                        ,@forbid-symbols-forms
                        ,allow-qualified-intern-form
-                       ,custom-reader-form))
+                       ))
                 `(prog1
                      ,package-definition
                    (eval-when (:load-toplevel :execute)
@@ -573,7 +573,7 @@ With buddens readtable extensions enabled, when reader finds \"that-package:\" i
                      ,custom-token-parsers-form
                      ,@forbid-symbols-forms
                      ,allow-qualified-intern-form
-                     ,custom-reader-form))))
+                     ))))
         (when print-defpackage-form
           (let (*print-length* *print-level*) (print package-definition)))
         package-definition
