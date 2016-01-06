@@ -35,66 +35,64 @@ function you most likely want to use."
   (:use :cl ;:org.tfeb.hax.hierarchical-packages
    )
   (:import-from :iterate-keywords #:iter #:keywordize)
+  (:import-from :def-merge-packages
+   def-merge-packages:package-metadata ; structure 
+   def-merge-packages:package-metadata-forbidden-symbol-names ; and
+   def-merge-packages:package-metadata-custom-reader ; its
+   def-merge-packages:package-metadata-custom-token-parsers ;slots 
+   def-merge-packages:package-metadata-allow-qualified-intern
+   def-merge-packages:package-metadata-interning-is-forbidden
+
+   def-merge-packages:set-package-lock-portably
+   def-merge-packages:*per-package-metadata* 
+   def-merge-packages:*per-package-alias-table*
+   def-merge-packages:package-forbidden-symbol-names
+   def-merge-packages:ensure-package-metadata
+   def-merge-packages:keywordize-package-designator
+   def-merge-packages:extract-clause
+   def-merge-packages:extract-several-clauses
+   def-merge-packages:force-find-package
+   def-merge-packages:group-similar-items
+   def-merge-packages:collect-duplicates-into-sublists
+   def-merge-packages:search-and-replace-seq
+   def-merge-packages:get-custom-token-parsers-for-package
+   def-merge-packages:this-source-file-directory
+   )
   (:export 
    #:декл_пакет_л2 ; exported name for !. ! itself is unexported
    ; #:export2 ; smart export clause
-   #:package-metadata ; structure 
-   #:package-metadata-forbidden-symbol-names ; and
-   #:package-metadata-custom-reader ; its
-   #:package-metadata-custom-token-parsers ;slots 
-   #:package-metadata-allow-qualified-intern
-   #:package-metadata-interning-is-forbidden
+   def-merge-packages:package-metadata ; structure 
+   def-merge-packages:package-metadata-forbidden-symbol-names ; and
+   def-merge-packages:package-metadata-custom-reader ; its
+   def-merge-packages:package-metadata-custom-token-parsers ;slots 
+   def-merge-packages:package-metadata-allow-qualified-intern
+   def-merge-packages:package-metadata-interning-is-forbidden
 
-   #:set-package-lock-portably
-   #:*per-package-metadata* ; variable
-   #:*per-package-alias-table* ; variable, stolen from hierarchical-packages
-   #:package-forbidden-symbol-names ; place of package designator
-   #:ensure-package-metadata ; makes sure that *per-package-metadata* entry for package exists
-   #:keywordize-package-designator
-   #:extract-clause ; extract one clause of def... form (e.g. defpackage) by its head
+   def-merge-packages:set-package-lock-portably
+   def-merge-packages:*per-package-metadata* ; variable
+   def-merge-packages:*per-package-alias-table* ; variable, stolen from hierarchical-packages
+   def-merge-packages:package-forbidden-symbol-names ; place of package designator
+   def-merge-packages:ensure-package-metadata ; makes sure that *per-package-metadata* entry for package exists
+   def-merge-packages:keywordize-package-designator
+   def-merge-packages:extract-clause ; extract one clause of def... form (e.g. defpackage) by its head
    ;#:reexport ; For every symbol in to-package2 which is external in 
    ;           ; package1, export it from to-package2
    #:reexport-clause-for-package ; for every expternal symbol in package, write an export clause
-   #:force-find-package ; force-find-package. If package not found, it is a cerror
-   #:group-similar-items ; group-similar-items
+   def-merge-packages:force-find-package ; force-find-package. If package not found, it is a cerror
+   def-merge-packages:group-similar-items ; group-similar-items
                   ; Given a list of items, groups similar (in sence of key-args) items into sublists
-   #:collect-duplicates-into-sublists ; '(#\a c #\A #\B #\b) :test 'equalp -> ((#\A #\a) (#\b #\B))
+   def-merge-packages:collect-duplicates-into-sublists ; '(#\a c #\A #\B #\b) :test 'equalp -> ((#\A #\a) (#\b #\B))
    #:find-symbol-in-packages ; like apropos, but searches only exact symbol name and returns a list
-   #:search-and-replace-seq
+   def-merge-packages:search-and-replace-seq
    #:get-custom-reader-for-package
-   #:get-custom-token-parsers-for-package
+   def-merge-packages:get-custom-token-parsers-for-package
 
    #:unintern-all-internal-symbols-of-package
 
-   #:this-source-file-directory
+   def-merge-packages:this-source-file-directory
    ))
 
 (in-package :defpackage-l2)
-
-(defun this-source-file-directory ()
-  "Use it like this: #.(this-source-file-directory)"
-  (let ((source (or *compile-file-truename* *load-truename*)))
-    (assert source)
-    (make-pathname :defaults source
-                   :name nil :type nil)))
-
-(defun search-and-replace-seq (type seq subseq newseq &key all (test #'equalp))
-  (let ((num-matches 0)
-        (start2 0))
-    (loop 
-     (let ((found (search subseq seq :test test :start2 start2)))  
-       (when found 
-         (setf seq (concatenate
-                    type 
-                    (subseq seq 0 found)
-                    newseq
-                    (subseq seq (+ found (length subseq)) (length seq))))
-         (setf start2 (+ found (length newseq)))
-         (incf num-matches))
-       (when (or (not found) (not all))
-         (return))))
-    (values seq num-matches)))
-
 
 (defun export2-reader (stream symbol)
   "(:export2 package:name ;comment
@@ -128,36 +126,6 @@ function you most likely want to use."
       ,@(with-input-from-string (s clause-string)
           (export2-reader s nil)))))
 
-(defun set-package-lock-portably (package lock)
-  "When t, package designator is locked. Designators are compared with string= in lispworks. I don't know how they are compared in SBCL"
-  #+lispworks (if lock 
-                  (pushnew package hcl:*packages-for-warn-on-redefinition* :test 'string=)
-                (setf hcl:*packages-for-warn-on-redefinition* (remove package hcl:*packages-for-warn-on-redefinition* :test 'string=))
-                )
-  #+sbcl
-  (if lock (sb-ext:lock-package package) (sb-ext:unlock-package package))
-  #-(or lispworks sbcl)
-  (warn "set-package-lock-portably not implemented for your lisp")
-  )
-
-(defun collect-duplicates-into-sublists (list &rest key-args &key key test test-not)
-  "Select duplicates from the list and collect them into sublists. Returns list of such sublists. E.g.,
-\'(#\a c #\A #\B #\b) :test 'equalp -> ((#\A #\a) (#\b #\B))
-  Non-desctructive on original list"
-  (declare (ignore key test test-not))          
-  (iter nil
-    (:for x in list)
-    (:for bucket = (apply #'assoc x buckets key-args))
-    (if bucket 
-        (push x (cdr bucket))
-      (:collect `(,x) :into buckets))
-    (:finally
-     (return
-      (iter 
-        (:for bucket in buckets)
-        (when (cdr bucket)
-          (:collect (nreverse bucket))))))))
-
 (defun reexport-clause-for-package (package)
   (let* 
       ((p (find-package package))
@@ -179,59 +147,6 @@ from to-package too. Была переведена в разряд устаре�
       (export ,s ,to-package)))))
 
 
-(defun extract-clause (rest-arglist clause-name)
-  "Extract a clause from &rest list. Returns (shared with the rest-arglist) tail of clause extracted and a fresh list of other clauses"
-  (iter 
-    (:with clause-extracted = nil)
-    (:with clause-extracted-p = nil)
-    (:for elt in rest-arglist)
-    (check-type elt list)
-    (if (eq (car elt) clause-name)
-        (if clause-extracted-p
-            (cerror "Ignore it" "Non-unique clause ~S in ~S" elt rest-arglist)
-          (setf clause-extracted-p t
-                clause-extracted (cdr elt)))
-      (:collect elt :into other-clauses))
-    (:finally 
-     (return (values clause-extracted other-clauses)))))
-
-
-(defun extract-several-clauses (rest-arglist clause-name)
-  "Is like extract-clauase. Extracts several clauses from &rest list and returns list of them"
-  (iter 
-    (:for elt in rest-arglist)
-    (check-type elt list)
-    (if (eq (car elt) clause-name)
-        (:collect (cdr elt) :into clauses-extracted)
-      (:collect elt :into other-clauses))
-    (:finally 
-     (return (values clauses-extracted other-clauses)))))
-  
-
-
-(defun force-find-package (package-designator)
-  "If package is not found, signal a cerror"
-  (iter 
-    (:for package = (find-package package-designator))
-    (when package (return package))
-    (cerror "Retry" "Required non-existent package ~A" package-designator)
-    ))
-
-(defun group-similar-items (list &rest key-args &key (key 'identity) test test-not)
-  #+russian "Недеструктивно группирует (в смысле key-args) значения списка в подсписки"
-  #-russian "Given a list of items, groups similar (in sence of key-args) items into sublists"
-  (declare (ignorable key test test-not))
-  (iter 
-    (:for item in list)
-    (:for group = (apply 'assoc (funcall key item) groups key-args))
-    (if group 
-        (push item (cdr group))
-      (:collect `(,item) into groups))
-    (:finally (return
-               (iter (:for (car . cdr) in groups)
-                 (if cdr
-                     (:collect `(,car ,.(nreverse cdr)))
-                   (:collect `(,car))))))))
 (defun process-local-nicknames (new-package-name list &key to-alist)
   (assert (evenp (length list)) () "defpackage-l2::! : local package nicknames list must be of even length")
   (do ((a (pop list) (pop list)) 
@@ -249,100 +164,9 @@ from to-package too. Была переведена в разряд устаре�
 
 (defun 1-to-list (x) (if (atom x) `(,x) x))
 
-(defstruct package-metadata
-;  write-lock ; if t, attempt to create a symbol creates continuable error
-;  read-lock ; if t, attempt to read a symbol creates a error
-  custom-reader ; custom reader is a function with the same args as read. It is called 
-                ; when reader is read in a context of package:: syntax. 
-  custom-token-parsers ; Custom token parsers is a list of custom token parsers. 
-                       ; Custom token parser is a function designator of 
-                       ; (stream potential-symbol-name package) which 
-                       ; returns two values. First value is t if token is 
-                       ; parsed and nil otherwise. Second value is parsed token itself.
-                       ; If custom token parsers are defined, package 
-                       ; protection is not accomplished. 
-                       ; Stream is at the end of the token at the time of the call.
-                       ; Parsers are called from left to right until some parser returns t as its
-                       ; secondary value. If no parser returns t, 
-  forbidden-symbol-names ; FIXME rename to forbidden-symbols. This is a list of forbidden symbols. Forbidden symbols are internal (and in shadowing-import list) in the package 
-                       ; and, if buddens readtable extensions are on,  you can't read them with reader 
-  allow-qualified-intern ; with buddens readtable extensions, by default, if package::symbol is being read for non-existent symbol, this is cerror. To return to default cl behaviour, set 
-                         ; this variable to t. E.g. (setf (budden-tools::package-metadata-allow-qualified-intern (budden-tools::ensure-package-metadata :my-package)) t)
-  interning-is-forbidden ; when this is true, interning via reading is prohibited for the package (in our readtable)
-  )
-
-(defvar *per-package-metadata* (make-hash-table :test 'eq)
-  "Mapping of keywordized package names to their metadata"
-  )
-
-
-(defvar *per-package-alias-table*
-  ;; maps from package -> alist of alias -> real names.
-  ;; Lookups are nopt recursive in this list.
-  ;; (could this be a constant?)
-  (make-hash-table))
-
 #+LispWorks
 ;;; Try and let entries go away when packages go away
 (hcl:set-hash-table-weak *per-package-alias-table* :key) 
-
-(defun get-custom-reader-for-package (package-designator)
-  "custom-reader, если он назначен (с помощью setf), имеет те же параметры, что и read. Вызывается для чтения во временном контексте пакета, т.е., после custom-reader-for-package должен учитывать, что его могут вызвать изнутри read, поэтому просто вызов read скорее всего, вызовет безконечную рекурсию"
-  (let ((pm (gethash (keywordize-package-designator package-designator) 
-                    *per-package-metadata*)))
-    (and pm (package-metadata-custom-reader pm))))
-
-(defun get-custom-token-parsers-for-package (package-designator)
-  "custom-token-parsers, если назначены (с помощью setf) - это список function designators (для funcall), которые вызываются слева направо над каждым токеном. Они получают на вход: поток, строку и пакет. Возвращают два значения. Первое значение - считанный объект. Второе - t, если объект считан, иначе - nil"
-  (let ((pm (gethash (keywordize-package-designator package-designator) 
-                     *per-package-metadata*)))
-    (and pm (package-metadata-custom-token-parsers pm))))
-  
-
-(defsetf get-custom-reader-for-package (package-designator) (new-value)
-  (let ((md (gensym)))
-    `(progn
-       (check-type ,new-value (or null symbol function))
-       (let ((,md (ensure-package-metadata ,package-designator)))
-         (setf (package-metadata-custom-reader ,md) ,new-value)))))
-
-(defsetf get-custom-token-parsers-for-package (package-designator) (new-value)
-  (let ((md (make-symbol "MD"))
-        (new-value-v (make-symbol "NEW-VALUE-V"))
-        (x (make-symbol "X")))
-    `(let ((,new-value-v ,new-value))
-       (check-type ,new-value-v (or null cons))
-       (dolist (,x ,new-value) (check-type ,x (or symbol function)))
-       (let ((,md (ensure-package-metadata ,package-designator)))
-         (setf (package-metadata-custom-token-parsers ,md) ,new-value-v)))))
-
-; FIXME - иногда при удалении текущего пакета пакет становится NIL. 
-; тогда наша хитрая читалка ломается
-(defun keywordize-package-designator (package-designator)
-  (etypecase package-designator
-    (keyword package-designator)
-    (package (intern (package-name package-designator) :keyword))
-    (symbol (keywordize package-designator))
-    (string (keywordize-package-designator (find-package package-designator)))
-    ))
-
-(defun ensure-package-metadata (package-designator)
-  "Gets package metadata. Creates one if there is no metadata"
-  (let ((d (keywordize-package-designator package-designator)))
-    (or (gethash d *per-package-metadata*)
-        (setf (gethash d *per-package-metadata*) (make-package-metadata)))))
-
-(defun package-forbidden-symbol-names (package)
-  "Note that symbol forbidding would work only when buddens readtables extensions are enabled"
-  (let ((m (ensure-package-metadata package)))
-    (package-metadata-forbidden-symbol-names m)))
-
-(defsetf package-forbidden-symbol-names (package) (names)
-  "Note that symbol forbidding would work well in buddens readtables extensions only"
-  (let ((m (gensym)))
-    `(progn (let ((,m (ensure-package-metadata ,package)))
-              (setf (package-metadata-forbidden-symbol-names ,m) ,names))
-       )))
 
 (defun forbid-symbols-simple (symbols &optional (package *package*))
   "Forbid symbols designated in the package. 
@@ -405,7 +229,7 @@ custom-token-parser-spec is [ symbol | (:packages &rest package-designators) ] -
 ")
 
 
-
+; 111
 (defmacro ! (name &rest clauses) 
   "См. +!docstring+"
   (macrolet ((get-clause (name)
@@ -474,8 +298,9 @@ custom-token-parser-spec is [ symbol | (:packages &rest package-designators) ] -
                   (unless (member (car dup) all-shadowing-import-names :test 'string=)
                     (:collect dup)))))
 
-        (when duplicates
-          (warn "defpackage-l2:! forbids clashing symbols ~S" duplicates))
+        ; в обычном def-merge-packages это есть, а нам вроде не нужно
+        ;(when duplicates
+        ;  (warn "defpackage-l2:! forbids clashing symbols ~S" duplicates))
         (setf forbidden-symbol-names 
               (iter 
                 (:for (dup) in (append duplicates (mapcar 'list forbid)))
@@ -586,34 +411,6 @@ as it is less verbose. But defpackage-l2 is exported so that one could find it e
 (dspec:define-dspec-alias ! (name &rest args)
   (setf args args)
   `(defpackage ,name))
-
-(defun delete-symbols-from-package (pack &rest symbols)
-  "Each element of symbols may be a string-designator, or a list. 
-If it is a list, first element should be a string-designator. 
-Try to delete symbol designated with each string-designator from pack 
-and explain if we can't"
-  (iter
-    (:for sname-or-list in symbols)
-    (:for sname = (if (consp sname-or-list) 
-                      (car sname-or-list)
-                    sname-or-list))
-    (:for str = (string sname))
-    (multiple-value-bind (sym status) (find-symbol str pack)
-      (unless sym
-        (warn "Хотели удалить символ ~S из ~A, но он не найден" str pack)
-        (:next-iteration))
-      (when (eq status :external)
-        (format *error-output* "Пытаемся разэкспортировать ~S из ~A" sym pack)
-        (unexport sym pack))
-      (multiple-value-bind (sym0 status0) (find-symbol str pack)
-        (assert (eq sym sym0))
-        (ecase status0
-          (:inherited (warn "Не получится удалить ~S из ~A, т.к. он унаследован через use-package от ~A" sym0 pack (symbol-package sym0)))
-          (:internal
-           (unintern sym0 pack)
-           (assert (not (find-symbol str pack))))
-          )))))
-
 
 (defun find-symbol-extended (string-designator package &key include-symbol-name) 
   "If include-symbol is nil, then include symbol-name instead of symbol itself"
