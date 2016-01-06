@@ -18,6 +18,8 @@
    (:file "def-merge-packages"
     :description "defpackage with some new clauses which are useful in conjunction with this library. See def-merge-packages::!"
     )
+   (:file "defpackage-l2"
+    :description "Упрощённая версия def-merge-package для l2/s2")
    (:file "package") ; might need
    (:file "package-proga-implementation")
    (:file "def-toplevel-progn")
