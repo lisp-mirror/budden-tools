@@ -48,6 +48,13 @@
 
 (?? 't4 :intermediate '(p1:s1 p2:s2))
 
+(let ((md (defpackage-l2:ensure-package-metadata :intermediate)))
+  (assert (eq (defpackage-l2:package-metadata-l2-package-p md) t))
+  (assert (equalp (defpackage-l2:package-metadata-body-of-last-definition md)
+                  '((:ALWAYS T) (:USE :P1 :P2) (:FORBID :SYM)
+                    (:EXPORT :S1 :S2)))))
+                  
+
 (defun got-buddens-readtable-a ()
   (and (find-package :budden-tools)
        (find-package :named-readtables)

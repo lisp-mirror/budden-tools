@@ -15,11 +15,13 @@
  10. Регистр не преобразуется
 
 Концепция преобразования:
+
 А. Совсем неоптимизированная:
 При изменении пакета идти по зависимостям и выполнять все зависимые определения.
 Для этого нужно запомнить информацию, достаточную для повторного выполнения определения. 
+
 Б. Более-менее оптимизированная:
-Запомнить не только определение, но и множество символов с учётом того, какие должны откуда браться. При повторном определении вычислять новое множество символов и сравнивать новое со старым. Если ничего не поменялось, то и не нужно повторно вычислять определение. 
+Запомнить не только определение, но и множество символов с учётом того, какие должны откуда браться. При повторном определении вычислять новое множество символов и сравнивать новое со старым. Если ничего не поменялось, то и не нужно повторно вычислять определение. Пока что этого НЕ ДЕЛАЕМ - нужно сделать простой вариант и хорошо закрыть его тестами. 
 
 Таким образом, определение нужно запомнить в любом случае.
 
@@ -59,7 +61,7 @@ function you most likely want to use."
    def-merge-packages:package-metadata-custom-token-parsers ;slots 
    def-merge-packages:package-metadata-allow-qualified-intern
    def-merge-packages:package-metadata-interning-is-forbidden
-   def-merge-packages:package-metadata-last-definition-executed
+   def-merge-packages:package-metadata-body-of-last-definition
    def-merge-packages:package-metadata-l2-package-p
 
    def-merge-packages:set-package-lock-portably
@@ -86,7 +88,7 @@ function you most likely want to use."
    def-merge-packages:package-metadata-custom-token-parsers ;slots 
    def-merge-packages:package-metadata-allow-qualified-intern
    def-merge-packages:package-metadata-interning-is-forbidden
-   def-merge-packages:package-metadata-last-definition-executed
+   def-merge-packages:package-metadata-body-of-last-definition
    def-merge-packages:package-metadata-l2-package-p
 
    def-merge-packages:set-package-lock-portably
@@ -262,6 +264,7 @@ custom-token-parser-spec is [ symbol | (:packages &rest package-designators) ] -
                )
              )
     (let (
+          (original-definition-body (copy-tree clauses))
           use
           forbid
           print-defpackage-form
@@ -298,6 +301,7 @@ custom-token-parser-spec is [ symbol | (:packages &rest package-designators) ] -
              all-symbols-for-clashes
              duplicates
              package-definition
+             record-package-definition-to-metadata-forms
              forbidden-symbol-names forbid-symbols-forms
              process-local-nicknames-form
              processed-export-s 
@@ -349,6 +353,10 @@ custom-token-parser-spec is [ symbol | (:packages &rest package-designators) ] -
                  ,@processed-export-s
                  ,@clauses
                  ))
+        (setf record-package-definition-to-metadata-forms
+              `(
+                (setf (package-metadata-l2-package-p (ensure-package-metadata ,name)) t)
+                (setf (package-metadata-body-of-last-definition (ensure-package-metadata ,name)) ',original-definition-body)))
         (setf forbid-symbols-forms
               `(; (setf (package-forbidden-symbol-names ,name) '(,@forbidden-symbol-names))
                 (setf (package-metadata-forbidden-symbol-names (ensure-package-metadata ,name)) (forbid-symbols-simple ',forbidden-symbol-names ,name)))
@@ -389,6 +397,7 @@ custom-token-parser-spec is [ symbol | (:packages &rest package-designators) ] -
                   `(eval-when (:compile-toplevel :load-toplevel :execute)
                      (prog1
                          ,package-definition
+                       ,@record-package-definition-to-metadata-forms
                        ,process-local-nicknames-form
                        ,custom-token-parsers-form
                        ,@forbid-symbols-forms
@@ -396,7 +405,9 @@ custom-token-parser-spec is [ symbol | (:packages &rest package-designators) ] -
                        ))
                 `(prog1
                      ,package-definition
+                     ,@record-package-definition-to-metadata-forms
                    (eval-when (:load-toplevel :execute)
+                     ,@record-package-definition-to-metadata-forms
                      ,process-local-nicknames-form
                      ,custom-token-parsers-form
                      ,@forbid-symbols-forms
