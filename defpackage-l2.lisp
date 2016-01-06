@@ -32,7 +32,6 @@
 See ! docstring for docs. ! is unexported to avoid any symbol clashes, but this is the
 function you most likely want to use."   
    )
-  (:nicknames :def-merge-packages)
   (:use :cl ;:org.tfeb.hax.hierarchical-packages
    )
   (:import-from :iterate-keywords #:iter #:keywordize)
@@ -62,17 +61,8 @@ function you most likely want to use."
    #:collect-duplicates-into-sublists ; '(#\a c #\A #\B #\b) :test 'equalp -> ((#\A #\a) (#\b #\B))
    #:find-symbol-in-packages ; like apropos, but searches only exact symbol name and returns a list
    #:search-and-replace-seq
-   #:package-doctor ; try to diagnose trash symbols, duplicate symbols, etc
-   ;  #:find-symbol-extended ; like find-symbol, but also returns if symbol is (f)bound and home package
    #:get-custom-reader-for-package
    #:get-custom-token-parsers-for-package
-
-   #:char-upcase-ascii
-   #:char-downcase-ascii
-   #:string-upcase-ascii
-   #:string-downcase-ascii
-
-   #:all-ascii-chars-in-same-case-p
 
    #:unintern-all-internal-symbols-of-package
 
@@ -87,78 +77,6 @@ function you most likely want to use."
     (assert source)
     (make-pathname :defaults source
                    :name nil :type nil)))
-
-(defparameter *ascii-letters* 
-  (let ((lowercase-ascii-letters
-      "abcdefghijklmnopqrstuvwxyz"))
-    (append
-     (concatenate
-      'list
-      lowercase-ascii-letters
-      (string-upcase lowercase-ascii-letters)
-      ))))
-
-(let* ((numchars (/ (length *ascii-letters*) 2))
-       (up (make-hash-table :test #'eql))
-       (down (make-hash-table :test #'eql)))
-  (check-type numchars integer)
-  (iter 
-    (:for i from 0 to (- numchars 1))
-    (:for j from numchars to (- (* 2 numchars) 1))
-    (:for lochar = (elt *ascii-letters* i))
-    (:for hichar = (elt *ascii-letters* j))
-    (setf (gethash lochar up) hichar)
-    (setf (gethash hichar down) lochar))
-
-; non-toplevel
-(defun char-upcase-ascii (char) 
-  (gethash char up char))
-
-; non-toplevel
-(defun char-downcase-ascii (char)
-  (gethash char down char))
-
-; non-toplevel
-(defun char-equal-ascii (c1 c2) 
-  (char-equal (char-upcase-ascii c1)
-              (char-upcase-ascii c2)))
-
-; non-toplevel
-(defun string-upcase-ascii (s)
-    (map 'string 'char-upcase-ascii s))
-
-(defun string-downcase-ascii (s)
-  (map 'string 'char-downcase-ascii s))
-
-);let*
-
-(defun all-ascii-chars-in-same-case-p (s)
-  (let ((all-downs t)
-        (all-ups t)
-        (up #\a)
-        (down #\a))
-    (declare (symbol all-ups all-downs))
-    (declare (character up down))
-    (iter 
-      (:while (or all-ups all-downs))
-      (:for c :in-string s)
-      (declare (character c))
-      (when all-ups
-        (setf up 
-              (char-upcase-ascii c))
-        (unless (char= up c)
-          (setf all-ups nil)))
-      (when all-downs 
-        (setf down 
-              (char-downcase-ascii c))
-        (unless (char= down c)
-          (setf all-downs nil)))
-      )
-    (cond
-     ((and all-ups all-downs) :ignore-case)
-     (all-ups :uppercase)
-     (all-downs :lowercase)
-     (t nil))))
 
 (defun search-and-replace-seq (type seq subseq newseq &key all (test #'equalp))
   (let ((num-matches 0)
@@ -748,100 +666,6 @@ and explain if we can't"
           )))
     (if show-symbols result
       (mapcar 'cdr result))))
-
-
-
-
-(defmacro package-doctor (package-with-trash &key packages)
-  "Returns a form which would likely clear trash symbols"
-  (setf packages (or packages (list-all-packages)))
-  (iter (:for pckg in (list package-with-trash :keyword))
-    (setf packages (remove pckg packages
-                                  :test 'string= :key 'package-name)))
-  `'(progn
-      "Trying to delete symbols which are (f)unbound and have the same name as (f)bound symbols from other packages"
-      (delete-symbols-from-package 
-       ',package-with-trash
-       ,@(sort 
-          (iter 
-            (:for sym :in-package package-with-trash)
-            (:for sname = (symbol-name sym))
-            (when (or (boundp sym) (fboundp sym))
-              (:next-iteration))
-            (flet ((outer-collect (x) (:collect x)))
-              (iter 
-                (:for pck in packages)
-                (multiple-value-bind (sym1 status1)
-                    (find-symbol sname pck)
-                  (when 
-                      (and 
-                       sym1
-                       (not (eq sym1 sym))
-                       (or (boundp sym1) (fboundp sym1))
-                       (not (eq status1 :inherited)))
-                    (:collect `(,(package-name pck) ,status1) :into explanation)
-                    )
-                  (:finally 
-                   (when explanation
-                     (outer-collect `(,sname ,@explanation)))))
-                )))
-          'string<
-          :key 'car))
-      "Symbols which may be duplicated definitions. I just note them for you"
-      '(,@(sort 
-           (iter 
-             (:for sym :in-package package-with-trash)
-             (:for sname = (symbol-name sym))
-             (:for boundp = (boundp sym))
-             (:for fboundp = (fboundp sym))
-             (when (or boundp fboundp)
-               (flet ((outer-collect (x) (:collect x)))
-                 (iter 
-                   (:for pck in packages)
-                   (multiple-value-bind (sym1 status1)
-                       (find-symbol sname pck)
-                     (when 
-                         (and 
-                          sym1
-                          (not (eq sym1 sym))
-                          (or (boundp sym1) (fboundp sym1))
-                          (not (eq status1 :inherited)))
-                       (:collect (find-symbol-extended sym1 pck) :into explanation)
-                       )
-                     (:finally 
-                      (when explanation
-                        (outer-collect `(,sname ,@(mapcar 'cdr explanation)))))
-                     )))))
-           'string<
-           :key 'car))
-      "Identical UPPERCASE and lowercase names. Suggest to delete either unbound of them, just list the rest"
-      ,@(sort 
-         (iter 
-           (:for sym :in-package package-with-trash)
-           (:for sname = (symbol-name sym))
-           (:for case = (all-ascii-chars-in-same-case-p sname))
-           (:for other-sym = 
-            (case case
-              (:uppercase (find-symbol (string-downcase sname) package-with-trash))
-              (:lowercase (find-symbol (string-upcase sname) package-with-trash))
-              (t nil)))
-           (:for other-sname = (symbol-name other-sym))
-           (when other-sym
-             (:for boundp = (boundp sym))
-             (:for fboundp = (fboundp sym))
-             (:for boundpo = (boundp other-sym))
-             (:for fboundpo = (fboundp other-sym))
-             (cond ((and (or boundp fboundp)
-                         (not (or boundpo fboundpo)))
-                    (:collect `(delete-symbols-from-package ,package-with-trash ,other-sname)))
-                   ((and (eq (find-package package-with-trash) :keyword)
-                         (eq case :uppercase)) ; remove lowercase keyword if there is a conflict
-                    (:collect `(delete-symbols-from-package ,package-with-trash ,other-sname)))
-                   (t (:collect `(,sname ,other-sname :both-are-bound))))
-             ))
-         'string<
-         :key 'car))
-  )
 
 
 (defun unintern-all-internal-symbols-of-package (package)
