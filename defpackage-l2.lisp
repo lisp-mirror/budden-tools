@@ -264,6 +264,7 @@ custom-token-parser-spec is [ symbol | (:packages &rest package-designators) ] -
        (string= (import-symbol-rec-s isr1)
                 (import-symbol-rec-s isr2))))
 
+
 ; 111
 (defmacro ! (name &rest clauses) 
   "См. +!docstring+"
@@ -310,9 +311,8 @@ custom-token-parser-spec is [ symbol | (:packages &rest package-designators) ] -
       (length-is-1 allow-qualified-intern)
       (let* (; (dest (keywordize name))
              (sources-for-clashes (mapcar #'force-find-package use))
-             all-symbols-for-clashes ; cons из пакета и символа
-             duplicates-as-list-of-list-of-import-symbol-recs
              duplicates-as-list-of-names
+             imports-as-list-of-symbols-grouped-by-package
              package-definition
              record-package-definition-to-metadata-forms
              forbidden-symbol-names forbid-symbols-forms
@@ -321,21 +321,13 @@ custom-token-parser-spec is [ symbol | (:packages &rest package-designators) ] -
              allow-qualified-intern-form
              custom-token-parsers-form
              )
-        (dolist (p sources-for-clashes)
-          (do-external-symbols (s p)
-            (pushnew
-             (make-import-symbol-rec :pkg p :s s)
-             all-symbols-for-clashes
-             :test #'import-symbol-rec-same-symbol-p)))
-    
-        (setf duplicates-as-list-of-list-of-import-symbol-recs
-              (collect-duplicates-into-sublists all-symbols-for-clashes :test 'import-symbol-rec-clash-p))
 
-        (dolist (list-of-import-symbol-recs duplicates-as-list-of-list-of-import-symbol-recs)
-          (push
-           (symbol-name (import-symbol-rec-s (first list-of-import-symbol-recs)))
-           duplicates-as-list-of-names))
-
+        (multiple-value-setq
+            (duplicates-as-list-of-names
+             imports-as-list-of-symbols-grouped-by-package)
+          (compute-imports-and-clashes-from-uses sources-for-clashes))
+          
+  
         (setf forbidden-symbol-names 
               (iter 
                 (:for dup in (append duplicates-as-list-of-names forbid))
@@ -489,6 +481,34 @@ as it is less verbose. But defpackage-l2 is exported so that one could find it e
       (mapcar 'cdr result))))
 
 
+
+(defun compute-imports-and-clashes-from-uses (sources-for-clashes)
+  "sources-for-clashes - список пакетов. Возвращает два значения"
+  (let (duplicates-as-list-of-list-of-import-symbol-recs
+        all-symbols-for-clashes ; список import-symbol-rec
+        duplicates-as-list-of-names ; это мы вернём
+        imports-as-list-of-symbols-grouped-by-package ; это мы вернём
+        )
+    (dolist (p sources-for-clashes)
+      (do-external-symbols (s p)
+        (pushnew
+         (make-import-symbol-rec :pkg p :s s)
+         all-symbols-for-clashes
+         :test #'import-symbol-rec-same-symbol-p)))
+    
+    (setf duplicates-as-list-of-list-of-import-symbol-recs
+          (collect-duplicates-into-sublists all-symbols-for-clashes :test 'import-symbol-rec-clash-p))
+
+    (dolist (list-of-import-symbol-recs duplicates-as-list-of-list-of-import-symbol-recs)
+      (push
+       (symbol-name (import-symbol-rec-s (first list-of-import-symbol-recs)))
+           duplicates-as-list-of-names))
+
+    (values imports-as-list-of-symbols-grouped-by-package
+            duplicates-as-list-of-names)
+    ))
+
+
 (defun unintern-all-internal-symbols-of-package (package)
   "Some cleanup of package. Useful after renaming of things to ensure no references to old names can be created. 
   Beware of type names, variables, advices and so. You should export them if you want predictable behaviour"
@@ -496,3 +516,20 @@ as it is less verbose. But defpackage-l2 is exported so that one could find it e
     (do-symbols (s package)
       (when (eq (symbol-package s) package)
         (unintern s package)))))
+
+
+#| (defun reevaluate-package-definition (keywordized-package-designator package-metadata)
+  )
+
+ (defun refresh-dependend-packages (package)
+  "Только для пакетов, определённых с помощью нашего макроса - повторно выполняет их определения, чтобы они заметили изменения в конфликтах. Как это сделать?
+ 1. Собрать все пакеты рекурсивно в виде графа зависимостей
+ 2. Топологически отсортировать
+ 3. Для каждого, начиная от ведущих и кончая ведомыми, обновить."
+  (dolist (p (package-used-by-list package))
+    (let* ((k (keywordize-package-designator package))
+           (md (get-package-metadata-or-nil k)))
+      (when md
+        (reevaluate-package-metadata k package)
+        )))) 
+|#
