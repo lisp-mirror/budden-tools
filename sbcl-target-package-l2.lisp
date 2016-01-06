@@ -1,7 +1,14 @@
+;;;; Зависит от :def-merge-packages 
 ;;;; Копия target-package.lisp . Пытаемся обойтись малой кровью и 
 ;;;; вместо того, чтобы создавать заново всю систему пакетов, 
 ;;;; пропатчить систему пакетов SBCL на горячую.
 ;;;; Это оправдывается тем, что нужно поменять практически весь интерфейс
+;;;; Вроде бы у нас получается сделать систему запретных символов путём
+;;;; совсем небольших изменений. НО. Она будет работать только при условии,
+;;;; что пакеты с запретами ничего не импортируют явно, не запрещают явно.
+;;;; Также неясно со shadowing-import. Если нам понадобится что-то иное, 
+;;;; мы всегда можем попробовать при каком-то изменении перевыполнять последнюю
+;;;; запомненную форму defpackage. 
 ;;;; 
 ;;;; PACKAGEs and stuff like that
 ;;;;
@@ -1373,7 +1380,10 @@ uninterned."
               (external (package-external-symbols package)))
           (dolist (sym syms)
             (add-symbol internal sym)
-            (nuke-symbol external sym))))
+            (nuke-symbol external sym)))
+        (dolist (p (package-%used-by-list package))
+          (maybe-unforbid-names p))
+        )
       t)))
 
 ;;; Check for name conflict caused by the import and let the user
@@ -1556,7 +1566,9 @@ PACKAGE."
                 (delete (package-external-symbols p)
                         (package-tables package)))
           (setf (package-%used-by-list p)
-                (remove package (the list (package-%used-by-list p))))))
+                (remove package (the list (package-%used-by-list p)))))
+          (maybe-unforbid-names package)
+                )
       t)))
 
 (defun find-all-symbols (string-or-symbol)
@@ -1773,6 +1785,34 @@ PACKAGE."
                       (:eval
                        (eval-error condition))))))
     (with-single-package-locked-error (:symbol symbol control))))
+
+
+(defun should-name-be-forbidden-in-a-package (package name)
+  "budden. Если извне мы получали бы через use несколько разных символов с таким именем, то возвращает истину. Конечно, раз мы можем вызвать эту функцию, у нас сейчас уже есть тень на это имя"
+  (let (symbols)
+    (dolist (p (package-%use-list package))
+      (multiple-value-bind (symbol found)
+                           (find-external-symbol name p)
+        (when found
+          (pushnew symbol symbols :test 'eq))))
+    (> (length symbols) 1)))
+
+(defun maybe-unforbid-name (package forbidden-symbol)
+  "If there is no more reason to forbid the symbol, unforbid it"
+  (unless
+      (should-name-be-forbidden-in-a-package package (symbol-name forbidden-symbol))
+    (unintern forbidden-symbol package)
+    (def-merge-packages:remove-package-forbidden-symbol-name package forbidden-symbol)))
+
+(defun maybe-unforbid-names (package)
+  "Looks at all forbidden symbols in package. If there is no reason to forbid them anymore, unforbids them"
+  (let ((md (def-merge-packages:get-package-metadata-or-nil package)))
+    (unless md
+      (return-from maybe-unforbid-names nil))
+    (let ((forbidden-symbols
+           (def-merge-packages:package-metadata-forbidden-symbol-names md)))
+      (dolist (forbidden-symbol forbidden-symbols)
+        (def-merge-packages:maybe-unforbid-name package forbidden-symbol)))))
 
 
 (eval-when (:compile-toplevel :load-toplevel :execute)

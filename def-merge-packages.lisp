@@ -37,6 +37,9 @@ function you most likely want to use."
    #:package-metadata-body-of-last-definition
    #:package-metadata-l2-package-p
 
+   #:append-package-forbidden-symbol-name
+   #:remove-package-forbidden-symbol-name
+
    #:set-package-lock-portably
    #:*per-package-metadata* ; variable
    #:*per-package-alias-table* ; variable, stolen from hierarchical-packages
@@ -469,6 +472,10 @@ Returns list of symbols.
     (with-slots ((fsn forbidden-symbol-names)) md
       (setf fsn (remove-duplicates (append fsn symbols))))))
 
+(defun remove-package-forbidden-symbol-name (package symbol)
+  (let ((md (ensure-package-metadata package)))
+    (with-slots ((fsn forbidden-symbol-names)) md
+      (setf fsn (remove symbol fsn)))))
 
 (defun assign-package-forbidden-symbol-names (package-designator symbols)
   "symbols - возврат forbid-symbols-simple, т.е. список символов, которые уже фактически являются запретными по своим свойствам. Добавляет символы к списку запрещённых"
