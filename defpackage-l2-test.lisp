@@ -13,35 +13,34 @@
 
 (defun make-three-packages ()
   (dolist (name '(:p1+p2 :p1 :p2))
-    (ignore-errors
-     (def-merge-packages:delete-package-metadata name)
-     (delete-package name)))
+    (when (find-package name)
+      (delete-package name)))
 
-  (eval '(defpackage-l2::! :p1 (:always t) (:use :cl) (:export :sym :s1 :nth) (:print-defpackage-form t)))
-  (eval '(defpackage-l2::! :p2 (:always t) (:use :cl) (:export :sym :s2 :nth)))
-  (eval '(defpackage-l2::! :p1+p2 (:always t) (:print-defpackage-form t) (:use :p1 :p2) (:export :s1 :s2 nth)))
+  (eval '(defpackage :p1 (:use :cl) (:export :sym :s1 :nth)))
+  (eval '(defpackage :p2 (:use :cl) (:export :sym :s2 :nth)))
+  (eval '(defpackage-l2::! :p1+p2 (:always t) (:use :p1 :p2) (:export :p1+p2s-own)))
   )
 
 
 (defun ?? (name package list-in-string)
-  "errs if set of external symbols from package is not the same as list. list must be represented as a string to read"
+  "errs if set of symbols from package is not the same as list. list must be represented as a string to read"
   (format t "~%Running ~A~%" name)
-  (let* ((externals 
+  (let* ((symbols
           (iterk:iter
-           (:for s :in-package package :external-only t)
+           (:for s :in-package package)
            (:collect s)))
          (list (read-from-string list-in-string)))
-    (assert (null (set-exclusive-or externals list)))))
+    (assert (null (set-exclusive-or symbols list)))))
 
 (make-three-packages)
 
-;;; Should warn here as p1:sym and p2:sym clash
-(?? 't1 :p1+p2 "(p1:s1 p2:s2 cl:nth)")
+(?? 't1 :p1+p2 "(p1:s1 p2:s2 cl:nth p1+p2::sym p1+p2::p1+p2s-own)")
 
 (let ((md (defpackage-l2:ensure-package-metadata :p1+p2)))
   (assert (eq (defpackage-l2:package-metadata-l2-package-p md) t))
   (assert (equalp (defpackage-l2:package-metadata-body-of-last-definition md)
-                  '((:ALWAYS T) (:PRINT-DEFPACKAGE-FORM T) (:USE :P1 :P2) (:EXPORT :S1 :S2 NTH)))))
+                  '((:ALWAYS T) (:USE :P1 :P2)
+                    (:export :p1+p2s-own)))))
                   
 
 (defun got-buddens-readtable-a ()
@@ -90,3 +89,59 @@
         (read-from-string "SYM"))
       t)
     t))
+
+
+(def-trivial-test::! can-t-export-inherited.1
+  (let* ((second-value
+          (nth-value 1
+                     (ignore-errors
+                      (eval '(defpackage-l2::! :trash-package (:use :cl) (:export :cons)))))))
+    (typep second-value 'error))
+  t)
+
+
+(def-trivial-test::! can-t-export-inherited.2
+                     (let (second-value)
+                       (eval '(defpackage-l2::! :trash-package (:use :cl)))
+                       (eval '(defpackage-l2::! :trash-package (:export :cons)))
+                       (setf second-value 
+                             (nth-value 1
+                                        (ignore-errors
+                                         (eval
+                                          '(defpackage-l2::! :trash-package
+                                                             (:use :cl)
+                                             (:export :cons))))))
+                       (typep second-value 'error))
+  t)
+
+(defmacro yields-error-p (form-to-eval)
+  (let ((second-value (gensym)))
+    `(let ((,second-value
+            (nth-value 1
+                       (ignore-errors (eval ,form-to-eval)))))
+       (typep ,second-value 'error))))
+
+(def-trivial-test::! can-t-export-forbidden.1
+                     (progn
+                       (make-three-packages)
+                       (yields-error-p
+                        '(defpackage-l2::! :p1+p2 (:always t) (:use :p1 :p2) (:export :sym))))
+  t)
+
+(def-trivial-test::! can-export-after-it-become-not-inherited.1
+                     (progn
+                       (eval '(defpackage-l2::! :trash-package (:use :cl)))
+                       (eval '(defpackage-l2::! :trash-package (:export :cons)))
+                       t
+                       )
+  t)
+
+
+(def-trivial-test::! can-export-after-it-become-not-inherited.2
+                     (progn
+                       (eval '(defpackage-l2::! :trash-package (:export :cons)))
+                       (eval '(defpackage-l2::! :trash-package (:use :cl)))
+                       t
+                       )
+  t)
+
