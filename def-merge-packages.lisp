@@ -44,6 +44,7 @@ function you most likely want to use."
    #:append-package-forbidden-symbol-name
    #:assign-package-forbidden-symbols
    #:remove-package-forbidden-symbol-name
+   #:forbidden-symbol-p ; для внутренних задач.
 
    #:set-package-lock-portably
    #:*per-package-metadata* ; variable
@@ -888,3 +889,13 @@ and explain if we can't"
     (do-symbols (s package)
       (when (eq (symbol-package s) package)
         (unintern s package)))))
+
+
+
+(defun forbidden-symbol-p (symbol package)
+  "Внутренняя функция, даром что экспортированная"
+  (assert (typep symbol 'symbol))
+  (assert (typep package 'package))
+  (let ((md (get-package-metadata-or-nil package)))
+    (and md (find symbol
+                  (package-metadata-forbidden-symbol-names md)))))

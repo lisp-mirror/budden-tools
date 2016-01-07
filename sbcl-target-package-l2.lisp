@@ -1136,7 +1136,7 @@ implementation it is ~S." *default-package-use-list*)
              (and md (def-merge-packages:package-metadata-l2-package-p md))))
          (do-forbid-symbols-manually ()
            (dolist (s (remove-duplicates symbols :test #'string=))
-             (format t "name-conflict : Запрещаю имя ~S в ~S" s package)
+             (format t "~%name-conflict : Запрещаю имя ~S в ~S~%" s package)
              (def-merge-packages::append-package-forbidden-symbol-names
                  package
                  (def-merge-packages::forbid-symbols-simple (list s) package))
@@ -1336,13 +1336,26 @@ uninterned."
           ;; Нехорошо получается, но нам придётся дважды посмотреть, не является ли символ импортированным. В противном случае мы сначала разрешим конфликт, а потом откажем в обновлении пакета и получится, что мы зря разрешали конфликт.
           (let (imports)
             (dolist (sym syms)
-              (multiple-value-bind (s w) (find-symbol (symbol-name sym) package)
+              (let ((w (nth-value 1 (find-symbol (symbol-name sym) package))))
                 (when (eq w :inherited)
                   (push sym imports))))
             (when imports
               (signal-package-error
                package
-               "Пакет ~S создан defpkg2. Нельзя экспортировать inherited (унаследованные) символы ~S" (package-%name package) imports))))
+               "Пакет ~S создан defpkg2. Нельзя экспортировать inherited (унаследованные) символы ~S" (package-%name package) imports)))
+          )
+
+        (when md
+          (let (forbiddens)
+            (dolist (sym syms)
+              (when (def-merge-packages:forbidden-symbol-p sym package)
+                (push sym forbiddens)))
+            (when forbiddens
+              (signal-package-cerror
+               package
+               "Но можешь попробовать на свой страх и риск"
+               "Нельзя экспортировать запретные символы символы ~S из ~S" forbiddens (package-%name package))))
+          )
 
         ;; Find symbols and packages with conflicts.
         (let ((used-by (package-%used-by-list package)))
