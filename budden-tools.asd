@@ -19,6 +19,8 @@
     :description "defpackage with some new clauses which are useful in conjunction with this library. See def-merge-packages::!"
     )
    (:file "sbcl-target-package-l2")
+   (:file "package-defpackage-l2")
+   (:file "sbcl-defpackage-l2")
    (:file "defpackage-l2"
     :description "Упрощённая версия def-merge-package для l2/s2. Тест defpackage-l2-test запускается намного ниже из c:/clcon/lp/clcon/load-clcon-server-and-client-win32.lisp")
    (:file "package") ; might need
