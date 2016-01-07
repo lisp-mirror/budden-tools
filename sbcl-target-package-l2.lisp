@@ -1315,11 +1315,13 @@ uninterned."
 
 (defun export (symbols &optional (package (sane-package)))
   #+sb-doc
-  "Exports SYMBOLS from PACKAGE, checking that no name conflicts result."
+  "Exports SYMBOLS from PACKAGE, checking that no name conflicts result. Если пакет создан defpkg2, то можем экспортировать только внутренние символы, а не пришедшие через :use"
   (with-package-graph ()
-    (let ((package (find-undeleted-package-or-lose package))
-          (symbols (symbol-listify symbols))
-          (syms ()))
+    (let* ((package (find-undeleted-package-or-lose package))
+           (symbols (symbol-listify symbols))
+           (md (def-merge-packages:get-package-metadata-or-nil package))
+           (l2-package-p (and md (def-merge-packages:package-metadata-l2-package-p md)))
+           (syms ()))
       ;; Punt any symbols that are already external.
       (dolist (sym symbols)
         (multiple-value-bind (s found)
@@ -1330,6 +1332,18 @@ uninterned."
         (when syms
           (assert-package-unlocked package "exporting symbol~P ~{~A~^, ~}"
                                    (length syms) syms))
+        (when l2-package-p
+          ;; Нехорошо получается, но нам придётся дважды посмотреть, не является ли символ импортированным. В противном случае мы сначала разрешим конфликт, а потом откажем в обновлении пакета и получится, что мы зря разрешали конфликт.
+          (let (imports)
+            (dolist (sym syms)
+              (multiple-value-bind (s w) (find-symbol (symbol-name sym) package)
+                (when (eq w :inherited)
+                  (push sym imports))))
+            (when imports
+              (signal-package-error
+               package
+               "Пакет ~S создан defpkg2. Нельзя экспортировать inherited (унаследованные) символы ~S" (package-%name package) imports))))
+
         ;; Find symbols and packages with conflicts.
         (let ((used-by (package-%used-by-list package)))
           (dolist (sym syms)
