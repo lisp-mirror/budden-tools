@@ -360,8 +360,8 @@ from to-package too. Была переведена в разряд устаре�
   l2-package-p ; истина, если создан с помощью defpackage-l2::!
   )
 
-(defvar *per-package-metadata* (make-hash-table :test 'eq)
-  "Mapping of keywordized package names to their metadata"
+(defvar *per-package-metadata* (swank-backend:make-weak-key-hash-table :test 'eq)
+  "Отображает пакеты на их метаданные. Слаб по ключу"
   )
 
 
@@ -377,13 +377,13 @@ from to-package too. Была переведена в разряд устаре�
 
 (defun get-custom-reader-for-package (package-designator)
   "custom-reader, если он назначен (с помощью setf), имеет те же параметры, что и read. Вызывается для чтения во временном контексте пакета, т.е., после custom-reader-for-package должен учитывать, что его могут вызвать изнутри read, поэтому просто вызов read скорее всего, вызовет безконечную рекурсию"
-  (let ((pm (gethash (keywordize-package-designator package-designator) 
+  (let ((pm (gethash (sb-int:find-undeleted-package-or-lose package-designator)
                     *per-package-metadata*)))
     (and pm (package-metadata-custom-reader pm))))
 
 (defun get-custom-token-parsers-for-package (package-designator)
   "custom-token-parsers, если назначены (с помощью setf) - это список function designators (для funcall), которые вызываются слева направо над каждым токеном. Они получают на вход: поток, строку и пакет. Возвращают два значения. Первое значение - считанный объект. Второе - t, если объект считан, иначе - nil"
-  (let ((pm (gethash (keywordize-package-designator package-designator) 
+  (let ((pm (gethash (sb-int:find-undeleted-package-or-lose package-designator) 
                      *per-package-metadata*)))
     (and pm (package-metadata-custom-token-parsers pm))))
   
@@ -418,17 +418,17 @@ from to-package too. Была переведена в разряд устаре�
 
 (defun get-package-metadata-or-nil (package-designator)
   "Function just for export. Returns nil if no metadata found"
-  (let ((d (keywordize-package-designator package-designator)))
+  (let ((d (sb-int:find-undeleted-package-or-lose package-designator)))
     (gethash d *per-package-metadata*)))
 
 (defun ensure-package-metadata (package-designator)
   "Gets package metadata. Creates one if there is no metadata. Пакет не обязан существовать, в этом случае он должен быть передан в виде keyword-а"
-  (let ((d (keywordize-package-designator package-designator)))
+  (let ((d (sb-int:find-undeleted-package-or-lose package-designator)))
     (or (gethash d *per-package-metadata*)
         (setf (gethash d *per-package-metadata*) (make-package-metadata)))))
 
 (defun delete-package-metadata (package-designator)
-  (remhash (keywordize-package-designator package-designator)
+  (remhash (sb-int:%find-package-or-lose package-designator)
            *per-package-metadata*))
 
 (defun package-forbidden-symbol-names (package)
