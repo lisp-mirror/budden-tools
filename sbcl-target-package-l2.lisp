@@ -1133,10 +1133,22 @@ implementation it is ~S." *default-package-use-list*)
             (or (eq 'use-package function)
                 (eq 'export function)))
            (let ((md (def-merge-packages:get-package-metadata-or-nil package)))
-             (and md (def-merge-packages:package-metadata-l2-package-p md))))            (old-symbol ()
+             (and md (def-merge-packages:package-metadata-l2-package-p md))))
+         (do-forbid-symbols-manually ()
+           (dolist (s (remove-duplicates symbols :test #'string=))
+             (format t "name-conflict : Запрещаю имя ~S в ~S" s package)
+             (def-merge-packages::append-package-forbidden-symbol-names
+                 package
+                 (def-merge-packages::forbid-symbols-simple (list s) package))
+             ))
+         (old-symbol ()
            (car (remove datum symbols))))
     (let ((pname (package-name package)))
-      (restart-case
+     (cond
+      ((can-forbid-symbols-manually nil)
+        (do-forbid-symbols-manually))
+      (t
+       (restart-case
           (error 'name-conflict :package package :symbols symbols
                                 :function function :datum datum)
         ;; USE-PACKAGE and EXPORT
@@ -1150,14 +1162,8 @@ implementation it is ~S." *default-package-use-list*)
                        (format s "Запретить новые символы в ~A (затенением)"
                                    pname))))
           :test can-forbid-symbols-manually
-
-; в оригинале было так: (setf (package-metadata-forbidden-symbol-names (ensure-package-metadata ,name)) (forbid-symbols-simple ',forbidden-symbol-names ,name)))
-
-          (dolist (s (remove-duplicates symbols :test #'string=))
-            (def-merge-packages::append-package-forbidden-symbol-names
-                pname
-                (def-merge-packages::forbid-symbols-simple (list s) pname))
-            ))
+          (do-forbid-symbols-manually)
+          )
         (keep-old ()
           :report (lambda (s)
                     (ecase function
@@ -1244,7 +1250,7 @@ implementation it is ~S." *default-package-use-list*)
                      (if (eq package-symbol chosen-symbol)
                          nil                ; re-importing the same symbol
                          (shadowing-import (list chosen-symbol) package))
-                     (shadowing-import (list chosen-symbol) package)))))))))))
+                     (shadowing-import (list chosen-symbol) package)))))))))))))
 
 ;;; If we are uninterning a shadowing symbol, then a name conflict can
 ;;; result, otherwise just nuke the symbol.
