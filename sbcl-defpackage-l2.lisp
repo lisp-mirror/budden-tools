@@ -226,9 +226,9 @@ specifies to signal a warning if SWANK package is in variance, and an error othe
                          :warn))))
         (ecase what
           (:error
-           (apply #'error 'package-at-variance-error args))
+           (apply #'error 'sb-impl::package-at-variance-error args))
           (:warn
-           (apply #'warn 'package-at-variance args)))))))
+           (apply #'warn 'sb-impl::package-at-variance args)))))))
 
 (defun update-package-with-variance (package name source-location
                                      use
@@ -242,31 +242,14 @@ specifies to signal a warning if SWANK package is in variance, and an error othe
            :format-arguments (list name (package-name name))))
   (let ((no-longer-used (set-difference (package-use-list package) use)))
     (when no-longer-used
-      (restart-case
-          (note-package-variance
-           :format-control "~A also uses the following packages:~%  ~A"
-           :format-arguments (list name (mapcar #'package-name no-longer-used))
-           :package package)
-        (drop-them ()
-          :report "Stop using them."
-          (unuse-package no-longer-used package))
-        (keep-them ()
-          :report "Keep using them."))))
+      (unuse-package no-longer-used package)))
   (let (old-exports)
     (do-external-symbols (s package)
       (push s old-exports))
-    (let ((no-longer-exported (set-difference old-exports exports :test #'string=)))
-     (when no-longer-exported
-       (restart-case
-           (note-package-variance
-            :format-control "~A also exports the following symbols:~%  ~S"
-            :format-arguments (list name no-longer-exported)
-            :package package)
-         (drop-them ()
-           :report "Unexport them."
-           (unexport no-longer-exported package))
-         (keep-them ()
-           :report "Keep exporting them.")))))
+    (let ((no-longer-exported
+           (set-difference old-exports exports :test #'string=)))
+      (when no-longer-exported
+        (unexport no-longer-exported package))))
   (update-package package source-location
                   use exports local-nicknames lock doc-string))
 
@@ -280,21 +263,30 @@ specifies to signal a warning if SWANK package is in variance, and an error othe
     (let* ((existing-package (find-package name))
            (use (use-list-packages existing-package use))
            )
-      (if existing-package
-          (update-package-with-variance existing-package name
-                                        source-location
-                                        use exports
-                                        local-nicknames
-                                        lock doc)
-          (let ((package (make-package name
-                                       :use nil
-                                       :internal-symbols (or size 10)
-                                       :external-symbols (length exports))))
-            (update-package package
-                            source-location
-                            use exports
-                            local-nicknames
-                            lock doc))))))
+      (cond
+       (existing-package
+        (let ((md (get-package-metadata-or-nil existing-package)))
+          (assert
+           (and md (package-metadata-l2-package-p md))
+           ()
+           "Для переопределения defpkg2 пакет ~S должен был быть изначально создан с помощью defpkg2" existing-package))
+        (update-package-with-variance existing-package name
+                                      source-location
+                                      use exports
+                                      local-nicknames
+                                      lock doc))
+       (t
+        (let* ((package (make-package name
+                                      :use nil
+                                      :internal-symbols (or size 10)
+                                      :external-symbols (length exports)))
+               (md (ensure-package-metadata package)))
+          (setf (package-metadata-l2-package-p md) t)
+          (update-package package
+                          source-location
+                          use exports
+                          local-nicknames
+                          lock doc)))))))
 
 (defun find-or-make-symbol (name package)
   (multiple-value-bind (symbol how) (find-symbol name package)
