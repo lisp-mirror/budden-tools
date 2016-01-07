@@ -134,9 +134,10 @@
 ;            (t (let ((b 7)) b))))
 
 
-#+see-packages 
-(def-trivial-test::! #:let-with-conc-type.1
-                    (proga (let-with-conc-type x string "asdf") 
-                      `(,(x.equal "asdf") ,(x.upcase) ,(x.equal x.upcase))
-                      )
-                    '(T "ASDF" T))
+; Отключил, когда стал делать новые пакеты (defpackage-l2)
+;#+see-packages 
+;(def-trivial-test::! #:let-with-conc-type.1
+;                    (proga (let-with-conc-type x string "asdf") 
+;                      `(,(x.equal "asdf") ,(x.upcase) ,(x.equal x.upcase))
+;                      )
+;                    '(T "ASDF" T))
