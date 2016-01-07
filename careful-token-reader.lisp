@@ -334,7 +334,7 @@ FIXME shadow find-symbol? FIXME rename"
      )
     ))
 
-(proclaim '(ftype (function (string package readtable symbol) symbol)
+(proclaim '(ftype (function (string package readtable t t) symbol)
                   fix-symbol-name-for-advanced-readtable-case))
 (defun fix-symbol-name-for-advanced-readtable-case (name package rt starts-with-vertical-line same-case-p)
   ;"Хотим заинтёрнить имя name в пакет package. Преобразуем его к верхнему регистру, если он - в пакет keyword"
@@ -348,7 +348,7 @@ FIXME shadow find-symbol? FIXME rename"
     (setf name (string-upcase-ascii name)))
    (t name)))
 
-(defun intern-check-forbidden (name package-designator stream qualified-p)
+(defun intern-check-forbidden (name package stream qualified-p)
   "Looks if the name is forbidden. Prior to call of the function, name should be transformed according to readtable-case conventions. Internal function, do not use it in your code."
   (let ((m (gethash (sb-int:find-undeleted-package-or-lose package)
                     *per-package-metadata*)))
