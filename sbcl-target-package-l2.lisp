@@ -1126,7 +1126,14 @@ implementation it is ~S." *default-package-use-list*)
            (declare (ignore c))
            (or (eq 'use-package function)
                (eq 'export function)))
-         (old-symbol ()
+         (can-forbid-symbols-manually (c)
+           "Разрешаем это только для патченных пакетов, сделанных с помощью defpackage-l2::! А в будущем такого рестарта вообще не должно быть - вместо него конфликт должен разрешаться автоматически"
+           (declare (ignore c))
+           (and
+            (or (eq 'use-package function)
+                (eq 'export function)))
+           (let ((md (def-merge-packages:get-package-metadata-or-nil package)))
+             (and md (def-merge-packages:package-metadata-l2-package-p md))))            (old-symbol ()
            (car (remove datum symbols))))
     (let ((pname (package-name package)))
       (restart-case
@@ -1142,7 +1149,7 @@ implementation it is ~S." *default-package-use-list*)
                       (use-package
                        (format s "Запретить новые символы в ~A (затенением)"
                                    pname))))
-          :test use-or-export-p
+          :test can-forbid-symbols-manually
 
 ; в оригинале было так: (setf (package-metadata-forbidden-symbol-names (ensure-package-metadata ,name)) (forbid-symbols-simple ',forbidden-symbol-names ,name)))
 
@@ -1802,7 +1809,8 @@ PACKAGE."
   (unless
       (should-name-be-forbidden-in-a-package package (symbol-name forbidden-symbol))
     (unintern forbidden-symbol package)
-    (def-merge-packages:remove-package-forbidden-symbol-name package forbidden-symbol)))
+    (def-merge-packages:remove-package-forbidden-symbol-name package forbidden-symbol)
+    t))
 
 (defun maybe-unforbid-names (package)
   "Looks at all forbidden symbols in package. If there is no reason to forbid them anymore, unforbids them"
@@ -1812,7 +1820,7 @@ PACKAGE."
     (let ((forbidden-symbols
            (def-merge-packages:package-metadata-forbidden-symbol-names md)))
       (dolist (forbidden-symbol forbidden-symbols)
-        (def-merge-packages:maybe-unforbid-name package forbidden-symbol)))))
+        (maybe-unforbid-name package forbidden-symbol)))))
 
 
 (eval-when (:compile-toplevel :load-toplevel :execute)

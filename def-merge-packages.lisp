@@ -9,6 +9,10 @@
 ;; Добавить никнейм пакету
 
 
+;; FIXME - метаданные нужно ассоциировать с пакетом, а не с его именем.
+;; это влечёт проблему порядка действий. 
+;; FIXME - Запретить экспорт символов, полученных через use
+
 (eval-when (:execute)
   (error "Do not execute the file, use compile/load sequence"))
 
@@ -38,15 +42,20 @@ function you most likely want to use."
    #:package-metadata-l2-package-p
 
    #:append-package-forbidden-symbol-name
+   #:assign-package-forbidden-symbols
    #:remove-package-forbidden-symbol-name
 
    #:set-package-lock-portably
    #:*per-package-metadata* ; variable
    #:*per-package-alias-table* ; variable, stolen from hierarchical-packages
    #:package-forbidden-symbol-names ; place of package designator
+
+   #:keywordize-package-designator
+
    #:get-package-metadata-or-nil
    #:ensure-package-metadata ; makes sure that *per-package-metadata* entry for package exists
-   #:keywordize-package-designator
+   #:delete-package-metadata
+
    #:extract-clause ; extract one clause of def... form (e.g. defpackage) by its head
    #:extract-several-clauses ; extract one clause of def... form (e.g. defpackage) by its head
    ;#:reexport ; For every symbol in to-package2 which is external in 
@@ -413,10 +422,14 @@ from to-package too. Была переведена в разряд устаре�
     (gethash d *per-package-metadata*)))
 
 (defun ensure-package-metadata (package-designator)
-  "Gets package metadata. Creates one if there is no metadata"
+  "Gets package metadata. Creates one if there is no metadata. Пакет не обязан существовать, в этом случае он должен быть передан в виде keyword-а"
   (let ((d (keywordize-package-designator package-designator)))
     (or (gethash d *per-package-metadata*)
         (setf (gethash d *per-package-metadata*) (make-package-metadata)))))
+
+(defun delete-package-metadata (package-designator)
+  (remhash (keywordize-package-designator package-designator)
+           *per-package-metadata*))
 
 (defun package-forbidden-symbol-names (package)
   "Note that symbol forbidding would work only when buddens readtables extensions are enabled"
@@ -477,7 +490,7 @@ Returns list of symbols.
     (with-slots ((fsn forbidden-symbol-names)) md
       (setf fsn (remove symbol fsn)))))
 
-(defun assign-package-forbidden-symbol-names (package-designator symbols)
+(defun assign-package-forbidden-symbols (package-designator symbols)
   "symbols - возврат forbid-symbols-simple, т.е. список символов, которые уже фактически являются запретными по своим свойствам. Добавляет символы к списку запрещённых"
   (let ((md (ensure-package-metadata package-designator)))
     (with-slots ((fsn forbidden-symbol-names)) md
@@ -626,7 +639,7 @@ With buddens readtable extensions enabled, when reader finds \"that-package:\" i
                  #+(and sbcl careful-token-reader-via-native-package-local-nicknames)
                  ,@process-local-nicknames-form))
         (setf forbid-symbols-form
-              `(assign-package-forbidden-symbol-names ,name (forbid-symbols-simple ',forbidden-symbol-names ,name)))
+              `(assign-package-forbidden-symbols ,name (forbid-symbols-simple ',forbidden-symbol-names ,name)))
         (setf allow-qualified-intern-form `(setf (package-metadata-allow-qualified-intern (ensure-package-metadata ,name)) ,allow-qualified-intern))
         (setf custom-token-parsers-form nil)
         (let ((custom-token-parser-list

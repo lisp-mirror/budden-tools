@@ -63,6 +63,7 @@ function you most likely want to use."
    def-merge-packages:package-metadata-interning-is-forbidden
    def-merge-packages:package-metadata-body-of-last-definition
    def-merge-packages:package-metadata-l2-package-p
+   def-merge-packages:assign-package-forbidden-symbols
 
    def-merge-packages:set-package-lock-portably
    def-merge-packages:*per-package-metadata* 
@@ -323,8 +324,8 @@ custom-token-parser-spec is [ symbol | (:packages &rest package-designators) ] -
              )
 
         (multiple-value-setq
-            (duplicates-as-list-of-names
-             imports-as-list-of-symbols-grouped-by-package)
+            (imports-as-list-of-symbols-grouped-by-package
+             duplicates-as-list-of-names)
           (compute-imports-and-clashes-from-uses sources-for-clashes))
           
   
@@ -360,9 +361,7 @@ custom-token-parser-spec is [ symbol | (:packages &rest package-designators) ] -
                 (setf (package-metadata-l2-package-p (ensure-package-metadata ,name)) t)
                 (setf (package-metadata-body-of-last-definition (ensure-package-metadata ,name)) ',original-definition-body)))
         (setf forbid-symbols-forms
-              `(; (setf (package-forbidden-symbol-names ,name) '(,@forbidden-symbol-names))
-                (setf (package-metadata-forbidden-symbol-names (ensure-package-metadata ,name)) (forbid-symbols-simple ',forbidden-symbol-names ,name)))
-                )
+              `((assign-package-forbidden-symbols ,name (forbid-symbols-simple ',forbidden-symbol-names ,name))))
         (setf allow-qualified-intern-form `(setf (package-metadata-allow-qualified-intern (ensure-package-metadata ,name)) ,allow-qualified-intern))
         (setf custom-token-parsers-form nil)
         (let ((custom-token-parser-list
@@ -397,19 +396,18 @@ custom-token-parser-spec is [ symbol | (:packages &rest package-designators) ] -
         (setf package-definition 
               (if always 
                   `(eval-when (:compile-toplevel :load-toplevel :execute)
+                     ,@record-package-definition-to-metadata-forms
                      (prog1
                          ,package-definition
-                       ,@record-package-definition-to-metadata-forms
                        ,process-local-nicknames-form
                        ,custom-token-parsers-form
                        ,@forbid-symbols-forms
                        ,allow-qualified-intern-form
                        ))
-                `(prog1
+                `(prog2
+                     ,@record-package-definition-to-metadata-forms
                      ,package-definition
-                     ,@record-package-definition-to-metadata-forms
                    (eval-when (:load-toplevel :execute)
-                     ,@record-package-definition-to-metadata-forms
                      ,process-local-nicknames-form
                      ,custom-token-parsers-form
                      ,@forbid-symbols-forms

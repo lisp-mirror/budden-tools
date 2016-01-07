@@ -11,9 +11,16 @@
 
 (in-package :defpackage-l2-simple-test)
 
-(defpackage-l2::! :p1 (:always t) (:use :cl) (:export :sym :s1 :nth))
-(defpackage-l2::! :p2 (:always t) (:use :cl) (:export :sym :s2 :nth))
+(defun make-three-packages ()
+  (dolist (name '(:p1+p2 :p1 :p2))
+    (ignore-errors
+     (def-merge-packages:delete-package-metadata name)
+     (delete-package name)))
 
+  (defpackage-l2::! :p1 (:always t) (:use :cl) (:export :sym :s1 :nth) (:print-defpackage-form t))
+  (defpackage-l2::! :p2 (:always t) (:use :cl) (:export :sym :s2 :nth))
+  (defpackage-l2::! :p1+p2 (:always t) (:print-defpackage-form t) (:use :p1 :p2) (:export :s1 :s2 nth))
+  )
 
 
 (defun ?? (name package list)
@@ -25,8 +32,9 @@
            (:collect s))))
     (assert (null (set-exclusive-or externals list)))))
 
+(make-three-packages)
+
 ;;; Should warn here as p1:sym and p2:sym clash
-(defpackage-l2::! :p1+p2 (:always t) (:use :p1 :p2) (:export :s1 :s2 nth))
 (?? 't1 :p1+p2 '(p1:s1 p2:s2 cl:nth))
 
 ;;; There is a way to suppress a warning: 
@@ -75,3 +83,28 @@
             (*package* (find-package :pckg-with-loc-nick)))
         (read-from-string "but:byref")))
     'budden-tools:byref))
+
+
+(when (got-buddens-readtable-a)
+  (def-trivial-test::! forbidden-symbols-work.1
+    (perga-implementation:perga
+      (make-three-packages)
+      (:@ multiple-value-bind (result error)
+          (ignore-errors
+           (let ((*readtable* (budden-tools:find-readtable :buddens-readtable-a))
+                 (*package* (find-package :p1+p2)))
+             (read-from-string "SYM"))))
+      (typep error 'error))
+    t))
+
+(when (got-buddens-readtable-a)
+  (def-trivial-test::! unexport-can-cause-unforbid.1
+    (perga-implementation:perga
+      (make-three-packages)
+      (unexport
+       (budden-tools::the* (not null) (find-symbol "SYM" :p1)) :p1)
+      (let ((*readtable* (budden-tools:find-readtable :buddens-readtable-a))
+            (*package* (find-package :p1+p2)))
+        (read-from-string "SYM"))
+      t)
+    t))
