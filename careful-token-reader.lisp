@@ -323,7 +323,7 @@ iii) if symbol is found more than once then first-symbol-found,list of packages,
 (defun budden-tools-find-symbol (name p)
   "Should be used instead of normal find-symbol with buddens readtable extensions. Transforms readtable case, and does not 'find' forbidden symbols.
 FIXME shadow find-symbol? FIXME rename"
-  (proga
+  (perga-implementation:perga
     (let p (or p *package*))
     (let result (find-symbol-with-advanced-readtable-case name p *readtable* nil))
     (and 
