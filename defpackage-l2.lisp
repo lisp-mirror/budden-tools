@@ -46,77 +46,6 @@
     (setf *readtable* (copy-readtable nil))
     nil)
 
-(cl:defpackage :defpackage-l2
-  (:documentation "
-See ! docstring for docs. ! is unexported to avoid any symbol clashes, but this is the
-function you most likely want to use."   
-   )
-  (:use :cl ;:org.tfeb.hax.hierarchical-packages
-   )
-  (:import-from :iterate-keywords #:iter #:keywordize)
-  (:import-from :def-merge-packages
-   def-merge-packages:package-metadata ; structure 
-   def-merge-packages:package-metadata-forbidden-symbol-names ; and
-   def-merge-packages:package-metadata-custom-reader ; its
-   def-merge-packages:package-metadata-custom-token-parsers ;slots 
-   def-merge-packages:package-metadata-allow-qualified-intern
-   def-merge-packages:package-metadata-interning-is-forbidden
-   def-merge-packages:package-metadata-body-of-last-definition
-   def-merge-packages:package-metadata-l2-package-p
-   def-merge-packages:assign-package-forbidden-symbols
-
-   def-merge-packages:set-package-lock-portably
-   def-merge-packages:*per-package-metadata* 
-   def-merge-packages:*per-package-alias-table*
-   def-merge-packages:package-forbidden-symbol-names
-   def-merge-packages:get-package-metadata-or-nil
-   def-merge-packages:ensure-package-metadata
-   def-merge-packages:keywordize-package-designator
-   def-merge-packages:extract-clause
-   def-merge-packages:extract-several-clauses
-   def-merge-packages:force-find-package
-   def-merge-packages:group-similar-items
-   def-merge-packages:collect-duplicates-into-sublists
-   def-merge-packages:search-and-replace-seq
-   def-merge-packages:get-custom-token-parsers-for-package
-   def-merge-packages:this-source-file-directory
-   )
-  (:export 
-   #:декл_пакет_л2 ; exported name for !. ! itself is unexported
-   ; #:export2 ; smart export clause
-   def-merge-packages:package-metadata ; structure 
-   def-merge-packages:package-metadata-forbidden-symbol-names ; and
-   def-merge-packages:package-metadata-custom-reader ; its
-   def-merge-packages:package-metadata-custom-token-parsers ;slots 
-   def-merge-packages:package-metadata-allow-qualified-intern
-   def-merge-packages:package-metadata-interning-is-forbidden
-   def-merge-packages:package-metadata-body-of-last-definition
-   def-merge-packages:package-metadata-l2-package-p
-
-   def-merge-packages:set-package-lock-portably
-   def-merge-packages:*per-package-metadata* ; variable
-   def-merge-packages:*per-package-alias-table* ; variable, stolen from hierarchical-packages
-   def-merge-packages:package-forbidden-symbol-names ; place of package designator
-   def-merge-packages:ensure-package-metadata ; makes sure that *per-package-metadata* entry for package exists
-   def-merge-packages:keywordize-package-designator
-   def-merge-packages:extract-clause ; extract one clause of def... form (e.g. defpackage) by its head
-   ;#:reexport ; For every symbol in to-package2 which is external in 
-   ;           ; package1, export it from to-package2
-   #:reexport-clause-for-package ; for every expternal symbol in package, write an export clause
-   def-merge-packages:force-find-package ; force-find-package. If package not found, it is a cerror
-   def-merge-packages:group-similar-items ; group-similar-items
-                  ; Given a list of items, groups similar (in sence of key-args) items into sublists
-   def-merge-packages:collect-duplicates-into-sublists ; '(#\a c #\A #\B #\b) :test 'equalp -> ((#\A #\a) (#\b #\B))
-   #:find-symbol-in-packages ; like apropos, but searches only exact symbol name and returns a list
-   def-merge-packages:search-and-replace-seq
-   #:get-custom-reader-for-package
-   def-merge-packages:get-custom-token-parsers-for-package
-
-   #:unintern-all-internal-symbols-of-package
-
-   def-merge-packages:this-source-file-directory
-   ))
-
 (in-package :defpackage-l2)
 
 (defun export2-reader (stream symbol)
@@ -311,29 +240,14 @@ custom-token-parser-spec is [ symbol | (:packages &rest package-designators) ] -
       (length-is-1 always)
       (length-is-1 allow-qualified-intern)
       (let* (; (dest (keywordize name))
-             (sources-for-clashes (mapcar #'force-find-package use))
-             duplicates-as-list-of-names
-             imports-as-list-of-symbols-grouped-by-package
              package-definition
              record-package-definition-to-metadata-forms
-             forbidden-symbol-names forbid-symbols-forms
              process-local-nicknames-form
              processed-export-s 
              allow-qualified-intern-form
              custom-token-parsers-form
              )
 
-        (multiple-value-setq
-            (imports-as-list-of-symbols-grouped-by-package
-             duplicates-as-list-of-names)
-          (compute-imports-and-clashes-from-uses sources-for-clashes))
-          
-  
-        (setf forbidden-symbol-names 
-              (iter 
-                (:for dup in (append duplicates-as-list-of-names forbid))
-                (assert (or (symbolp dup) (stringp dup)) () "forbidden-symbol-names clause must contain a list of string designators")
-                (:collect dup)))
         (setf processed-export-s
               (iter
                 (:for clause in export-s)
@@ -343,25 +257,21 @@ custom-token-parser-spec is [ symbol | (:packages &rest package-designators) ] -
                   (:collect (export-clause name (car clause))))
                  (t 
                   (:collect `(:export ,@clause))))))
+
         (setf process-local-nicknames-form 
               (if local-nicknames
                   `(setf (gethash (find-package ,name) *per-package-alias-table*) 
                          ',(process-local-nicknames name local-nicknames :to-alist t))
                   `(remhash (find-package ,name) *per-package-alias-table*)))
+
         (setf package-definition 
-              `(defpackage ,name
-                 ,@(when forbidden-symbol-names 
-                     `((:shadow ,@forbidden-symbol-names)))
+              `(defpkg2 ,name
                  ,@`((:use ,@use))
                  ,@processed-export-s
                  ,@clauses
                  ))
         (setf record-package-definition-to-metadata-forms
-              `(
-                (setf (package-metadata-l2-package-p (ensure-package-metadata ,name)) t)
-                (setf (package-metadata-body-of-last-definition (ensure-package-metadata ,name)) ',original-definition-body)))
-        (setf forbid-symbols-forms
-              `((assign-package-forbidden-symbols ,name (forbid-symbols-simple ',forbidden-symbol-names ,name))))
+              `((setf (package-metadata-body-of-last-definition (ensure-package-metadata ,name)) ',original-definition-body)))
         (setf allow-qualified-intern-form `(setf (package-metadata-allow-qualified-intern (ensure-package-metadata ,name)) ,allow-qualified-intern))
         (setf custom-token-parsers-form nil)
         (let ((custom-token-parser-list
@@ -396,21 +306,19 @@ custom-token-parser-spec is [ symbol | (:packages &rest package-designators) ] -
         (setf package-definition 
               (if always 
                   `(eval-when (:compile-toplevel :load-toplevel :execute)
-                     ,@record-package-definition-to-metadata-forms
                      (prog1
                          ,package-definition
+                       ,@record-package-definition-to-metadata-forms
                        ,process-local-nicknames-form
                        ,custom-token-parsers-form
-                       ,@forbid-symbols-forms
                        ,allow-qualified-intern-form
                        ))
-                `(prog2
-                     ,@record-package-definition-to-metadata-forms
+                `(prog1
                      ,package-definition
+                     ,@record-package-definition-to-metadata-forms
                    (eval-when (:load-toplevel :execute)
                      ,process-local-nicknames-form
                      ,custom-token-parsers-form
-                     ,@forbid-symbols-forms
                      ,allow-qualified-intern-form
                      ))))
         (when print-defpackage-form
