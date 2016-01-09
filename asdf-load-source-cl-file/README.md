@@ -1,0 +1,1 @@
+Class of asdf component to be loaded as a source. See example
