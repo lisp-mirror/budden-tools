@@ -312,6 +312,21 @@
 (defun name-and-type-of-a-file (filename) "d:/foo/file.ext --> file.ext"
   (make-pathname :defaults (pathname filename) :host nil :device nil :directory nil))
 
+(defun pathname-relative-to-super-dir (pathname super-dir) "d:/dir/subdir/file.ext, d:/dir -> subdir/file.ext or error"
+  (let*
+      ((pp (pathname pathname))
+       (psd (cl-fad:pathname-as-directory (pathname super-dir)))
+       (ppns (namestring pp))
+       (psdns (namestring psd))
+       )
+    (multiple-value-bind
+        (success suffix)
+        (alexandria:starts-with-subseq psdns ppns :test 'char= :return-suffix t)
+      (cond
+       (success (copy-seq suffix))
+       (t (error "pathname-relative-to-super-dir: ~S is not a super-dir of ~S" super-dir pathname))))))
+
+
 (defun quit-lisp ()
   (let ((quit-symbol (or (find-symbol "QUIT" "CL-USER")
                          (find-symbol "EXIT" "CL-USER"))))
@@ -599,7 +614,7 @@ if to-alist is true, to ((a . b) (c . d) ...)"
   (let1 e1 expr
     (once-only (e1)
       `(progn 
-         (format ,stream "~S = ~S~%" ',expr ,e1)
+         (format ,stream "~%~S = ~S" ',expr ,e1)
          ,e1))))
      
 

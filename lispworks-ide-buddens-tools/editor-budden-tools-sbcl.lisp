@@ -46,12 +46,12 @@
   (declare (ignore buffer expr))
   (break "not implemented"))
  
-(defun replace-string-in-file (filename from to &key (test #'eql))
-  "Редактор нормально не работает. Поэтому, нужно пользоваться регекспами, как в creatab2deftbl.lisp"
+(defun replace-string-in-file (filename from to &key (test #'eql) (external-format nil external-format-supplied-p) all)
+  "Заменяет строку в файле. all - заменить все вхождения. Пишет в исходный файл. "
   (proga 
-    (let chars (read-file-into-string filename))
-    (let new-string (search-and-replace-seq 'string chars from to :test test))
-    (write-string-into-file new-string filename :if-exists :supersede)))
+    (let chars (apply 'read-file-into-string filename (dispatch-keyargs-full external-format)))
+    (let new-string (search-and-replace-seq 'string chars from to :test test :all all))
+    (apply 'write-string-into-file new-string filename :if-exists :supersede (dispatch-keyargs-full external-format))))
     
     
 (defun replace-once (filename from to)
