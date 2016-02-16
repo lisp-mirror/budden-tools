@@ -4,6 +4,9 @@
 (in-package :budden-tools)
 (in-readtable nil)
 
+; disable stepping
+(declaim (optimize (debug 3) (compilation-speed 3) (safety 3)))
+
 (defun decorated-swank--tokenize-symbol-thoroughly (fn string)
   "Use sbcl-reader-budden-tools-lispworks machinery if appropriate"
   (cond

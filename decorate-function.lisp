@@ -21,6 +21,10 @@
 ;(asdf:of-system :decorate-function) ; we are too early
 (in-package :decorate-function)
 
+; disable stepping
+(declaim (optimize (debug 3) (compilation-speed 3) (safety 3)))
+
+
 ;;; Здесь нормально (с проверкой переопределения) сделаны макросы. Ф-ии надо переделать. 
 
 (defvar *undecorated-functions* (make-hash-table :test 'eq))

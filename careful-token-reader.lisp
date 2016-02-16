@@ -1,5 +1,9 @@
 ;;; -*- Encoding: utf-8; -*-
 (in-package :budden-tools)
+
+; disable stepping
+(declaim (optimize (debug 3) (compilation-speed 3) (safety 3)))
+
 (setf *readtable* (copy-readtable nil))
 
 (defun unread-char* (char stream) "Раньше возвращал новый stream, а теперь - просто unread-char"
