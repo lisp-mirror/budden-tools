@@ -619,7 +619,7 @@ if to-alist is true, to ((a . b) (c . d) ...)"
      
 
 (defmacro show-exprt (expr)
-  `(show-expr ,expr *trace-output*))
+  `(show-expr ,expr t))
 
 (defmacro cl-user::eval-when* (situations &body body)
   "Use #.(eval-when* (:read ...) body)"
