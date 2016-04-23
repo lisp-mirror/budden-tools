@@ -177,7 +177,7 @@
                   exports)
           package)
   ;; Everything was created: update metadata
-  (sb-c:with-source-location (source-location)
+  (when source-location
     (setf (sb-impl::package-source-location package) source-location))
   (setf (sb-impl::package-doc-string package) doc-string)
   ;; Handle lock

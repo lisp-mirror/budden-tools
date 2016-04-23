@@ -52,7 +52,7 @@
     `(prog1
          (setf (symbol-readmacro ',symbol) ,reader)      
        (let ((,source-location (sb-c:source-location)))
-         (sb-c:with-source-location (,source-location)
+         (when ,source-location
            (setf (sb-c::info :source-location :symbol-macro ',symbol)
                  ,source-location))))))
 

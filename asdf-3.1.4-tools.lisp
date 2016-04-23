@@ -150,7 +150,7 @@ to resolve circular references between systems"
             (,(decorate-function::decorate-macro-get-undecorated-invoker 'defsystem)
              ,name ,@options)
           (let ((,source-location-sym (sb-c:source-location)))
-            (sb-c:with-source-location (,source-location-sym)
+            (when ,source-location-sym
               (setf (sb-c::info
                      :source-location
                      :constant ,(keywordize-system-name name))
