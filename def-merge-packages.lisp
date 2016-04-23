@@ -83,6 +83,7 @@ function you most likely want to use."
    #:unintern-all-internal-symbols-of-package
 
    #:this-source-file-directory
+   #:qualified-intern-allowed-p
    ))
 
 (in-package :defpackage-budden)
@@ -891,6 +892,16 @@ and explain if we can't"
         (unintern s package)))))
 
 
+(defun qualified-intern-allowed-p (package-designator)
+  (let ((metadata (get-package-metadata-or-nil package-designator)))
+    (and metadata
+         (package-metadata-allow-qualified-intern metadata))))
+
+(defun set-qualified-intern-allowed-p (package-designator new-value)
+  (let ((metadata (ensure-package-metadata package-designator)))
+    (setf (package-metadata-allow-qualified-intern metadata) new-value)))
+
+(defsetf qualified-intern-allowed-p set-qualified-intern-allowed-p)
 
 (defun forbidden-symbol-p (symbol package)
   "Внутренняя функция, даром что экспортированная"
