@@ -46,7 +46,7 @@
    (:file "perga")
 
    (:file "iterate-extensions" :description "some iterate drivers")
-   #+sbcl (:file "let-around-compile-file-or-load" :description "Связать заданные переменные вокруг compile-file или load")
+   #+sbcl (:file "let-around-compile-file-and-load" :description "Связать заданные переменные вокруг compile-file или load")
    (:file "defun-to-file" :description "When named function is created, it can be saved to a file in order to find-source to work")
    (:file "variable-type" :description "Compilation environment related stuff"
    )
