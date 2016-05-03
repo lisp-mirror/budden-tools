@@ -25,74 +25,74 @@
    (t (str+ string "/"))))
 
 
-#|
- Ещё один проект печатаемых генсимов. Идея:
- 1. Декорируем output-symbol
- 2. При включённой перем *идентифицировать-бездомные-символы-при-печати* 
-  любой genym, выведенный во внешний мир, запоминается. Запомненное состоит 
-  из id-а лиспового мира и id-а символа в этом мире. id-лиспового мира хранится
-  в файле и при запуске лиспа (или при надобности) атомарно увеличивается на 1. 
-  Это у нас пока не работает, т.к. мы не умеем ставить блокировку на уровне всейсистемы, т.е. не умеем делать атомарные на системном уровне операции. Попытка предпринята в с-файлом-блокировки.lisp, но она не работает (файл открывается всегда в режиме разделения). Из-за дефицита времени не могу довести до конца (и непонятно, как довести до конца). 
+(defvar *идентификатор-образа*
+  (str++ (get-universal-time) "-" (sb-posix:getpid)))
 
-  Может быть, можно сделать в виде пары чисел - pid и время обращения к функции идентификации символа. Тогда, если процессы мелькают не слишком часто, будет уникально. 
-
-  id-символа в лисповом мире - это просто число, оно каждый раз увеличивается на 1. 
-
- 3. Вместо символа печатается некий symbol-readmacro
- 4. Соответствие между напечатанными символами и соответствующими генсимами хранится в хеш-таблице.
-
-
-
- (defvar *идентифицировать-бездомные-символы-при-печати* nil
+(defvar *идентифицировать-бездомные-символы-при-печати* nil
   "Если истина, то при печати бездомный символ идентифицируется. При чтении ранее идентифицированный бездомныйсимвол всегда идентифицируется")
 
- (defvar *все-сериализуемые-бездомные-символы* (make-hash-table :test 'eq)
-  "Сюда заносятся бездомные символы, идентифицированные при чтении или печати")
+(defvar *все-сериализуемые-бездомные-символы* (make-hash-table :test 'equal)
+  "Сюда заносятся бездомные символы, идентифицированные при чтении или печати. Они могут перестать впоследствии быть бездомными, поэтому данное название не совсем корректно")
 
+(defvar *счётчик-сериализуемых-бездомных-символов* 0)
 
- (defun присвоить-идентификатор-бездомному-символу () )
-
-|#
-
-
-#|
-
-незаконченный проект доделанной печати с gensym. Идея в следующем - создать во время чтения переменную, содержащую 
-псевдопакет и заменить все генсимы на некоторые объекты, которые при печати и последующем чтении превращаются
-в такие генсимы. В этом случае, генсимы, используемые только в пределах файла, будут печататься нормально. 
-
-отложено из-за цейтнота. 
-
-(defclass printable-gensym ()
-  ((name :initarg name :accessor printable-gensym-name)
-   (var :initarg var :accessor printable-gensym-var))
+(defclass печатаемый-представитель-символа ()
+  ((имя :initarg имя :accessor печатаемый-представитель-символа-имя)
+   (ид-образа :initarg ид-образа :accessor печатаемый-представитель-символа-ид-образа)
+   (код-внутри-образа :initarg код-внутри-образа :accessor печатаемый-представитель-символа-код-внутри-образа))
   )
 
-(defmethod print-object ((o printable-gensym) out-stream)
-  (format nil "#.~S" `(ggsym ,(printable-gensym-var o) ,(printable-gensym-name o))))
+(defmethod print-object ((o печатаемый-представитель-символа) out-stream)
+  (cond
+   (*идентифицировать-бездомные-символы-при-печати*
+     (format out-stream "#.~S" `(ggsym ,(slot-value o 'ид-образа)
+                                       ,(slot-value o 'код-внутри-образа)
+                                       ,(slot-value o 'имя))))
+   (t
+    (call-next-method))))
 
-(defmacro ggsym (pseudo-package name)
-  `(let ((result (cdr (assoc ,name ,pseudo-package :test 'string=))))
-     (assert result "ggsym: name ~S not found in pseudo-package ~S" ,name ',pseudo-package)))
+(defmacro ggsym (ид-образа код-внутри-образа имя)
+  `',(ggsym-fun ид-образа код-внутри-образа имя))
 
-(defun convert-if-gensym (x)
-  (typecase 
+(defun ключ-таблицы-сериализуемых-бездомных-символов (ид-образа код-внутри-образа)
+  (str++ ид-образа "!" код-внутри-образа))
 
+(defun ggsym-fun (ид-образа код-внутри-образа имя)
+  (or (gethash (ключ-таблицы-сериализуемых-бездомных-символов ид-образа код-внутри-образа)
+               *все-сериализуемые-бездомные-символы*)
+      (make-symbol имя)))
 
-(defun make-gensyms-printable (tree var-name)
-  #+russian "Есть некий список форм верхнего уровня с gensym-ами. Хотим сделать, чтобы он печатался читабельно. 
-   Для этого gensym-ы заменяем читабельными выражениями, и создаём отдельную форму, к-рая их порождает.
-   Возвращает новый список, в который спереди добавлены необходимые определения.  
-   Например 
-   (with-gensyms (a) `(,a)) 
-   => (#:a173607)
-   => `((defparameter *my-gensyms* '((\"A173607\" . (make-symbol \"A173607\")))) `(,(ggsym *my-gensyms* \"A173607\")))"
-  (let* ((result-tree (maptree
+(defun получить-печатаемый-представитель-символа (символ)
+  (or
+   (get символ 'печатаемый-представитель-символа)
+   (let* ((ид-образа *идентификатор-образа*)
+          (код-внутри-образа (incf *счётчик-сериализуемых-бездомных-символов*))
+          (ключ (ключ-таблицы-сериализуемых-бездомных-символов ид-образа код-внутри-образа))
+          (представитель
+            (make-instance 'печатаемый-представитель-символа
+                           'имя (string символ)
+                           'ид-образа ид-образа
+                           'код-внутри-образа код-внутри-образа)))
+     (setf (get символ 'печатаемый-представитель-символа) представитель)
+     (setf (gethash ключ *все-сериализуемые-бездомные-символы*) символ)
+     представитель
+    )))
 
+(defun decorated-output-symbol (fn object stream)
+  (cond
+   ((symbol-package object)
+    (funcall fn object stream))
+   (*идентифицировать-бездомные-символы-при-печати*
+    (sb-impl::output-object 
+     (получить-печатаемый-представитель-символа object)
+     stream))
+   (t 
+    (funcall fn object stream))))
 
-Пусть дан список форм, который потом будет записан в файл. Обходим формы и находим в них все gensym-ы. Создаём переменную var-name, в которую записываем порождение этих gensym-ов, а при использовании заменяем gensym-ы на форму, которая их читает. 
-
-|#
+(decorate-function:portably-without-package-locks
+ (decorate-function:decorate-function
+  'sb-impl::output-symbol
+  #'decorated-output-symbol))
 
 
 (defmacro defun-to-file (name &rest more)
@@ -110,14 +110,19 @@
       (:@ with-open-file (out (str+ filename ".lisp") :direction :output
         :if-does-not-exist :create :if-exists :supersede
         :external-format :utf-8))
-      (let *print-circle* t *print-readably* t *print-pretty* t)
+      (let *print-circle* t
+        *print-readably* t
+        *print-pretty* t
+        *идентифицировать-бездомные-символы-при-печати* t)
       (format out
               ";;; -*- Encoding: utf-8; -*-~%;;; generated with budden-tools::defun-to-file from ~S~%"
               (or *compile-file-pathname* *load-pathname*))
       (print `(in-package ,(def-merge-packages:keywordize-package-designator
                             (package-name *package*))) out)
       (print `(in-readtable :buddens-readtable-a) out)
-      (print `(defun ,name ,@more) out)
+      (print (let ((sb-walker::*walk-form-expand-macros-p* t))
+               (sb-walker:walk-form `(defun ,name ,@more)))
+             out)
       )
     (assert (compile-file (str+ filename ".lisp")))
     `(values (load ,filename) ,filename)))
@@ -137,5 +142,20 @@
         (unintern func-name)
         ))))
             
-      
-          
+;;; tests
+(defun тест-печатаемый-представитель-символа (&optional (sym (gensym)))
+  (let* ((str (with-output-to-string (ou)
+                (let ((*идентифицировать-бездомные-символы-при-печати* t))
+                  (print sym ou)))))
+    ;(print str)
+    (assert
+     (eql sym (read-from-string str)))))
+
+
+#|(let ((sym1 (gensym)))
+  (dolist (sym (list sym1 'cons nil 123 sym1))
+    (тест-печатаемый-представитель-символа sym)))|#
+
+
+;; (defun-to-file aabbyy () (loop thereis t))
+
