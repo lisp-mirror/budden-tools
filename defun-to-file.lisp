@@ -109,10 +109,23 @@
   (defun-to-file-fn name more :walk-form nil))
 
 (defmacro defun-to-file-macroexpanded (name &rest more)
-  "То же, что defun-to-file, но вызывает walk-form с полным макрорасширением, а также настраивает steppable код"
-  (defun-to-file-fn name more :walk-form t
+  "То же, что defun-to-file, но вызывает walk-form с полным макрорасширением над телом, а также настраивает steppable код. Есть риск ошибок в этой конструкции из-за отсутствия локальных переменных в контексте во время прогулок по лямбда-выражению"
+  (defun-to-file-fn name more :walk-form :careful
     :preambula '(declaim
                  (optimize (debug 3) (space 2) (compilation-speed 2) (speed 2) (safety 3)))))
+
+
+(defun careful-transform-defun-form (name more)
+  (perga-implementation:perga
+   (let args (car more))
+   (let body (cdr more))
+   (:@ multiple-value-bind (forms decls doc) (sb-impl::parse-body body t))
+   (let lambda-guts `(,@decls (block ,(sb-impl::fun-name-block-name name) ,@forms)))
+   (let lambda `(lambda () ,@lambda-guts))
+   (let walked-lambda 
+     (let ((sb-walker::*walk-form-expand-macros-p* t))
+       (sb-walker:walk-form lambda)))
+   `(defun ,name ,args ,@(when doc (list doc)) (funcall ,walked-lambda))))
 
 (defun defun-to-file-fn (name more &key walk-form (package *package*) preambula)
   (perga-implementation:perga
@@ -138,12 +151,14 @@
         (cons
          (print preambula out)))
       (let processed-definition
-        (cond
-         (walk-form
-          (let ((sb-walker::*walk-form-expand-macros-p* t))
-            (sb-walker:walk-form `(defun ,name ,@more))))
-         (t
-          `(defun ,name ,@more))))
+        (ecase walk-form
+          (t
+           (let ((sb-walker::*walk-form-expand-macros-p* t))
+             (sb-walker:walk-form `(defun ,name ,@more))))
+          (:careful
+           (careful-transform-defun-form name more))
+          ((nil)
+           `(defun ,name ,@more))))
       (print processed-definition out)
       )
     (assert (compile-file (str+ filename ".lisp")))
@@ -178,5 +193,9 @@
   (dolist (sym (list sym1 'cons nil 123 sym1))
     (тест-печатаемый-представитель-символа sym)))
 
+; здесь степпер работает
+;(defun-to-file:defun-to-file aabby (y) (let ((x y)) (break) (loop while (< x 5) do (incf x)) x))
 
-;; (defun-to-file aabbyy () (loop thereis t))
+; а здесь - нет. Но виной тому то, во что расширяется loop
+; (defun-to-file:defun-to-file-macroexpanded aabby (y) (let ((x y)) (break) (loop while (< x 5) do (incf x)) x))
+
