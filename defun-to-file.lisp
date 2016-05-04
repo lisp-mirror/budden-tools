@@ -6,6 +6,7 @@
                         "
   budden-tools:*defun-to-file-directory*
   budden-tools:defun-to-file
+  budden-tools:defun-to-file-macroexpanded
    "
                         ))
 
@@ -83,9 +84,11 @@
    ((symbol-package object)
     (funcall fn object stream))
    (*идентифицировать-бездомные-символы-при-печати*
-    (sb-impl::output-object 
-     (получить-печатаемый-представитель-символа object)
-     stream))
+     (let ((*print-circle* nil)
+           (*print-readably* nil))
+       (sb-impl::output-object 
+        (получить-печатаемый-представитель-символа object)
+        stream)))
    (t 
     (funcall fn object stream))))
 
@@ -102,7 +105,16 @@
 печатаются (что, в общем-то сводит всю идею на нет). Возвращает два значения - имя функции и имя файла. Если определить таким способом ф-ю CamelCase, а затем CAMELCASE, то определение CamelCase пропадёт, поскольку имена файлов в Windows нечувствительны к регистру."
   #-russian "Works like defun, but writes source to file named *defun-to-file-directory*/function-name. 
  Function name must be a valid filename. Returns two values: function name and filename. Beware lowercase vs uppercase
- problem: if you defun-to-file CamelCase function and then CAMELCASE, first function will be overwritten as filenames coincide in Windows" 
+ problem: if you defun-to-file CamelCase function and then CAMELCASE, first function will be overwritten as filenames coincide in Windows"
+  (defun-to-file-fn name more :walk-form nil))
+
+(defmacro defun-to-file-macroexpanded (name &rest more)
+  "То же, что defun-to-file, но вызывает walk-form с полным макрорасширением, а также настраивает steppable код"
+  (defun-to-file-fn name more :walk-form t
+    :preambula '(declaim
+                 (optimize (debug 3) (space 2) (compilation-speed 2) (speed 2) (safety 3)))))
+
+(defun defun-to-file-fn (name more &key walk-form (package *package*) preambula)
   (perga-implementation:perga
     (assert (every (lambda (!1) (not (find !1 "\\/.?* "))) (string name)))
     (let filename (str+ (namestring *defun-to-file-directory*) name))
@@ -118,11 +130,21 @@
               ";;; -*- Encoding: utf-8; -*-~%;;; generated with budden-tools::defun-to-file from ~S~%"
               (or *compile-file-pathname* *load-pathname*))
       (print `(in-package ,(def-merge-packages:keywordize-package-designator
-                            (package-name *package*))) out)
+                            (package-name (the* not-null (find-package package))))) out)
       (print `(in-readtable :buddens-readtable-a) out)
-      (print (let ((sb-walker::*walk-form-expand-macros-p* t))
-               (sb-walker:walk-form `(defun ,name ,@more)))
-             out)
+      (etypecase preambula
+        (null)
+        (string (format out "~%~A~%" preambula))
+        (cons
+         (print preambula out)))
+      (let processed-definition
+        (cond
+         (walk-form
+          (let ((sb-walker::*walk-form-expand-macros-p* t))
+            (sb-walker:walk-form `(defun ,name ,@more))))
+         (t
+          `(defun ,name ,@more))))
+      (print processed-definition out)
       )
     (assert (compile-file (str+ filename ".lisp")))
     `(values (load ,filename) ,filename)))
@@ -152,10 +174,9 @@
      (eql sym (read-from-string str)))))
 
 
-#|(let ((sym1 (gensym)))
+(let ((sym1 (gensym)))
   (dolist (sym (list sym1 'cons nil 123 sym1))
-    (тест-печатаемый-представитель-символа sym)))|#
+    (тест-печатаемый-представитель-символа sym)))
 
 
 ;; (defun-to-file aabbyy () (loop thereis t))
-

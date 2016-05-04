@@ -85,6 +85,8 @@ srcpl - symbol-readmacro. Прочитать объект и запрограм�
 
 ; (proclaim '(optimize (speed 3) (debug 0) (safety 0)))
 
+; disable stepping
+(declaim (optimize (debug 3) (compilation-speed 3) (safety 3)))
 
 
 (defvar *nplm 
