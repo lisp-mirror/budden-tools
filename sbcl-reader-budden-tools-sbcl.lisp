@@ -776,18 +776,18 @@ extended <package-name>::<form-in-package> syntax."
 (budden-tools::decorate-function 'read-token #'read-token-d)
 
 
-(defun sharp-colon (stream sub-char numarg)
+#|(defun sharp-colon (stream sub-char numarg)
+  "Сильно устарело и не работает,т.к. token - это буфер, а не строка"
   (declare (ignore sub-char numarg))
-  (with-reader ()
-    (multiple-value-bind (token escapep colon) (read-extended-token stream)
-      (declare (simple-string token) (ignore escapep))
-      (cond
-       (*read-suppress* nil)
-       (colon
-        (simple-reader-error
-         stream "The symbol following #: contains a package marker: ~S" token))
-       (t
-        (make-symbol token))))))
+  (multiple-value-bind (token escapep colon) (read-extended-token stream)
+    (declare (simple-string token) (ignore escapep))
+    (cond
+     (*read-suppress* nil)
+     (colon
+      (simple-reader-error
+       stream "The symbol following #: contains a package marker: ~S" token))
+     (t
+      (make-symbol token)))))|#
 
 (def-merge-packages::! :sbcl-reader-budden-tools-sbcl
  (:nicknames :sbcl-reader-budden-tools-lispworks :sbcl-reader-budden-tools)
@@ -821,8 +821,13 @@ extended <package-name>::<form-in-package> syntax."
    #:potential-symbol-qualified
    #:potential-symbol-p
    #:sharp-colon
-   ; #:constituentp ; отключено для SBCL
+   #:constituentp ; отключено для SBCL
    ; #:read-preserving-whitespace-2
  )) 
 
 
+(defmacro sbcl-reader-budden-tools-sbcl::test-attribute (char whichclass rt)
+  `(= (the fixnum (get-cat-entry ,char ,rt)) ,whichclass))
+
+(defmacro sbcl-reader-budden-tools-sbcl::constituentp (char &optional (rt '*readtable*))
+  `(test-attribute ,char +char-attr-constituent+ ,rt))
