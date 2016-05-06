@@ -26,7 +26,7 @@
         (:file "package-aliases")	
 	(:file "locations")
         (:file "cons-to-source" :description "Alternative to ~{ ~} format to product source code from conses")
-        #+(and lispworks6 win32) (:file "test-sbcl-reader-budden-tools-lispworks")
+        (:file "test-sbcl-reader-budden-tools-lispworks")
         (:file "here-document" :description "Alternative string syntax - like here documents in shell")
 	)
 	)
