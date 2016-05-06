@@ -12,30 +12,6 @@
 
 (named-readtables:in-readtable nil)
 
-#|
-(def-merge-packages::! :sbcl-reader-budden-tools
- (:always t)
- (:use :cl 
-  :budden-tools
-  :sb-impl
-  )
- (:shadow
-   #:read-token
-   #:constituentp
-   )
- (:export 
-   #:*return-package-and-symbol-name-from-read*
-   #:read-token
-   #:potential-symbol
-   #:make-potential-symbol
-   #:potential-symbol-casified-name
-   #:potential-symbol-package
-   #:potential-symbol-qualified
-   #:potential-symbol-p
-   #:constituentp
-   #:read-preserving-whitespace-2
- )) |#
-
 ; (in-package :sbcl-reader-budden-tools-sbcl)
 (in-package :sb-impl)
 
@@ -307,7 +283,7 @@
 |#
 ;;; Modify the read buffer according to READTABLE-CASE, ignoring
 ;;; ESCAPES. ESCAPES is a vector of the escaped indices.
-(defun casify-read-buffer-2 (token-buf)
+(defun casify-read-buffer (token-buf)
   (let ((case (readtable-case *readtable*))
         (escapes (token-buf-escapes token-buf))
         (acase (budden-tools::readtable-case-advanced *readtable*))
@@ -364,13 +340,16 @@
                (cond (all-lower (raise-em))
                      (all-upper (lower-em))))))))))))
 
-(defun reader-find-package-2 (package-designator stream)
+(defun reader-find-package-common (package-designator stream with-read-buffer)
   (if (%instancep package-designator)
       package-designator
-      (let ((package (budden-tools:hp-find-package package-designator *reader-package*)))
+      (let ((package (budden-tools:hp-find-package
+                      package-designator
+                      (or *reader-package* (sane-package)))))
         (cond (package
                ;; Release the token-buf that was used for the designator
-               (release-token-buf (shiftf (token-buf-next *read-buffer*) nil))
+               (when with-read-buffer
+                 (release-token-buf (shiftf (token-buf-next *read-buffer*) nil)))
                package)
               (t
                (error 'simple-reader-package-error
@@ -379,6 +358,8 @@
                       :format-control "package or local-package nickname ~S not found from package ~S. Note we ignore SBCL's local-package nicknames, but obey those from def-merge-packages::! or defpackage-l2::!"
                       :format-arguments (list package-designator *reader-package*)))))))
 
+(defun reader-find-package (package-designator stream)
+  (reader-find-package-common package-designator stream t))
 
 (defun read-token-2 (stream firstchar)
   "Default readmacro function. Handles numbers, symbols, and SBCL's
@@ -693,7 +674,7 @@ extended <package-name>::<form-in-package> syntax."
                 *keyword-package*))
       (reset-read-buffer buf)
       ; brt - если назначен специальный ридер для этого пакета, используем его
-      (let ((found (reader-find-package package-designator stream)))
+      (let ((found (reader-find-package-common package-designator stream nil)))
         (unless found
           (simple-reader-error stream "package or local-package nickname ~S not found. Note we ignore SBCL's local-package nicknames, but obey those from def-merge-packages::! or defpackage-l2::!" package-designator
                  ))
@@ -784,4 +765,64 @@ extended <package-name>::<form-in-package> syntax."
           )
         ))))
   )
+
+(defvar *read-token-d* nil)
+
+(defun read-token-d (fn stream firstchar)
+  (if t ; *read-token-d*
+      (read-token-2 stream firstchar)
+      (funcall fn stream firstchar)))
+
+(budden-tools::decorate-function 'read-token #'read-token-d)
+
+
+(defun sharp-colon (stream sub-char numarg)
+  (declare (ignore sub-char numarg))
+  (with-reader ()
+    (multiple-value-bind (token escapep colon) (read-extended-token stream)
+      (declare (simple-string token) (ignore escapep))
+      (cond
+       (*read-suppress* nil)
+       (colon
+        (simple-reader-error
+         stream "The symbol following #: contains a package marker: ~S" token))
+       (t
+        (make-symbol token))))))
+
+(def-merge-packages::! :sbcl-reader-budden-tools-sbcl
+ (:nicknames :sbcl-reader-budden-tools-lispworks :sbcl-reader-budden-tools)
+ (:always t)
+ (:use :cl 
+  :budden-tools
+  :sb-impl
+  )
+ (:shadow
+   ; #:read-token
+   #:constituentp
+   )
+ (:import-from :sb-impl
+   #:*return-package-and-symbol-name-from-read*
+   #:read-token ; это не обычная ф-я чтения, она требует буферов
+   #:potential-symbol
+   #:make-potential-symbol
+   #:potential-symbol-casified-name
+   #:potential-symbol-package
+   #:potential-symbol-qualified
+   #:potential-symbol-p
+   #:sharp-colon
+   )
+ (:export 
+   #:*return-package-and-symbol-name-from-read*
+   #:read-token
+   #:potential-symbol
+   #:make-potential-symbol
+   #:potential-symbol-casified-name
+   #:potential-symbol-package
+   #:potential-symbol-qualified
+   #:potential-symbol-p
+   #:sharp-colon
+   ; #:constituentp ; отключено для SBCL
+   ; #:read-preserving-whitespace-2
+ )) 
+
 
