@@ -147,6 +147,7 @@ make-load-form
   (let* ((p (position #\^ symbol-name :from-end t)))
     (cond 
      ((null p) (values nil nil))
+     ((= p 0) (values nil nil))
      ((= (+ p 1) (length symbol-name)) (values nil nil))
      (t ; (break "~A" symbol-name)
         (let ((beg (subseq symbol-name 0 p))
