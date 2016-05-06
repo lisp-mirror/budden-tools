@@ -355,8 +355,7 @@ from to-package too. Была переведена в разряд устаре�
                        ; secondary value. If no parser returns t, 
   forbidden-symbol-names ; FIXME rename to forbidden-symbols. This is a list of forbidden symbols. Forbidden symbols are internal (and in shadowing-import list) in the package 
                        ; and, if buddens readtable extensions are on,  you can't read them with reader 
-  allow-qualified-intern ; with buddens readtable extensions, by default, if package::symbol is being read for non-existent symbol, this is cerror. To return to default cl behaviour, set 
-                         ; this variable to t. E.g. (setf (budden-tools::package-metadata-allow-qualified-intern (budden-tools::ensure-package-metadata :my-package)) t)
+  (allow-qualified-intern t) ; If nil, and package::symbol is attempted to read for non-existent symbol, this is an error. For package designator, its value is setfable via QUALIFIED-INTERN-ALLOWED-P
   interning-is-forbidden ; when this is true, interning via reading is prohibited for the package (in our readtable)
   body-of-last-definition ; последнее определение, к-рое мы выполняли
   l2-package-p ; истина, если создан с помощью defpackage-l2::!
@@ -894,8 +893,8 @@ and explain if we can't"
 
 (defun qualified-intern-allowed-p (package-designator)
   (let ((metadata (get-package-metadata-or-nil package-designator)))
-    (and metadata
-         (package-metadata-allow-qualified-intern metadata))))
+    (or (not metadata)
+        (package-metadata-allow-qualified-intern metadata))))
 
 (defun set-qualified-intern-allowed-p (package-designator new-value)
   (let ((metadata (ensure-package-metadata package-designator)))

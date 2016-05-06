@@ -365,8 +365,8 @@ FIXME shadow find-symbol? FIXME rename"
       (cond
        ((and qualified-p
              (not success)
-             (or (not m)
-                 (not (package-metadata-allow-qualified-intern m))))
+             (and m
+                  (not (package-metadata-allow-qualified-intern m))))
         (simple-reader-error stream "qualified-intern is not allowed for ~A while trying to intern ~S" package name))
        ((and (not success)
              m
