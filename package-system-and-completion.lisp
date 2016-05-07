@@ -150,9 +150,6 @@ internal - включать внутренние символы в случае,
            matcher       ; a completion from the list
            )
 
-      (show-expr found-package)
-      (show-expr editor-package)
-
       (setf raw-list
             (remove-duplicates 
             ; (identity ; append
