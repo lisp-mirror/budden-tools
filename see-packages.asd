@@ -21,6 +21,7 @@
         (:file "package-system-and-completion" :description "Изменения в системе пакетов, а также функции для завершения имени символа (completion)")
         #+(and lispworks6 win32)
         (:file "lispworks60-def-symbol-readmacro")
+        (:file "oduvanchik-regexp-synonyms") 
         #+sbcl
         (:file "budden-tools-package-system-and-completion-swank")
         (:file "package-aliases")	
