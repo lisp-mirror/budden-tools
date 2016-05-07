@@ -99,16 +99,15 @@
         (escapes (token-buf-escapes token-buf))
         (acase (budden-tools::readtable-case-advanced *readtable*))
         )
+    (cond
     ;brt если в имени нет #\\, #\| и все латинские буквы в нём - в в одинаковом регистре, приводим к верхнему
-    (when (and (zerop (length escapes)) (eq acase :upcase-if-uniform))
-      (setf case :preserve)
+     ((and (zerop (length escapes)) (eq acase :upcase-if-uniform))
+      ; (setf case :preserve)
       (when (budden-tools::all-ascii-chars-in-same-case-p (copy-token-buf-string token-buf))
         (let ((buffer (token-buf-string token-buf)))
           (dotimes (i (token-buf-fill-ptr token-buf))
             (setf (schar buffer i) (budden-tools::char-upcase-ascii (schar buffer i)))
-            )))
-      )
-    (cond
+            ))))
      ((and (zerop (length escapes)) (eq case :upcase))
       (let ((buffer (token-buf-string token-buf)))
         (dotimes (i (token-buf-fill-ptr token-buf))
@@ -172,7 +171,7 @@
 (defun reader-find-package (package-designator stream)
   (reader-find-package-common package-designator stream t))
 
-(defun read-token-2 (stream firstchar)
+(defun read-token (stream firstchar)
   "Default readmacro function. Handles numbers, symbols, and SBCL's
 extended <package-name>::<form-in-package> syntax."
   ;; Check explicitly whether FIRSTCHAR has an entry for
@@ -185,7 +184,7 @@ extended <package-name>::<form-in-package> syntax."
 
   (when *read-suppress*
     (internal-read-extended-token stream firstchar nil)
-    (return-from read-token-2 nil))
+    (return-from read-token nil))
   (let* ((rt *readtable*)
          (attribute-array (character-attribute-array rt))
          (attribute-hash-table (character-attribute-hash-table rt))
@@ -536,10 +535,10 @@ extended <package-name>::<form-in-package> syntax."
           (dolist (parser custom-token-parsers)
             (multiple-value-bind (result parsed) (funcall parser stream (copy-token-buf-string buf) pkg)
               (when parsed
-                (return-from read-token-2 (values result t))))))
+                (return-from read-token (values result t))))))
 
         (when *return-package-and-symbol-name-from-read*
-          (return-from read-token-2 (make-potential-symbol :package pkg :casified-name (copy-token-buf-string buf) :qualified colons)))
+          (return-from read-token (make-potential-symbol :package pkg :casified-name (copy-token-buf-string buf) :qualified colons)))
                      
         (let ((symbol
                (block nil
@@ -577,15 +576,15 @@ extended <package-name>::<form-in-package> syntax."
         ))))
   )
 
-(defvar *read-token-d* nil)
+#|(defvar *read-token-d* nil)
 
-(defun read-token-d (fn stream firstchar)
+ (defun read-token-d (fn stream firstchar)
   (if t ; *read-token-d*
       (read-token-2 stream firstchar)
       (funcall fn stream firstchar)))
 
-(budden-tools::decorate-function 'read-token #'read-token-d)
-
+ (budden-tools::decorate-function 'read-token #'read-token-d)
+|#
 
 #|(defun sharp-colon (stream sub-char numarg)
   "Сильно устарело и не работает,т.к. token - это буфер, а не строка"
