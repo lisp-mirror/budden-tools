@@ -1,4 +1,4 @@
-;;; -*- Encoding: utf-8; system :see-packages;  -*-
+;;; -*- Encoding: utf-8; system :see-packages ;  -*-
 ;;; Some SWANK symbols are decorated here. This code may be sbcl-specific. А также пытаемся декорировать find-package
  
 (in-package :budden-tools)
@@ -30,7 +30,7 @@
 
 (decorate-function:decorate-function 'swank::tokenize-symbol-thoroughly #'decorated-swank--tokenize-symbol-thoroughly)
 
-
+;;; FIXME see also oduvanchik-regexp-synonyms
 (defun decorated-swank--completion-output-case-converter (fn input &optional with-escaping-p)
   "Return a function to convert strings for the completion output.
 INPUT is used to guess the preferred case."
@@ -99,3 +99,83 @@ INPUT is used to guess the preferred case."
                           when (prefix-match-p name str) ; remove |Foo|
                           collect str)))
       (swank::format-completion-set strings intern pname)))) |#
+
+(defun note-package-and-readtable-change-in-line (string old-package old-readtable old-rt-specified-p)
+  "Принимает ранее известные значения пакета, таблицы чтения и признак, что таблица чтения была задана. Возвращает (values new-package new-readtable new-rt-specified-p)"
+  (let* ((new-package old-package)
+         (new-readtable old-readtable)
+         (new-rt-specified-p old-rt-specified-p)
+         (new-pkg-name
+          (oduresy:find-package-change-in-string string)))
+    (multiple-value-bind (readtable-change-found new-rt-name)
+                         (oduresy:find-readtable-change-in-string string)
+      (setf new-package (if new-pkg-name (find-package new-pkg-name) old-package))
+      (cond
+       (readtable-change-found
+        (setf new-rt-specified-p t)
+        ; problem here for non-existent, but specified readtable
+        (setf new-readtable (find-readtable new-rt-name))
+        )
+       (new-pkg-name
+        (let ((rt-by-pkg (cdr (assoc new-pkg-name
+                                     swank::*readtable-alist*
+                                     :test 'string=))))
+          (cond
+           (old-rt-specified-p
+           ; do nothing for rt when package changed
+            )
+           (rt-by-pkg
+            (setf new-readtable rt-by-pkg)))))))
+    (values new-package new-readtable new-rt-specified-p)))
+
+(defun decorated-swank-source-path-parser--guess-reader-state (fn stream)
+  "Take readtable from source where possible. See also oduvanchik-internals::recompute-line-tag-inner-1"
+  (declare (ignore fn))
+  (let* ((point (file-position stream))
+         (pkg *package*)
+         (rt *readtable*)
+         (rt-specified-p nil))
+    (file-position stream 0)
+    (loop for line = (read-line stream nil nil) do
+      (when (not line) (return))
+      (multiple-value-setq
+          (pkg rt rt-specified-p)
+        (note-package-and-readtable-change-in-line line pkg rt rt-specified-p)))
+    (file-position stream point)
+    (values rt pkg)))
+
+(decorate-function:decorate-function 'swank/source-path-parser::guess-reader-state
+                                     #'decorated-swank-source-path-parser--guess-reader-state)
+
+
+
+
+(defun decorated-swank-source-path-parser--make-source-recording-readtable (fn readtable source-map)
+  (declare (type readtable readtable) (type hash-table source-map))
+  (declare (ignore fn))
+  "Return a source position recording copy of READTABLE.
+The source locations are stored in SOURCE-MAP."
+  (flet ((install-special-sharpdot-reader (rt)
+	   (let ((fun (ignore-errors
+			(get-dispatch-macro-character #\# #\. rt))))
+	     (when fun
+	       (let ((wrapper (swank/source-path-parser::make-sharpdot-reader fun)))
+		 (set-dispatch-macro-character #\# #\. wrapper rt)))))
+	 (install-wrappers (rt)
+	   (dolist (char (append (loop for code from 0 to 127 collect (code-char code))
+                                 RUSSIAN-BUDDEN-TOOLS:*CYRILLIC-CHARACTERS*))
+             (multiple-value-bind (fun nt) (get-macro-character char rt)
+               (when fun
+                 (let ((wrapper (swank/source-path-parser::make-source-recorder fun source-map)))
+                   (set-macro-character char wrapper nt rt)))))))
+    (let ((rt (copy-readtable readtable)))
+      (when (packages-seen-p readtable)
+        (BUDDEN-TOOLS:ENABLE-BUDDENS-READTABLE-EXTENSIONS rt)
+        (setf (readtable-case-advanced rt) (readtable-case-advanced readtable)))
+      (install-special-sharpdot-reader rt)
+      (install-wrappers rt)
+      rt)))
+
+
+(decorate-function:decorate-function 'swank/source-path-parser::make-source-recording-readtable
+                                     #'decorated-swank-source-path-parser--make-source-recording-readtable)
