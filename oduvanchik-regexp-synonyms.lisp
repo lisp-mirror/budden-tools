@@ -1,4 +1,4 @@
-;;;; -*- Mode: Lisp; indent-tabs-mode: nil; system :budden-tools ; -*-
+;;;; -*- Mode: Lisp; indent-tabs-mode: nil; system :see-packages ; -*-
 
 (def-merge-packages::! :oduvanchik-regexp-synonyms
                        (:always t)
