@@ -720,7 +720,10 @@ srcpl - symbol-readmacro. Прочитать объект и запрограм�
   (when (track-locations)
     (let (source beg end)
       (when position
-        (dsetq (source beg end) position))
+        (setf source (yar-lexem:lexem-pos-file-name position))
+        (setf beg (yar-lexem:lexem-pos-start position))
+        (setf end (yar-lexem:lexem-pos-end position))
+        )
       (setf beg (row-col-offset-to-buffer-offset beg))
       (setf end (row-col-offset-to-buffer-offset beg))
       (when source
