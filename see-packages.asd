@@ -24,7 +24,8 @@
         (:file "oduvanchik-regexp-synonyms") 
         #+sbcl
         (:file "budden-tools-package-system-and-completion-swank")
-        (:file "package-aliases")	
+        (:file "package-aliases")
+        (:file "lexem-pos" :description "Структура lexem-pos")
 	(:file "locations")
         (:file "cons-to-source" :description "Alternative to ~{ ~} format to product source code from conses")
         (:file "test-sbcl-reader-budden-tools-lispworks")

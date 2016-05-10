@@ -30,7 +30,8 @@
    (:file "def-trivial-test"
     :description "yet another test suite")
    (:file "budden-tools"
-    :description "General purpose utilities") 
+    :description "General purpose utilities")
+   (:file "tests/test-budden-tools")
    (:file "with-conc-name" :description "DEPRECATED")
    #+lispworks6.1 (:file "lw-macro-friendly-stepper" :description "put breakpoints in macros without macroexpansion (for stepper)")
    #+lispworks6.1 (:file "lw-macro-friendly-dbg-vars-and-macros" :description "find frame source correction for debugger")
