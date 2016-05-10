@@ -534,17 +534,19 @@ if to-alist is true, to ((a . b) (c . d) ...)"
 
 
 (defun collect-duplicates (list &rest key-args &key key test test-not)
-  #+russian "Работает только для списка. Надо сделать, чтобы работало для sequence (использовать find-if-not)"
+  #+russian "Работает только для списка. Надо сделать, чтобы работало для sequence (использовать find-if-not). См. также kons:budden-tools-collect-duplicates"
   #-russian "Collect only a single duplicate of all duplicated entries"
-  (declare (ignore key test test-not))          
-  (iter 
-    (:with known-values) (:with old-known-values)
-    (:for x in list)
-    (setf old-known-values known-values known-values 
-	  (apply 'adjoin x known-values key-args))
-    (when (eq old-known-values known-values)
-      (:collect x))))
-
+  (declare (ignore key test test-not))
+  (let ((all-duplicates-maybe-several-times
+         (iter 
+          (:with known-values) (:with old-known-values)
+          (:for x in list)
+          (setf old-known-values known-values)
+          (setf known-values 
+                (apply 'adjoin x known-values key-args))
+          (when (eq old-known-values known-values)
+            (:collect x)))))
+    (apply 'remove-duplicates all-duplicates-maybe-several-times key-args)))
 
 ;; FIXME добавить proga-expander
 (defmacro mlvl-bind (vars values-form &body body) `(multiple-value-bind ,vars ,values-form ,@body))
@@ -602,6 +604,9 @@ if to-alist is true, to ((a . b) (c . d) ...)"
     `(progn
        (assert (typep ,value ',typespec))
        (the ,typespec ,value))))
+
+(defun implies (a b)
+  (or b (not a)))
 
 (defun tree-weight (tree) #+russian "Общее количество консов в дереве"
   #-russian "number of conses in a tree (or smth like this :)"
