@@ -35,6 +35,7 @@ perga but beware this way of extending is likely to be broken in the near future
   perga-implementation:wind-up-tail-if-second-is-atom
   perga-implementation:wind-up-tail-if-3
   perga-implementation:with-unwind 
+  perga-implementation:when-perga-transformer
   "
   )
  )
