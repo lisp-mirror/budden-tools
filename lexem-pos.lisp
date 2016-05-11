@@ -20,3 +20,7 @@
 (named-readtables::in-readtable nil)
 
 (defstruct lexem-pos file-name start end start-line-number) ; FIXME - записпользовать
+
+(defmethod cl:make-load-form ((self lexem-pos) &optional env)
+  (make-load-form-saving-slots self :environment env))
+
