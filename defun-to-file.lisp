@@ -7,6 +7,8 @@
   budden-tools:*defun-to-file-directory*
   budden-tools:defun-to-file
   budden-tools:defun-to-file-macroexpanded
+  budden-tools:defun-to-file-me-no-pe
+  budden-tools:ggsym
    "
                         ))
 
@@ -79,8 +81,24 @@
      представитель
     )))
 
+(defun print-symbol-with-readmacro-readably (object stream)
+  "Символ должен иметь домашний пакет, см. вызовы. Сделано по аналогии с print.lisp/output-symbol"
+  (let ((name (symbol-name object))
+        (package (symbol-package object)))
+    (unless (budden-tools::symbol-is-in-package object *package* nil)
+      (let ((prefix (package-name package)))
+        (sb-impl::output-symbol-name prefix stream))
+      (if (eq :external (nth-value 1 (find-symbol name package)))
+          (write-char #\: stream)
+          (write-string "::" stream)))
+    (sb-impl::output-quoted-symbol-name name stream))
+  object)
+
 (defun decorated-output-symbol (fn object stream)
   (cond
+   ((and (symbol-package object)
+         (symbol-readmacro object))
+    (print-symbol-with-readmacro-readably object stream))         
    ((symbol-package object)
     (funcall fn object stream))
    (*идентифицировать-бездомные-символы-при-печати*
@@ -110,10 +128,15 @@
 
 (defmacro defun-to-file-macroexpanded (name &rest more)
   "То же, что defun-to-file, но вызывает walk-form с полным макрорасширением над телом, а также настраивает steppable код. Есть риск ошибок в этой конструкции из-за отсутствия локальных переменных в контексте во время прогулок по лямбда-выражению"
-  (defun-to-file-fn name more :walk-form :careful
+  (defun-to-file-fn name more :walk-form t
     :preambula '(declaim
                  (optimize (debug 3) (space 2) (compilation-speed 2) (speed 2) (safety 3)))))
 
+(defmacro defun-to-file-me-no-pe (name &rest more)
+  "Вызывает walk-form с полным макрорасширением над телом и без print-circle"
+  (defun-to-file-fn name more :walk-form t :print-circle nil
+    :preambula '(declaim
+                 (optimize (debug 3) (space 2) (compilation-speed 2) (speed 2) (safety 3)))))
 
 (defun careful-transform-defun-form (name more)
   (perga-implementation:perga
@@ -127,7 +150,7 @@
        (sb-walker:walk-form lambda)))
    `(defun ,name ,args ,@(when doc (list doc)) (funcall ,walked-lambda))))
 
-(defun defun-to-file-fn (name more &key walk-form (package *package*) preambula)
+(defun defun-to-file-fn (name more &key walk-form (package *package*) (print-circle t) preambula)
   (perga-implementation:perga
     (assert (every (lambda (!1) (not (find !1 "\\/.?* "))) (string name)))
     (let filename (str+ (namestring *defun-to-file-directory*) name))
@@ -135,7 +158,7 @@
       (:@ with-open-file (out (str+ filename ".lisp") :direction :output
         :if-does-not-exist :create :if-exists :supersede
         :external-format :utf-8))
-      (let *print-circle* t
+      (let *print-circle* print-circle
         *print-readably* t
         *print-pretty* t
         *идентифицировать-бездомные-символы-при-печати* t)
