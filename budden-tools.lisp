@@ -600,10 +600,15 @@ if to-alist is true, to ((a . b) (c . d) ...)"
 
 (defmacro the* (typespec value)
   "Combines check-type and the"
+  #-sbcl
   (once-only (value)
     `(progn
-       (assert (typep ,value ',typespec))
-       (the ,typespec ,value))))
+       (assert (typep ,value ',typespec)) 
+       (the ,typespec ,value)))
+  ;; в SBCL не нужно проверять тип, см. "Declarations as assertions"
+  #+sbcl
+  `(the ,typespec ,value)
+  )
 
 (defun implies (a b)
   (or b (not a)))
