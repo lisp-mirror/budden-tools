@@ -628,31 +628,35 @@ srcpl - symbol-readmacro. Прочитать объект и запрограм�
     (let cur-char-position 0)
     (let filename (extract-source-filename-from-stream stream))
     (let ef (file-stream-extract-encoding stream))
-    (:@ with-open-file (in filename :external-format ef))
-    (push (cons 0 0) map-list)
-    (loop
-     (let line (read-line in nil nil))
-     (unless line (return))
-     (_f + cur-char-position (length line) 1)
-     (push (cons (file-position in) cur-char-position) map-list)
-     )
-    (_f nreverse map-list)
-    (let map-size (length map-list))
-    (let result (make-array (list map-size 2)))
-    (let i 0)
-    (dolist (l map-list)
-      (setf (aref result i 0) (car l))
-      (setf (aref result i 1) (cdr l))
-      (incf i))
-    result))
+    (when filename
+      (:@ with-open-file (in filename :external-format ef))
+      (push (cons 0 0) map-list)
+      (loop
+        (let line (read-line in nil nil))
+        (unless line (return))
+        (_f + cur-char-position (length line) 1)
+        (push (cons (file-position in) cur-char-position) map-list)
+        )
+      (_f nreverse map-list)
+      (let map-size (length map-list))
+      (let result (make-array (list map-size 2)))
+      (let i 0)
+      (dolist (l map-list)
+        (setf (aref result i 0) (car l))
+        (setf (aref result i 1) (cdr l))
+        (incf i))
+      result)))
 
 (defun file-position-and-map-to-char-position (file-position map)
   "map получаем из build-file-position-to-char-position-map"
   (perga-implementation:perga
-    (:@ mlvl-bind (index start-file-offset start-char-offset)
-     (fp-half-divide-to-floor file-position map))
-    (ignored index)
-    (+ file-position (- start-file-offset) start-char-offset)))
+   (cond
+    ((null map) 0)
+    (t
+     (:@ mlvl-bind (index start-file-offset start-char-offset)
+         (fp-half-divide-to-floor file-position map))
+     (ignored index)
+     (+ file-position (- start-file-offset) start-char-offset)))))
 
 (defvar *stream-to-file-position-to-char-position-maps*
   (SWANK-BACKEND:make-weak-key-hash-table :test 'eq)
