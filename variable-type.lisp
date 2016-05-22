@@ -279,16 +279,33 @@ sb-c::global-var :kind :special - связанная глоб.перем
 но у нас есть и sb-cltl2:variable-information
 |#
 
+(proclaim '(notinline keep-var-for-debug-fn))
+
+(defun keep-var-for-debug-fn (object)
+  object)
+
+(defun keep-var-for-debug (object)
+  "Пытаемся гарантировать, чтобы в конструкции
+   (let ((z (keep-var-for-debug x)))
+     (break)) 
+  переменная z была видна в отладчике при политике отладки >=2"
+  (if (>= (or (sbcl-policy-level 'debug) 0) 2)
+    `(keep-var-for-debug-fn ,object)
+    object))
 
 (defmacro with-the1 (var type object &body body &environment env)
   "Combines type declaration, type check and binding. See also :lett perga clause" 
-  (let ((the-symbol (gensym (format nil "~A" var))))
-    (assert-special-subtype-for-with-the1 var env type)
-    `(let ((,var
-            (let ((,the-symbol ,object)) ; expanded `(the* ,type ,object)
+  (assert-special-subtype-for-with-the1 var env type)
+  (let ((expr 
+         #-sbcl
+         (let ((the-symbol (gensym (format nil "~A" var))))
+           `(let ((,the-symbol ,object)) ; expanded `(the* ,type ,object)
               (assert (typep ,the-symbol ',type))
-              (the ,type ,the-symbol))))
-       (declare (type ,type ,var))
+              (the ,type ,the-symbol)))
+         #+sbcl
+         `(the ,type ,(keep-var-for-debug object))))
+    `(let ((,var ,expr))
+       (declare (type ,type ,var)) ; нужно ли это в SBCL? 
        ,@body)))
 
 
