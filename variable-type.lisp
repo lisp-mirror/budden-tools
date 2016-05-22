@@ -305,7 +305,7 @@ sb-c::global-var :kind :special - связанная глоб.перем
               (assert (typep ,the-symbol ',type))
               (the ,type ,the-symbol)))
          #+sbcl
-         `(the ,type ,(keep-var-for-debug object))))
+         (keep-var-for-debug object)))
     `(let ((,var ,expr))
        (declare (type ,type ,var)) ; нужно ли это в SBCL? 
        ,@body)))
