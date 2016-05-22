@@ -1,6 +1,8 @@
 ;;; -*- Encoding: utf-8; -*-
 (in-package :budden-tools)
 
+(named-readtables:in-readtable nil)
+
 ; (defmacro pvi (var &ENVIRONMENT env) (break) (print (list (hcl:variable-information var env) (hcl:declaration-information 'type))) `',var)
 
 (defmacro print-environment (&optional break &ENVIRONMENT env) (print env) (if break (break)))

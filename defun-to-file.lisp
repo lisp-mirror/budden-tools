@@ -92,11 +92,13 @@
           (write-char #\: stream)
           (write-string "::" stream)))
     (sb-impl::output-quoted-symbol-name name stream))
-  object)
+  nil)
+
 
 (defun decorated-output-symbol (fn object stream)
   (cond
-   ((and (symbol-package object)
+   ((and *escape-symbol-readmacros*
+         (symbol-package object)
          (symbol-readmacro object))
     (print-symbol-with-readmacro-readably object stream))         
    ((symbol-package object)

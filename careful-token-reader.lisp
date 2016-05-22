@@ -1,4 +1,4 @@
-;;; -*- Encoding: utf-8; -*-
+;;; -*- Encoding: utf-8; system :see-packages ; -*-
 (in-package :budden-tools)
 
 ; disable stepping
@@ -22,8 +22,6 @@
     (funcall (get-dispatch-macro-character #\# #\\ *good-readtable*) s c n)))
 
 ; (defparameter *char-table* (make-array 256 :initial-element nil))
-
-(defmacro symbol-readmacro (symbol) `(get ,symbol 'symbol-readmacro))
 
 #+lispworks 
 (dspec:define-form-parser def-symbol-readmacro (name &rest args)

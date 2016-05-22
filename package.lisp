@@ -216,6 +216,8 @@
    budden-tools:symbol-readmacro ; function of two arguments: symbol and a stream. setf symbol-readmacro to reader switched by the symbol
    budden-tools:def-symbol-readmacro ; Navigation does not work
    budden-tools:it-is-a-car-symbol-readmacro ; put this at the first line of your symbol-readmacro definition
+   budden-tools:*escape-symbol-readmacros* 
+
    budden-tools:*print-normalize-seen-symbols*
 
    ; budden-tools:defpackage-autoimport ; obsolete

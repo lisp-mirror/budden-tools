@@ -744,3 +744,25 @@ modifying form, e.g. @code{(_f + a b) @equiv{} (incf a b)}. See also __f. Modife
 (defmacro defparameter-always (name initial-value &optional (documentation nil docp))
   `(eval-when (:compile-toplevel :load-toplevel :execute)
      (defparameter ,name ,initial-value ,@(when docp `(,documentation)))))
+
+
+(defun symbol-is-in-package (symbol package external-only)
+  "Возвращает два значения: 1. t, если данный символ доступен в данном пакете. Если external-only, то возвращает t, только если он внешний в данном пакете
+   2. статус из find-symbol, если символ доступен"
+  (multiple-value-bind (other-symbol status)
+                       (find-symbol (symbol-name symbol) package)
+    (cond
+     ((null symbol)
+      (cond ((null other-symbol) (values t status))
+            (t nil)))
+     ((null other-symbol) nil)
+     ((not (eq symbol other-symbol)) nil)
+     ((eq status :EXTERNAL) (values t status))
+     ((not external-only) (values t status))
+     (t nil))))
+
+; нам это нужно очень рано из-за defun-to-file
+(defmacro symbol-readmacro (symbol) `(get ,symbol 'symbol-readmacro))
+
+(defvar *escape-symbol-readmacros* t
+  "Скрывать символы, которые symbol-readmacro при печати, чтобы они читались как символы")

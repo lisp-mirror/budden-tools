@@ -8,22 +8,6 @@
 ;;; FIXME - проверить работу иерархических пакетов,
 ;;; основать def-merge-packages::! на них
 
-(defun symbol-is-in-package (symbol package external-only)
-  "Возвращает два значения: 1. t, если данный символ доступен в данном пакете. Если external-only, то возвращает t, только если он внешний в данном пакете
-   2. статус из find-symbol, если символ доступен"
-  (perga-implementation:perga
-    (:@ mlvl-bind (other-symbol status) (find-symbol (symbol-name symbol) package))
-    (cond
-     ((null symbol)
-      (cond ((null other-symbol) (values t status))
-            (t nil)))
-     ((null other-symbol) nil)
-     ((not (eq symbol other-symbol)) nil)
-     ((eq status :EXTERNAL) (values t status))
-     ((not external-only) (values t status))
-     (t nil))))
-
-
 (defun printed-symbol-without-package-with-advanced-readtable-case (sym)
   (perga-implementation:perga
    (let* ((sp (symbol-package sym))
