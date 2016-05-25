@@ -154,10 +154,15 @@
 
 (defun defun-to-file-fn (name more &key walk-form (package *package*) (print-circle t) preambula)
   (perga-implementation:perga
-    (assert (every (lambda (!1) (not (find !1 "\\/.?* "))) (string name)))
-    (let filename (str+ (namestring *defun-to-file-directory*) name))
+    (:lett имя-директории-пакета string
+           (|Закодировать-строку-в-имя-файла| (package-name (symbol-package name))))
+    (:lett директория-пакета string
+           (str+ (namestring *defun-to-file-directory*) "/" имя-директории-пакета "/"))
+    (:lett имя-файла string (|Закодировать-строку-в-имя-файла| (symbol-name name)))
+    (:lett полное-имя-файла string (str+ директория-пакета имя-файла ".lisp"))
+    (ensure-directories-exist директория-пакета)
     (perga-implementation:perga
-      (:@ with-open-file (out (str+ filename ".lisp") :direction :output
+      (:@ with-open-file (out полное-имя-файла :direction :output
         :if-does-not-exist :create :if-exists :supersede
         :external-format :utf-8))
       (let *print-circle* print-circle
@@ -186,8 +191,12 @@
            `(defun ,name ,@more))))
       (print processed-definition out)
       )
-    (assert (compile-file (str+ filename ".lisp")))
-    `(values (load ,filename) ,filename)))
+    (:@ mlvl-bind (имя-фасл-файла ошибки неудача)
+        (compile-file полное-имя-файла))
+    (when неудача
+          (cerror "Продолжить и попытаться загрузить"
+                  "defun-to-file*: неудача при компиляции функции ~S в файл: ~S" name ошибки))
+    `(values (load ,имя-фасл-файла) ,имя-фасл-файла)))
 
 
 (defun eval-with-file (code) 

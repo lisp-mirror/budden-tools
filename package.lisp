@@ -192,6 +192,7 @@
 
 ;; make input stream available to sharpsign-dot
    budden-tools:*read-eval-stream*
+   budden-tools:|Закодировать-строку-в-имя-файла|
 
 ;; see-packages and friends
    budden-tools:*keyword-package* ; just a keyword package
