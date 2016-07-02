@@ -166,7 +166,6 @@
        expanded into (FOO-BAR A). 
        |#
    budden-tools:with-conc-namec ; set translaction prefix for V^X where V is a given symbol.
-   budden-tools:with-proplist-carat  ; another (experimental) example of per-variable assignment of ^ 
 
 ;; i/o utilities
    budden-tools:show-hash

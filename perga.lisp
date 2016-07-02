@@ -43,7 +43,7 @@
 делаем
  (def-perga-clause sym 'func)
 2. let1, pllet1, with-conc-name, let-with-conc-type, with-open-file,
-  with-input-from-string, with-proplist-carat не имеют clause.
+  with-input-from-string не имеют clause.
   Вместо этого пользоваться :@, :&
 3. вместо labels - :lables, т.к. может быть несколько выражений. 
 4. вместо with-the1  - :lett

@@ -172,20 +172,5 @@ it is essential from ap5 viewpoint"
   )
                                      
 
-; FIXME - теперь мы не можем добавлять новые свойства и записывать
-; существующие
-(defmacro with-proplist-carat (var &body body)
-  "в var содержится property-list (:key value :key2 value2). Тогда внутри body var^key и var^KEY раскроется в 
-код с getf* для поиска value. Ключи сравниваются с помощью string-equal"
-  (unless body (warn "with-proplist-carat: empty body"))
-  `(with-custom-carat-implementation 
-    (,var (o f &rest mo)
-          `(getf* ,o ,f :test 'string-equal :mandatory t)
-          )
-    ,@body))
-
-(setf (get 'with-proplist-carat 'proga-implementation::proga-transformer) 
-      'proga-implementation::open-up)
-
 
 
