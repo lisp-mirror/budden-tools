@@ -342,7 +342,7 @@ sb-c::global-var :kind :special - связанная глоб.перем
                         (read-from-string 
                          "(with-custom-carat-implementation 
                               (a (o f &rest mo) `(str+ ',o ',f))
-                            (^ a b))"))
+                            (|^| a b))"))
                        )
                      "AB")
 
