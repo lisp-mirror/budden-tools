@@ -116,6 +116,7 @@
    budden-tools:smlet ; another name for symbol-macrolet
    budden-tools:*defun-to-file-directory*
    budden-tools:defun-to-file ; to see source of your generated function. TODO: package name->file name, gensyms vs `,
+   budden-tools:defun-to-file-2
    budden-tools:defun-to-file-macroexpanded
    budden-tools:defun-to-file-me-no-pe
    budden-tools:ggsym

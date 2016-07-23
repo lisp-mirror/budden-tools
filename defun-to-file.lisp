@@ -5,9 +5,10 @@
                        (:export
                         "
   budden-tools:*defun-to-file-directory*
-  budden-tools:defun-to-file
-  budden-tools:defun-to-file-macroexpanded
-  budden-tools:defun-to-file-me-no-pe
+  budden-tools:defun-to-file ; устарело
+  budden-tools:defun-to-file-2
+  budden-tools:defun-to-file-macroexpanded ; устарело
+  budden-tools:defun-to-file-me-no-pe ; устарело
   budden-tools:ggsym
    "
                         ))
@@ -118,27 +119,19 @@
   #'decorated-output-symbol))
 
 
-(defmacro defun-to-file (name &rest more)
-  #+russian "Определяет функцию с таким исходником в файле с именем *defun-to-file-directory*/имя-функции.
-Имя функции должно быть допустимым именем файла и не должно содержать всяких мерзких символов. 
-Нужно бы добавить сюда ещё имя пакета, но пока не сделано. Для лиспворкс 4 в функции не могут быть gensyms, т.к. они криво
-печатаются (что, в общем-то сводит всю идею на нет). Возвращает два значения - имя функции и имя файла. Если определить таким способом ф-ю CamelCase, а затем CAMELCASE, то определение CamelCase пропадёт, поскольку имена файлов в Windows нечувствительны к регистру."
-  #-russian "Works like defun, but writes source to file named *defun-to-file-directory*/function-name. 
- Function name must be a valid filename. Returns two values: function name and filename. Beware lowercase vs uppercase
- problem: if you defun-to-file CamelCase function and then CAMELCASE, first function will be overwritten as filenames coincide in Windows"
-  (defun-to-file-fn name more :walk-form nil))
+(defparameter |*декларации-оптимизации-пошаговой-отладки*| 
+  '(declaim
+    (optimize (debug 3) (space 2) (compilation-speed 2) (speed 2) (safety 3))))
 
 (defmacro defun-to-file-macroexpanded (name &rest more)
   "То же, что defun-to-file, но вызывает walk-form с полным макрорасширением над телом, а также настраивает steppable код. Есть риск ошибок в этой конструкции из-за отсутствия локальных переменных в контексте во время прогулок по лямбда-выражению"
-  (defun-to-file-fn name more :walk-form t
-    :preambula '(declaim
-                 (optimize (debug 3) (space 2) (compilation-speed 2) (speed 2) (safety 3)))))
+  (defun-to-file-fn 'defun-to-file-macroexpanded name more :walk-form t
+    :preambula |*декларации-оптимизации-пошаговой-отладки*|))
 
 (defmacro defun-to-file-me-no-pe (name &rest more)
   "Вызывает walk-form с полным макрорасширением над телом и без print-circle"
-  (defun-to-file-fn name more :walk-form t :print-circle nil
-    :preambula '(declaim
-                 (optimize (debug 3) (space 2) (compilation-speed 2) (speed 2) (safety 3)))))
+  (defun-to-file-fn 'defun-to-file-me-no-pe name more :walk-form t :print-circle nil
+    :preambula |*декларации-оптимизации-пошаговой-отладки*|))
 
 (defun careful-transform-defun-form (name more)
   (perga-implementation:perga
@@ -152,7 +145,38 @@
        (sb-walker:walk-form lambda)))
    `(defun ,name ,args ,@(when doc (list doc)) (funcall ,walked-lambda))))
 
-(defun defun-to-file-fn (name more &key walk-form (package *package*) (print-circle t) preambula)
+(defmacro defun-to-file (name &rest args-docstring-decls-body)
+  #+russian "Определяет функцию с таким исходником в файле с именем *defun-to-file-directory*/имя-функции.
+Имя функции должно быть допустимым именем файла и не должно содержать всяких мерзких символов. 
+Нужно бы добавить сюда ещё имя пакета, но пока не сделано. Для лиспворкс 4 в функции не могут быть gensyms, т.к. они криво
+печатаются (что, в общем-то сводит всю идею на нет). Возвращает два значения - имя функции и имя файла. Если определить таким способом ф-ю CamelCase, а затем CAMELCASE, то определение CamelCase пропадёт, поскольку имена файлов в Windows нечувствительны к регистру."
+  #-russian "Works like defun, but writes source to file named *defun-to-file-directory*/function-name. 
+ Function name must be a valid filename. Returns two values: function name and filename. Beware lowercase vs uppercase
+ problem: if you defun-to-file CamelCase function and then CAMELCASE, first function will be overwritten as filenames coincide in Windows"
+  (defun-to-file-fn 'defun-to-file name args-docstring-decls-body :walk-form nil))
+
+(defmacro defun-to-file-2 (name args options &rest docstring-decls-body)
+  "Копирует определение функции в файл и выполняет файл. Смысл в том, что функция может быть генерируемой, в этом случае её исходник в виде файла не существует, а это затрудняет отладку. 
+  (defun-to-file-2 имя-функции
+     (&key walk-form (package *package*) (print-circle t) preambula)
+     (арг1 ...)
+     докстрока декларации . тело). 
+     walk-form - Обработать с помощью sb-walker:walk-form.
+     preambula - код, вставляемый в файл перед телом функции.
+     См. также defun-to-file"
+  (defun-to-file-fn-with-options 'defun-to-file-2 name options (cons args docstring-decls-body))) 
+
+(defun defun-to-file-fn-with-options (definer-name name options args-docstring-decls-body)
+  (apply 'defun-to-file-fn definer-name name args-docstring-decls-body options))
+
+(defun defun-to-file-fn (definer-name name args-docstring-decls-body
+                          &key
+                          walk-form
+                          (package *package*)
+                          (print-circle t)
+                          (preambula |*декларации-оптимизации-пошаговой-отладки*|)
+                          (|компилировать| t))
+  "Описание см. в defun-to-file-2"
   (perga-implementation:perga
     (:lett имя-директории-пакета string
            (|Закодировать-строку-в-имя-файла| (package-name (symbol-package name))))
@@ -170,7 +194,8 @@
         *print-pretty* t
         *идентифицировать-бездомные-символы-при-печати* t)
       (format out
-              ";;; -*- Encoding: utf-8; -*-~%;;; generated with budden-tools::defun-to-file from ~S~%"
+              ";;; -*- Encoding: utf-8; -*-~%;;; generated with ~S from ~S~%"
+              definer-name
               (or *compile-file-pathname* *load-pathname*))
       (print `(in-package ,(def-merge-packages:keywordize-package-designator
                             (package-name (the* not-null (find-package package))))) out)
@@ -184,19 +209,23 @@
         (ecase walk-form
           (t
            (let ((sb-walker::*walk-form-expand-macros-p* t))
-             (sb-walker:walk-form `(defun ,name ,@more))))
+             (sb-walker:walk-form `(defun ,name ,@args-docstring-decls-body))))
           (:careful
-           (careful-transform-defun-form name more))
+           (careful-transform-defun-form name args-docstring-decls-body))
           ((nil)
-           `(defun ,name ,@more))))
+           `(defun ,name ,@args-docstring-decls-body))))
       (print processed-definition out)
       )
-    (:@ mlvl-bind (имя-фасл-файла ошибки неудача)
-        (compile-file полное-имя-файла))
-    (when неудача
-          (cerror "Продолжить и попытаться загрузить"
-                  "defun-to-file*: неудача при компиляции функции ~S в файл: ~S" name ошибки))
-    `(values (load ,имя-фасл-файла) ,имя-фасл-файла)))
+    (cond
+     (|компилировать| 
+      (:@ mlvl-bind (имя-фасл-файла ошибки неудача)
+          (compile-file полное-имя-файла))
+      (when неудача
+            (cerror "Продолжить и попытаться загрузить"
+                    "~S: неудача при компиляции функции ~S в файл: ~S" definer-name name ошибки))
+      `(values (load ,имя-фасл-файла) ,имя-фасл-файла))
+     (t
+      (load полное-имя-файла)))))
 
 
 (defun eval-with-file (code) 
