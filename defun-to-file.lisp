@@ -177,13 +177,11 @@
                           (preambula |*декларации-оптимизации-пошаговой-отладки*|)
                           (|компилировать| t))
   "Описание см. в defun-to-file-2"
-  (perga-implementation:perga
-    (:lett имя-директории-пакета string
-           (|Закодировать-строку-в-имя-файла| (package-name (symbol-package name))))
-    (:lett директория-пакета string
-           (str+ (namestring *defun-to-file-directory*) "/" имя-директории-пакета "/"))
-    (:lett имя-файла string (|Закодировать-строку-в-имя-файла| (symbol-name name)))
-    (:lett полное-имя-файла string (str+ директория-пакета имя-файла ".lisp"))
+  (let* 
+      ((|имя-директории-пакета| (|Закодировать-строку-в-имя-файла| (package-name (symbol-package name))))
+       (директория-пакета (str+ (namestring *defun-to-file-directory*) "/" |имя-директории-пакета| "/"))
+       (имя-файла (|Закодировать-строку-в-имя-файла| (symbol-name name)))
+       (полное-имя-файла (str+ директория-пакета имя-файла ".lisp")))
     (ensure-directories-exist директория-пакета)
     (perga-implementation:perga
       (:@ with-open-file (out полное-имя-файла :direction :output
@@ -218,14 +216,14 @@
       )
     (cond
      (|компилировать| 
-      (:@ mlvl-bind (имя-фасл-файла ошибки неудача)
-          (compile-file полное-имя-файла))
-      (when неудача
-            (cerror "Продолжить и попытаться загрузить"
-                    "~S: неудача при компиляции функции ~S в файл: ~S" definer-name name ошибки))
-      `(values (load ,имя-фасл-файла) ,имя-фасл-файла))
+      (multiple-value-bind (имя-фасл-файла ошибки неудача)
+                           (compile-file полное-имя-файла)
+        (when неудача
+              (cerror "Продолжить и попытаться загрузить"
+                      "~S: неудача при компиляции функции ~S в файл: ~S" definer-name name ошибки))
+        `(values (load ,имя-фасл-файла) ,имя-фасл-файла)))
      (t
-      (load полное-имя-файла)))))
+      `(load ,полное-имя-файла)))))
 
 
 (defun eval-with-file (code) 
