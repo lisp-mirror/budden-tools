@@ -613,6 +613,8 @@ if to-alist is true, to ((a . b) (c . d) ...)"
 (defun implies (a b)
   (or b (not a)))
 
+(defun exclusive-or (a b) (or (and (not a) b) (and a (not b))))
+
 (defun tree-weight (tree) #+russian "Общее количество консов в дереве"
   #-russian "number of conses in a tree (or smth like this :)"
   (cond 

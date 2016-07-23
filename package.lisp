@@ -127,6 +127,7 @@
    budden-tools:eswitch ; reexported from alexandria
    budden-tools:switch
    budden-tools:cswitch 
+   budden-tools:exclusive-or 
    budden-tools:implies
 
    budden-tools:with-byref-params ; declare function to accept some
