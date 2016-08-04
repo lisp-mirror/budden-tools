@@ -114,7 +114,20 @@
        (or (eq :invalid *ignored-package-locks*)
            (not (member package *ignored-package-locks*)))
        ;; declarations for symbols
-       (not (and symbolp (member symbol (disabled-package-locks))))))
+       (not (and symbolp (lexically-unlocked-symbol-p symbol)))))
+
+(defun lexically-unlocked-symbol-p (symbol)
+  (member symbol
+          (if (boundp 'sb-c::*lexenv*)
+              (let ((list (sb-c::lexenv-disabled-package-locks sb-c::*lexenv*)))
+                ;; The so-called LIST might be an interpreter env.
+                #+sb-fasteval
+                (unless (listp list)
+                  (return-from lexically-unlocked-symbol-p
+                    (sb-interpreter::lexically-unlocked-symbol-p
+                     symbol list)))
+                list)
+              sb-c::*disabled-package-locks*)))
 
 ) ; progn
 
