@@ -789,7 +789,7 @@ srcpl - symbol-readmacro. Прочитать объект и запрограм�
                (or
                 #+(and sbcl win32) 61
                 #+(and lispworks win32) 61
-                #+(and sbcl unix) 63
+                #+(and sbcl unix) 61
                -1000 ; write me
                )))
     (print "sanity check ok")
