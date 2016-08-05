@@ -286,7 +286,7 @@ sb-c::global-var :kind :special - связанная глоб.перем
 (defun keep-var-for-debug-fn (object)
   object)
 
-(defun keep-var-for-debug (object)
+(defmacro keep-var-for-debug (object)
   "Пытаемся гарантировать, чтобы в конструкции
    (let ((z (keep-var-for-debug x)))
      (break)) 
