@@ -181,6 +181,7 @@
    budden-tools:path-to-a-file
    budden-tools:name-and-type-of-a-file
    budden-tools:pathname-relative-to-super-dir
+   budden-tools:subdir-p ; является ли первый аргумент поддиректорией второго?
 
    budden-tools:maybe-add-slash ; got a directory name. Make sure it ends with slash
    budden-tools:up-dir

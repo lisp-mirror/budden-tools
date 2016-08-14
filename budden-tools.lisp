@@ -45,7 +45,6 @@
 ;(defun copy-tree-with-structures (tree)
 ;  (
 
-
 (defun rmsubseq (seq &rest args &key from-end start end count)
   #+russian "Удаляет из последовательности указанные элементы"
   #-russian "Removes subsequence from sequence"
@@ -312,6 +311,24 @@
 (defun name-and-type-of-a-file (filename) "d:/foo/file.ext --> file.ext"
   (make-pathname :defaults (pathname filename) :host nil :device nil :directory nil))
 
+
+(defun subdir-p (subdir super-dir) "Истина, если subdir является поддиректорией super-dir. В этом случае возвращает путь от super-dir до subdir. Работает только для абсолютных имён"
+  (let*
+      ((pp (pathname subdir))
+       (psd (cl-fad:pathname-as-directory (pathname super-dir)))
+       (ppns (namestring pp))
+       (psdns (namestring psd))
+       )
+    (assert (cl-fad:pathname-absolute-p pp))
+    (assert (cl-fad:pathname-absolute-p psd))
+    (multiple-value-bind
+        (success suffix)
+        (alexandria:starts-with-subseq psdns ppns :test 'char= :return-suffix t)
+      (cond
+       (success (copy-seq suffix))
+       (t nil)))))
+  
+
 (defun pathname-relative-to-super-dir (pathname super-dir) "d:/dir/subdir/file.ext, d:/dir -> subdir/file.ext or error"
   (let*
       ((pp (pathname pathname))
@@ -319,6 +336,8 @@
        (ppns (namestring pp))
        (psdns (namestring psd))
        )
+    (assert (cl-fad:pathname-absolute-p pp))
+    (assert (cl-fad:pathname-absolute-p psd))
     (multiple-value-bind
         (success suffix)
         (alexandria:starts-with-subseq psdns ppns :test 'char= :return-suffix t)
