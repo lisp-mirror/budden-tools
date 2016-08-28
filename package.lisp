@@ -120,6 +120,7 @@
    budden-tools:defun-to-file-macroexpanded
    budden-tools:defun-to-file-me-no-pe
    budden-tools:ggsym
+   budden-tools:ПЕЧАТАЕМЫЙ-ПРЕДСТАВИТЕЛЬ-СИМВОЛА
    budden-tools:defparameter-always ; defparameter at load-toplevel,compile-toplevel,execute
    budden-tools:eval-with-file ; write code to file, compile it and load
    budden-tools:not-null ; type (not null)

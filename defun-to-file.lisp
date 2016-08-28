@@ -10,6 +10,7 @@
   budden-tools:defun-to-file-macroexpanded ; устарело
   budden-tools:defun-to-file-me-no-pe ; устарело
   budden-tools:ggsym
+  budden-tools:ПЕЧАТАЕМЫЙ-ПРЕДСТАВИТЕЛЬ-СИМВОЛА
    "
                         ))
 
