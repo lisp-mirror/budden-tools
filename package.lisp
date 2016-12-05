@@ -229,6 +229,9 @@
    budden-tools:find-symbol-in-packages ; consider using find-all-symbols
    budden-tools:package-doctor ; see also :smart-resolve-export-conflict debugger command for lispworks
 
+   budden-tools:write-exports-for-defstruct
+   budden-tools:|Написать-экспорт-для-структуры|
+
 ;; alternative-backquoting
    |`|
    |,|
