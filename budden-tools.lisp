@@ -201,7 +201,7 @@
                      
 
 (defun mandatory-slot (slot-name)
-  (error "mandatory slot ~S in defstruct is not initialized" slot-name)) 
+  (error "Обязательное поле ~S в defstruct не инициализировано" slot-name)) 
 
 (defun copy-tree-of-structures (tree)
   ;(declare (optimize (speed 3) (safety 0) (debug 0)))
@@ -787,3 +787,31 @@ modifying form, e.g. @code{(_f + a b) @equiv{} (incf a b)}. See also __f. Modife
 
 (defvar *escape-symbol-readmacros* t
   "Скрывать символы, которые symbol-readmacro при печати, чтобы они читались как символы")
+
+(defun |Написать-экспорт-для-структуры| (type &optional (string-stream (make-string-output-stream) string-stream-supplied-p))
+  (let* ((pack (symbol-package type))
+         (pack-name (package-name pack))
+         (struct-name (string type)))
+    (macrolet ((doit (filter-expr)
+                 `(do-symbols (x pack)
+                    (let ((x-name (string x)))
+                      (when (and (eq (symbol-package x) pack) ,filter-expr)
+                        (format string-stream "~%~A:~A" pack-name x-name))))))
+      (format string-stream "~%;;~A" struct-name)
+      (doit (eq x type))
+      (doit (string= x-name (str+ "MAKE-" struct-name)))
+      (doit (string= x-name (str+ struct-name "-P")))
+      (doit (string= x-name (str+ "COPY-" struct-name)))
+      (format string-stream "~%")
+      (doit (and
+             (alexandria:starts-with-subseq (str+ struct-name "-") x-name)
+             (not (string= x-name (str+ struct-name "-P")))))
+      (format string-stream "~%")
+      ))
+  (unless string-stream-supplied-p
+    (get-output-stream-string string-stream)))
+
+        
+
+(defun write-exports-for-defstruct (type)
+  (|Написать-экспорт-для-структуры| type))
