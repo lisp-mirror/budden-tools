@@ -201,7 +201,7 @@
                      
 
 (defun mandatory-slot (slot-name)
-  (error "mandatory slot ~S in defstruct is not initialized" slot-name)) 
+  (error "Обязательное поле ~S в defstruct не инициализировано" slot-name)) 
 
 (defun copy-tree-of-structures (tree)
   ;(declare (optimize (speed 3) (safety 0) (debug 0)))
