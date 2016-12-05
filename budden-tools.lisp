@@ -799,6 +799,7 @@ modifying form, e.g. @code{(_f + a b) @equiv{} (incf a b)}. See also __f. Modife
                       (let ((x-name (string x)))
                         (when (and (eq (symbol-package x) pack) ,filter-expr)
                           (format ou "~%~A:~A" pack-name x-name))))))
+        (format ou "~%;;~A" struct-name)
         (doit (eq x type))
         (doit (string= x-name (str+ "MAKE-" struct-name)))
         (doit (string= x-name (str+ struct-name "-P")))
