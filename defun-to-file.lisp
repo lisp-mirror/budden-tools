@@ -150,8 +150,7 @@
 (defmacro defun-to-file (name &rest args-docstring-decls-body)
   #+russian "Определяет функцию с таким исходником в файле с именем *defun-to-file-directory*/имя-функции.
 Имя функции должно быть допустимым именем файла и не должно содержать всяких мерзких символов. 
-Нужно бы добавить сюда ещё имя пакета, но пока не сделано. Для лиспворкс 4 в функции не могут быть gensyms, т.к. они криво
-печатаются (что, в общем-то сводит всю идею на нет). Возвращает два значения - имя функции и имя файла. Если определить таким способом ф-ю CamelCase, а затем CAMELCASE, то определение CamelCase пропадёт, поскольку имена файлов в Windows нечувствительны к регистру."
+Нужно бы добавить сюда ещё имя пакета, но пока не сделано. Возвращает два значения - имя функции и имя файла. Если определить таким способом ф-ю CamelCase, а затем CAMELCASE, то определение CamelCase пропадёт, поскольку имена файлов в Windows нечувствительны к регистру."
   #-russian "Works like defun, but writes source to file named *defun-to-file-directory*/function-name. 
  Function name must be a valid filename. Returns two values: function name and filename. Beware lowercase vs uppercase
  problem: if you defun-to-file CamelCase function and then CAMELCASE, first function will be overwritten as filenames coincide in Windows"
