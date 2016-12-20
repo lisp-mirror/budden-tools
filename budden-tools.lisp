@@ -392,6 +392,18 @@
                           (cerror "continue" "~A is not unique in ~A" x list)) y) 
           (sort list 'string<) :initial-value nil))          
 
+
+(defmacro |Добавить-в-точку-роста| (|Значение| |Переменная-результат| |Переменная-точка-роста|)
+  "Значение - это значение для добавления (вычисляется 1 раз), Переменная-результа и Переменная-точка-роста - два символа, именующих переменные (не вычисляются)"
+  `(cond
+    ((null ,|Переменная-результат|)
+     (setf ,|Переменная-результат|
+           (setf ,|Переменная-точка-роста| (list ,|Значение|))))
+    (t
+     (setf (cdr ,|Переменная-точка-роста|)
+           (setf ,|Переменная-точка-роста| (list ,|Значение|))))))
+
+;;; а-списки
 (defun list-to-alist (x) "Превращает '(:a 1 :b 2) в '((:a . 1) (:b . 2)). Устарела. Используй splice-list"
   (let1 res nil
     (loop
@@ -447,8 +459,6 @@ if to-alist is true, to ((a . b) (c . d) ...)"
 (defun flat-assoc (thing list &key test key) "Возвращает assoc из плоского списка типа (:a 1 :b 2), как будто он был a-списком ((:a . 1) (:b . 2))"
   (apply 'assoc thing (list-to-alist list) `(,@(if test `(:test ,test)) 
                                              ,@(if key `(:key ,key)))))
-(unexport 'flat-assoc) ; deprecate it. 
-
 
 (defun assoc-getf* (list thing &rest keyargs &key key test test-not mandatory) 
   "Just like assoc, but operates on flat lists rather than on alists, (:a 1 :b 2) instead of ((:a . 1) (:b . 2)). Returns sublist starting from key found. If not found and mandtory is true, errs. If not found and mandatory is null, returns nil"
