@@ -7,6 +7,10 @@
 
 (defmacro print-environment (&optional break &ENVIRONMENT env) (print env) (if break (break)))
 
+;; отключаем пошаговую отладку
+(declaim  (optimize (debug 2) (space 2) (compilation-speed 2) (speed 2) (safety 3)))
+
+
 #+sbcl 
 (defun normalize-type (type)
   (cond
