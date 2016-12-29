@@ -420,7 +420,6 @@ end.
          (if (= o1 reversed-offset)
              (reverse (subseq reversed-text o1 o2))
            nil))))
-    (show-expr backward-part)
     (let matched-filename
       (str++ (or backward-part "")
              (or forward-part "")))
@@ -626,7 +625,7 @@ end.
     (elt (points-to-string p pp) 0)))
 
 (defun char-can-be-in-symbol (c)
-  "Проверяем символы в общем смысле слова, не в смысле лиспа. Только тире позволяем быть"
+  "Проверяем символы в общем смысле слова, не в смысле лиспа. Только тире позволяем быть. Также разрешаем двоеточие"
   (not (find c '(#\  #\newline #\, #\^ #\' #\" #\` #\tab #\; #\( #\) #\@ #\| #\# #\\ #\>))))
 
 (defun process-potential-symbol (x package)
