@@ -1,4 +1,4 @@
-;;; -*- Encoding: utf-8; -*-
+;;; -*- Encoding: utf-8; system :budden-tools; -*-
 (def-merge-packages::! :defun-to-file
                        (:always t)
                        (:use :cl :budden-tools)
@@ -182,7 +182,8 @@
       ((|имя-директории-пакета| (|Закодировать-строку-в-имя-файла| (package-name (symbol-package name))))
        (директория-пакета (str+ (namestring *defun-to-file-directory*) "/" |имя-директории-пакета| "/"))
        (имя-файла (|Закодировать-строку-в-имя-файла| (symbol-name name)))
-       (полное-имя-файла (str+ директория-пакета имя-файла ".lisp")))
+       (полное-имя-файла (str+ директория-пакета имя-файла ".lisp"))
+       (*readtable* (find-readtable nil)))
     (ensure-directories-exist директория-пакета)
     (perga-implementation:perga
       (:@ with-open-file (out полное-имя-файла :direction :output
@@ -196,9 +197,8 @@
               ";;; -*- Encoding: utf-8; -*-~%;;; generated with ~S from ~S~%"
               definer-name
               (or *compile-file-pathname* *load-pathname*))
-      (print `(in-package ,(def-merge-packages:keywordize-package-designator
-                            (package-name (the* not-null (find-package package))))) out)
-      (print `(in-readtable :buddens-readtable-a) out)
+      (print `(named-readtables:in-readtable nil) out)
+      (print `(CL:IN-PACKAGE ,(package-name (the* not-null (find-package package)))) out)
       (etypecase preambula
         (null)
         (string (format out "~%~A~%" preambula))
