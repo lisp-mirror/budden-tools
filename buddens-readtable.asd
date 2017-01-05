@@ -11,5 +11,6 @@
          (:file "buddens-readmacros")
          (:file "buddens-readtable") ; here readtables are defined
 ;	 (:file "buddens-sharpdot")
+         (:file "buddens-readtable-test")
 ))	
 ; asdf

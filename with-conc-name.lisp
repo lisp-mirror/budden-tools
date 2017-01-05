@@ -91,15 +91,15 @@
                 (eql (mismatch sname svar :test 'char-equal) len)
                 (eql (elt sname len) #\.)
                 (let ((accessor-name
-                       (find-symbol-with-advanced-readtable-case
-                        (string-upcase
-                         (concatenate 'string 
-                                      string-concname
+                       (show-expr
+                        (find-symbol-with-advanced-readtable-case
+                         (show-expr (concatenate 'string 
+                                      string-concname "-"
                                       (subseq sname (1+ len))))
-                        *package*
-                        *readtable*
-                        nil ; хм? FIXME разобраться, что значит этот nil. 
-                        )))
+                         *package*
+                         *readtable*
+                         nil ; хм? FIXME разобраться, что значит этот nil. 
+                         ))))
                   (when accessor-name                                                       
                     (values accessor-name var))
                   ))))))
@@ -147,15 +147,6 @@
   (assert (typep type 'symbol) () "let-with-conc-type: ожидали имя типа, получили ~S" type)
   `(let ((,var ,value))
      (declare (type ,type ,var))
-     (with-conc-name ,var ,(symbol+ type '-)
+     (with-conc-name ,var ,type
        ,@body)))
 
-
-; #+see-packages
-;(trivial-deftest::! #:let-with-conc-type.1
-;                    (let-with-conc-type x string "asdf"
-;                      `(,(x.equal "asdf") ,(x.upcase) ,(x.equal x.upcase))
-;                      )
-;                    '(T "ASDF" T))
-
-; FIXME - тест требует see-packages, но они ещё не загружены

@@ -304,7 +304,7 @@ srcpl - symbol-readmacro. Прочитать объект и запрограм�
       (proga
         (cond
          ((ses-p sub1)
-          (with-conc-name sub1 ses-)
+          (with-conc-name sub1 ses)
           (cond 
            ((= (length sub1.sources) 1)
             (let sub2 (first sub1.sources))
@@ -314,7 +314,7 @@ srcpl - symbol-readmacro. Прочитать объект и запрограм�
                   already-copied
                 (_f copy-olm olm)
                 (setf already-copied t))
-              (with-conc-name sub2 olm-)
+              (with-conc-name sub2 olm)
               (_f simplify-location-map sub2)
               (move-olm-by-offset sub2 sub1.beg)
               (:appending  (mapcar 'simplify-location-map sub2.ses-list) :into new-ses-list))
