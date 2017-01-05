@@ -91,16 +91,15 @@
                 (eql (mismatch sname svar :test 'char-equal) len)
                 (eql (elt sname len) #\.)
                 (let ((accessor-name
-                       (show-expr
-                        (find-symbol-with-advanced-readtable-case
-                         (show-expr (concatenate 'string 
-                                      string-concname "-"
-                                      (subseq sname (1+ len))))
-                         *package*
-                         *readtable*
-                         nil ; хм? FIXME разобраться, что значит этот nil. 
-                         ))))
-                  (when accessor-name                                                       
+                       (find-symbol-with-advanced-readtable-case
+                        (concatenate 'string 
+                                     string-concname "-"
+                                     (subseq sname (1+ len)))
+                        *package*
+                        *readtable*
+                        nil ; FIXME разобраться, что значит этот nil. 
+                        )))
+                  (when accessor-name                                                 
                     (values accessor-name var))
                   ))))))
         (maybe-replace-var-with-conc-name (symbol)
