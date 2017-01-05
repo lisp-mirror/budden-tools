@@ -1,4 +1,4 @@
-;;; -*- Encoding: utf-8; -*-
+;;; -*- Encoding: utf-8; system :see-packages; -*-
 (in-package :budden-tools)
 (in-readtable nil) 
 
@@ -85,7 +85,7 @@ symbol-readmacro должен вернуть список. cdr считанно�
   object)|#
 
 
-
+;;; ^ (одиночный карат внутри символа, превращается в подобие точки) 
 
 (defun ^-reader-internal-2 (stream read-object object read-field-name field-name)
   "Если read-object=nil, то мы уже считали объект и читаем только то, что идёт после него"
@@ -107,9 +107,6 @@ symbol-readmacro должен вернуть список. cdr считанно�
     (list '|^| object field-name)))
 
 
-
-  
-
 ;; FIXME при печати-чтении ^ выполняется повторно. Переименовать ^ во что-то, если это опасно 
 ;; (а опасно это может быть, если читать '(a b c --> d e f), хотя опасность не столь велика - ошибка чтения
 (defun ^-reader (stream symbol)
@@ -119,15 +116,47 @@ symbol-readmacro должен вернуть список. cdr считанно�
   (closing-paren-splice-cdr-into-car (^-reader-internal-3 stream t nil t nil))
   )
 
-
-
 (def-symbol-readmacro |^| '^-reader)
 ; функция ^ определена в variable-type.lisp
 
-;(def-symbol-readmacro def-merge-packages:|EXPORT2| 'def-merge-packages::export2-reader)                            
+;;; ^^ (двойной карат внутри символа, превращается в подобие точки, тип должен быть известен при компиляции) 
+
+
+(defun ^^-reader-internal-2 (stream read-object object read-field-name field-name)
+  "Если read-object=nil, то мы уже считали объект и читаем только то, что идёт после него"
+  (let* ((object (if read-object (read stream t) object))
+         (field-name (if read-field-name (read-symbol-name stream) field-name))
+         (ret `(|^^| ,object ,field-name))
+         )
+    (splice-later-if-a-car ret)
+    ret))
+
+
+(defun ^^-reader-internal-3 (stream read-object object read-field-name field-name)
+  "Если read-object=nil, то мы уже считали объект и читаем только то, что идёт после него.FIXME - здесь делается let пакету, 
+в результате чего может многое испортиться. поправить read-symbol-name"
+  (let* ((object (if read-object (read stream t) object))
+         (field-name (if read-field-name (read-symbol-name stream) field-name))
+         
+         )
+    (list '|^^| object field-name)))
+
+
+;; FIXME при печати-чтении ^ выполняется повторно. Переименовать ^ во что-то, если это опасно 
+;; (а опасно это может быть, если читать '(a b c --> d e f), хотя опасность не столь велика - ошибка чтения
+(defun ^^-reader (stream symbol)
+  "См. также второе определение и найдёшь определение макроса ^"
+  (declare (ignore symbol))
+;  (it-is-a-car-symbol-readmacro (^-reader-internal-2 stream t nil t nil))
+  (closing-paren-splice-cdr-into-car (^-reader-internal-3 stream t nil t nil))
+  )
+
+(def-symbol-readmacro |^^| '^^-reader)
+; функция ^ определена в variable-type.lisp
+
 
 (defun convert-carat-to-^ (stream symbol-name package)
-  "превращает инфиксный ^ в (^ a b). Для этого анализирует структуру
+  "превращает инфиксный ^ в (^ a b), ^^ - в (^^ a b). Для этого анализирует структуру
 прочитанного списка после того, как он прочитан.
 Это позволяет писать как (о^fun arg), так и o^field (а не (o^field)). 
 Здесь есть ещё не вполне понятная проблема: если результат выполнения в виде 
@@ -149,6 +178,15 @@ make-load-form
      ((null p) (values nil nil))
      ((= p 0) (values nil nil))
      ((= (+ p 1) (length symbol-name)) (values nil nil))
+     ((and (> p 1) (char= (elt symbol-name (- p 1)) #\^)) ; это двойной карат
+      (let ((beg (subseq symbol-name 0 (- p 1)))
+            (end (subseq symbol-name (+ p 1))))
+        (values (let ((*package* package))
+                  (funcall '^^-reader-internal-2 
+                           (make-concatenated-stream (make-string-input-stream (str+ beg " ")) stream)
+                           t nil 
+                           nil end))
+                t)))
      (t ; (break "~A" symbol-name)
         (let ((beg (subseq symbol-name 0 p))
               (end (subseq symbol-name (+ p 1))))

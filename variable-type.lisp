@@ -27,7 +27,7 @@
 
 (defun variable-type-or-class (VAR ENV) 
   "Возвращает тип ИЛИ класс значения. Непонятно, зачем нужен класс - наверняка всегда достаточно типа для ^ (FIXME)"
-  #+sbcl 
+  #+sbcl
   (cond
    ((constantp var env)
     (normalize-type (type-of var))) ; в лиспворксе здесь возвращается класс... 
@@ -192,10 +192,21 @@
   `(runtime^ ,object ',field-name ,@args))
 
 (define-compiler-macro common-carat-implementation (object field-name &rest args &environment env)
-  "See also defmacro common-carat-implementation"
+  "See also defmacro common-carat-implementation, а также strict-carat-implementation"
   (let ((variable-type-or-class (variable-type-or-class object env)))
     (case variable-type-or-class
       ((t nil) `(runtime^ ,object ',field-name ,@args))
+      (t
+       (multiple-value-bind (function-symbol field-p)
+           (function-symbol-for-^ variable-type-or-class field-name)
+         `(,function-symbol ,object ,@(when field-p `(,field-name)) ,@args))
+       ))))
+
+(defmacro strict-carat-implementation (object field-name &rest args &environment env)
+  "Для ^^ "
+  (let ((variable-type-or-class (variable-type-or-class object env)))
+    (case variable-type-or-class
+      ((t nil) (error "Для ~S ^^ ~S - не понял тип аргумента слева от ^^" object field-name))
       (t
        (multiple-value-bind (function-symbol field-p)
            (function-symbol-for-^ variable-type-or-class field-name)
@@ -247,19 +258,20 @@
 
 
 
-;--------------------------------------------------------------      Читалка   ^ -----------------------------------------------------------
+;--------------------------------------------------------------      Читалка   ^ и ^^ -----------------------------------------------------------
 (defparameter ^-reader nil "Этот параметр нужен только для тогО, чтобы было возможно с помощью Alt-. Alt-, найти определение функции ^,которую невозможно прочитать")
+
+(defparameter ^^-reader nil "Аналогично ^-reader")
 
 (defmacro |^| (object field-name &rest args)
   "See also ^-READER"
   `(carat-implementation ,object ,field-name ,@args))
-      
-#|(defmacro with-the1 (var type object &body body)
-  "Combines type declaration, type check and binding. See also :lett perga clause" 
-  `(let ((,var (the* ,type ,object)))
-     (declare (type ,type ,var))
-     ,@body))|#
 
+(defmacro |^^| (object field-name &rest args)
+  "See also ^-READER"
+  `(strict-carat-implementation ,object ,field-name ,@args))
+
+     
 (defun assert-special-subtype-for-with-the1 (var env new-type) 
   "If variable is special, checks that with-the1 does not redeclare it with incompatible subtype"
   (multiple-value-bind (kind localp decls)
