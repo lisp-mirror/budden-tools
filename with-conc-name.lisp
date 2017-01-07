@@ -7,7 +7,7 @@
 ;;; Dedicated to my sister Ksenya
 ;;; Code is in the public domain
 
-;;; (with-conc-name x conc-name- &body body) 
+;;; (with-conc-name x conc-name &body body) 
 ;;; Looks for symbols *package*::x.foo or :x.bar in body
 ;;; For each symbol found, if symbol conc-name-foo exist, 
 ;;; replaces x.foo with (conc-name-foo x), (x.foo . args) with (conc-name-foo x . args)
