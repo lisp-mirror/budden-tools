@@ -193,7 +193,12 @@
 
    budden-tools:filename-to-pathname ; from swank-backend
    budden-tools:quit-lisp ; thanks to Thomas A.Russ
+
+;; streams
    budden-tools:edit-stream-position ; trying to find out position in a file stream, open the file at the cursor and edit it
+   budden-tools:extract-source-filename-from-stream
+   budden-tools:input-stream-position-in-chars
+   budden-tools:stream-get-line-number
 
 ;; make input stream available to sharpsign-dot
    budden-tools:*read-eval-stream*
