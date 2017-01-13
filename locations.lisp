@@ -501,6 +501,21 @@ srcpl - symbol-readmacro. Прочитать объект и запрограм�
                            :b-offset b-offset))))
 
 
+(defun numeric-file-position-to-buffer-offset (nfp)
+  (etypecase nfp
+    (lexem-pos:file-and-file-position
+     (let ((file (lexem-pos:file-and-file-position-file nfp))
+           (position (lexem-pos:file-and-file-position-position nfp)))
+       (cond
+        (file 
+         (show-expr "budden-tools::numeric-file-position-to-buffer-offset - Здесь вызывается очень медленная функция")      
+         (fix-offset-2 file position))
+        (t
+         (show-expr "numeric-file-position-to-buffer-offset - ничего не могу сделать - информация о файле утеряна")
+         position))))
+    (lexem-pos:file-offset-chars-newline-is-1
+     (lexem-pos:file-offset-chars-newline-is-1-offset nfp))))
+
 (defun row-col-offset-to-buffer-offset (offset-or-row-col-offset)
   "На вход принимает row-col-offset или число (уже смещение в буфере). Возвращает смещение в буфере"
   (etypecase offset-or-row-col-offset
@@ -508,7 +523,12 @@ srcpl - symbol-readmacro. Прочитать объект и запрограм�
      offset-or-row-col-offset)
     (row-col-offset
      (row-col-offset-b-offset offset-or-row-col-offset)
-     )))
+     )
+    (lexem-pos:numeric-file-position
+     (numeric-file-position-to-buffer-offset offset-or-row-col-offset))
+    (lexem-pos:char-frc
+     (break "Ой, меня не написали"))
+    ))
 
 
 (defmacro note-not-implemented-for-this-lisp (symbol)
@@ -673,7 +693,7 @@ srcpl - symbol-readmacro. Прочитать объект и запрограм�
 
 (defun input-stream-position-in-chars (stream)
   "Возвращает текущую позицию в потоке в буквах. В отличие от обычного file-position, к-рый извлекает её в буквах исходного файла - может отличаться на cr/lf. 
-  См. также EDITOR-BUDDEN-TOOLS::fix-offset-2"
+  См. также fix-offset-2"
   (etypecase stream
     (string-stream (file-position stream))
     (file-stream
@@ -689,6 +709,12 @@ srcpl - symbol-readmacro. Прочитать объект и запрограм�
         point)))
     (synonym-stream (input-stream-position-in-chars (symbol-value (synonym-stream-symbol stream))))
     ))
+
+(defun fix-offset-2 (pathname offset)
+  "Имеется числовой offset, к-рый вернул file-position. Давайте попробуем превратить его в смещение в буквах, считая #\newline за 1 букву. Предпочтительнее (гораздо эффективнее) использовать input-stream-position-in-chars"
+  (with-open-file (stream pathname)
+    (let ((map (ensure-file-position-to-char-position-for-stream stream)))
+       (file-position-and-map-to-char-position offset map))))
 
 ; FIXME Deprecated - используй input-stream-position-in-chars 
 (defun extract-file-position (stream)
@@ -721,7 +747,7 @@ srcpl - symbol-readmacro. Прочитать объект и запрограм�
   (when (track-locations)
     (let (source beg end)
       (when position
-        (setf source (lexem-pos:lexem-pos-file-name position))
+        (setf source (lexem-pos:lexem-pos-file position))
         (setf beg (lexem-pos:lexem-pos-start position))
         (setf end (lexem-pos:lexem-pos-end position))
         )

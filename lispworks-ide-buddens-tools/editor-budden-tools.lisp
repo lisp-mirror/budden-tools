@@ -632,7 +632,7 @@ end.
        ;(print `(,file ,text ,offset ,targets))
     (when targets
       (let* ((target (car targets))
-             (target-file (first target)) ; (meta-parse-firebird::lexem-pos-file-name target)??? FIXME Записывать позиции единообразно, например, с помощью olm. 
+             (target-file (first target)) ; FIXME Записывать позиции единообразно, например, с помощью olm. 
              (offset (second target)))
         (goto-offset target-file offset :kill-buffer nil)
         ))))

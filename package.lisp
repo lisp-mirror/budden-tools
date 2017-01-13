@@ -195,6 +195,7 @@
    budden-tools:quit-lisp ; thanks to Thomas A.Russ
 
 ;; streams
+   budden-tools:fix-offset-2 ; переводит смещение в файле. полученное из file-position, в положение, рассчитанное в буквах. При этом читает весь файл, т.е. работает медленно.
    budden-tools:edit-stream-position ; trying to find out position in a file stream, open the file at the cursor and edit it
    budden-tools:extract-source-filename-from-stream
    budden-tools:input-stream-position-in-chars
