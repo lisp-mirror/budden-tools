@@ -696,6 +696,7 @@ As a short-hand, #\s means *STANDARD-OUTPUT*, #\t - *TRACE-OUTPUT*"
 (deftype not-null () '(not null))
 (deftype nullable (x) `(or ,x null))
 
+(deftype lisp-bool () `(member t nil))
       
        
 (defmacro _f (op place &rest args &environment env)

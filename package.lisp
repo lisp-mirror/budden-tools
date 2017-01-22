@@ -124,9 +124,14 @@
    budden-tools:ПЕЧАТАЕМЫЙ-ПРЕДСТАВИТЕЛЬ-СИМВОЛА
    budden-tools:defparameter-always ; defparameter at load-toplevel,compile-toplevel,execute
    budden-tools:eval-with-file ; write code to file, compile it and load
+
+   ;; types 
    budden-tools:not-null ; type (not null)
    budden-tools:nullable ; тип 'что-то или nil'
+   budden-tools:lisp-bool ; t или nil 
    budden-tools:the* ; errs if type ain't match. Otherwise, returns a thing
+
+   ;; switches and logical operators
    budden-tools:eswitch ; reexported from alexandria
    budden-tools:switch
    budden-tools:cswitch 
