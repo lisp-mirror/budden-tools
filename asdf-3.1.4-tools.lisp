@@ -31,7 +31,7 @@ to resolve circular references between systems"
 (defvar *current-component*)
 
 (defmacro of-system (system-name-designator)
-  "Declares and asserts that file belongs to system"
+  "Устарело. Declares and asserts that file belongs to system"
   (let ((nm (coerce-name system-name-designator)))
     `(eval-when (:compile-toplevel :load-toplevel)
        (when (boundp '*current-component*)
