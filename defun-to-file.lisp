@@ -11,6 +11,7 @@
   budden-tools:defun-to-file-me-no-pe ; устарело
   budden-tools:ggsym
   budden-tools:ПЕЧАТАЕМЫЙ-ПРЕДСТАВИТЕЛЬ-СИМВОЛА
+  defun-to-file:get-tfi-symbol ; будет определена в defun-or-defun-tfi
    "
                         ))
 
@@ -35,6 +36,9 @@
 
 (defvar *идентифицировать-бездомные-символы-при-печати* nil
   "Если истина, то при печати бездомный символ идентифицируется. При чтении ранее идентифицированный бездомныйсимвол всегда идентифицируется")
+
+(defvar |*заменять-символы-на-их-Tfi-эквиваленты*| nil
+  "Используется в defun-and-defun-tfi, чтобы заменить обращения к символам, именующим компилируемые ф-ии, на обращения к символам, именующим интерпретируемые ф-ии")
 
 (defvar *все-сериализуемые-бездомные-символы* (make-hash-table :test 'equal)
   "Сюда заносятся бездомные символы, идентифицированные при чтении или печати. Они могут перестать впоследствии быть бездомными, поэтому данное название не совсем корректно")
@@ -97,13 +101,19 @@
     (sb-impl::output-quoted-symbol-name name stream))
   nil)
 
+(declaim (ftype (function (t t) t) get-tfi-symbol))
 
 (defun decorated-output-symbol (fn object stream)
   (cond
    ((and *escape-symbol-readmacros*
          (symbol-package object)
          (symbol-readmacro object))
-    (print-symbol-with-readmacro-readably object stream))         
+    (print-symbol-with-readmacro-readably object stream))
+   ((and |*заменять-символы-на-их-Tfi-эквиваленты*|
+         ; эта ф-я будет определена в defun-or-defun-tfi
+         (get-tfi-symbol object nil))
+    (let ((|*заменять-символы-на-их-Tfi-эквиваленты*| nil))
+      (funcall fn (get-tfi-symbol object nil) stream)))
    ((symbol-package object)
     (funcall fn object stream))
    (*идентифицировать-бездомные-символы-при-печати*
@@ -176,7 +186,8 @@
                           (package *package*)
                           (print-circle t)
                           (preambula |*декларации-оптимизации-пошаговой-отладки*|)
-                          (|компилировать| t))
+                          (|компилировать| t)
+                          (|заменять-символы-на-их-Tfi-эквиваленты| nil))
   "Описание см. в defun-to-file-2"
   (let* 
       ((|имя-директории-пакета| (|Закодировать-строку-в-имя-файла| (package-name (symbol-package name))))
@@ -192,7 +203,8 @@
       (let *print-circle* print-circle
         *print-readably* t
         *print-pretty* t
-        *идентифицировать-бездомные-символы-при-печати* t)
+        *идентифицировать-бездомные-символы-при-печати* t
+        |*заменять-символы-на-их-Tfi-эквиваленты*| |заменять-символы-на-их-Tfi-эквиваленты|)
       (format out
               ";;; -*- Encoding: utf-8; -*-~%;;; generated with ~S from ~S~%"
               definer-name
