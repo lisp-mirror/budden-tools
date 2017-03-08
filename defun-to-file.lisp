@@ -101,7 +101,7 @@
     (sb-impl::output-quoted-symbol-name name stream))
   nil)
 
-(declaim (ftype (function (t t) t) get-tfi-symbol))
+(declaim (ftype (function (t t t) t) get-tfi-symbol))
 
 (defun decorated-output-symbol (fn object stream)
   (cond
@@ -111,9 +111,9 @@
     (print-symbol-with-readmacro-readably object stream))
    ((and |*заменять-символы-на-их-Tfi-эквиваленты*|
          ; эта ф-я будет определена в defun-or-defun-tfi
-         (get-tfi-symbol object nil))
+         (get-tfi-symbol object nil nil))
     (let ((|*заменять-символы-на-их-Tfi-эквиваленты*| nil))
-      (funcall fn (get-tfi-symbol object nil) stream)))
+      (funcall fn (get-tfi-symbol object nil nil) stream)))
    ((symbol-package object)
     (funcall fn object stream))
    (*идентифицировать-бездомные-символы-при-печати*
@@ -203,10 +203,9 @@
       (let *print-circle* print-circle
         *print-readably* t
         *print-pretty* t
-        *идентифицировать-бездомные-символы-при-печати* t
-        |*заменять-символы-на-их-Tfi-эквиваленты*| |заменять-символы-на-их-Tfi-эквиваленты|)
+        *идентифицировать-бездомные-символы-при-печати* t)
       (format out
-              ";;; -*- Encoding: utf-8; -*-~%;;; generated with ~S from ~S~%"
+              ";;; -*- Encoding: utf-8; -*-~%;;; Автоматически создано ~S из ~S~%"
               definer-name
               (or *compile-file-pathname* *load-pathname*))
       (print `(named-readtables:in-readtable nil) out)
@@ -216,6 +215,12 @@
         (string (format out "~%~A~%" preambula))
         (cons
          (print preambula out)))
+
+      (let normal-symbol-from-tfi-symbol (get-tfi-symbol name nil t))
+      (when normal-symbol-from-tfi-symbol
+        (format out ";; См. также ~S~%" normal-symbol-from-tfi-symbol))
+      (let |*заменять-символы-на-их-Tfi-эквиваленты*| |заменять-символы-на-их-Tfi-эквиваленты|)
+
       (let processed-definition
         (ecase walk-form
           (t
