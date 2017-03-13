@@ -44,30 +44,6 @@
                (perga-implementation:perga ,@perga-body)
              ,@cleanup)))))))
 
-(defmacro with-byref-params-proga (symbols &body proga-body)
-  "Deprecated version of with-byref-params. Body is wrapped inside proga. Use with-byref-params instead" 
-  (assert (typep symbols '(or (cons symbol) null)) () "with-byref-params: ~S должно было быть списком символов или nil-ом"
-    symbols)
-  (iter 
-    (:for symbol in symbols)
-    (:for setter-new-name = (make-symbol (str+ symbol "-setter")))
-    (assert (symbolp symbol))
-    (:collect `(assert (reference-box-p ,symbol)) :into checks)
-    (:appending
-     `((,setter-new-name (reference-box-setter ,symbol))
-       (,symbol (funcall (reference-box-getter ,symbol))))
-     :into inits)
-    (:collecting `(funcall ,setter-new-name ,symbol) :into cleanup)
-    (:finally
-     (return 
-      `(progn
-         ,@checks
-         (let ,inits
-           (unwind-protect 
-               (proga ,@proga-body)
-             ,@cleanup)))))))
-
-
 (defmacro assert-byvalue (x)
   "If you afraid someone would pass unexpected byref param, you can add the assertion"
   `(assert (not (typep ,x 'reference-box)) ()
