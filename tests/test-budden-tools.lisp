@@ -10,29 +10,29 @@
   (budden-tools:collect-duplicates '(1 1 2 3 3 3) :test 'eql)
   '(1 3))
 
-(def-trivial-test::! Добавить-в-точку-роста-1
+(def-trivial-test::! collect-into-tail-of-list-1
   '(1 2 3)
   (let (Рез Тр)
-    (|Добавить-в-точку-роста| 1 Рез Тр)
-    (|Добавить-в-точку-роста| 2 Рез Тр)
-    (|Добавить-в-точку-роста| 3 Рез Тр)
+    (collect-into-tail-of-list 1 Рез Тр)
+    (collect-into-tail-of-list 2 Рез Тр)
+    (collect-into-tail-of-list 3 Рез Тр)
     Рез))
 
-(def-trivial-test::! Добавить-в-точку-роста-как-в-очередь
+(def-trivial-test::! collect-into-tail-of-list-как-в-очередь
   '(1 2 3)
   (let (Рез Тр)
-    (|Добавить-в-точку-роста| 1 Рез Тр)
+    (collect-into-tail-of-list 1 Рез Тр)
     (pop Рез)
     (pop Рез) ; это уже ничего не изменит
-    (|Добавить-в-точку-роста| 1 Рез Тр)
-    (|Добавить-в-точку-роста| 2 Рез Тр)
+    (collect-into-tail-of-list 1 Рез Тр)
+    (collect-into-tail-of-list 2 Рез Тр)
     (pop Рез)
     (pop Рез)
-    (|Добавить-в-точку-роста| 0 Рез Тр)
-    (|Добавить-в-точку-роста| 1 Рез Тр)
-    (|Добавить-в-точку-роста| 2 Рез Тр)
+    (collect-into-tail-of-list 0 Рез Тр)
+    (collect-into-tail-of-list 1 Рез Тр)
+    (collect-into-tail-of-list 2 Рез Тр)
     (pop Рез)
-    (|Добавить-в-точку-роста| 3 Рез Тр)
+    (collect-into-tail-of-list 3 Рез Тр)
     Рез))
   
 

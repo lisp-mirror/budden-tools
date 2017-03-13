@@ -67,7 +67,7 @@
    budden-tools:symbol-macroletf   
    budden-tools:plist-names  ; items of list at odd places
    budden-tools:plist-values  ; items of a list at even places
-   budden-tools:|Добавить-в-точку-роста| ; Макрос как collect, требует дополнительную переменную - указатель на хвост
+   budden-tools:collect-into-tail-of-list ; Макрос как collect, требует дополнительную переменную - указатель на хвост
 
 ;; hashes
    budden-tools:ensure-gethash-2 ; gethash with default, better than alexandria
