@@ -110,8 +110,8 @@
    budden-tools:ignored 
 ;   budden-tools:eval-when* ; it is defined internal in cl-user for some unknown reason
    budden-tools:print-if 
-   budden-tools:proga ; macro to get rid of some extra parens and nesting levels. Changes lisp syntax significantly. 
-                      ; currently it needs to be redesigned. 
+   budden-tools:proga ; obsolete
+   budden-tools:perga 
    ;budden-tools:dsetq ; reexported from iterate
    budden-tools:pllet1 ; 'bind' place
    budden-tools:smlet ; another name for symbol-macrolet
