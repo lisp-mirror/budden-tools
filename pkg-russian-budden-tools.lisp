@@ -23,6 +23,8 @@
 ;  (:import-from :merge-packages-and-reexport #:collect-duplicates-into-sublists)
   (:export
    "
+   russian-budden-tools:cyrillic-char-p
+
    russian-budden-tools:char-upcase-cyr
    russian-budden-tools:char-equal-cyr
    russian-budden-tools:char-downcase-cyr
