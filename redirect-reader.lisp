@@ -1,4 +1,4 @@
-;;; -*- Encoding: utf-8; -*-
+;;; -*- Encoding: utf-8; system :see-packages ; -*-
 
 ; (defmacro let1 (var val &body body) `(let ((,var ,val)) ,@body))
 
@@ -40,6 +40,11 @@ is already an altered readtable, simply returns it"
       (return rt))
 
     (set-macro-character #\( #'paren-reader-with-closing-paren-notification nil rt)
+
+    ;; Хотел сделать это здесь, но не могу из-за циклической зависимости систем. Лень разбираться
+    ;; Вместо этого, включаю тройные скобки только для своих таблиц чтения, см. 
+    ;; buddens-readtable::redefine-buddens-readtable-a
+    ;; (buddens-readtable:enable-triple-quote-reader rt)
 
     (setf (gethash rt *readtable-uses-sbcl-reader-budden-tools-lispworks*) t)
 

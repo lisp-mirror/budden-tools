@@ -88,10 +88,59 @@
     (nsubstitute #\" double-quote-char
       (read (unread-char* #\" s))))) 
 
+;;; Triple quote reader
 
+(defvar *standard-double-quote-reader*
+  (get-macro-character #\" (copy-readtable nil)))
 
+(defun triple-quote-reader (s c)
+  (let* ((res-1 (funcall *standard-double-quote-reader* s c)))
+    (cond
+     ((not (string= res-1 ""))
+      res-1)
+     ((eql (peek-char nil s nil nil) #\")
+      (triple-quote-reader-proper s))
+     (t
+      res-1))))
 
+(defun triple-quote-reader-proper (s)
+  (read-char s) ; #\"
+  (let ((res nil))
+    (flet ((read-up-to-five-more-quotes ()
+             "Уже прочитана одна кавычка. Читаем ещё не более 5"
+             (dotimes (i 5) 
+               (let ((cc (read-char s nil nil)))
+                 (cond
+                  ((and (>= i 2) (null cc)) ; после третьей кавычки eof - ок.
+                   (return-from read-up-to-five-more-quotes i))
+                  ((eql cc #\")
+                   (push cc res))
+                  (t
+                   (unread-char cc s)
+                   (return-from read-up-to-five-more-quotes i)))))
+             ;; прочитали 5 кавычек
+             5))
+      (loop
+        (let ((c (read-char s nil nil)))
+          (case c
+            (nil (error "Конец файла при чтении трёхкавычечной строки"))
+            (#\"
+             (push c res)
+             (let ((no-of-quotes (+ 1 (read-up-to-five-more-quotes))))
+               (ecase no-of-quotes
+                 ((1 2) ; это были кавычки внутри строки
+                  )
+                 ((3 4 5) ; 0..2 кавычки в строке, а затем кавычки закрылись - выкинем закрывающие кавычки пора возвращать строку
+                  (dotimes (i 3) (pop res))
+                  (return (coerce (nreverse res) 'string)))
+                 (6  ; это затенённые три кавычки - выкинем 3 из 6 кавычек из собираемого результата
+                  (dotimes (i 3) (pop res))))))
+            (t
+             (push c res))))))))
 
+(defun enable-triple-quote-reader (readtable)
+  (set-macro-character #\" 'triple-quote-reader readtable))
+  
 ;(equalp #"@@" "\"")
 ;(equalp #"a@" "@")
 ;(equalp #"^$(^#content^).load(^~A.clhp^)" 

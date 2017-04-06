@@ -11,6 +11,7 @@
   (:dispatch-macro-char #\# #\. #'sbcl-sharp-dot)
   ; (:dispatch-macro-char #\# #\" #'sharp-double-quote-readmacro)
   )
+(enable-triple-quote-reader (find-readtable :buddens-readtable))
 (budden-tools::ENABLE-BUDDENS-READTABLE-EXTENSIONS :buddens-readtable)
 (setf (budden-tools::readtable-case-advanced :buddens-readtable) :upcase-if-uniform)
 
@@ -25,6 +26,7 @@
     (:dispatch-macro-char #\# #\. #'sbcl-sharp-dot)
   ; (:dispatch-macro-char #\# #\" #'sharp-double-quote-readmacro)
     ) 
+  (enable-triple-quote-reader (find-readtable :buddens-readtable-a))
   (budden-tools::ENABLE-BUDDENS-READTABLE-EXTENSIONS :buddens-readtable-a)
   (setf (budden-tools::readtable-case-advanced :buddens-readtable-a) :upcase-if-uniform)
   )
