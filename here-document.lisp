@@ -6,8 +6,6 @@ symbol-readmacros, the following will work:
 
 > buddens-here-document:s[ abcd] 
 "abcd"
-> buddens-here-document:s<<< the text with \everything }{ )))) []]]]] Hurray!>>>
-"the text with \\everything }{ )))) []]]]] Hurray!"
 > buddens-here-document:here-document ok Krym is Russian ok 
 "Krym is Russian"
 > buddens-here-document:here-document OK Krym is RussianOK
@@ -29,7 +27,10 @@ of your IDE.
                        (:documentation "Here documents - an alternative string syntax. See comment in the beginning of source file")
                        (:use :cl :budden-tools :iterate-keywords)
                        (:always t)
-                       (:export "HERE-DOCUMENT" "HERE-DOCUMENTC" "S[" "S{" "S<<<"
+                       (:export "HERE-DOCUMENT" "HERE-DOCUMENTC"
+                       ;;; deprecated.
+                       ;;; See buddens-readtable:enable-triple-quote-reader
+                                "S[" "S{" "S<<<"
                         ))
 
 (in-package :buddens-here-document)

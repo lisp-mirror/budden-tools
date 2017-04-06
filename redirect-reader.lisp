@@ -24,65 +24,60 @@
   )
 
 
-(defun enable-buddens-readtable-extensions (readtable-designator-or-nil)
+(defun enable-buddens-readtable-extensions (readtable-designator)
   "Alters readtable to enable budden's readtable extensions. If readtable is nil, 
 alters a new copy of standard readtable. Returns readtable it has altered. If readtable
 is already an altered readtable, simply returns it"
-  (let (rt)
   (block nil
-    ; (let readtable (ensure-readtable readtable-designator))
-    (setf rt
-      (etypecase readtable-designator-or-nil
-        (null (copy-readtable nil))
-        (t (ensure-readtable readtable-designator-or-nil))))
-    (when (gethash rt *readtable-uses-sbcl-reader-budden-tools-lispworks*)
-      (warn "buddens readtable extensions are already enabled on ~S" rt)
-      (return rt))
+    (let ((rt (ensure-readtable readtable-designator)))
+      (when (gethash rt *readtable-uses-sbcl-reader-budden-tools-lispworks*)
+        (warn "buddens readtable extensions are already enabled on ~S" rt)
+        (return rt))
+      
+      (set-macro-character #\( #'paren-reader-with-closing-paren-notification nil rt)
 
-    (set-macro-character #\( #'paren-reader-with-closing-paren-notification nil rt)
-
-    ;; Хотел сделать это здесь, но не могу из-за циклической зависимости систем. Лень разбираться
-    ;; Вместо этого, включаю тройные скобки только для своих таблиц чтения, см. 
-    ;; buddens-readtable::redefine-buddens-readtable-a
-    ;; (buddens-readtable:enable-triple-quote-reader rt)
-
-    (setf (gethash rt *readtable-uses-sbcl-reader-budden-tools-lispworks*) t)
-
-    (set-dispatch-macro-character #\# #\: #'sbcl-reader-budden-tools-lispworks::sharp-colon rt)
+      ;; Хотел сделать это здесь, но не могу из-за циклической зависимости систем. Лень разбираться
+      ;; Вместо этого, включаю тройные скобки только для своих таблиц чтения, см. 
+      ;; buddens-readtable::redefine-buddens-readtable-a
+      ;; (buddens-readtable:enable-triple-quote-reader rt)
+      
+      (setf (gethash rt *readtable-uses-sbcl-reader-budden-tools-lispworks*) t)
+      
+      (set-dispatch-macro-character #\# #\: #'sbcl-reader-budden-tools-lispworks::sharp-colon rt)
 
     ;(setf good-readtable (copy-readtable rt))
 
-    (iter 
-      (:for i :from 0 to 255)
-      (:for b := (elt *char-table* i))
-      (:for c := (code-char i))
-      (cond 
-       ((consp b))
-       (t
-        (ecase b 
-          ((:does-not-terminate-token ; :multiple-escape 
-            ; :single-escape
-            ; In a past, we could start tokens with \ with no problem. 
-            ; with lispworks6, we can't do that anymore as it conforms to a standard in treating #\\ in string
-            ; When #\\ is a macro char, it is not a single-escape anymore, so string reading becomes broken
-            ; let's try to live without #\\ as a token starting character. 
-            )
-           ;?? (set-syntax-from-char c #\# rt good-readtable) ; will make it non-terminating macro character
-           (set-macro-character c #'sbcl-reader-budden-tools-lispworks:read-token t rt))
-          (:colon
-           (set-macro-character c #'sbcl-reader-budden-tools-lispworks:read-token t rt))
-          ((:dot :whitespace[2] :single-escape :multiple-escape nil))
-          )
+      (iter 
+       (:for i :from 0 to 255)
+       (:for b := (elt *char-table* i))
+       (:for c := (code-char i))
+       (cond 
+        ((consp b))
+        (t
+         (ecase b 
+           ((:does-not-terminate-token ; :multiple-escape 
+             ; :single-escape
+             ; In a past, we could start tokens with \ with no problem. 
+             ; with lispworks6, we can't do that anymore as it conforms to a standard in treating #\\ in string
+             ; When #\\ is a macro char, it is not a single-escape anymore, so string reading becomes broken
+             ; let's try to live without #\\ as a token starting character. 
+             )
+            ;?? (set-syntax-from-char c #\# rt good-readtable) ; will make it non-terminating macro character
+            (set-macro-character c #'sbcl-reader-budden-tools-lispworks:read-token t rt))
+           (:colon
+            (set-macro-character c #'sbcl-reader-budden-tools-lispworks:read-token t rt))
+           ((:dot :whitespace[2] :single-escape :multiple-escape nil))
+           )
+         )
         )
        )
-      )
-
-    (iter
-      (:for c in *def-symbol-reamacro-additional-name-starting-characters*)
-      (set-macro-character c #'sbcl-reader-budden-tools-lispworks:read-token t rt))
-
-    rt)
-  ))
+      
+      (iter
+       (:for c in *def-symbol-reamacro-additional-name-starting-characters*)
+       (set-macro-character c #'sbcl-reader-budden-tools-lispworks:read-token t rt))
+      
+      rt)
+    ))
 
 (defun reset-to-standard-readtable (readtable-designator)
   "Removes buddens readtable extensions from readtable and reset it to standard one"

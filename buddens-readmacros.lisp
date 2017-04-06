@@ -139,7 +139,8 @@
              (push c res))))))))
 
 (defun enable-triple-quote-reader (readtable)
-  (set-macro-character #\" 'triple-quote-reader readtable))
+  (assert readtable)
+  (set-macro-character #\" 'triple-quote-reader nil readtable))
   
 ;(equalp #"@@" "\"")
 ;(equalp #"a@" "@")
