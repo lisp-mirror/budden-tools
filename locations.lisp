@@ -421,7 +421,7 @@ srcpl - symbol-readmacro. Прочитать объект и запрограм�
     ))
 
 (defun extract-source-filename-from-stream (stream)
-  "Посмотреть в SLIME"
+  "Посмотреть в SLIME. По идее, должно всегда работать pathname stream, но данная ф-я чётко ограничивает список классов потоков, с которыми работает, и возвращает nil вместо ошибки для потоков, читающих не из файла"
 ;  (declare (optimize speed))
   #-(or lispworks sbcl)
   (note-not-implemented-for-this-lisp extract-source-filename-from-stream)
@@ -436,8 +436,7 @@ srcpl - symbol-readmacro. Прочитать объект и запрограм�
   #+sbcl
   (etypecase stream
     (sb-impl::fd-stream (sb-impl::fd-stream-file stream))
-    (file-stream (break "fix extract-source-filename-from-stream") ; (slot-value stream 'file)
-                 )
+    (file-stream (pathname stream)) ; (slot-value stream 'file)
     (string-stream nil))
   )
 

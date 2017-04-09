@@ -205,6 +205,7 @@
    budden-tools:extract-source-filename-from-stream
    budden-tools:input-stream-position-in-chars
    budden-tools:stream-get-line-number
+   budden-tools:string-stream-extract-string
 
 ;; make input stream available to sharpsign-dot
    budden-tools:*read-eval-stream*
