@@ -1,5 +1,5 @@
-;;; -*- Encoding: utf-8; -*-
-;;; proga macro 
+;;; -*- Encoding: utf-8; system :budden-tools; -*-
+;;; proga macro - УСТАРЕЛА
 
 
 (in-package :proga-implementation)

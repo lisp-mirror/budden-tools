@@ -1,4 +1,5 @@
-;;; -*- Encoding: utf-8; -*-
+;;; -*- Encoding: utf-8; system :budden-tools; -*-
+;;; proga устарела вместе со своими тестами, см. budden-tools:perga
 (in-package :proga-implementation)
 
 (defmacro def-p-t (name x y)

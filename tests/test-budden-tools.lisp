@@ -1,3 +1,4 @@
+;;; -*- Encoding: utf-8; system :budden-tools; -*-
 ;; Copyright (C) Денис Будяк 2016
 ;; Лицензия MIT
 (def-merge-packages::! :test-budden-tools

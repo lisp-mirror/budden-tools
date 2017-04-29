@@ -1,3 +1,4 @@
+;;; -*- Encoding: utf-8; system :budden-tools; -*-
 ;;;; (C) Денис Будяк 2016
 ;;;; Это переделка DEFPACKAGE из SBCL
 #| 

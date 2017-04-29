@@ -1,4 +1,4 @@
-; -*- system :budden-tools ; -*- 
+;;; -*- Encoding: utf-8; system :budden-tools; -*-
 
 (in-package :budden-tools)
 

@@ -1,4 +1,4 @@
-;;; -*- Encoding: utf-8; -*-
+;;; -*- Encoding: utf-8; system :budden-tools; -*-
 ;;; (С) Денис Будяк 2016. MIT лицензия.
 
 ;;; Средство определения пакетов. Отличия от defpackage

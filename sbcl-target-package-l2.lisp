@@ -1,3 +1,4 @@
+;;; -*- Encoding: utf-8; system :budden-tools; -*-
 ;;;; Зависит от :def-merge-packages 
 ;;;; Копия target-package.lisp . 
 

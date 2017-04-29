@@ -1,4 +1,4 @@
-;;; -*- system :budden-tools; -*-
+;;; -*- Encoding: utf-8; system :budden-tools; -*-
 
 ;;; Copyright (c) 2004-2010, Dr. Edmund Weitz. Все права зарезервированы
 ;;; Copyright (c) 2016, Денис Будяк. Все права зарезервированы

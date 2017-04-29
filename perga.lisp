@@ -1,4 +1,4 @@
-;;; -*- Encoding: utf-8; -*-
+;;; -*- Encoding: utf-8; system :budden-tools; -*-
 
 #| Зародыш документации по perga.
    Примеры см. в perga-test-1.lisp, perga-test-2.lisp. 
