@@ -27,7 +27,7 @@
    #+sbcl (:file "sbcl-policy" :description "Возвращает сведения о политике компилятора")
    (:file "package-proga-implementation")
    (:file "def-toplevel-progn")
-   (:file "let1")
+   (:file "let1" :description "Устарел. Используй perga")
    (:file "def-trivial-test"
     :description "yet another test suite")
    (:file "budden-tools"
