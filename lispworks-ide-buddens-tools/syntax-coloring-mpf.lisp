@@ -1,4 +1,4 @@
-;; -*- Encoding : utf-8 ; -*- ;; 
+;; -*- Encoding: utf-8 ; -*- ;; 
 
 ;; -*- Mode: Lisp; rcs-header: "$Header: /hope/lwhope1-cam/hope.0/compound/23/LISPexamples/RCS/editor:syntax-coloring:syntax-coloring.lisp,v 1.3.8.1 2009/08/21 21:12:58 davef Exp $" -*-
 

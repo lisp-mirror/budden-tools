@@ -6,7 +6,7 @@
 (defun convert-file-code-page-to-utf (filename)
   (cl-fad:COPY-FILE filename (budden-tools:str++ filename ".bak"))
   (let ((s (budden-tools:READ-FILE-INTO-STRING filename :external-format :windows-1251)))
-    (budden-tools:__f budden-tools:str++ ";; -*- encoding : utf-8; coding : utf-8-*- 
+    (budden-tools:__f budden-tools:str++ ";; -*- encoding: utf-8; coding: utf-8-*- 
 " s)
     (setf s (budden-tools::SEARCH-AND-REPLACE-SEQ 'string s (budden-tools::str++ (code-char 13)) "" :all t))
     (budden-tools:SAVE-STRING-TO-FILE s filename :external-format :utf-8)))

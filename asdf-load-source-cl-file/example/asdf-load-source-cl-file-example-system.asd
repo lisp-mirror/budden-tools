@@ -1,4 +1,4 @@
-;;;; -*- Mode: lisp; indent-tabs-mode: nil; coding : utf-8; -*-
+;;;; -*- Mode: lisp; indent-tabs-mode: nil; coding: utf-8; -*-
 
 (asdf:defsystem :asdf-load-source-cl-file-example-system
   :defsystem-depends-on (:asdf-load-source-cl-file)

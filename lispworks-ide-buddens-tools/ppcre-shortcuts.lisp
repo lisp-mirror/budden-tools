@@ -1,4 +1,4 @@
-;; -*- Encoding : utf-8 ; -*- ;; 
+;; -*- Encoding: utf-8 ; -*- ;; 
 
 ;; some ppcre parse-tree synonyms
 (asdf::of-system :editor-budden-tools)

@@ -1,4 +1,4 @@
-; -*- Encoding : utf-8 ; -*- 
+; -*- Encoding: utf-8 ; -*- 
 
 ;; Change the layout of the lispworks debugger so that 
 ;; condition pane would be larger
