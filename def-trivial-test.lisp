@@ -10,6 +10,19 @@
 (defvar *run-tests* t)
 (defvar *break-on-test-failure* t)
 
+
+(defun |Проверить-правильное-прохождение-теста| (|Печатаемое-представление-теста| |Ож| #| Ожидали |# |Пол| #| учили |# &key (|Сравниватель| 'equalp))
+  (unless (funcall |Сравниватель| |Ож| |Пол|)
+    (let ((message
+           (format
+            nil "Неудача теста: ~S~%Ож=~S~%Пол=~S"
+            |Печатаемое-представление-теста|
+            |Ож| |Пол|)))
+      (if *break-on-test-failure* 
+          (cerror "continue" "~A" message)
+          (warn "~A" message))
+      )))
+  
 #-lispworks
 (defmacro ! (name expr1 expr2 &rest keyargs &key (test ''equalp))
   "Defines a test. Names are not uninterned, beware!"
@@ -27,16 +40,11 @@
                  "function for def-trivial-test::!"
                  (let ((,x ,expr1)
                        (,y ,expr2))
-                   (unless (funcall ,test ,x ,y)
-                     (let ((,message
-                            (format
-                             nil "deftest failed: ~S~%x=~S~%y=~S"
-                             '(,current-fn-symbol ,expr1 ,expr2 ,@keyargs)
-                             ,x ,y)))
-                       (if *break-on-test-failure* 
-                           (cerror "continue" "~A" ,message)
-                           (warn "~A" ,message))
-                       ))))
+                   (|Проверить-правильное-прохождение-теста|
+                    '(,current-fn-symbol ,expr1 ,expr2 ,@keyargs)
+                    ,x
+                    ,y
+                    :|Сравниватель| ,test)))
                (,current-fn-symbol)
                )))
       the-form)))
@@ -52,11 +60,13 @@
                (dspec:record-definition `(! ,',name) (dspec:location))
                (defun ,current-fn-symbol ()
                  "function for def-trivial-test::!"
-                 (unless (funcall ,test ,expr1 ,expr2)
-                 (if *break-on-test-failure* 
-                     (cerror "continue" "deftest failed: ~S" '(,current-fn-symbol ,expr1 ,expr2 ,@keyargs))
-                   (warn "deftest failed: ~S" '(,current-fn-symbol ,expr1 ,expr2 ,@keyargs))
-                   )))
+                 (let ((,x ,expr1)
+                       (,y ,expr2))
+                   (|Проверить-правильное-прохождение-теста|
+                    '(,current-fn-symbol ,expr1 ,expr2 ,@keyargs)
+                    ,x
+                    ,y
+                    :|Сравниватель| ,test)))
                (,current-fn-symbol)
                )))
       the-form)))

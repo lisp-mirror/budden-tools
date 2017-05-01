@@ -15,7 +15,9 @@
      #:undecorate-function
      #:apply-undecorated
      #:portably-without-package-locks
-     #:get-undecorated)
+     #:get-undecorated
+     #:|С-декорированной-функцией|
+     )
     (:use :cl)))
 
 ;(asdf:of-system :decorate-function) ; we are too early
@@ -115,6 +117,17 @@ progn
 
 (defun get-undecorated (symbol)
   (gethash symbol *undecorated-functions* (symbol-function symbol)))
+
+(defmacro |С-декорированной-функцией| (|Функция| |Декоратор| &body |Тело|)
+  "Функция и декоратор - это символы, хотя декоратор может быть и лямбдой. Вычисляются.
+ПРАВЬМЯ - этому место в пакете decorate-function. Не стоит питать иллюзий на тему безопасности этйо конструкции - её действие, хоть и временное, но распространяется на все треды. Возвращает nil"
+  (let ((|Функция-однократно| (gensym "Функция-однократно")))
+    `(let ((,|Функция-однократно| ,|Функция|))
+       (unwind-protect
+           (progn
+             (decorate-function:decorate-function ,|Функция-однократно| ,|Декоратор|)
+             ,@|Тело|)
+         (decorate-function:undecorate-function ,|Функция-однократно|)))))
 
 
 #+example
