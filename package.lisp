@@ -13,7 +13,7 @@
   (:documentation "Some tools by budden. See packages definition to find a list of symbols")
   (:use :cl :named-readtables  ; :org.tfeb.hax.hierarchical-packages
    :def-merge-packages :decorate-function :iterk)
-  (:import-from :alexandria #:with-gensyms #:once-only #:string-designator #:eswitch #:cswitch #:switch alexandria:simple-reader-error)
+  (:import-from :alexandria #:with-gensyms #:once-only #:string-designator #:eswitch #:cswitch #:switch alexandria:simple-reader-error alexandria:named-lambda)
   (:import-from :split-sequence #:split-sequence)
   (:import-from :swank #:*readtable-alist*)
   (:import-from :swank-backend #:pathname-to-filename #:filename-to-pathname #:make-weak-key-hash-table #:make-weak-value-hash-table)
@@ -124,6 +124,7 @@
    budden-tools:ПЕЧАТАЕМЫЙ-ПРЕДСТАВИТЕЛЬ-СИМВОЛА
    budden-tools:defparameter-always ; defparameter at load-toplevel,compile-toplevel,execute
    budden-tools:eval-with-file ; write code to file, compile it and load
+   alexandria:named-lambda ; reexporting
 
    ;; types 
    budden-tools:not-null ; type (not null)
