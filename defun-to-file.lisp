@@ -215,10 +215,10 @@
         (string (format out "~%~A~%" preambula))
         (cons
          (print preambula out)))
-
-      (let normal-symbol-from-tfi-symbol (get-tfi-symbol name nil t))
-      (when normal-symbol-from-tfi-symbol
-        (format out ";; См. также ~S~%" normal-symbol-from-tfi-symbol))
+      ; Закомментаренный код - для defun-tfi, см. теги в репозитории Яр и budden-tools - этот код временно удалён, но в целом полезен
+      ;(let normal-symbol-from-tfi-symbol (get-tfi-symbol name nil t))
+      ;(when normal-symbol-from-tfi-symbol
+      ;  (format out ";; См. также ~S~%" normal-symbol-from-tfi-symbol))
       (let |*заменять-символы-на-их-Tfi-эквиваленты*| |заменять-символы-на-их-Tfi-эквиваленты|)
 
       (let processed-definition
