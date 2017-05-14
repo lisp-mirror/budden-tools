@@ -1,4 +1,4 @@
-;;; -*- Encoding: utf-8; -*-
+;;; -*- coding: utf-8; -*-
 
 (named-readtables:in-readtable nil)
 
