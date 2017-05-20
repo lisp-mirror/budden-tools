@@ -31,9 +31,9 @@
        (list-to-alist 
         (split-sequence:split-sequence-if 
          'cl-ppcre::whitespacep
-         "а a б b в v г g д d е e ё yo ж zh з z и i й jj к k л l м m н n о o п p р r с s т t у u 
+         "а a б b в v г g д d е e ё yo ж zh з z и i й j к k л l м m н n о o п p р r с s т t у u 
 ф f х kh ц c ч ch ш sh щ shh ъ w ы yy ь q э eh ю yu я ya 
-А A Б B В V Г G Д D Е E Ё JO Ж ZH З Z И I Й JJ К K Л L М M Н N О O П P Р R С S Т T У U 
+А A Б B В V Г G Д D Е E Ё YO Ж ZH З Z И I Й J К K Л L М M Н N О O П P Р R С S Т T У U 
 Ф F Х KH Ц C Ч CH Ш SH Щ SHH Ъ W Ы YY Ь Q Э EH Ю YU Я YA" :remove-empty-subseqs t)))
       (setf (gethash (elt from 0) *reversible-cyrillic-translit-table*) to)
       (assert (= 1 (length from)))
@@ -142,7 +142,7 @@
         ))))
 
 
-#|
+;;#|
 ;; тест длится одну секунду, поэтому отключаем его
 (def-trivial-test::! translit-rev-test
                      t
@@ -158,7 +158,7 @@
                                  (warn "translit-rev-test не проходит для ~S" sub)
                                  (return-from b nil)))))
                          t)))
-|#
+;;|#
 
 
 (let* ((numchars (/ (length *cyrillic-characters*) 2))
