@@ -142,7 +142,7 @@
         ))))
 
 
-;;#|
+#|
 ;; тест длится одну секунду, поэтому отключаем его
 (def-trivial-test::! translit-rev-test
                      t
@@ -158,7 +158,7 @@
                                  (warn "translit-rev-test не проходит для ~S" sub)
                                  (return-from b nil)))))
                          t)))
-;;|#
+|#
 
 
 (let* ((numchars (/ (length *cyrillic-characters*) 2))
