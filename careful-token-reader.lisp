@@ -43,6 +43,7 @@
 
 #+lispworks 
 (defun def-symbol-readmacro-fun (symbol reader location)
+  (ПРОВЕРИТЬ-ЧТО-ИМЯ-СИМВОЛА-ПОДХОДИТ-ДЛЯ-DEF-SYMBOL-READMACRO symbol)
   (setf (symbol-readmacro symbol) reader)
   (lispworks:record-definition symbol location)
   )
@@ -59,6 +60,7 @@
 #+sbcl
 (defmacro def-symbol-readmacro (symbol reader &key documentation)
   (declare (ignore documentation))
+  (ПРОВЕРИТЬ-ЧТО-ИМЯ-СИМВОЛА-ПОДХОДИТ-ДЛЯ-DEF-SYMBOL-READMACRO symbol)
   (with-gensyms (source-location)
     `(prog1
          (setf (symbol-readmacro ',symbol) ,reader)      
