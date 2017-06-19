@@ -18,11 +18,8 @@
    (:file "def-merge-packages"
     :description "defpackage with some new clauses which are useful in conjunction with this library. See def-merge-packages::!"
     )
-   (:file "sbcl-target-package-l2")
-   (:file "package-defpackage-l2")
-   (:file "sbcl-defpackage-l2")
    (:file "defpackage-l2"
-    :description "Упрощённая версия def-merge-package для l2/s2. Тест defpackage-l2-test запускается намного ниже из c:/clcon/lp/clcon/load-clcon-server-and-client-win32.lisp")
+    :description "Упрощённая версия def-merge-package для l2/s2 - осталось только описание, см. внутри файла")
    (:file "package") ; might need
    #+sbcl (:file "sbcl-policy" :description "Возвращает сведения о политике компилятора")
    (:file "package-proga-implementation")
@@ -33,7 +30,7 @@
    (:file "budden-tools"
     :description "General purpose utilities")
    (:file "tests/test-budden-tools")
-   (:file "with-conc-name")
+   (:file "with-conc-name" :description "Позволяет сократить запись обращений к полям структуры за счёт кодировки обращений в виде префикса в имени символа. Считается устаревшим, но надёжнее, чем ^")
    #+lispworks6.1 (:file "lw-macro-friendly-stepper" :description "put breakpoints in macros without macroexpansion (for stepper)")
    #+lispworks6.1 (:file "lw-macro-friendly-dbg-vars-and-macros" :description "find frame source correction for debugger")
    #+lispworks6.1 (:file "lw-macro-friendly-dbg" :description "find frame source correction for debugger")
