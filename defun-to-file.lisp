@@ -67,14 +67,12 @@
    (код-внутри-образа :initarg код-внутри-образа :accessor печатаемый-представитель-символа-код-внутри-образа))
   )
 
-(defmethod print-object ((o ПЕЧАТАЕМЫЙ-ПРЕДСТАВИТЕЛЬ-СИМВОЛА) out-stream)
-  (cond
-   (*идентифицировать-бездомные-символы-при-печати*
-     (format out-stream "#.~S" `(ggsym ,(slot-value o 'ид-образа)
-                                       ,(slot-value o 'код-внутри-образа)
-                                       ,(slot-value o 'имя))))
-   (t
-    (call-next-method))))
+(defun ВЫВЕСТИ-ПЕЧАТАЕМЫЙ-ПРЕДСТАВИТЕЛЬ-СИМВОЛА-ДЛЯ-ЧТЕНИЯ-СИМВОЛА (o package out-stream)
+  "Напечатаем представитель символа так, чтобы вместо него считался сам символ"
+  (let ((*package* (or package *package*)))
+    (format out-stream "#.~S" `(ggsym ,(slot-value o 'ид-образа)
+                                      ,(slot-value o 'код-внутри-образа)
+                                      ,(slot-value o 'имя)))))
 
 (defmacro ggsym (ид-образа код-внутри-образа имя)
   `',(ggsym-fun ид-образа код-внутри-образа имя))
@@ -104,48 +102,55 @@
      представитель
     )))
 
-(defun print-symbol-with-readmacro-readably (object stream)
-  "Символ должен иметь домашний пакет, см. вызовы. Сделано по аналогии с print.lisp/output-symbol"
+(defun print-symbol-with-readmacro-readably (object package stream)
+  "Печатаем символ, окружая его | |, чтобы он не работал как symbol-readmacro. Чтобы это было возможно, набор букв в символе ограничен, см. BUDDEN-TOOLS::ПРОВЕРИТЬ-ЧТО-ИМЯ-СИМВОЛА-ПОДХОДИТ-ДЛЯ-DEF-SYMBOL-READMACRO"
   (let ((name (symbol-name object))
         (package (symbol-package object)))
-    (unless (budden-tools::symbol-is-in-package object *package* nil)
+    (unless (budden-tools::symbol-is-in-package object package nil)
       (let ((prefix (package-name package)))
-        (sb-impl::output-symbol-name prefix stream))
+        (format stream "|~A|" prefix))
       (if (eq :external (nth-value 1 (find-symbol name package)))
           (write-char #\: stream)
           (write-string "::" stream)))
-    (sb-impl::output-quoted-symbol-name name stream))
+    (format stream "|~A|" name))
   nil)
 
 (declaim (ftype (function (t t t) t) get-tfi-symbol))
 
-(defun decorated-output-symbol (fn object stream)
+(defun decorated-output-symbol (fn object package stream)
   (cond
    ((and *escape-symbol-readmacros*
          (symbol-package object)
          (symbol-readmacro object))
-    (print-symbol-with-readmacro-readably object stream))
+    (print-symbol-with-readmacro-readably object package stream))
    ((and |*заменять-символы-на-их-Tfi-эквиваленты*|
          ; эта ф-я будет определена в defun-or-defun-tfi
          (get-tfi-symbol object nil nil))
     (let ((|*заменять-символы-на-их-Tfi-эквиваленты*| nil))
-      (funcall fn (get-tfi-symbol object nil nil) stream)))
+      (funcall fn (get-tfi-symbol object nil nil) package stream)))
    ((symbol-package object)
-    (funcall fn object stream))
+    (funcall fn object package stream))
    (*идентифицировать-бездомные-символы-при-печати*
      (let ((*print-circle* nil)
-           (*print-readably* nil))
-       (sb-impl::output-object 
-        (получить-печатаемый-представитель-символа object)
-        stream)))
+           (*print-readably* nil)
+           (*print-escape* t))
+       (ВЫВЕСТИ-ПЕЧАТАЕМЫЙ-ПРЕДСТАВИТЕЛЬ-СИМВОЛА-ДЛЯ-ЧТЕНИЯ-СИМВОЛА (ПОЛУЧИТЬ-ПЕЧАТАЕМЫЙ-ПРЕДСТАВИТЕЛЬ-СИМВОЛА object) package stream)))
    (t 
-    (funcall fn object stream))))
+    (funcall fn object package stream))))
 
+#+SBCL
 (decorate-function:portably-without-package-locks
  (decorate-function:decorate-function
-  'sb-impl::output-symbol
+  'sb-kernel:output-symbol 
   #'decorated-output-symbol))
 
+;; чтобы отключить, если сломалось при обновлении SBCL
+;; (decorate-function:portably-without-package-locks (decorate-function:undecorate-function 'sb-impl::output-symbol))
+;; и в этом случае для отладки вызывай decorated-output-symbol прямо (ща тесты напишу)
+
+
+#-SBCL
+(error "Нужно как-то декорировать печать символа")
 
 (defparameter |*декларации-оптимизации-пошаговой-отладки*| 
   '(declaim
@@ -286,7 +291,8 @@
 
 (let ((sym1 (gensym)))
   (dolist (sym (list sym1 'cons nil 123 sym1))
-    (тест-печатаемый-представитель-символа sym)))
+    (тест-печатаемый-представитель-символа sym)
+    ))
 
 ; здесь степпер работает
 ;(defun-to-file:defun-to-file aabby (y) (let ((x y)) (break) (loop while (< x 5) do (incf x)) x))

@@ -416,7 +416,7 @@ extended <package-name>::<form-in-package> syntax."
         (#.+char-attr-package-delimiter+ (go COLON))
         (t (go SYMBOL)))
      SYMBOL ; not a dot, dots, or number
-      (let ((stream (in-synonym-of stream)))
+      (let ((stream (in-stream-from-designator stream)))
         (macrolet
            ((scan (read-a-char &optional finish)
              `(prog ()
@@ -546,7 +546,10 @@ extended <package-name>::<form-in-package> syntax."
                   ((= colons 2)
                    (return (budden-tools::intern-check-forbidden (copy-token-buf-string buf) pkg stream t)))
                   ((eq pkg *keyword-package*)
-                   (return (%intern (token-buf-string buf) (token-buf-fill-ptr buf) pkg t)))
+                   (return (%intern (token-buf-string buf) (token-buf-fill-ptr buf) pkg
+                                    (if (token-buf-only-base-chars buf)
+                                        (%readtable-symbol-preference rt)
+                                        'character))))
                   ((zerop colons)
                    (return (budden-tools::intern-check-forbidden (copy-token-buf-string buf) pkg stream nil)))
                   (t 
@@ -585,19 +588,6 @@ extended <package-name>::<form-in-package> syntax."
 
  (budden-tools::decorate-function 'read-token #'read-token-d)
 |#
-
-#|(defun sharp-colon (stream sub-char numarg)
-  "Сильно устарело и не работает,т.к. token - это буфер, а не строка"
-  (declare (ignore sub-char numarg))
-  (multiple-value-bind (token escapep colon) (read-extended-token stream)
-    (declare (simple-string token) (ignore escapep))
-    (cond
-     (*read-suppress* nil)
-     (colon
-      (simple-reader-error
-       stream "The symbol following #: contains a package marker: ~S" token))
-     (t
-      (make-symbol token)))))|#
 
 (def-merge-packages::! :sbcl-reader-budden-tools-sbcl
  (:nicknames :sbcl-reader-budden-tools-lispworks :sbcl-reader-budden-tools)
