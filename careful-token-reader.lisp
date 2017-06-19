@@ -23,6 +23,19 @@
 
 ; (defparameter *char-table* (make-array 256 :initial-element nil))
 
+(defun ПРОВЕРИТЬ-ЧТО-ИМЯ-СИМВОЛА-ПОДХОДИТ-ДЛЯ-DEF-SYMBOL-READMACRO (SYMBOL)
+  "Это лишь защита от дурака. Она нужна для возможности печати символа с отключением его действия как SYMBOL-READMACRO, см defun-to-file::print-symbol-with-readmacro-readably"
+  (let ((ДОПУСТИМЫЕ "0123456789абвгдеёжзийклмнопрстуфхцчшщъыьэюяАБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯabcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ~',<>[]{}@$!/^*`-"))
+    (unless (symbol-package SYMBOL)
+      (error "Имя для DEF-SYMBOL-READMACRO должно иметь пакет"))
+    (unless (every (lambda (x) (find x ДОПУСТИМЫЕ :test 'char=))
+                   (package-name (symbol-package SYMBOL)))
+      (error "Допустимые буквы для имени пакета в symbol-readmacro: ~S" ДОПУСТИМЫЕ))
+    (unless (every (lambda (x) (find x ДОПУСТИМЫЕ :test 'char=))
+                   (symbol-name SYMBOL))
+      () (error "Допустимые буквы для имени символа в symbol-readmacro: ~S" ДОПУСТИМЫЕ))))
+                                                                                              
+
 #+lispworks 
 (dspec:define-form-parser def-symbol-readmacro (name &rest args)
   (declare (ignore def-symbol-readmacro args))
