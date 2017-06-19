@@ -2,17 +2,6 @@
 (in-package :budden-tools)
 (in-readtable nil) 
 
-; почему-то не работает, видимо из-за начинки нашего readtable
-(def-symbol-readmacro |/WITH-PACKAGE/|
-                      (lambda (stream symbol)
-                        (declare (ignore symbol))
-                        (let* ((*package* (find-package (read stream)))
-                               (res (read stream)))
-                          (print res)
-                          (it-is-a-car-symbol-readmacro res))))
-
-
-
 (defpackage :package-for-read-symbol-name (:use))
 (defparameter +package-for-read-symbol-name+ 
   (find-package :package-for-read-symbol-name))

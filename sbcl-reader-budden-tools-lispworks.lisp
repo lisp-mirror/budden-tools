@@ -227,15 +227,13 @@
 (defun flush-whitespace (stream)
   ;; This flushes whitespace chars, returning the last char it read (a
   ;; non-white one). It always gets an error on end-of-file.
-  (let (;(stream (in-synonym-of stream))
-        )
-    (do ((char (read-char stream nil :eof) (read-char stream nil :eof)))
-        ((or (eq char :eof)
-             (/= (get-cat-entry char *readtable*)
-                 +char-attr-whitespace+))
-         (if (eq char :eof)
-             (error 'end-of-file :stream stream)
-           char)))))
+  (do ((char (read-char stream nil :eof) (read-char stream nil :eof)))
+      ((or (eq char :eof)
+           (/= (get-cat-entry char *readtable*)
+               +char-attr-whitespace+))
+       (if (eq char :eof)
+           (error 'end-of-file :stream stream)
+           char))))
 
 
 ;;;; temporary initialization hack
@@ -428,7 +426,7 @@ variables to allow for nested and thread safe reading."
              'sb!kernel::character-decoding-error-in-macro-char-comment
              :position (file-position stream) :stream stream)
             (invoke-restart 'attempt-resync)))|#)
-    (let (#|(stream (in-synonym-of stream))|#)
+    (let ()
       (do ((char (read-char stream nil :eof) (read-char stream nil :eof)))
           ((or (eq char :eof) (char= char #\newline))))))
   ;; Don't return anything.
@@ -489,7 +487,7 @@ variables to allow for nested and thread safe reading."
   ;; This accumulates chars until it sees same char that invoked it.
   ;; For a very long string, this could end up bloating the read buffer.
   (reset-read-buffer)
-  (let (#|(stream (in-synonym-of stream))|#)
+  (let ()
     (do ((char (read-char stream nil :eof) (read-char stream nil :eof)))
         ((or (eq char :eof) (char= char closech))
          (if (eq char :eof)

@@ -565,9 +565,9 @@ end.
 
 #| Go Back работает лучше. 
 
-(defvar *find-definition-locations-stack* nil)
+ (defvar *find-definition-locations-stack* nil)
 
-(defcommand "Push location and Find Source" (p &rest more-args) "Remembers current location and calls \"Find Source\". Use \"Pop location from find source\" to go back. Do not call the command, call decorated \"Find source\" command instead"
+ (defcommand "Push location and Find Source" (p &rest more-args) "Remembers current location and calls \"Find Source\". Use \"Pop location from find source\" to go back. Do not call the command, call decorated \"Find source\" command instead"
   (let* ((file-name (buffer-pathname (current-buffer)))
          (pnt (current-point))
          (offset (real-point-offset pnt)))
@@ -575,14 +575,14 @@ end.
       (push `(,file-name ,offset) *find-definition-locations-stack*))
     (DECORATE-FUNCTION:apply-undecorated 'find-source-command (cons p more-args))))
 
-(DECORATE-FUNCTION:decorate-function
+ (DECORATE-FUNCTION:decorate-function
  'find-source-command
  (lambda (fn &rest args)
    (declare (ignore fn))
    (apply 'push-location-and-find-source-command args)))
 
 
-(defcommand "Push location and Continue Tags Search" (p &rest more-args) "Remembers current location and calls \"Find Source\". Use \"Pop location from find source\" to go back. Do not call the command, call decorated \"Find source\" command instead"
+ (defcommand "Push location and Continue Tags Search" (p &rest more-args) "Remembers current location and calls \"Find Source\". Use \"Pop location from find source\" to go back. Do not call the command, call decorated \"Find source\" command instead"
      (declare (ignorable p))
   (let* ((file-name (buffer-pathname (current-buffer)))
          (pnt (current-point))
@@ -591,7 +591,7 @@ end.
       (push `(,file-name ,offset) *find-definition-locations-stack*))
     (DECORATE-FUNCTION:apply-undecorated 'continue-tags-search-command (cons p more-args))))
 
-(DECORATE-FUNCTION:decorate-function
+ (DECORATE-FUNCTION:decorate-function
  'continue-tags-search-command
  (lambda (fn &rest args)
    (declare (ignore fn))
@@ -599,7 +599,7 @@ end.
 
 
 
-(defcommand "Pop location from find source" (p)
+ (defcommand "Pop location from find source" (p)
      (declare (ignore p))
      (let* ((cur-file-and-offset (pop *find-definition-locations-stack*))
             (file-name (first cur-file-and-offset))
