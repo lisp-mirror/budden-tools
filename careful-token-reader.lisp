@@ -365,7 +365,8 @@ FIXME shadow find-symbol? FIXME rename"
              (not success)
              (and m
                   (not (package-metadata-allow-qualified-intern m))))
-        (simple-reader-error stream "qualified-intern is not allowed for ~A while trying to intern ~S" package name))
+        (cerror "Создать символ" #|stream|# "qualified-intern is not allowed for ~A while trying to intern ~S в потоке ~S" package name stream)
+        (intern name package))
        ((and (not success)
              m
              (package-metadata-interning-is-forbidden m))
