@@ -104,9 +104,11 @@
 
 (defun print-symbol-with-readmacro-readably (object package stream)
   "Печатаем символ, окружая его | |, чтобы он не работал как symbol-readmacro. Чтобы это было возможно, набор букв в символе ограничен, см. BUDDEN-TOOLS::ПРОВЕРИТЬ-ЧТО-ИМЯ-СИМВОЛА-ПОДХОДИТ-ДЛЯ-DEF-SYMBOL-READMACRO"
-  (let ((name (symbol-name object))
-        (package (symbol-package object)))
-    (unless (budden-tools::symbol-is-in-package object package nil)
+  (let ((name (symbol-name object)))
+    (when (and package
+               (not (budden-tools::symbol-is-in-package object *package* nil)))
+      ;; так по построению, см. (defmethod print-object ((object symbol) stream)
+      (assert (eq package (symbol-package object)))
       (let ((prefix (package-name package)))
         (format stream "|~A|" prefix))
       (if (eq :external (nth-value 1 (find-symbol name package)))
@@ -138,16 +140,14 @@
    (t 
     (funcall fn object package stream))))
 
+
+;; ПРАВЬМЯ - в версии 1.3.18 для печати символа SBCL использует defmethod print-object
+;; Почему бы не определить around метод, вместо того, чтобы декорировать?
 #+SBCL
 (decorate-function:portably-without-package-locks
  (decorate-function:decorate-function
   'sb-kernel:output-symbol 
   #'decorated-output-symbol))
-
-;; чтобы отключить, если сломалось при обновлении SBCL
-;; (decorate-function:portably-without-package-locks (decorate-function:undecorate-function 'sb-impl::output-symbol))
-;; и в этом случае для отладки вызывай decorated-output-symbol прямо (ща тесты напишу)
-
 
 #-SBCL
 (error "Нужно как-то декорировать печать символа")
