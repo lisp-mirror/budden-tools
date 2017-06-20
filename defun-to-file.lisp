@@ -166,6 +166,14 @@
   (defun-to-file-fn 'defun-to-file-me-no-pe name more :walk-form t :print-circle nil
     :preambula |*декларации-оптимизации-пошаговой-отладки*|))
 
+(defun walk-form-expanding-macros (form)
+  #+sbcl
+  (let ((sb-walker::*walk-form-expand-macros-p* t))
+    (sb-walker:walk-form form))
+  #+ccl
+  form ; ничего нет
+  )
+
 (defun careful-transform-defun-form (name more)
   (perga-implementation:perga
    (let args (car more))
@@ -173,9 +181,7 @@
    (:@ multiple-value-bind (forms decls doc) (sb-impl::parse-body body t))
    (let lambda-guts `(,@decls (block ,(sb-impl::fun-name-block-name name) ,@forms)))
    (let lambda `(lambda () ,@lambda-guts))
-   (let walked-lambda 
-     (let ((sb-walker::*walk-form-expand-macros-p* t))
-       (sb-walker:walk-form lambda)))
+   (let walked-lambda (walk-form-expanding-macros lambda))
    `(defun ,name ,args ,@(when doc (list doc)) (funcall ,walked-lambda))))
 
 (defmacro defun-to-file (name &rest args-docstring-decls-body)
@@ -193,7 +199,7 @@
      (&key walk-form (package *package*) (print-circle t) preambula)
      (арг1 ...)
      докстрока декларации . тело). 
-     walk-form - Обработать с помощью sb-walker:walk-form.
+     walk-form - Обработать с помощью имеющегося в распоряжении walk-form.
      preambula - код, вставляемый в файл перед телом функции.
      См. также defun-to-file"
   (defun-to-file-fn-with-options 'defun-to-file-2 name options (cons args docstring-decls-body))) 
@@ -245,8 +251,7 @@
       (let processed-definition
         (ecase walk-form
           (t
-           (let ((sb-walker::*walk-form-expand-macros-p* t))
-             (sb-walker:walk-form `(defun ,name ,@args-docstring-decls-body))))
+           (walk-form-expanding-macros `(defun ,name ,@args-docstring-decls-body)))
           (:careful
            (careful-transform-defun-form name args-docstring-decls-body))
           ((nil)
