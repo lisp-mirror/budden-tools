@@ -155,45 +155,6 @@ is already an altered readtable, simply returns it"
      (t
       (call-next-method)))))
 
-
-
-
-
-#|    (let1 cases (all-ascii-chars-in-same-case-p (string o))
-      (case cases
-        (:uppercase 
-         (let ((*print-case* :upcase)
-               (*readtable* *cached-default-readtable*))
-           (call-next-method)))
-        ((:lowercase :ignore-case)
-         (let ((*print-case* :downcase))
-           (call-next-method)))
-        (t 
-         (call-next-method)
-         ))))) |#
-
-#|
-    (let1 *readtable* *cached-default-readtable* 
-    ; #+nil (if 
-    ;                      (eq (symbol-package o) *keyword-package*) 
-    ;                      *cached-default-readtable*
-    ;                    (gethash *readtable* *my-readtable-to-good-readtable* *readtable*))
-    ;(with-good-readtable-2 (:ensure-this-is-a-bad-one nil)
-      (call-next-method)))) |#
-
-#| #+lispworks6
- (decorate-function::PORTABLY-WITHOUT-PACKAGE-LOCKS
-  (defmethod print-object :around ((o structure-object) s)
-    "Lispworks6 prints '|ASDF| as \\A\\S\\D\\F in our readtables. Try to bind
-     system:*print-symbols-using-bars*"
-    (call-next-method)
-    ;(let ((SYSTEM:*print-symbols-using-bars* t))
-    ;  (call-next-method))
-    ;old (let1 *readtable* *cached-default-readtable* 
-    ;old  (call-next-method)
-    ;old  )
-    )) |#
-
 #+lispworks6
 (lispworks:defadvice (SYSTEM::write-symbol-as-keyword fix-keyword-printing-for-our-readtables :around)
     (symbol output-stream)

@@ -128,78 +128,6 @@ NIL
   (declare (ignorable p))
   (do-fix-case-of-symbol-at-point (editor:current-point)))
 
-
-#|
-(defun my-complete-symbol (partial-name &key predicate symbols default-package return-common-string) 
-  "Нужно это написать, т.к. lw не понимает регистра и ищет только символы в верхнем регистре" 
-  (proga 
-    (when (or predicate symbols) 
-      (break "пришли неведомые аргументы predicate,symbols")) 
-    (unless default-package 
-      (break "нет default-package")) 
-    (unless return-common-string 
-      ;(break "not return-common-string") 
-      ) 
-    (multiple-value-bind (pckg sym-str external-only prefix-length) 
-        (editor::pathetic-parse-symbol partial-name default-package)) 
-    (let partial-name-length (length partial-name)) 
-    (when prefix-length (setf partial-name sym-str)) 
-    (let all-chars-in-same-case-p (all-ascii-chars-in-same-case-p partial-name)) 
-    ; тогда ищём всё, что подходит. Но только в default-package 
-    ;(break) 
-    (let list 
-      (iter 
-        (:for sym :in-package pckg) 
-        (when (may-symbol-complete-symbol sym pckg partial-name external-only all-chars-in-same-case-p) 
-          (:collect sym)))) 
-    (cond 
-     (list  
-      (values list partial-name-length (string (first list)) (symbol-package (first list)))) 
-     (t  
-      (values nil 0 nil nil))) 
-    )) 
-     
-   
- 
-(defun decorated-complete-symbol  
-       (fn partial-name &key abbreviated predicate symbols default-package return-common-string) 
-  (declare (ignore abbreviated)) 
-  (declare (ignorable predicate symbols return-common-string)) 
-  (setf fn 'my-complete-symbol) 
-  (proga function 
-    (let *use-decorated-package-system-fns* t) 
-;    (let id (new-show-package-system-vars-id)) 
-    (when (hp-relative-package-name-p partial-name) 
-      (let1 pos (position #\: partial-name :test 'char=) 
-        (when pos 
-          (let* 
-              ((pos1 (if (and (< (1+ pos) (length partial-name)) 
-                              (eql (elt partial-name (1+ pos)) #\:)) 
-                         (+ 2 pos) 
-                       (+ 1 pos))) 
-               (new-default-package (budden-tools::hp-find-package (subseq partial-name 0 pos) default-package))) 
-            (return-from function 
-              (multiple-value-bind (symbols length some-symbol some-package) 
-                  (apply 'decorated-complete-symbol                
-                         fn  
-                         (str+ (package-name new-default-package) 
-                               ":" 
-                               (subseq partial-name pos1)) 
-                         `(,@(dispatch-keyarg-simple predicate) 
-                           ,@(dispatch-keyarg-simple symbols) 
-                           :default-package ,new-default-package 
-                           ,@(dispatch-keyarg-simple return-common-string))) 
-                (ignored length) 
-                (values symbols pos1 some-symbol some-package))))))) 
-    (mlvl-bind (rlist rlength rstring rpackage)  
-        (let1 *editors-real-package* default-package 
-          (apply fn partial-name (dispatch-keyargs-simple predicate symbols default-package return-common-string)))) 
-    (return-from function  
-      (values  
-       (sort rlist 'editor::symbol-string-<) 
-       rlength rstring rpackage))))
-|#
-
 (editor::defcommand "Complete Symbol With Budden Tools"
      (p) "Complete Symbol With Local Package Nicknames and advanced readtable-case"
          "Complete Symbol With Local Package Nicknames and advanced readtable-case"
@@ -217,118 +145,29 @@ NIL
       (editor:delete-previous-character-command str-len)
       (editor:insert-string (editor:current-point) res))))
 
-
-
-
-#|(defun decorated-intern-symbol-from-string (fn string default-package)
-    2 EDITOR::INTERN-SYMBOL-FROM-STRING > ...
-      >> STRING                  : "казя-базя"
-      >> EDITOR::DEFAULT-PACKAGE : #<PACKAGE TST>
-    2 EDITOR::INTERN-SYMBOL-FROM-STRING < ...
-      << VALUE-0 : казя-базя
-      << VALUE-1 : NIL
-
-|#
-#|(defun decorated-parse-symbol (fn string &key package)
-  (let1 *use-decorated-package-system-fns* t
-    (multiple-value-bind
-        (out-package name found-p prefix-length)
-        (apply fn string (dispatch-keyarg-simple package))
-      (cond
-       (prefix-length ; символ с квалификатором не трогаем
-        (values out-package name found-p prefix-length))
-       (t 
-        (multiple-value-bind
-            (symbol packages status)
-            (see-packages-find-unqualified-symbol name package)
-          ; (print status *trace-output*)
-          (case status
-            (:ambigious
-             (values (first packages) (symbol-name symbol) t nil))
-            (:external
-             (values packages (symbol-name symbol) t nil))
-            (t
-             (values out-package name found-p prefix-length)))))))))|#
-
-;(undecorate-function 'editor:parse-symbol #'decorated-parse-symbol)
-
 (defun print-symbol-string-with-advanced-readtable-case (string &key (readtable *readtable*) (package *package*))
   "see also print-symbol-string-with-advanced-readtable-case-2"
   (let1 str string
     (when
         (and 
          str
-       ;(member complete '(:complete :complete-but-not-unique :not-unique))
          (eq (readtable-case-advanced readtable) :upcase-if-uniform)
          (multiple-value-bind (pckg name-only-str xlam1 xlam2)
              (editor::pathetic-parse-symbol str package)
            (declare (ignore pckg xlam1 xlam2))
-           ;(show-expr `("returned from p-p-s to d-c-s-1" ,name-only-str))
            (all-ascii-chars-in-same-case-p (sequence-last str (length name-only-str)))
            )
-         ;(eq (all-ascii-chars-in-same-case-p string) :lowercase) ; если набирали в верхнем или смешанном регистре, и останемся в верхнем
          )
-      ; (print "ura!")
       (setf str (string-downcase-ascii str))
       )
     str))
-
-#|(defun print-symbol-with-advanced-readtable-case (symbol &key (readtable *readtable*) (package *package*))
-  (proga
-    (let name (symbol-name symbol)
-      (cond
-       ((and 
-         (eq (readtable-case-advanced readtable) :upcase-if-uniform)
-         (all-ascii-chars-in-same-case-p name)
-         )
-        (setf name (string-downcase-ascii str))
-        )))|#
-    
 
 (defun decorated-create-print-function-for-symbols (fn &key (package *package*) case)
   (declare (ignorable case fn))
   (lambda (symbol) (print-symbol-string-with-advanced-readtable-case (string symbol) :package package)))
 
 
-#|(defun decorated-complete-symbol-1 (fn string &key 
-                                       (package nil package-supplied-p)
-                                       (print-function nil print-function-supplied-p)
-                                       (predicate nil predicate-supplied-p)
-                                       (print-case nil print-case-supplied-p)
-                                       (abbreviated nil abbreviated-supplied-p))
-  (multiple-value-bind (str len complete)
-      (apply fn string (dispatch-keyargs-full package print-function predicate print-case abbreviated))
-    ;(break)
-    (when
-        (and 
-         str
-         (member complete '(:complete :complete-but-not-unique :not-unique))
-         (eq (readtable-case-advanced *readtable*) :upcase-if-uniform)
-         (multiple-value-bind (pckg name-only-str xlam1 xlam2)
-             (editor::pathetic-parse-symbol str package)
-           (declare (ignore pckg xlam1 xlam2))
-           ; (print `("returned from p-p-s to d-c-s-1" ,name-only-str))
-           (all-ascii-chars-in-same-case-p (sequence-last str (length name-only-str)))
-           )
-         (eq (all-ascii-chars-in-same-case-p string) :lowercase) ; если набирали в верхнем или смешанном регистре, и останемся в верхнем
-         )
-      ; (print "ura!")
-      (setf str (string-downcase str))
-      )
-    ; (print `(,str ,len ,complete))
-    (values str len complete)
-    )  ; FIXME - отключить кириллицу в нашем мухляже с RT - кириллицы нет в CL и пусть для неё будет всё preserve
-  )
-    
-
-(decorate-function 'editor::complete-symbol-1 #'decorated-complete-symbol-1)|#
-
 (defvar *in-complete-symbol-command* nil)
-
-;(decorate-function 'editor:complete-symbol-command #'decorated-complete-symbol-command)
-;(decorate-function 'editor::indent-or-complete-symbol-command #'decorated-complete-symbol-command)
-;(decorate-function 'editor::indent-selection-or-complete-symbol-command #'decorated-complete-symbol-command)
-
 
 ; string-capitalize
 (defun decorated-string-capitalize (fn string &rest keyargs)
@@ -339,14 +178,6 @@ NIL
     (apply fn string keyargs)))
 
 (decorate-function 'string-capitalize #'decorated-string-capitalize)
-
-
-; (undecorate-function 'editor::complete-symbol-1) 
-
-; editor:prompt-for-symbol editor:find-source-command
-; editor::complete-symbol-1
-; editor::get-symbol-from-point
-; editor::complete-symbol
 
 
 (defun decorated-intern-symbol-from-string (fn string &optional default-package)
