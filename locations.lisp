@@ -706,7 +706,12 @@ srcpl - symbol-readmacro. Прочитать объект и запрограм�
        (buffer-offset-to-row-col-offset
         (EDITOR:point-buffer point)
         point)))
-    (synonym-stream (input-stream-position-in-chars (symbol-value (synonym-stream-symbol stream))))
+    (synonym-stream
+     (or
+      ;; что-то случилось в SBCL 1.3.18 и в консоли попытка получить положение перестала работать
+      (ignore-errors 
+       (input-stream-position-in-chars (symbol-value (synonym-stream-symbol stream))))
+      0))
     ))
 
 (defun fix-offset-2 (pathname offset)
