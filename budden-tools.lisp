@@ -655,7 +655,7 @@ if to-alist is true, to ((a . b) (c . d) ...)"
   (let1 e1 expr
     (once-only (e1)
       `(progn 
-         (format ,stream "~&~S = ~S" ',expr ,e1)
+         (format ,stream "~&~S = ~S~%" ',expr ,e1)
          (finish-output ,stream)
          ,e1))))
      
