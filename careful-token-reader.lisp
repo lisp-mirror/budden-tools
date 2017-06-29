@@ -372,20 +372,21 @@ FIXME shadow find-symbol? FIXME rename"
     (when m
       (let ((fs (package-metadata-forbidden-symbol-names m)))
         (when (find name fs :test 'string=)
-          (simple-reader-error stream "Symbol name ~S is in forbidden-symbol-names of ~A" name package))))
+          (simple-reader-error stream "Имя символа ~S запрещено (входит в forbidden-symbol-names) в пакете ~S" name package))))
       ;(break)
     (multiple-value-bind (symbol-found success) (find-symbol name package)
       (cond
        ((and qualified-p
              (not success)
              (and m
-                  (not (package-metadata-allow-qualified-intern m))))
-        (cerror "Создать символ" #|stream|# "qualified-intern is not allowed for ~A while trying to intern ~S в потоке ~S" package name stream)
+                  (not (package-metadata-allow-qualified-intern m)))
+             (not (eq package *package*)))
+        (cerror "Создать символ" #|stream|# "Не разрешено создание символа в другом пакете чтением с квалификатором: пакет ~S, символ ~S, поток ~S" package name stream)
         (intern name package))
        ((and (not success)
              m
              (package-metadata-interning-is-forbidden m))
-        (simple-reader-error stream "interning-is-forbidden for ~A while trying to intern ~S" package name))
+        (simple-reader-error stream "Создание символов чтением запрещено (interning-is-forbidden): пакет ~S, имя символа ~S" package name))
        (success
         symbol-found)
        (t 
