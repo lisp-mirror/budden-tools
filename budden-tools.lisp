@@ -810,12 +810,11 @@ modifying form, e.g. @code{(_f + a b) @equiv{} (incf a b)}. See also __f. Modife
          (pack-name (and pack (package-name pack)))
          (symbol
           (etypecase type
-            (cons (and pack (find-symbol (second type) pack)))
+            (cons (and pack (let ((*package* pack)) (the* symbol (read-from-string (second type))))))
             (symbol type)))
-         (struct-name
-          (etypecase type
-            (cons (second type))
-            (symbol (symbol-name type)))))
+         (struct-name (symbol-name symbol))
+         ;; были проблемы из-за переноса комментариев
+         (*print-right-margin* 1000000))
     (format string-stream "~%;; (budden-tools:|Написать-экспорт-для-структуры| '~S)" type)
     (cond
      ((null pack)
@@ -828,7 +827,7 @@ modifying form, e.g. @code{(_f + a b) @equiv{} (incf a b)}. See also __f. Modife
                         (when (and (eq (symbol-package x) pack) ,filter-expr)
                           (format string-stream "~%~A:~A" pack-name x-name))))))
         (format string-stream "~%;;~A" struct-name)
-        (doit (eq x type))
+        (doit (string= x-name struct-name))
         (doit (string= x-name (str+ "MAKE-" struct-name)))
         (doit (string= x-name (str+ struct-name "-P")))
         (doit (string= x-name (str+ "COPY-" struct-name)))
