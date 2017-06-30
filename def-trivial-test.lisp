@@ -11,13 +11,13 @@
 (defvar *break-on-test-failure* t)
 
 
-(defun |Проверить-правильное-прохождение-теста| (|Печатаемое-представление-теста| |Ож| #| Ожидали |# |Пол| #| учили |# &key (|Сравниватель| 'equalp))
-  (unless (funcall |Сравниватель| |Ож| |Пол|)
+(defun |Проверить-правильное-прохождение-теста| (|Печатаемое-представление-теста| |Ожид| #| ...али |# |Полу| #| ...чили |# &key (|Сравниватель| 'equalp))
+  (unless (funcall |Сравниватель| |Ожид| |Полу|)
     (let ((message
            (format
-            nil "Неудача теста: ~S~%Ож=~S~%Пол=~S"
+            nil "Неудача теста: ~S~%Ожид=~S~%Полу=~S"
             |Печатаемое-представление-теста|
-            |Ож| |Пол|)))
+            |Ожид| |Полу|)))
       (if *break-on-test-failure* 
           (cerror "continue" "~A" message)
           (warn "~A" message))
@@ -33,7 +33,6 @@
                ((symbolp name) name)))
            (x (gensym "X"))
            (y (gensym "Y"))
-           (message (gensym "MESSAGE"))
            (the-form 
             `(progn
                (defun ,current-fn-symbol ()
