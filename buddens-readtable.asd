@@ -10,7 +10,7 @@
          (:file "buddens-readtable-package")
          (:file "buddens-readmacros")
          (:file "buddens-readmacros-test")
-         (:file "buddens-readtable") ; here readtables are defined
+         (:file "buddens-readtable" :description "Здесь определены таблицы чтения")
 ;	 (:file "buddens-sharpdot")
          (:file "buddens-readtable-test")
 ))
