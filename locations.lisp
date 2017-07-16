@@ -168,6 +168,15 @@ srcpl - symbol-readmacro. Прочитать объект и запрограм�
       ))
   object)
 
+#| Пример применения l/pass-from-stream-to-file
+(perga
+ (:@ with-open-file ou "бла-бла" :direction :output :if-exists :supersede)
+ (get-stream-location-map-delegate ou :if-not-exists :create)
+ (l/princ Некая-строка-с-ассоциированной-инфой-об-исходнике ou)
+ (l/pass-from-stream-to-file ou))
+|#
+
+
 (defun l/pass-from-stream-to-file (stream)
   "данные были связаны с потоком. Ассоциируем их с файлом"
 ;  (declare (optimize speed))
