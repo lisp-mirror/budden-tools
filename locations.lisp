@@ -88,6 +88,9 @@ srcpl - symbol-readmacro. Прочитать объект и запрограм�
 ; disable stepping
 (declaim (optimize (debug 3) (compilation-speed 3) (safety 3)))
 
+(eval-when (:compile-toplevel :load-toplevel :execute)
+  (defmacro get-non-persistent-object-locations (object)
+    `(gethash ,object *nplm)))
 
 (defvar *nplm 
   #+NIL (make-hash-table :test 'eq)

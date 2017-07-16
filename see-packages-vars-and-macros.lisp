@@ -75,7 +75,5 @@ prefix even if they can be read without the prefix")
      ,@pbody))
 
 
-(defmacro get-non-persistent-object-locations (object)
-  `(gethash ,object *nplm))
 
 
