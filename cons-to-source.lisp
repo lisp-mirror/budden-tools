@@ -247,7 +247,7 @@
         (string)
         (t (setf x-with-location x x (with-output-to-string (v) (faster-princ x v)))))
       (let ((dst-beg (file-position *codegen-stream*))
-            (delegate (gethash *codegen-stream* budden-tools::*slmd)))
+            (delegate (gethash *codegen-stream* КАРТЫ-ИСХОДНИКОВ-ТЕЛО::*slmd)))
         ; (when (>= dst-beg 11883) (break))
         (cond
          (formatter-stack 
@@ -261,7 +261,7 @@
          (t (faster-princ x *codegen-stream*)))
         (let ((dst-end (file-position *codegen-stream*)))
           (when delegate
-            (budden-tools::l/add-to-location-map delegate dst-beg dst-end (or x-with-location x))))
+            (КАРТЫ-ИСХОДНИКОВ-ЛИЦО:l/add-to-location-map delegate dst-beg dst-end (or x-with-location x))))
         )))) ; по идее, нужен цикл, и при встречании символа конца строки - 
                                              ; добавлять indentation.
 

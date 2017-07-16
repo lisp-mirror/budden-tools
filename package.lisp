@@ -8,11 +8,37 @@
     (setf *readtable* (copy-readtable nil))
     nil)
 
+
+(def-merge-packages::! :КАРТЫ-ИСХОДНИКОВ-ЛИЦО
+  (:always t)
+  (:documentation "Инфраструктура для запоминания и поиска соответствий между генерирующим и генерируемым исходными текстами")
+  (:export
+   "КАРТЫ-ИСХОДНИКОВ-ЛИЦО:L/WITH-OUTPUT-TO-STRING
+    КАРТЫ-ИСХОДНИКОВ-ЛИЦО:L/PASS-FROM-STREAM-TO-FILE
+    КАРТЫ-ИСХОДНИКОВ-ЛИЦО:L/ADD-TO-LOCATION-MAP
+    КАРТЫ-ИСХОДНИКОВ-ЛИЦО:L/SUBSEQ
+    КАРТЫ-ИСХОДНИКОВ-ЛИЦО:L/FIND-SOURCES-IN-FILE
+    КАРТЫ-ИСХОДНИКОВ-ЛИЦО:L/PRINC
+    КАРТЫ-ИСХОДНИКОВ-ЛИЦО:L/STR++
+    КАРТЫ-ИСХОДНИКОВ-ЛИЦО:EXTRACT-SOURCE-FILENAME-FROM-STREAM
+    КАРТЫ-ИСХОДНИКОВ-ЛИЦО:L/SUBSTITUTE-SUBSEQ
+    КАРТЫ-ИСХОДНИКОВ-ЛИЦО:L/RORL ; = return-object-recording-location
+    КАРТЫ-ИСХОДНИКОВ-ЛИЦО:fix-offset-2 ; переводит смещение в файле. полученное из file-position, в положение, рассчитанное в буквах. При этом читает весь файл, т.е. работает медленно.
+    КАРТЫ-ИСХОДНИКОВ-ЛИЦО:EXTRACT-SOURCE-FILENAME-FROM-STREAM
+    КАРТЫ-ИСХОДНИКОВ-ЛИЦО:input-stream-position-in-chars
+    КАРТЫ-ИСХОДНИКОВ-ЛИЦО:stream-get-line-number
+    КАРТЫ-ИСХОДНИКОВ-ЛИЦО:string-stream-extract-string
+    КАРТЫ-ИСХОДНИКОВ-ЛИЦО:*RECORD-LOCATIONS*
+    КАРТЫ-ИСХОДНИКОВ-ЛИЦО:extract-file-position
+    "
+   ))
+
 (def-merge-packages::! :BUDDEN-TOOLS
+  (:always t)
   (:nicknames "budden-tools")
   (:documentation "Some tools by budden. See packages definition to find a list of symbols")
   (:use :cl :named-readtables  ; :org.tfeb.hax.hierarchical-packages
-   :def-merge-packages :decorate-function :iterk)
+   :def-merge-packages :decorate-function :iterk :КАРТЫ-ИСХОДНИКОВ-ЛИЦО)
   (:import-from :alexandria #:with-gensyms #:once-only #:string-designator #:eswitch #:cswitch #:switch alexandria:simple-reader-error alexandria:named-lambda)
   (:import-from :split-sequence #:split-sequence)
   (:import-from :swank #:*readtable-alist*)
@@ -201,12 +227,14 @@
    budden-tools:quit-lisp ; thanks to Thomas A.Russ
 
 ;; streams
-   budden-tools:fix-offset-2 ; переводит смещение в файле. полученное из file-position, в положение, рассчитанное в буквах. При этом читает весь файл, т.е. работает медленно.
+   КАРТЫ-ИСХОДНИКОВ-ЛИЦО:fix-offset-2 ; переводит смещение в файле. полученное из file-position, в положение, рассчитанное в буквах. При этом читает весь файл, т.е. работает медленно.
    budden-tools:edit-stream-position ; trying to find out position in a file stream, open the file at the cursor and edit it
-   budden-tools:extract-source-filename-from-stream
-   budden-tools:input-stream-position-in-chars
-   budden-tools:stream-get-line-number
-   budden-tools:string-stream-extract-string
+   КАРТЫ-ИСХОДНИКОВ-ЛИЦО:EXTRACT-SOURCE-FILENAME-FROM-STREAM
+   КАРТЫ-ИСХОДНИКОВ-ЛИЦО:input-stream-position-in-chars
+   КАРТЫ-ИСХОДНИКОВ-ЛИЦО:stream-get-line-number
+   КАРТЫ-ИСХОДНИКОВ-ЛИЦО:string-stream-extract-string
+
+   budden-tools:edit-stream-position ; trying to find out position in a file stream, open the file at the cursor and edit it
 
 ;; make input stream available to sharpsign-dot
    budden-tools:*read-eval-stream*
@@ -262,6 +290,14 @@
    budden-tools:def-toplevel-progn ; top-level-form which is locatable in a debugger session
    "
    ))
+
+
+(def-merge-packages::! :КАРТЫ-ИСХОДНИКОВ-ТЕЛО
+  (:always t)
+  (:use :cl :alexandria :iterate-keywords :budden-tools :КАРТЫ-ИСХОДНИКОВ-ЛИЦО)
+  (:shadowing-import-from :budden-tools budden-tools:read-file-into-string)
+  (:import-from :SWANK/BACKEND SWANK/BACKEND:MAKE-WEAK-KEY-HASH-TABLE)
+  )
 
 ;(merge-packages-and-reexport::! :proga-implementation 
 ;                                )
