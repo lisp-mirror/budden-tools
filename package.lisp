@@ -30,6 +30,7 @@
     КАРТЫ-ИСХОДНИКОВ-ЛИЦО:string-stream-extract-string
     КАРТЫ-ИСХОДНИКОВ-ЛИЦО:*RECORD-LOCATIONS*
     КАРТЫ-ИСХОДНИКОВ-ЛИЦО:extract-file-position
+    КАРТЫ-ИСХОДНИКОВ-ЛИЦО:get-stream-location-map-delegate
     "
    ))
 
