@@ -510,14 +510,6 @@ source-location = slo
     (string-stream nil))
   )
 
-(defun real-point-offset (point) 
-  "Дубль аналогичной функции из editor-budden-tools"
-  #-lispworks (declare (ignore point))
-  #+lispworks
-  (+ (editor::point-offset point) (slot-value (editor::point-bigline point) 'editor::start-char))
-  #-lispworks
-  (error "Not implemented"))
-
 (defvar *stream-line-count* 
   (make-weak-key-hash-table :test 'eq)
   "Для потока отражает число прочитанных строк, если, конечно, функция чтения его прописывает. См., например
