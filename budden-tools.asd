@@ -10,7 +10,7 @@
   :depends-on 
   (:alexandria :cl-fad :split-sequence :cl-utilities :named-readtables
    :cl-ppcre		
-   :iterate-keywords :swank :decorate-function :closer-mop)
+   :iterate-keywords :swank :decorate-function :closer-mop :trivial-gray-streams)
   :components ( 
     ;(:file "hierarchical-packages"
     ; :doc "port of Allergo's hierarchical packages to some more implementations by Tim Bradshaw with some changes by Budden"
@@ -55,4 +55,5 @@
    )
    (:file "print-hash-table" :description "Print hashtable readably and other hash table utils"
     )
-   )) 
+   (:file "потоки-зпт-считающие-буквы-строки-и-колонки")
+   ))
