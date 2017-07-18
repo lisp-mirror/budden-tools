@@ -1,4 +1,4 @@
-; -*- Encoding: utf-8;   -*- 
+; -*- coding: utf-8;   -*- 
 ;;; Правильнее было бы назвать ide-budden-tools
 ;;; Работа со средой лиспворкса и немножко - с SBCL
 
@@ -7,6 +7,7 @@
   :serial t
   :components (
                (:file "editor-budden-tools-package")
+               (:file "ма-пе-ти" :description "содержит родовые ф-ии")
                #+lispworks (:file "editor-budden-tools") ; навигация по коду
                #+sbcl (:file "editor-budden-tools-sbcl")
                (:file "ppcre-shortcuts") ; сокращения, удобные для работы с ppcre

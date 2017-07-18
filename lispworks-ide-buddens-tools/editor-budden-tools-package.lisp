@@ -1,4 +1,4 @@
-;; -*- Encoding: utf-8; -*- 
+;; -*- coding: utf-8; -*- 
 
 (asdf::of-system :editor-budden-tools)
 
@@ -51,11 +51,13 @@
   EDITOR-BUDDEN-TOOLS:GOTO-BUFFER-2 ; перейти к буферу и вывести окно вперёд
   EDITOR-BUDDEN-TOOLS:GOTO-XY ; перейти на заданную строку и колонку файла
   EDITOR-BUDDEN-TOOLS:GOTO-OFFSET ; перейти на заданную позицию файла #\newline считается за один символ!
+  EDITOR-BUDDEN-TOOLS:REAL-POINT-OFFSET
   EDITOR-BUDDEN-TOOLS:REPLACE-STRING-IN-FILE
   EDITOR-BUDDEN-TOOLS:GET-CLIPBOARD-TEXT
   EDITOR-BUDDEN-TOOLS:TEXT-TO-CLIPBOARD
   EDITOR-BUDDEN-TOOLS:CLEAR-LEXEM-POSITION-CACHE
   EDITOR-BUDDEN-TOOLS:+WHITESPACE+
+  
   "
 
   ; fixme - это должно работать и в нижнем регистре

@@ -1,4 +1,4 @@
-; -*- Encoding: utf-8; system :EDITOR-BUDDEN-TOOLS ;  -*- 
+; -*- coding: utf-8; system :EDITOR-BUDDEN-TOOLS ;  -*- 
 ;;; Утилиты для работы с редактором. 
 (in-package :editor-budden-tools)
 (asdf::of-system :editor-budden-tools)
@@ -387,7 +387,7 @@ end.
   (goto-xy pathname row col :kill-buffer kill-buffer :set-foreground-window set-foreground-window))
 
 ;; В EMACS есть аналогичная goto-xy
-(DEFUN GOTO-XY (PATHNAME ROW COL &KEY KILL-BUFFER (set-foreground-window t))
+(DEFUN GOTO-XY-EXTENDED (PATHNAME ROW COL &KEY KILL-BUFFER (set-foreground-window t))
   "Не сработает при отсутствии редактора. При kill-buffer опасно, т.к. закрывает файл без изменений"
   (perga
     (let ED (get-some-editor))
@@ -415,18 +415,19 @@ end.
                     ))
     ))
 
-(defun real-point-offset (point) 
-  "offset of the point is not an offset indeed. Trying to calculate real offset relative to buffer start"
-  #+lispworks
+(defmethod goto-xy ((pathname t) (row t) (col t))
+  (goto-xy-extended pathname row col))
+
+#+lispworks
+(defmethod real-point-offset ((point t)) 
+  "offset of the point is not an offset indeed. Trying to calculate real offset relative to buffer start. Похоже, что в буквах"
   (let ((result 
          (+ (point-offset point) (slot-value (editor::point-bigline point) 'editor::start-char))))
     (unless (= result (editor::find-point-offset (point-buffer point) point))
       (cerror "продолжить"
        "нашёл функцию в редакторе, к-рая делает то же самое, что и real-point-offset. Надеялся, что они одинаковы")
       )
-    result)
-  #-lispworks
-  (error "not implemented in this lisp"))
+    result))
 
 #|(defcommand "hg" (p) "Calls hg on current file"
      (declare (ignorable p))

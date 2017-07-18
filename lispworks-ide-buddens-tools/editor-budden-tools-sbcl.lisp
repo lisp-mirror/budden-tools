@@ -1,4 +1,4 @@
-; -*- Encoding: utf-8; system :EDITOR-BUDDEN-TOOLS ;  -*- 
+; -*- coding: utf-8; system :EDITOR-BUDDEN-TOOLS ;  -*- 
 ;;; Утилиты для работы с редактором. 
 (in-package :editor-budden-tools)
 (asdf::of-system :editor-budden-tools)
@@ -51,8 +51,7 @@ replace-string-in-file filename from to :close-file nil :times 1 :from-the-start
 (defmethod goto-xy (pathname row col)
   (swank:eval-in-emacs `(goto-xy ,(namestring pathname) ,row ,col)))
 
-#+(and sbcl clcon)
-(defgeneric goto-xy (pathname row col))
+;; в SBCL оно, видимо, будет позднее
    
 (defvar *in-find-source* nil "in lispworks, it is bound to t in find-source-command by defadvice")
 
@@ -61,7 +60,7 @@ replace-string-in-file filename from to :close-file nil :times 1 :from-the-start
   (- offset #+nil no-of-newlines 1))
 
 
-(DEFUN GOTO-OFFSET (PATHNAME OFFSET &KEY KILL-BUFFER (set-foreground-window t) subtract-no-of-newlines)
+(defmethod GOTO-OFFSET (PATHNAME OFFSET &KEY KILL-BUFFER set-foreground-window subtract-no-of-newlines)
   "Offset может быть:
   - структурой row-col-offset
   - смещением в буквах
@@ -124,7 +123,6 @@ replace-string-in-file filename from to :close-file nil :times 1 :from-the-start
       (CAPI:set-pane-focus (slot-value ed 'LISPWORKS-TOOLS::editor-panes-pane)))
     
     ))
-
 
 (defun budden-tools::edit-stream-position (stream &optional position subtract-no-of-newlines) 
   ;(editor-budden-tools::do-in-editor-command (budden-tools::extract-source-filename-from-stream stream)
