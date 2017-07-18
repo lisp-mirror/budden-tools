@@ -586,7 +586,9 @@ end.
 
 (defun char-can-be-in-symbol (c)
   "Проверяем символы в общем смысле слова, не в смысле лиспа. Только тире позволяем быть. Также разрешаем двоеточие"
-  (not (find c '(#\  #\newline #\, #\^ #\' #\" #\` #\tab #\; #\( #\) #\@ #\| #\# #\\ #\>))))
+  (not (find c '(#\  #\newline #\, #\^ #\' #\" #\` #\tab #\; #\( #\) #\@
+                               ; попробуем ловить символы АА:|Бб| #\|
+                               #\# #\\ #\>))))
 
 (defun process-potential-symbol (x package)
   "returns either (symbol t), or (values nil nil) if there is no symbol"
