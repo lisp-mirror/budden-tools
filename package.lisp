@@ -13,8 +13,12 @@
   (:always t)
   (:documentation "Инфраструктура для запоминания и поиска соответствий между генерирующим и генерируемым исходными текстами")
   (:export
-   "КАРТЫ-ИСХОДНИКОВ-ЛИЦО:L/WITH-OUTPUT-TO-STRING
+   "
+    КАРТЫ-ИСХОДНИКОВ-ЛИЦО:TRACK-LOCATIONS
+    КАРТЫ-ИСХОДНИКОВ-ЛИЦО:L/WITH-OUTPUT-TO-STRING
+    КАРТЫ-ИСХОДНИКОВ-ЛИЦО:l/make-string-output-stream
     КАРТЫ-ИСХОДНИКОВ-ЛИЦО:L/PASS-FROM-STREAM-TO-FILE
+    КАРТЫ-ИСХОДНИКОВ-ЛИЦО:l/pass-from-delegate-to-object
     КАРТЫ-ИСХОДНИКОВ-ЛИЦО:L/ADD-TO-LOCATION-MAP
     КАРТЫ-ИСХОДНИКОВ-ЛИЦО:L/SUBSEQ
     КАРТЫ-ИСХОДНИКОВ-ЛИЦО:L/FIND-SOURCES-IN-FILE
@@ -32,6 +36,10 @@
     КАРТЫ-ИСХОДНИКОВ-ЛИЦО:get-stream-location-map-delegate
     ;; КАРТЫ-ИСХОДНИКОВ-ЛИЦО:string-stream-extract-string ; заменено на КАРТЫ-ИСХОДНИКОВ-ЛИЦО:ИСХОДНИК-ЦЕЛИКОМ-В-ВИДЕ-СТРОКИ
     КАРТЫ-ИСХОДНИКОВ-ЛИЦО:ИСХОДНИК-ЦЕЛИКОМ-В-ВИДЕ-СТРОКИ
+    КАРТЫ-ИСХОДНИКОВ-ЛИЦО:|Удалить-карты-для-генерируемого-файла|
+    КАРТЫ-ИСХОДНИКОВ-ЛИЦО:|Сохранить-карту-для-файла-в-файл|
+    КАРТЫ-ИСХОДНИКОВ-ЛИЦО:|Имя-файла-карты-по-имени-файла-исходного-текста|
+    КАРТЫ-ИСХОДНИКОВ-ЛИЦО:|Сохранить-карту-для-файла-в-файл|
     "
    ))
 
@@ -297,7 +305,7 @@
 
 (def-merge-packages::! :КАРТЫ-ИСХОДНИКОВ-ТЕЛО
   (:always t)
-  (:use :cl :alexandria :iterate-keywords :budden-tools :КАРТЫ-ИСХОДНИКОВ-ЛИЦО)
+  (:use :КАРТЫ-ИСХОДНИКОВ-ЛИЦО :cl :alexandria :iterate-keywords :budden-tools)
   (:shadowing-import-from :budden-tools budden-tools:read-file-into-string)
   (:import-from :SWANK/BACKEND SWANK/BACKEND:MAKE-WEAK-KEY-HASH-TABLE)
   )
