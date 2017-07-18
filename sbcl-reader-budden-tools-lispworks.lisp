@@ -1464,7 +1464,7 @@ variables to allow for nested and thread safe reading."
       (values (if preserve-whitespace
                   (read-preserving-whitespace2 stream eof-error-p eof-value)
                   (read2 stream eof-error-p eof-value))
-              (- (budden-tools::extract-file-position stream) start)))
+              (- (budden-tools:input-stream-position-in-chars stream) start)))
   ;  )
   )
 

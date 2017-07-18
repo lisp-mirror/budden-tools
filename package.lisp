@@ -32,7 +32,6 @@
     КАРТЫ-ИСХОДНИКОВ-ЛИЦО:input-stream-position-in-chars
     КАРТЫ-ИСХОДНИКОВ-ЛИЦО:stream-get-line-number
     КАРТЫ-ИСХОДНИКОВ-ЛИЦО:*RECORD-LOCATIONS*
-    КАРТЫ-ИСХОДНИКОВ-ЛИЦО:extract-file-position
     КАРТЫ-ИСХОДНИКОВ-ЛИЦО:get-stream-location-map-delegate
     ;; КАРТЫ-ИСХОДНИКОВ-ЛИЦО:string-stream-extract-string ; заменено на КАРТЫ-ИСХОДНИКОВ-ЛИЦО:ИСХОДНИК-ЦЕЛИКОМ-В-ВИДЕ-СТРОКИ
     КАРТЫ-ИСХОДНИКОВ-ЛИЦО:ИСХОДНИК-ЦЕЛИКОМ-В-ВИДЕ-СТРОКИ

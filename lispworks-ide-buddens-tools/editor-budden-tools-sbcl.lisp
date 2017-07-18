@@ -127,8 +127,8 @@ replace-string-in-file filename from to :close-file nil :times 1 :from-the-start
 (defun budden-tools::edit-stream-position (stream &optional position subtract-no-of-newlines) 
   ;(editor-budden-tools::do-in-editor-command (budden-tools::extract-source-filename-from-stream stream)
   (perga ; ignore-errors
-    (let filename (budden-tools::extract-source-filename-from-stream stream))
-    (let position (or position (budden-tools::extract-file-position stream)))
+    (let filename (budden-tools:extract-source-filename-from-stream stream))
+    (let position (or position (budden-tools:input-stream-position-in-chars stream)))
       ;(print buf)
       ;(print position)
     (goto-offset filename position :kill-buffer nil :subtract-no-of-newlines subtract-no-of-newlines)

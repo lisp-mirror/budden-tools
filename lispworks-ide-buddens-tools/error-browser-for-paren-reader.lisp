@@ -201,10 +201,10 @@
           )))
       (let close nil)
       (with-output-to-string (*standard-output*) 
-        (setf close (budden-tools::extract-file-position stream)))
+        (setf close (budden-tools:input-stream-position-in-chars stream)))
       (let all-positions 
         (append (list close) opens))
-      (let filename (budden-tools::extract-source-filename-from-stream stream))
+      (let filename (budden-tools:extract-source-filename-from-stream stream))
       #|(when (typep stream '(or stream::ef-file-stream stream::file-stream))
         (setf all-positions
               (mapcar (lambda (x) 

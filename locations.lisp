@@ -448,7 +448,7 @@ source-location = slo
 ;  (declare (optimize speed))
   (let*
       ((track-locations-value (track-locations))
-       (dst-beg (and track-locations-value (input-stream-position-in-chars stream)))
+       (dst-beg (and track-locations-value (output-stream-position-in-chars stream)))
        (delegate (and track-locations-value (get-stream-location-map-delegate stream)))
        )
     (prog1
@@ -456,7 +456,7 @@ source-location = slo
           (string (write-string object stream))
           (t (princ object stream)))
       (when track-locations-value
-        (let* ((dst-end (extract-file-position stream)))
+        (let* ((dst-end (output-stream-position-in-chars stream)))
           (when delegate 
             (l/add-to-location-map delegate dst-beg dst-end object)))
         ))))
@@ -748,7 +748,7 @@ source-location = slo
   См. также fix-offset-2"
   (etypecase stream
     (ПОТОКИ-ЗПТ-СЧИТАЮЩИЕ-БУКВЫ-СТРОКИ-И-КОЛОНКИ:|Считающий-входной-поток-литер|
-     (ПОТОКИ-ЗПТ-СЧИТАЮЩИЕ-БУКВЫ-СТРОКИ-И-КОЛОНКИ:|Счётчик-литер-из| stream))                                            
+     (ПОТОКИ-ЗПТ-СЧИТАЮЩИЕ-БУКВЫ-СТРОКИ-И-КОЛОНКИ:|Счётчик-литер-из| stream))                                        
     (string-stream (file-position stream))
     (file-stream
      (let ((map (ensure-file-position-to-char-position-for-stream stream)))
@@ -767,6 +767,14 @@ source-location = slo
       (ignore-errors 
        (input-stream-position-in-chars (symbol-value (synonym-stream-symbol stream))))
       0))
+    ))
+
+(defun output-stream-position-in-chars (stream)
+  (etypecase stream
+    (ПОТОКИ-ЗПТ-СЧИТАЮЩИЕ-БУКВЫ-СТРОКИ-И-КОЛОНКИ:|Считающий-выходной-поток-литер|
+     (ПОТОКИ-ЗПТ-СЧИТАЮЩИЕ-БУКВЫ-СТРОКИ-И-КОЛОНКИ:|Счётчик-литер-из| stream))
+    (string-stream (file-position stream)) ; а правда ли это - то нам неведомо
+    #+sbcl (synonym-stream 0) ; *standard-output*
     ))
 
 (defun fix-offset-2 (pathname offset)
@@ -868,10 +876,10 @@ source-location = slo
 
 (defun srcpl-reader (stream symbol)
   (declare (ignore symbol))
-  (let* ((before (extract-file-position stream))
+  (let* ((before (input-stream-position-in-chars stream))
          after
          (object (read stream)))
-    (setf after (extract-file-position stream))
+    (setf after (input-stream-position-in-chars stream))
     (it-is-a-car-symbol-readmacro 
      `(l/rorl ,object ,(extract-source-filename-from-stream stream) ,before ,after))))
 

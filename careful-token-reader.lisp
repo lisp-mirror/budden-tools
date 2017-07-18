@@ -109,7 +109,7 @@ so use stream parameter only to identify a reader. Return value of hook function
   (defun paren-reader-with-closing-paren-notification (stream char)
     "Если внутри readera кто-то заполнил ф-ями в *functions-to-call-when-paren-is-closing*,
 то эти ф-и будут вызвана над результатом чтения (...) и потоком с первой по последнюю, преобразуя результат" 
-    (let* ((position (extract-file-position stream))
+    (let* ((position (input-stream-position-in-chars stream))
            (*reading-parens* (cons position *reading-parens*))
            (*reading-parens-stream* stream)
            (*functions-to-call-when-paren-is-closing* nil)
