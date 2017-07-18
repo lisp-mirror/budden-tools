@@ -1,4 +1,4 @@
-;; -*- Encoding: utf-8 ; -*- ;; 
+;; -*- coding: utf-8 ; -*- ;; 
 
 (def-merge-packages::!
  :multipaste

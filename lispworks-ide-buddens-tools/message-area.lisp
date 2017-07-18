@@ -1,4 +1,4 @@
-;; -*- Encoding: utf-8 ; -*- 
+;; -*- coding: utf-8 ; -*- 
 
 (asdf::of-system :editor-budden-tools)
 (in-package #+budden :editor-budden-tools #-budden :editor)

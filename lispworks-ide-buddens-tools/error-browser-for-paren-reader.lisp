@@ -1,4 +1,4 @@
-; -*- Encoding: utf-8 ; -*- 
+; -*- coding: utf-8 ; -*- 
 ;; помощник для поиска ошибок чтения. Пример простого расширения отладчика
 (asdf::of-system :editor-budden-tools)
 
