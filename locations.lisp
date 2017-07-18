@@ -156,7 +156,7 @@ source-location = slo
 
 (defstruct slo ; откуда взялся данный объект cl:cons
   source ; например, имя файла. А также, в порядке эксперимента, попробуем БУКВЫ-И-МЕСТА-В-ФАЙЛЕ:|Ссылка-на-источник|
-  (|Система-координат| '|сико-ПФ| :type |Система-координат|)
+  (|Система-координат| '|сико-ПБу| :type |Система-координат|)
   beg 
   end)
 
@@ -167,19 +167,22 @@ source-location = slo
 (defmacro l/make-string-output-stream (&rest args)
   "Создаёт поток и делегата для него. Возвращает два значения - поток и делегат. После завершении не забудьте вызвать l/pass-from-delegate-to-object, подобно l/with-output-to-string"
   (with-gensyms (Поток)
-    `(let ((,Поток (make-string-output-stream ,@args)))
+    `(let ((,Поток (make-instance 'ПОТОКИ-ЗПТ-СЧИТАЮЩИЕ-БУКВЫ-СТРОКИ-И-КОЛОНКИ:|Считающий-выходной-поток-литер|
+                                  :|Поток| (make-string-output-stream ,@args))))
        (values ,Поток (get-stream-location-map-delegate ,Поток :if-not-exists :create)))))
 
-(defmacro l/with-output-to-string ((VAR &REST SOME-MORE) 
+(defmacro l/with-output-to-string ((VAR &REST string-and-key) 
                                    &BODY BODY)
-  (with-gensyms (location-delegate)
-  `(let (,location-delegate)
-     (l/pass-from-delegate-to-object 
-      (with-output-to-string (,var ,@some-more)
-        (setf ,location-delegate (get-stream-location-map-delegate ,var :if-not-exists :create))
-        ,@body
-        )
-      ,location-delegate))))
+  (with-gensyms (var-var location-delegate)
+    `(let (,location-delegate)
+       (l/pass-from-delegate-to-object 
+        (with-output-to-string (,var-var ,@string-and-key)
+          (let ((,var (make-instance 'ПОТОКИ-ЗПТ-СЧИТАЮЩИЕ-БУКВЫ-СТРОКИ-И-КОЛОНКИ:|Считающий-выходной-поток-литер|
+                                     :|Поток| ,var-var)))
+            (setf ,location-delegate (get-stream-location-map-delegate ,var :if-not-exists :create))
+            ,@body
+            ))
+        ,location-delegate))))
 
 (defun |Удалить-карты-для-генерируемого-файла| (namestring)
   (remhash namestring *nplf))
@@ -752,6 +755,8 @@ source-location = slo
   "Возвращает текущую позицию в потоке в буквах. В отличие от обычного file-position, к-рый извлекает её в буквах исходного файла - может отличаться на cr/lf. 
   См. также fix-offset-2"
   (etypecase stream
+    (ПОТОКИ-ЗПТ-СЧИТАЮЩИЕ-БУКВЫ-СТРОКИ-И-КОЛОНКИ:|Считающий-входной-поток-литер|
+     (ПОТОКИ-ЗПТ-СЧИТАЮЩИЕ-БУКВЫ-СТРОКИ-И-КОЛОНКИ:|Счётчик-литер-из| stream))                                            
     (string-stream (file-position stream))
     (file-stream
      (let ((map (ensure-file-position-to-char-position-for-stream stream)))
