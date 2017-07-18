@@ -27,10 +27,10 @@
     КАРТЫ-ИСХОДНИКОВ-ЛИЦО:EXTRACT-SOURCE-FILENAME-FROM-STREAM
     КАРТЫ-ИСХОДНИКОВ-ЛИЦО:input-stream-position-in-chars
     КАРТЫ-ИСХОДНИКОВ-ЛИЦО:stream-get-line-number
-    КАРТЫ-ИСХОДНИКОВ-ЛИЦО:string-stream-extract-string
     КАРТЫ-ИСХОДНИКОВ-ЛИЦО:*RECORD-LOCATIONS*
     КАРТЫ-ИСХОДНИКОВ-ЛИЦО:extract-file-position
     КАРТЫ-ИСХОДНИКОВ-ЛИЦО:get-stream-location-map-delegate
+    ;; КАРТЫ-ИСХОДНИКОВ-ЛИЦО:string-stream-extract-string ; заменено на КАРТЫ-ИСХОДНИКОВ-ЛИЦО:ИСХОДНИК-ЦЕЛИКОМ-В-ВИДЕ-СТРОКИ
     КАРТЫ-ИСХОДНИКОВ-ЛИЦО:ИСХОДНИК-ЦЕЛИКОМ-В-ВИДЕ-СТРОКИ
     "
    ))
@@ -234,7 +234,8 @@
    КАРТЫ-ИСХОДНИКОВ-ЛИЦО:EXTRACT-SOURCE-FILENAME-FROM-STREAM
    КАРТЫ-ИСХОДНИКОВ-ЛИЦО:input-stream-position-in-chars
    КАРТЫ-ИСХОДНИКОВ-ЛИЦО:stream-get-line-number
-   КАРТЫ-ИСХОДНИКОВ-ЛИЦО:string-stream-extract-string
+    ;; КАРТЫ-ИСХОДНИКОВ-ЛИЦО:string-stream-extract-string ; заменено на КАРТЫ-ИСХОДНИКОВ-ЛИЦО:ИСХОДНИК-ЦЕЛИКОМ-В-ВИДЕ-СТРОКИ
+   КАРТЫ-ИСХОДНИКОВ-ЛИЦО:ИСХОДНИК-ЦЕЛИКОМ-В-ВИДЕ-СТРОКИ
 
    budden-tools:edit-stream-position ; trying to find out position in a file stream, open the file at the cursor and edit it
 
