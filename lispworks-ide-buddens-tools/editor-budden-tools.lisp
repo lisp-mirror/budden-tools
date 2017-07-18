@@ -333,6 +333,7 @@ end.
       (setf *my-command-result* 
             (points-to-string p1 (current-point))))))
 
+;; for sbcl it is a emacs function paste-filename
 (editor:defcommand "Paste Filename" (p) "Pastes and unixized filename from clipboard" "Pastes and unixized filename from clipboard"  
   (declare (ignore p))
   #+ignore (editor:backward-kill-form-command p)
@@ -349,6 +350,7 @@ end.
                  (format nil "~S" 
                          (string-trim +whitespace+ (CAPI-WIN32-LIB::GET-CLIPBOARD-TEXT)))))
 
+; в sbcl есть ф-я EMACS insert-string-from-clipboard
 (editor:defcommand "Insert string from clipboard" (p) "Pastes string from a clipboard as a lisp string"
      (declare (ignore p))
   (insert-string (current-point)
@@ -356,7 +358,7 @@ end.
                          (string-trim +whitespace+ (capi-win32-lib::get-clipboard-text)))))
 
   
-
+; в sbcl - ф-я EMACS buffer-pathname-to-clipboard
 (defcommand "Buffer Pathname To Clipboard" (p)
      "Копирует имя файла (namestring) в буфер обмена"
      (declare (ignorable p))
@@ -384,6 +386,7 @@ end.
   (capi:find-interface 'lispworks-tools:editor)
   (goto-xy pathname row col :kill-buffer kill-buffer :set-foreground-window set-foreground-window))
 
+;; В EMACS есть аналогичная goto-xy
 (DEFUN GOTO-XY (PATHNAME ROW COL &KEY KILL-BUFFER (set-foreground-window t))
   "Не сработает при отсутствии редактора. При kill-buffer опасно, т.к. закрывает файл без изменений"
   (perga
@@ -515,7 +518,7 @@ end.
   (do-identifier-search t))
 
 
-
+; в EMACS - команда find-file-at-point
 (defun get-filename-at-point-and-prompt ()
   "Подсказка для открытия файла, имя к-рого находится в текущей точке" 
   (perga function
