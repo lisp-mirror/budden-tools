@@ -160,6 +160,15 @@ source-location = slo
   beg 
   end)
 
+(defgeneric SLO-SOURCE-В-ИМЯ-ФАЙЛА (slo-source)
+  (:documentation "На входе - значение поля slo-source, на выходе - имя файла"))
+
+(defmethod SLO-SOURCE-В-ИМЯ-ФАЙЛА ((slo-source string))
+  slo-source)
+
+(defmethod SLO-SOURCE-В-ИМЯ-ФАЙЛА ((slo-source pathname))
+  slo-source)
+
 (deftype КАРТА ()
   "Карта говорит о том, где находится исходник данного объекта. Для объектов - строк или объектов, которые можно вывести в строку, карта может состоять из многих сегментов, для каждого из которых указано отдельное место в исходном тексте"
     '(or olm ses slo))
@@ -296,24 +305,25 @@ source-location = slo
 (defun l/find-sources-in-file (filename offset &key (strict nil))
   "Дан файл, найти точку"
 ;  (declare (optimize speed))
-  (let1 res
-      (l/find-sources-in-map (gethash (namestring filename) *nplf) offset :strict strict)
-    (_f remove-duplicates res :test 'equalp)
-    (if (and res (> (length res) 1))
-        (list 
-         (nth #-lispworks (progn 
-                            (format *query-io* "Sources are ~A~%Which (from 1)?" res) 
-                            (- (read *query-io*) 1))
-              #+lispworks (let* ((choice-list (mapcar 'str++ res))
-                                 (choice (capi:prompt-with-list choice-list "Choose one of the sources"))
-                                 (pos 
-                                  (if choice 
-                                      (position choice choice-list :test 'equalp)
-                                    (return-from l/find-sources-in-file nil))
-                                  ))
-                            pos)
-              res))
-      res)))
+  (perga
+   (let res
+     (l/find-sources-in-map (gethash (namestring filename) *nplf) offset :strict strict))
+   (_f remove-duplicates res :test 'equalp)
+   (if (and res (> (length res) 1))
+       (list 
+        (nth #-lispworks (progn 
+                           (format *query-io* "Sources are ~A~%Which (from 1)?" res) 
+                           (- (read *query-io*) 1))
+             #+lispworks (let* ((choice-list (mapcar 'str++ res))
+                                (choice (capi:prompt-with-list choice-list "Choose one of the sources"))
+                                (pos 
+                                 (if choice 
+                                     (position choice choice-list :test 'equalp)
+                                     (return-from l/find-sources-in-file nil))
+                                 ))
+                           pos)
+             res))
+       res)))
 
 (defun l/find-sources-in-map (map offset &key (strict nil))
   "Дана карта, найти точку, откуда растёт исходник. Возвращает список троек (файл начало конец). Если strict=nil, 
@@ -493,22 +503,18 @@ source-location = slo
 (defun extract-source-filename-from-stream (stream)
   "Посмотреть в SLIME. По идее, должно всегда работать pathname stream, но данная ф-я чётко ограничивает список классов потоков, с которыми работает, и возвращает nil вместо ошибки для потоков, читающих не из файла"
 ;  (declare (optimize speed))
-  #-(or lispworks sbcl)
-  (note-not-implemented-for-this-lisp extract-source-filename-from-stream)
-  #+lispworks
   (etypecase stream
+    #+lispworks
     (editor::editor-region-stream
      (slot-value (slot-value (slot-value stream 'editor::point) 'editor::buffer) 'editor::%pathname))
+    #+lispworks
     (stream::ef-file-stream (slot-value (slot-value stream 'stream::underlying-stream) 'stream::path))
-    (stream::file-stream (slot-value stream 'stream::path))
-    (string-stream nil)
-    )
-  #+sbcl
-  (etypecase stream
-    (sb-impl::fd-stream (sb-impl::fd-stream-file stream))
     (file-stream (pathname stream)) ; (slot-value stream 'file)
-    (string-stream nil))
-  )
+    (ПОТОКИ-ЗПТ-СЧИТАЮЩИЕ-БУКВЫ-СТРОКИ-И-КОЛОНКИ:|Обёрнутый-поток|
+     (extract-source-filename-from-stream (ПОТОКИ-ЗПТ-СЧИТАЮЩИЕ-БУКВЫ-СТРОКИ-И-КОЛОНКИ:|Поток-из| stream)))
+    (string-stream nil)
+    #+sbcl (sb-impl::fd-stream (sb-impl::fd-stream-file stream))
+    ))
 
 (defvar *stream-line-count* 
   (make-weak-key-hash-table :test 'eq)
