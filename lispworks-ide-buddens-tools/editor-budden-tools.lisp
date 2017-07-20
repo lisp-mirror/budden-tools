@@ -1,7 +1,8 @@
 ; -*- coding: utf-8; system :EDITOR-BUDDEN-TOOLS ;  -*- 
-;;; Утилиты для работы с редактором. 
 (in-package :editor-budden-tools)
 (asdf::of-system :editor-budden-tools)
+
+;;; Утилиты для работы с редактором (lispworks). Для clcon см. editor-budden-tools-sbcl.lisp 
 
 #+new-projects-structure 
 (defun this-system-dir ()

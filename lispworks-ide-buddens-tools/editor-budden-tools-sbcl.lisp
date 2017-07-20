@@ -94,8 +94,10 @@ replace-string-in-file filename from to :close-file nil :times 1 :from-the-start
    
     (:lett line-count integer
      (etypecase offset
-       (row-col-offset (- (row-col-offset-row offset) 1))
-       (integer no-of-newlines)))
+       (row-col-offset
+        (break "Это не устарело ли?")
+        (row-col-offset-row offset))
+       (integer (+ no-of-newlines 1))))
     (:lett char-count integer
      (etypecase offset
        (row-col-offset (- (row-col-offset-col offset) 1))

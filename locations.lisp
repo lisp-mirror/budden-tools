@@ -221,6 +221,8 @@ source-location = slo
    (let Имя-файла-карты (|Имя-файла-карты-по-имени-файла-исходного-текста| namestring))
    (:@ with-open-file (Вы Имя-файла-карты :direction :output :if-does-not-exist :create :if-exists :supersede))
    (let *print-readably* t)
+   (let *print-right-margin* 200)
+   (let *package* (find-package :карты-исходников-тело))
    (print Карта Вы)))
 
 (defun l/pass-from-delegate-to-object (object delegate)
