@@ -802,7 +802,7 @@ source-location = slo
     #+sbcl (synonym-stream 0) ; *standard-output*
     ))
 
-(defun fix-offset-2 (pathname offset)
+(defun fix-offset-2 (pathname offset) ; только преобразует file-offset к числу букв
   "Имеется числовой offset, к-рый вернул file-position. Давайте попробуем превратить его в смещение в буквах, считая #\newline за 1 букву. Предпочтительнее (гораздо эффективнее) использовать input-stream-position-in-chars"
   (with-open-file (stream pathname)
     (let ((map (ensure-file-position-to-char-position-for-stream stream)))

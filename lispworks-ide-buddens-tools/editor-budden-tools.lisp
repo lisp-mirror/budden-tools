@@ -687,43 +687,12 @@ end.
   (- offset #+nil no-of-newlines 1))
 
 
-(defun fix-offset-2 (pathname offset)
+(defun fix-offset-2 (pathname offset) ; lispworks
   "Имеется числовой offset, к-рый вернул file-position. Давайте попробуем превратить его в 
   row-col-offset. См. также BUDDEN-TOOLS::input-stream-position-in-chars"
   (with-open-file (stream pathname)
     (let ((map (budden-tools::ensure-file-position-to-char-position-for-stream stream)))
-       (budden-tools::file-position-and-map-to-char-position offset map)))
-  #|(perga
-    (when (typep offset 'row-col-offset)
-      (warn "fix-offset-2: attempted to fix row-col-offset")
-      (return-from fix-offset-2 offset))
-    (:lett row integer 1)
-    (:lett col integer 0)
-    (:lett b-offset integer 0) ; = f-offset
-    (perga 
-      (:@ with-open-file (in pathname :direction :input))
-      (loop
-       (:lett char (or character null) (read-char in nil nil))
-       (when (>= (file-position in) offset)
-         (return-from fix-offset-2
-           (make-row-col-offset :row row :col col
-                                :b-offset b-offset
-                                :f-offset offset)))
-       (etypecase char
-         (null
-          (warn "fix-offset-2: approached EOF")
-          (return-from fix-offset-2 0))
-         (character
-          (case char 
-            (#\Newline
-             (incf row)
-             (incf b-offset)
-             (setf col 0))
-            (#\Return
-             (warn "fix-offset-2: got Return character!"))
-            (t
-             (incf b-offset)
-             (incf col))))))))|#)
+       (budden-tools::file-position-and-map-to-char-position offset map))))
 
       
 

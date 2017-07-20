@@ -292,7 +292,7 @@
    |`|
    |,|
 
-;; locations
+;; locations - это всё устарело.
    budden-tools:row-col-offset ; type for storing location in a row-col coordinates
    budden-tools:make-row-col-offset 
    budden-tools:row-col-offset-row 
