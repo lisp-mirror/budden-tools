@@ -806,7 +806,9 @@ source-location = slo
   "Имеется числовой offset, к-рый вернул file-position. Давайте попробуем превратить его в смещение в буквах, считая #\newline за 1 букву. Предпочтительнее (гораздо эффективнее) использовать input-stream-position-in-chars"
   (with-open-file (stream pathname)
     (let ((map (ensure-file-position-to-char-position-for-stream stream)))
-       (file-position-and-map-to-char-position offset map))))
+       (values
+        pathname
+        (file-position-and-map-to-char-position offset map)))))
 
 ; FIXME Deprecated - используй input-stream-position-in-chars 
 (defun extract-file-position (stream)

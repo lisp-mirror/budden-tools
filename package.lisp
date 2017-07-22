@@ -300,7 +300,10 @@
    budden-tools:buffer-offset-to-row-col-offset ; find row-col-offset in an editor
    budden-tools:row-col-offset-to-buffer-offset
    BUDDEN-TOOLS:row-col-offset-b-offset
+
+;; отладка
    budden-tools:def-toplevel-progn ; top-level-form which is locatable in a debugger session
+   budden-tools:keep-var-for-debug
    "
    ))
 
