@@ -1,5 +1,5 @@
-;;; -*- Encoding: utf-8; -*-
-;;; Written by Denis Budyak 2008-2015. This file is in public domain or covered by asdf licens or maybe 
+;;; -*- coding: utf-8; -*-
+;;; Written by Denis Budyak 2008-2017. This file is in public domain or covered by asdf licens or maybe 
 ;;; under some other license. It conatains modified parts of asdf so I don't know. 
 ;;; Load this file (w/o compilation)
 ;;; This file is not a part of any asdf system
@@ -162,3 +162,19 @@ to resolve circular references between systems"
 #+sbcl
 (decorate-function::decorate-macro 'defsystem 'decorate-defsystem)
 
+(defun systems-that-depend-on-system (system-or-system-name)
+  "systems-or-system-names - это система, имя системы, список систем или список имён систем. 
+Ищем в asdf и в quicklisp. Когда ищет в asdf, показывает зарегистрированные системы. Какие системы показаны в quicklisp, мне неведомо"
+  (let* ((system (find-system system-or-system-name))
+         (system-name (component-name system))
+         (result (ql:who-depends-on system-name)))
+    (map-systems
+     (lambda (other-system)
+       (let ((other-system-name (component-name other-system)))
+         (flet ((discover-dependency-from-list (list)
+                  (dolist (nm list)
+                    (when (string= nm system-name)
+                      (pushnew other-system-name result :test 'string=)))))
+           (discover-dependency-from-list (system-defsystem-depends-on other-system))
+           (discover-dependency-from-list (system-depends-on other-system))))))
+    result))
