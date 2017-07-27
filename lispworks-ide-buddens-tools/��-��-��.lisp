@@ -10,6 +10,6 @@
   (:documentation "Открыть в редакторе файл и перейти на позицию, считая с 1"))
 
 
-(defgeneric real-point-offset (point)
-  (:documentation "Сколько букв от начала файла в этой точке"))
+(defgeneric real-point-offset-0-based (point)
+  (:documentation "Сколько букв от начала файла в этой точке, считая от 0 (sic!)"))
 
