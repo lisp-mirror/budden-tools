@@ -187,6 +187,37 @@
   #-(or lispworks closer-mop) (error "struct-to-alist not defined for this lisp version")
   )
 
+#| Ниже следует лишь пример кода, его не делаем функцией, потому что пользы от него мало
+
+ (defun |Все-функции-доступа-к-полям-структуры| (structure-type)
+  "Для унаследованных полей возвращает унаследованные читатели (что не слишком-то хорошо). Возвращает имена функций."
+  (let* ((|Класс| (if (typep structure-type 'class)
+                      structure-type
+                      (find-class structure-type)))
+         (|Непосредственные-поля| (closer-mop:class-direct-slots |Класс|))
+         (|Читатели|
+          #+sbcl (mapcar 'SB-PCL::SLOT-DEFINITION-INTERNAL-READER-FUNCTION |Непосредственные-поля|)
+          ;; ожидаем только один читатель для каждого поля
+          #-sbcl (error "Не знаю, как получить читателей, но closer-mop:slot-definition-readers должно бы работать"))
+         (|Имена-читателей|
+          (mapcar (lambda (Ф)
+                    ;; Если function-lambda-expression не работает, смотреть как это делает swank
+                    (let ((И (nth-value 2 (function-lambda-expression Ф))))
+                      (assert (typep И '(and symbol (not null))))
+                      И))
+                  |Читатели|))
+         (|Родители| (closer-mop:class-direct-superclasses |Класс|))
+         (|Родители-кроме-structure-object|
+          (remove (find-class 'structure-object) |Родители|))
+         (|Рез| nil))
+    ;; вообще-то родителей у структуры может быть не более одного
+    (dolist (|Родитель| |Родители-кроме-structure-object|)
+      (setf |Рез|
+            (append |Рез| (|Все-функции-доступа-к-полям-структуры| |Родитель|))))
+    (append |Рез| |Имена-читателей|)))
+
+|#
+
 
 (def-trivial-test::! struct-to-alist.1
                      (let (x)
