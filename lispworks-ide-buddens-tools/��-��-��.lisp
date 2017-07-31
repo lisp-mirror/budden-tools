@@ -4,7 +4,11 @@
 (in-package :editor-budden-tools)
 
 (defgeneric goto-xy (pathname row col)
-  (:documentation "Открыть в редакторе файл и перейти на строку (считая с 1) и колонку (считая с 1) - нужно иметь в виду, что в text widget в tcl колонки считаются с 0, а end - это конец строки"))
+  (:documentation "Открыть в редакторе файл и перейти на строку (считая с 1) и колонку (считая с 1) - нужно иметь в виду, что в text widget в tcl колонки считаются с 0, а end - это конец строки. См. также goto-offset,
+                   КАРТЫ-ИСХОДНИКОВ-ТЕЛО::NUMERIC-FILE-POSITION-TO-BUFFER-OFFSET
+                   ODUVANCHIK-INTERFACE:COUNT-LINES
+                   ODUVANCHIK-INTERNALS::MARK-ROW-AND-COL
+                   "))
 
 (defgeneric goto-offset (PATHNAME OFFSET &KEY KILL-BUFFER set-foreground-window subtract-no-of-newlines)
   (:documentation "Открыть в редакторе файл и перейти на позицию, считая с 1"))

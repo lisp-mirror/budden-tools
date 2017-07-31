@@ -201,7 +201,11 @@
                      
 
 (defun mandatory-slot (slot-name)
-  (error "Обязательное поле ~S в defstruct не инициализировано" slot-name)) 
+  "Для начального значения поля структуры, напр:
+   (defstruct Стр
+     (Поле (mandatory-slot 'Поле) :type Ой). 
+   В SBCL мне попадалась подобная внутренняя функция"
+  (error "Обязательное поле ~S в defstruct не инициализировано" slot-name))
 
 (defun copy-tree-of-structures (tree)
   ;(declare (optimize (speed 3) (safety 0) (debug 0)))

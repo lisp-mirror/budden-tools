@@ -115,7 +115,7 @@
    budden-tools:hash-table-difference ; like set-difference, but for hash tables
 
 ;; structures
-   budden-tools:struct-to-alist ; lispworks only for now
+   budden-tools:struct-to-alist 
    budden-tools:mandatory-slot  ; initarg for defstruct slots which must be initialized explicitly
 
 ;; strings and symbols
