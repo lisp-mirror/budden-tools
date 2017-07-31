@@ -1,4 +1,4 @@
-;;; -*- Encoding: utf-8; system :budden-tools; -*-
+;;; -*- coding: utf-8; system :budden-tools; -*-
 (def-merge-packages::! :defun-to-file
                        (:always t)
                        (:use :cl :budden-tools)
@@ -231,10 +231,12 @@
         *print-readably* t
         *print-pretty* t
         *идентифицировать-бездомные-символы-при-печати* t)
-      (format out
-              ";;; -*- Encoding: utf-8; -*-~%;;; Автоматически создано ~S из ~S~%"
-              definer-name
-              (or *compile-file-pathname* *load-pathname*))
+      (perga
+       (let *package* budden-tools:*keyword-package*)
+       (format out
+               ";;; -*- coding: utf-8; -*-~%;;; Автоматически создано ~S из ~S~%"
+               definer-name
+               (or *compile-file-pathname* *load-pathname*)))
       (print `(named-readtables:in-readtable nil) out)
       (print `(CL:IN-PACKAGE ,(package-name (the* not-null (find-package package)))) out)
       (etypecase preambula

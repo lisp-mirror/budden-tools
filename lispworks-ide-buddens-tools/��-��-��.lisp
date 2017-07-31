@@ -8,10 +8,11 @@
                    КАРТЫ-ИСХОДНИКОВ-ТЕЛО::NUMERIC-FILE-POSITION-TO-BUFFER-OFFSET
                    ODUVANCHIK-INTERFACE:COUNT-LINES
                    ODUVANCHIK-INTERNALS::MARK-ROW-AND-COL
+                   GOTO-OFFSET
                    "))
 
 (defgeneric goto-offset (PATHNAME OFFSET &KEY KILL-BUFFER set-foreground-window subtract-no-of-newlines)
-  (:documentation "Открыть в редакторе файл и перейти на позицию, считая с 1"))
+  (:documentation "Открыть в редакторе файл и перейти на позицию, считая с 1. См. также GOTO-XY"))
 
 
 (defgeneric real-point-offset-0-based (point)
