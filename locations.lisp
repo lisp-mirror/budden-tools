@@ -96,6 +96,9 @@ source-location = slo
 - перевести из file-position. Для строковых потоков вроде бы преобразование тривиально. Файл нужно открыть и создать
 карту соответствий, см. ensure-file-position-to-char-position-for-stream и его использование
 - использование потоков, считающих буквы по мере чтения, см. :ПОТОКИ-ЗПТ-СЧИТАЮЩИЕ-БУКВЫ-СТРОКИ-И-КОЛОНКИ
+
+Таких координат есть две, 0-based - это когда первая литера в файле имеет смещение 0, 
+и 1-based - когда первая литера в файле имеет смещение 1
  
 
 СМ. ТАКЖЕ
@@ -322,40 +325,50 @@ source-location = slo
 
 
 (defun l/find-sources-in-file (filename offset &key (strict nil))
-  "Дан файл, найти точку"
+  "Дано место в файле, найти места, откуда произрастает данное место. offset (место) должен быть в координатах |сико-ПБу| т.е. в литерах, считая первую литеру файла за 1 (1-based), то же касается карт (и мы это проверяем). При этом мы теряем возможность вызывать эту ф-ю так, чтобы она указывала на исходники лиспа, поскольку там с.к. - это |сико-ПФ| . Вероятно, нужно добавить сюда ещё параметр, указывающий систему координат"
 ;  (declare (optimize speed))
   (perga
    (let res
      (l/find-sources-in-map (gethash (namestring filename) *nplf) offset :strict strict))
    (_f remove-duplicates res :test 'equalp)
-   (if (and res (> (length res) 1))
-       (list 
-        (nth #-lispworks (progn 
-                           (format *query-io* "Sources are ~A~%Which (from 1)?" res) 
-                           (- (read *query-io*) 1))
-             #+lispworks (let* ((choice-list (mapcar 'str++ res))
-                                (choice (capi:prompt-with-list choice-list "Choose one of the sources"))
-                                (pos 
-                                 (if choice 
-                                     (position choice choice-list :test 'equalp)
-                                     (return-from l/find-sources-in-file nil))
-                                 ))
-                           pos)
-             res))
-       res)))
+   (let res2
+     (if (and res (> (length res) 1))
+         (list 
+          (nth #-lispworks (progn 
+                             (format *query-io* "Sources are ~A~%Which (from 1)?" res) 
+                             (- (read *query-io*) 1))
+               #+lispworks (let* ((choice-list (mapcar 'str++ res))
+                                  (choice (capi:prompt-with-list choice-list "Choose one of the sources"))
+                                  (pos 
+                                   (if choice 
+                                       (position choice choice-list :test 'equalp)
+                                       (return-from l/find-sources-in-file nil))
+                                   ))
+                             pos)
+               res))
+         res))
+   (assert (every
+            (lambda (Ю)
+              (implies
+               Ю
+               (eq (fourth Ю) '|сико-ПБу|)))
+            res2 () "Читай комментарии в функции, где упал assert"))
+   res2
+   ))
 
 (defun l/find-sources-in-map (map offset &key (strict nil))
-  "Дана карта, найти точку, откуда растёт исходник. Возвращает список троек (файл начало конец). Если strict=nil, 
-может возвращать и пустое имя файла (для отладки)"
+  "Дана карта, найти точку, откуда растёт исходник. Возвращает список четвёрок (файл начало конец |Система-координат|). Если strict=nil, 
+может возвращать и пустое имя файла (для отладки). Крайне рекомендуется проверять систему координат. Не уверен в работоспособности систем координат, отличных от |сико-ПБу|"
 ;  (declare (optimize speed))
   (etypecase map
     (null nil)
     (slo
      (let ((source (slo-source map))
            (beg (slo-beg map))
-           (end (slo-end map)))
+           (end (slo-end map))
+           (sk (|SLO-Система-координат| map)))
        (when (or source (not strict))
-         (list (list source (+ offset beg) end)))))
+         (list (list source (+ offset beg) end sk)))))
     (ses
      (let ((beg (ses-beg map))
            (end (ses-end map)))
@@ -365,8 +378,8 @@ source-location = slo
                                               :strict strict))
            (when pos 
              (flet ((outer-collecting (x) (:collecting x)))
-               (iter (:for (f1 b1 e1) in pos)
-                 (outer-collecting `(,f1 ,b1 ,e1)))))))))
+               (iter (:for (f1 b1 e1 sk) in pos)
+                 (outer-collecting `(,f1 ,b1 ,e1 ,sk)))))))))
     (olm
      (iter (:for ses in (olm-ses-list map))
        (:for poss = (l/find-sources-in-map ses offset :strict strict))
@@ -771,7 +784,7 @@ source-location = slo
 
 (defun input-stream-position-in-chars (stream)
   "Возвращает текущую позицию в потоке в буквах. В отличие от обычного file-position, к-рый извлекает её в буквах исходного файла - может отличаться на cr/lf. 
-  См. также fix-offset-2"
+  См. также fix-offset-2, КАРТЫ-ИСХОДНИКОВ-ЛИЦО:FIX-OFFSET-2, editor-budden-tools::fix-offset-with-no-of-newlines "
   (etypecase stream
     (ПОТОКИ-ЗПТ-СЧИТАЮЩИЕ-БУКВЫ-СТРОКИ-И-КОЛОНКИ:|Считающий-входной-поток-литер|
      (ПОТОКИ-ЗПТ-СЧИТАЮЩИЕ-БУКВЫ-СТРОКИ-И-КОЛОНКИ:|Счётчик-литер-из| stream))                                        
@@ -804,7 +817,7 @@ source-location = slo
     ))
 
 (defun fix-offset-2 (pathname offset) ; только преобразует file-offset к числу букв
-  "Имеется числовой offset, к-рый вернул file-position. Давайте попробуем превратить его в смещение в буквах, считая #\newline за 1 букву. Предпочтительнее (гораздо эффективнее) использовать input-stream-position-in-chars"
+  "Имеется числовой offset, к-рый вернул file-position. Давайте попробуем превратить его в смещение в буквах, считая #\newline за 1 букву. Предпочтительнее (гораздо эффективнее) использовать input-stream-position-in-chars. См. также clco::fix-offset-2"
   (with-open-file (stream pathname)
     (let ((map (ensure-file-position-to-char-position-for-stream stream)))
        (values
