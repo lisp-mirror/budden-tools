@@ -235,7 +235,7 @@
   "Для начального значения поля структуры, напр:
    (defstruct Стр
      (Поле (mandatory-slot 'Поле) :type Ой). 
-   В SBCL мне попадалась подобная внутренняя функция"
+   В SBCL мне попадалась подобная внутренняя функция - sb-int:missing-arg"
   (error "Обязательное поле ~S в defstruct не инициализировано" slot-name))
 
 (defun copy-tree-of-structures (tree)

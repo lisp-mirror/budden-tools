@@ -12,7 +12,15 @@
                    "))
 
 (defgeneric goto-offset (PATHNAME OFFSET &KEY KILL-BUFFER set-foreground-window subtract-no-of-newlines)
-  (:documentation "Открыть в редакторе файл и перейти на позицию, считая с 1. См. также GOTO-XY"))
+  (:documentation "Offset может быть:
+  - структурой row-col-offset
+  - смещением в буквах
+  - file-position. В этом случае нужно передать аргумент subtract-no-of-newlines
+
+  См. также editor::count-lines, editor::what-line-command
+  
+  Данная команда не сработает при отсутствии редактора. При kill-buffer опасно, т.к. закрывает файл без изменений. 
+   См. также modest-goto-offset"))
 
 
 (defgeneric real-point-offset-0-based (point)

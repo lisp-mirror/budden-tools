@@ -61,15 +61,7 @@ replace-string-in-file filename from to :close-file nil :times 1 :from-the-start
 
 
 (defmethod GOTO-OFFSET (PATHNAME OFFSET &KEY KILL-BUFFER set-foreground-window subtract-no-of-newlines)
-  "Offset может быть:
-  - структурой row-col-offset
-  - смещением в буквах
-  - file-position. В этом случае нужно передать аргумент subtract-no-of-newlines
-
-  См. также editor::count-lines, editor::what-line-command
-  
-  Данная команда не сработает при отсутствии редактора. При kill-buffer опасно, т.к. закрывает файл без изменений. 
-   См. также modest-goto-offset"
+  "См. документацию у определения родовой ф-ии"
   #+sbcl (declare (ignore set-foreground-window kill-buffer))
   (perga
     #+lispworks (let ed (get-some-editor))
