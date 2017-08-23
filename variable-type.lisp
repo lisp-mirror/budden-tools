@@ -20,6 +20,8 @@
      (sb-kernel:named-type-name type))
     ((sb-kernel:union-type-p type)
      (sb-kernel:type-specifier type))
+    ((sb-kernel::built-in-classoid-p type)
+     (sb-kernel:classoid-name type))
     (t
      type)))
 
@@ -30,22 +32,37 @@
   #+sbcl
   (cond
    ((constantp var env)
-    (normalize-type (type-of var))) ; в лиспворксе здесь возвращается класс... 
+    (normalize-type (type-of var))) ; в лиспворксе здесь возвращается класс...
+   ((not (symbolp var)) ; если это не переменная, то про тип ничего и не знаем
+    t)         
    (env
     (assert (typep env 'sb-kernel:lexenv))
-    (let* ((vars (sb-c::lexenv-vars env))
-           (this-var (cdr (assoc var vars))))
-      (when this-var
-        (etypecase this-var
-          (sb-c::lambda-var
-           (let ((result (sb-c::lambda-var-type this-var)))
-             (normalize-type result)))
-          (sb-c::global-var
-          ; there is sb-c::global-var-defined-type also
-           (let ((result (sb-c::global-var-type this-var)))
-             (normalize-type result)))
-           
-          )))))
+    (let ((type-cltl2
+           (multiple-value-bind
+               (binding-type local-p declarations) (sb-cltl2:variable-information var env)
+             (declare (ignore binding-type local-p))
+             (let ((declared-type (cdr (assoc 'type declarations))))
+               (or declared-type ; если тип не задан, то и нечего декларировать
+                   t))))
+          (hacked-type
+           (let* ((vars (sb-c::lexenv-vars env))
+                  (this-var (cdr (assoc var vars))))
+             (cond
+              ((null this-var) ; а странно... но считаем, что тип t
+               t)
+              (t
+               (etypecase this-var
+                 (sb-c::lambda-var
+                  (let ((result (sb-c::lambda-var-type this-var)))
+                    (normalize-type result)))
+                 (sb-c::global-var
+                  ; there is sb-c::global-var-defined-type also
+                  (let ((result (sb-c::global-var-type this-var)))
+                    (normalize-type result)))))))))
+      (unless (equalp type-cltl2 hacked-type)
+        (warn "variable-type-or-class есть куда улучшить: type-cltl2 = ~A, hacked-type = ~A"
+              type-cltl2 hacked-type))
+      hacked-type)))
   #+:LISPWORKS4.4
   (cond
    ((constantp VAR ENV)
@@ -118,8 +135,8 @@
           (values (str+ 'string "-") (find-package :common-lisp)))
          ((subtypep class (find-class 'character))
           (values (str+ 'char "-") (find-package :common-lisp)))
-         ((eq class-name 'package)
-          (values (str+ 'package "-") (find-package :common-lisp)))
+         ((member class-name '(symbol package))
+          (values (str+ class-name "-") (find-package :common-lisp)))
          ((subtypep class (find-class 'array))
           (values (str+ 'array "-") (find-package :common-lisp)))
          ((typep class (find-class 'standard-class))
@@ -203,7 +220,7 @@
        ))))
 
 (defmacro strict-carat-implementation (object field-name &rest args &environment env)
-  "Для ^^ "
+  "Для ^^ ."
   (let ((variable-type-or-class (variable-type-or-class object env)))
     (case variable-type-or-class
       ((t nil) (error "Для ~S ^^ ~S - не понял тип аргумента слева от ^^" object field-name))
