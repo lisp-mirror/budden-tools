@@ -185,7 +185,6 @@
    -- :function 
    -- :field
    -- nil - не решено, должен ли это быть синтаксис вызова ф-ии или обращения к полю.
-
 "
 ))
 
@@ -230,7 +229,7 @@
        ))))
 
 (defmacro strict-carat-implementation (object field-name &rest args &environment env)
-  "Для ^^ ."
+  "Для ^^ . См. также .апр {.°} "
   (let ((variable-type-or-class (variable-type-or-class object env)))
     (case variable-type-or-class
       ((t nil) (error "Для ~S ^^ ~S - не понял тип аргумента слева от ^^" object field-name))
