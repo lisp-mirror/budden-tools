@@ -188,6 +188,15 @@
 "
 ))
 
+
+(defmethod function-symbol-for-^ ((type-or-class symbol) field-name)
+  (multiple-value-bind (name pass-field-name field-or-function)
+                       (call-next-method)
+    (cond
+     ((string= field-name "VALUE")
+      (setf field-or-function :field)))
+    (values name pass-field-name field-or-function)))
+
 (defmethod function-symbol-for-^ (type-or-class field-name)
   "возвращает функцию для выполнения ^"
   (multiple-value-bind (prefix package) (conc-prefix-by-type-or-class type-or-class)
