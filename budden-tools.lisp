@@ -835,8 +835,9 @@ modifying form, e.g. @code{(_f + a b) @equiv{} (incf a b)}. See also __f. Modife
 (defvar *escape-symbol-readmacros* t
   "Скрывать символы, которые symbol-readmacro при печати, чтобы они читались как символы")
 
-(defun |Написать-экспорт-для-структуры| (type &optional (string-stream (make-string-output-stream) string-stream-supplied-p))
-  "type - это символ (имя типа структуры) или список из имени пакета и имени символа. В этом случае, если такого символа нет, то ничего и не экспортируется"
+(defun |Написать-экспорт-для-структуры| (type &key (string-stream (make-string-output-stream) string-stream-supplied-p) (|Стиль| :def-merge-packages))
+  "type - это символ (имя типа структуры) или список из имени пакета и имени символа. В последнем случае, если такого символа нет, то ничего и не экспортируется.
+   |Стиль| - либо :def-merge-packages, либо 'defpackage"
   (assert (or (consp type) (symbolp type)))
   (let* ((pack
           (etypecase type
@@ -860,8 +861,13 @@ modifying form, e.g. @code{(_f + a b) @equiv{} (incf a b)}. See also __f. Modife
                    `(do-symbols (x pack)
                       (let ((x-name (string x)))
                         (when (and (eq (symbol-package x) pack) ,filter-expr)
-                          (format string-stream "~%~A:~A" pack-name x-name))))))
-        (format string-stream "~%;;~A" struct-name)
+                          (ecase |Стиль|
+                            (:def-merge-packages
+                             (format string-stream "~%~A:~A" pack-name x-name))
+                            (defpackage
+                             (format string-stream "~%#:~A" x-name)
+                            )))))))
+        ;(format string-stream "~%;;~A" struct-name)
         (doit (string= x-name struct-name))
         (doit (string= x-name (str+ "MAKE-" struct-name)))
         (doit (string= x-name (str+ struct-name "-P")))
@@ -876,6 +882,3 @@ modifying form, e.g. @code{(_f + a b) @equiv{} (incf a b)}. See also __f. Modife
       (get-output-stream-string string-stream))))
 
         
-
-(defun write-exports-for-defstruct (type)
-  (|Написать-экспорт-для-структуры| type))
