@@ -215,6 +215,7 @@
        expanded into (FOO-BAR A). 
        |#
    budden-tools:with-conc-namec ; set translaction prefix for V^X where V is a given symbol.
+   budden-tools:symbol-from-yar-p ; заготовка для определения символов, порождённых из Яра
 
 ;; i/o utilities
    budden-tools:show-hash

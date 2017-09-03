@@ -121,11 +121,62 @@
 
 ; (defun foo (x) (declare (integer x)) (print-variable-type-or-class x))
 
+(defgeneric symbol-from-yar-p (symbol) (:documentation "Будет определён around метод при загрузке Яра"))
+
+(defmethod symbol-from-yar-p ((symbol symbol)) nil)
+
+(defun dash-after-symbol (symbol)
+  (if (symbol-from-yar-p symbol) "ₒ" "-"))
+
+(defun structure-or-class-slots-at-compile-time (type-name)
+  "Для SBCL, умеем проведать о слотах во время компиляции. Для других реализаций будем брать метаданные, известные из прошлых компиляций. См. также structure-or-class-slot-accessors-at-compile-time. ПРАВЬМЯ на самом деле работает только для структур"
+  #+SBCL
+  (let* ((layout (sb-kernel::compiler-layout-or-lose type-name))
+         (info (sb-kernel::layout-info layout))
+         (slots (sb-kernel::dd-slots info))
+         (names (mapcar 'sb-kernel::dsd-name slots)))
+    names)
+  #-SBCL
+  (let* ((slots (closer-mop:class-slots (find-class type-name nil)))
+         (names (mapcar 'closer-mop:slot-definition-name slots)))
+    names))
+
+(defun structure-or-class-slot-readers-at-compile-time (type-name)
+  "Аналогично structure-or-class-slots-at-compile-time"
+  #+SBCL
+  (let* ((layout (sb-kernel::compiler-layout-or-lose type-name))
+         (info (sb-kernel::layout-info layout))
+         (slots (sb-kernel::dd-slots info))
+         (names (mapcar 'sb-kernel::dsd-accessor-name slots)))
+    names)
+  #-SBCL
+  (let* ((slots (closer-mop:class-slots (find-class type-name nil)))
+         (names-lists (mapcar 'closer-mop:slot-definition-readers slots))
+         (names (mapcar 'car slots)))
+    names))
+
+(defun field-or-function-by-type-or-class-and-field-name (type-or-class field-name)
+  "Третье значение для function-symbol-for-^"
+  (cond
+   ((not (typep type-or-class 'symbol))
+    :bad ; если у нас всё в порядке, мы в Яре не увидим этого значения
+    )
+   (t
+    (let* ((class (find-class type-or-class nil)))
+      (cond
+       ((null class)
+        nil)
+       ((and (typep class 'structure-class)
+             (member field-name (structure-or-class-slots-at-compile-time type-or-class)
+                     :test 'string=))
+        :field)
+       (t
+        :function))))))
 
 (defun conc-prefix-by-type-or-class-name (type class)
   (let* ((type-package (symbol-package type)))
     (cond
-     ((null class) (values (str+ type "-") type-package)) ; might fail
+     ((null class) (values (str+ type (dash-after-symbol type)) type-package)) ; might fail
      (t 
       (let1 class-name (class-name class)
         (cond
@@ -140,7 +191,7 @@
          ((subtypep class (find-class 'array))
           (values (str+ 'array "-") (find-package :common-lisp)))
          ((typep class (find-class 'standard-class))
-          (values (str+ class-name "-") type-package))
+          (values (str+ class-name (dash-after-symbol class-name)) type-package))
          (t (error "conc-prefix for class ~S is undefined" class-name))
          ))))))
 
@@ -185,6 +236,7 @@
    -- :function 
    -- :field
    -- nil - не решено, должен ли это быть синтаксис вызова ф-ии или обращения к полю.
+   -- :bad - ошибка в алгоритме (такой код не должен вызываться для Яра)
 "
 ))
 
@@ -192,22 +244,22 @@
 (defmethod function-symbol-for-^ ((type-or-class symbol) field-name)
   (multiple-value-bind (name pass-field-name field-or-function)
                        (call-next-method)
-    (cond
-     ((string= field-name "VALUE")
-      (setf field-or-function :field)))
     (values name pass-field-name field-or-function)))
 
 (defmethod function-symbol-for-^ (type-or-class field-name)
-  "возвращает функцию для выполнения ^"
   (multiple-value-bind (prefix package) (conc-prefix-by-type-or-class type-or-class)
     (let* ((target-symbol-name (str+ prefix field-name))
-           (target-symbol (find-symbol target-symbol-name package)))
-      (assert target-symbol () "(runtime^ ~S ~S): symbol name ~S not found in ~S" 
+           (target-symbol (find-symbol target-symbol-name package))
+           (target-field-or-function (field-or-function-by-type-or-class-and-field-name type-or-class field-name)))
+           
+      (assert target-symbol () "(^ ~S ~S): symbol name ~S not found in ~S" 
         type-or-class field-name target-symbol-name package)
-      (unless (fboundp target-symbol) (warn "(runtime^ ~S ~S): ~S should be a function" 
-                                            type-or-class field-name target-symbol))
+      (unless (or (fboundp target-symbol)
+                  (member target-symbol (structure-or-class-slot-readers-at-compile-time type-or-class)))
+        (warn "(^ ~S ~S): ~S должен быть функцией. Если вы используете а.б в том же модуле, где определена функция, она может быть не видна. Попробуйте вынести определение функции выше по течению сборки" 
+              type-or-class field-name target-symbol))
         ; а если это макрос? (assert (null (macro-function target-symbol)))?
-      target-symbol
+      (values target-symbol nil target-field-or-function)
       )))
                             
 ; we need this as we attach symbol-readmacro on ^ so that it can't be 
@@ -215,8 +267,9 @@
   "Вызывается, если на этапе компиляции не удалось определить тип объекта"
   (assert object () "(runtime^ nil ~S): Sorry, object can't be null!" field-name)
   (let* ((class (class-of object)))
-    (multiple-value-bind (target-function-symbol field-p)
+    (multiple-value-bind (target-function-symbol field-p field-or-function)
         (function-symbol-for-^ class field-name)
+      (warn "Здесь должна стоять проверка на field-or-function, да и вообще вряд ли оно оживёт!")
       (apply target-function-symbol object
              (if field-p (cons field-name args)
                args))
