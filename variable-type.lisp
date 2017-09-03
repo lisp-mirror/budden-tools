@@ -128,28 +128,31 @@
 (defun dash-after-symbol (symbol)
   (if (symbol-from-yar-p symbol) "ₒ" "-"))
 
-(defun structure-or-class-slots-at-compile-time (type-name)
-  "Для SBCL, умеем проведать о слотах во время компиляции. Для других реализаций будем брать метаданные, известные из прошлых компиляций. См. также structure-or-class-slot-accessors-at-compile-time. ПРАВЬМЯ на самом деле работает только для структур"
-  #+SBCL
+;; почему мы отключаем определение функций во время компиляции?
+;; а потому, что нам придётся тогда воспроизвести всю работу, в т.ч. определять сигнатуры
+;; функций доступа. 
+(defun structure-or-class-slots-maybe-compile-time (type-name)
+  "Для SBCL, умеем проведать о слотах во время компиляции. Для других реализаций будем брать метаданные, известные из прошлых компиляций. См. также structure-or-class-slot-accessors-maybe-compile-time. ПРАВЬМЯ на самом деле работает только для структур"
+  #+(and SBCL BUDDEN-TOOLS--VARIABLE-TYPE--COMPILE-TIME-METADATA)
   (let* ((layout (sb-kernel::compiler-layout-or-lose type-name))
          (info (sb-kernel::layout-info layout))
          (slots (sb-kernel::dd-slots info))
          (names (mapcar 'sb-kernel::dsd-name slots)))
     names)
-  #-SBCL
+  #-(and SBCL BUDDEN-TOOLS--VARIABLE-TYPE--COMPILE-TIME-METADATA)
   (let* ((slots (closer-mop:class-slots (find-class type-name nil)))
          (names (mapcar 'closer-mop:slot-definition-name slots)))
     names))
 
-(defun structure-or-class-slot-readers-at-compile-time (type-name)
-  "Аналогично structure-or-class-slots-at-compile-time"
-  #+SBCL
+(defun structure-or-class-slot-readers-maybe-compile-time (type-name)
+  "Аналогично structure-or-class-slots-maybe-compile-time"
+  #+(and SBCL BUDDEN-TOOLS--VARIABLE-TYPE--COMPILE-TIME-METADATA)
   (let* ((layout (sb-kernel::compiler-layout-or-lose type-name))
          (info (sb-kernel::layout-info layout))
          (slots (sb-kernel::dd-slots info))
          (names (mapcar 'sb-kernel::dsd-accessor-name slots)))
     names)
-  #-SBCL
+  #-(and SBCL BUDDEN-TOOLS--VARIABLE-TYPE--COMPILE-TIME-METADATA)
   (let* ((slots (closer-mop:class-slots (find-class type-name nil)))
          (names-lists (mapcar 'closer-mop:slot-definition-readers slots))
          (names (mapcar 'car slots)))
@@ -167,7 +170,7 @@
        ((null class)
         nil)
        ((and (typep class 'structure-class)
-             (member field-name (structure-or-class-slots-at-compile-time type-or-class)
+             (member field-name (structure-or-class-slots-maybe-compile-time type-or-class)
                      :test 'string=))
         :field)
        (t
@@ -255,7 +258,7 @@
       (assert target-symbol () "(^ ~S ~S): symbol name ~S not found in ~S" 
         type-or-class field-name target-symbol-name package)
       (unless (or (fboundp target-symbol)
-                  (member target-symbol (structure-or-class-slot-readers-at-compile-time type-or-class)))
+                  (member target-symbol (structure-or-class-slot-readers-maybe-compile-time type-or-class)))
         (warn "(^ ~S ~S): ~S должен быть функцией. Если вы используете а.б в том же модуле, где определена функция, она может быть не видна. Попробуйте вынести определение функции выше по течению сборки" 
               type-or-class field-name target-symbol))
         ; а если это макрос? (assert (null (macro-function target-symbol)))?
