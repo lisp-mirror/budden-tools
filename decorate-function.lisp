@@ -16,7 +16,10 @@
      #:apply-undecorated
      #:portably-without-package-locks
      #:get-undecorated
+     #:get-function-decorator
      #:|С-декорированной-функцией|
+     #:*undecorated-function-source-locations*
+     #:get-original-function-source-location
      )
     (:use :cl)))
 
@@ -29,12 +32,25 @@
 
 ;;; Здесь нормально (с проверкой переопределения) сделаны макросы. Ф-ии надо переделать. 
 
-(defvar *undecorated-functions* (make-hash-table :test 'eq))
+(defstruct function-decoration
+  "All we know about this decoration"
+  (name (error "mandatory slot name missing") :type symbol)
+  (old-function nil :type (or null function))
+  old-function-source-location 
+  ;; We generate lambda when decorating
+  ;; new-function and new-function-source-location store decorator, not the lambda
+  ;; which is actually written to (symbol-function name)
+  (new-function nil :type (or symbol function)) 
+  )
+
+(defvar *function-decorations*
+  (swank/backend:make-weak-key-hash-table :test 'eq)
+  "Name of original function -> function-decoration")
 
 ; maps symbol to (symbol . original-macro-function)
 ; symbol is an uninterned symbol to which original macro definition is copied while
 ; macro is being decorated
-(defvar *undecorated-macros* (make-hash-table :test 'eq))
+(defvar *undecorated-macros* (swank/backend:make-weak-key-hash-table :test 'eq))
 
 (defmacro portably-without-package-locks (&body body)
   "An attempt to override package locks in a cross-implementation manner. Misplaced and maybe erroneous"
@@ -55,12 +71,31 @@ progn
 
 (defun decorate-function (symbol decorator-fn)
   "See example"
-  (let (#+lispworks (lispworks:*handle-warn-on-redefinition* nil))
-    (symbol-macrolet ((old (gethash symbol *undecorated-functions*)))
-      (let ((old-fn (or old (setf old (symbol-function symbol)))))
-        (setf (symbol-function symbol) 
-              (lambda (&rest args) (apply decorator-fn old-fn args)))))))
+  (check-type symbol symbol)
+  (assert (fboundp symbol) () "It hardly makes sense to decorate non-functions")
+  (check-type decorator-fn (and (not null) (or symbol function)))
+  (let* (#+lispworks
+         (lispworks:*handle-warn-on-redefinition* nil)
+         (old-entry (gethash symbol *function-decorations*))
+         (old-fn (if old-entry (function-decoration-old-function old-entry) (symbol-function symbol)))
+         (new-entry
+          (make-function-decoration
+           :name symbol
+           :old-function old-fn
+           #+sbcl :old-function-source-location
+           #+sbcl (sb-introspect::find-definition-source old-fn)
+           :new-function decorator-fn)))
+    (setf (symbol-function symbol)
+          (lambda (&rest args) (apply decorator-fn old-fn args)))
+    (setf (gethash symbol *function-decorations*)
+          new-entry)
+    (symbol-function symbol)))
 
+(defun get-function-decorator (name)
+  "Returns decorator for function name. If it is undecorated, returns nil"
+  (check-type name (and symbol (not null)))
+  (let* ((entry (gethash name *function-decorations*)))
+    (and entry (function-decoration-new-function entry))))
 
 (defun decorate-macro-get-undecorated-invoker (symbol)
   (car (gethash symbol *undecorated-macros*)))
@@ -105,18 +140,27 @@ progn
       (remhash symbol *undecorated-macros*))))
 
 (defun undecorate-function (symbol)
-  (let ((old-function (gethash symbol *undecorated-functions*)))
-    (assert old-function)
-    (setf (symbol-function symbol) old-function)))
+  (let ((decoration (gethash symbol *function-decorations*)))
+    (assert decoration () "Function ~S is not decorated" symbol)
+    (remhash symbol *function-decorations*)
+    (setf (symbol-function symbol) (function-decoration-old-function decoration))
+    ))
 
+(defun get-original-function-source-location (symbol)
+  (let ((decoration (gethash symbol *function-decorations*)))
+    (and decoration
+         (function-decoration-old-function-source-location decoration))))
 
 (defun apply-undecorated (symbol args)
   "If function of a symbol is decorated, calls original function. If it is not decorated, call just the #'symbol"
-  (apply (or (gethash symbol *undecorated-functions* (symbol-function symbol))
-             symbol) args))
+  (apply (get-undecorated symbol) args))
 
 (defun get-undecorated (symbol)
-  (gethash symbol *undecorated-functions* (symbol-function symbol)))
+  "If function is not decorated, returns symbol-function of symbol"
+  (let ((decoration (gethash symbol *function-decorations*)))
+    (if decoration
+        (function-decoration-old-function decoration)
+        (symbol-function symbol))))
 
 (defmacro |С-декорированной-функцией| (|Функция| |Декоратор| &body |Тело|)
   "Функция и декоратор - это символы, хотя декоратор может быть и лямбдой. Вычисляются.
@@ -132,17 +176,17 @@ progn
 
 #+example
 (progn 
-  (remhash 'foo *undecorated-functions*)
+  (remhash 'foo *function-decorations*)
   (defun foo (x) x)
-  (defun decorate-foo (fn &rest args) (let1 (y) args (+ y (apply fn args))))
-  (decorate-function 'foo #'decorate-foo)
+  (defun decorated-foo (fn &rest args) (let1 (y) args (+ y (apply fn args))))
+  (decorate-function 'foo #'decorated-foo)
   (assert (= (foo 1) 2))
-  (decorate-function 'foo #'decorate-foo)
+  (decorate-function 'foo #'decorated-foo)
   (assert (= (foo 1) 2))
   (defun foo (x) (- x)) 
-  ; this is a flaw. Old #'foo is taken from *undecorated-functions*. 
+  ; Тhis is a flaw. Old #'foo is taken from *function-decorations*. 
   ; but code is intended for decorating system functions.
-  (decorate-function 'foo #'decorate-foo)
+  (decorate-function 'foo #'decorated-foo)
   (assert (= (foo 1) 2))
   )
   
