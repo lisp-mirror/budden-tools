@@ -1,7 +1,8 @@
 ;;; -*- coding: utf-8; -*-
 ;;; Written by Denis Budyak 2008-2017. This file is in public domain or covered by asdf licens or maybe 
 ;;; under some other license. It conatains modified parts of asdf so I don't know. 
-;;; Load this file (w/o compilation)
+;;; In Lispworks, load this file
+;;; In SBCL, you can compile it
 ;;; This file is not a part of any asdf system
 
 (in-package :asdf)
@@ -139,21 +140,21 @@ to resolve circular references between systems"
   (check-type symbol symbol)
   (intern (string-upcase (coerce-name symbol)) (find-package :keyword)))
   
-
 #+sbcl
 (defmacro decorate-defsystem (name &body options)
   "Enable finding system definition with slime-edit-definition"
   (cond
     ((not (stringp name)) ; definitions named by strings can't be navigated to properly 
-     (let ((source-location-sym (make-symbol (string 'sb-c:source-location))))
+     (let ((source-location-sym (make-symbol (string 'sb-c:source-location)))
+           (system-sym (make-symbol (string 'system))))
        `(prog1
             (,(decorate-function::decorate-macro-get-undecorated-invoker 'defsystem)
              ,name ,@options)
-          (let ((,source-location-sym (sb-c:source-location)))
-            (when ,source-location-sym
-              (setf (sb-c::info
-                     :source-location
-                     :constant ,(keywordize-system-name name))
+          ;; see also sbcl--find-definition-sources-by-name--patch.lisp
+          (let ((,source-location-sym (sb-c:source-location))
+                (,system-sym (find-system ',name)))
+            (when (and ,source-location-sym ,system-sym)
+              (setf (system-source-control ,system-sym)
                     ,source-location-sym)))
           )))
     (t `(,(decorate-function::decorate-macro-get-undecorated-invoker 'defsystem) ,name ,@options))))
