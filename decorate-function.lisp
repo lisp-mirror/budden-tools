@@ -40,7 +40,11 @@
   ;; We generate lambda when decorating
   ;; new-function and new-function-source-location store decorator, not the lambda
   ;; which is actually written to (symbol-function name)
-  (new-function nil :type (or symbol function)) 
+  (new-function nil :type (or symbol function))
+  ;; also we store new-lambda which is actually assigned to (symbol-function name)
+  ;; thus we are able to track the situation when the name was redefined and we are trying
+  ;; to apply decoration again
+  new-lambda 
   )
 
 (defvar *function-decorations*
@@ -77,7 +81,11 @@ progn
   (let* (#+lispworks
          (lispworks:*handle-warn-on-redefinition* nil)
          (old-entry (gethash symbol *function-decorations*))
-         (old-fn (if old-entry (function-decoration-old-function old-entry) (symbol-function symbol)))
+         (old-ok (and old-entry (eq (function-decoration-new-lambda old-entry)
+                                    (symbol-function symbol))))
+         (old-fn (if old-ok
+                     (function-decoration-old-function old-entry)
+                     (symbol-function symbol)))
          (new-entry
           (make-function-decoration
            :name symbol
