@@ -10,7 +10,7 @@
     (:asdf-system
      (typecase name
        ((or symbol string)
-        (let* ((system (asdf:find-system name nil))
+        (let* ((system (ignore-errors (asdf:find-system name nil)))
                ;; we reuse the slot which seem to be unused
                (location (and system (asdf:system-source-control system)))
                (result (and location (list (translate-source-location location)))))
