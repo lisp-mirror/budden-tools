@@ -20,7 +20,7 @@
 |#
 
 (defvar |*Запретить-неявное-сужение-типа*| nil
-  "Если истина, то при safety 3 не позволяет сужать тип. Например, передача number в параметр, принимающий integer, вызовет warning. Связывается вокруг загрузки и компиляции любого файла в саму себя, поэтому её можно присваивать внутри eval-when внутри самого файла - эффект будет распространяться только на этот акт компиляции. Для справки: мы не обнаружили никаких отличий между (safety 3) и (safety 2), но safety 3 используется во многих местах, в т.ч. в чужом для нас коде, поэтому мы не можем глобально поменять поведение safety 3.")
+  "Если истина, то при safety 2 не позволяет сужать тип. Например, передача number в параметр, принимающий integer, вызовет warning. Связывается вокруг загрузки и компиляции любого файла в саму себя, поэтому её можно присваивать внутри eval-when внутри самого файла - эффект будет распространяться только на этот акт компиляции. Для справки: мы не обнаружили никаких отличий между (safety 3) и (safety 2), но safety 3 используется во многих местах, в т.ч. в чужом для нас коде и в самой среде, поэтому мы не можем глобально поменять поведение safety 3. А safety 2 вроде довольно редкая вещь, хотя в исходниках SBCL она тоже бывает")
 
 (pushnew '|*Запретить-неявное-сужение-типа*|
          СВЯЗАТЬ-СПЕЦИАЛЬНЫЕ-ПЕРЕМЕННЫЕ-ВОКРУГ-LOAD-И-COMPILE-FILE:*СПИСОК-ПЕРЕМЕННЫХ-ДЛЯ-СВЯЗЫВАНИЯ-ВОКРУГ-LOAD-И-COMPILE-FILE*)
@@ -34,7 +34,8 @@
     ((consp tree) (or (in-tree item (car tree)) (in-tree item (cdr tree))))
     (t nil)))
 
-(defun ir1-optimize-cast (cast &optional do-not-optimize)
+(defun decorated-ir1-optimize-cast (fn cast &optional do-not-optimize)
+  (declare (ignore fn))
   (declare (type cast cast))
   (let ((value (cast-value cast))
         (atype (cast-asserted-type cast)))
@@ -60,7 +61,7 @@
                                        (function-designator-cast-arg-count cast))))
 
           (delete-cast cast)
-          (return-from ir1-optimize-cast t))
+          (return-from decorated-ir1-optimize-cast t))
 
         (when (and (listp (lvar-uses value))
                    lvar)
@@ -101,14 +102,15 @@
       (cond ((or
               (neq int *empty-type*)
               (eq value-type *empty-type*))
-             (when (and (policy cast (= safety 3))
+             (when (and (policy cast (= safety 2))
                         |*Запретить-неявное-сужение-типа*|)
                (let ((context (node-source-form cast))
                      (detail (lvar-all-sources (cast-value cast))))
                  (unless (or (eq (car context) 'named-lambda) 
                              (and (eq (car context) 'function) 
                                   (eq (caadr context) 'named-lambda))
-                             (not (in-tree (car detail) context)))
+                             ;(not (in-tree (car detail) context))
+                             )
                    (filter-lvar
                      (cast-value cast)
                      ;; FIXME: Derived type.
@@ -165,7 +167,7 @@
              ;; FIXME: Is it necessary?
              (aver (null (block-pred (node-block cast))))
              (delete-block-lazily (node-block cast))
-             (return-from ir1-optimize-cast)))
+             (return-from decorated-ir1-optimize-cast)))
       (when (eq (node-derived-type cast) *empty-type*)
         (maybe-terminate-block cast nil))
 
@@ -176,3 +178,60 @@
 
   (unless do-not-optimize
     (setf (node-reoptimize cast) nil)))
+
+(decorate-function:decorate-function 'ir1-optimize-cast 'decorated-ir1-optimize-cast)
+(decorate-function:undecorate-function 'ir1-optimize-cast)
+
+
+(defun named-function-some-cast-p (cast)
+  "Без особого понимания выдернуто из ir1-optimize-cast"
+  (let ((context (node-source-form cast))
+        (detail (lvar-all-sources (cast-value cast))))
+    (or (eq (car context) 'named-lambda) 
+        (and (eq (car context) 'function) 
+             (eq (caadr context) 'named-lambda)))))
+
+
+(defun decorated-generate-type-checks (fn component)
+  (declare (ignore fn))
+  (collect ((casts))
+    (do-blocks (block component)
+      (when (and (block-type-check block)
+                 (not (block-delete-p block)))
+        ;; CAST-EXTERNALLY-CHECKABLE-P wants the backward pass
+        (do-nodes-backwards (node nil block)
+          (when (and (cast-p node)
+                     (cast-type-check node))
+            (cast-check-uses node)
+            (cond ((cast-externally-checkable-p node)
+                   (setf (cast-%type-check node) :external))
+                  (t
+                   ;; it is possible that NODE was marked :EXTERNAL by
+                   ;; the previous pass
+                   (setf (cast-%type-check node) t)
+                   (casts node)))))
+        (setf (block-type-check block) nil)))
+    (dolist (cast (casts))
+      (budden-tools:show-expr cast)
+      (unless (bound-cast-p cast)
+        (multiple-value-bind (check types) (cast-check-types cast)
+          (ecase check
+            (:simple
+             (when (and (policy cast (= safety 2))
+                        |*Запретить-неявное-сужение-типа*|
+                        (not (named-function-some-cast-p cast)))               
+               (compiler-notify "Неявное сужение типа с проверкой во время выполнения запрещено в этой части кода:~%~S." cast))
+             (convert-type-check cast types))
+            (:too-hairy
+             (let ((*compiler-error-context* cast))
+               (when (policy cast (>= safety inhibit-warnings))
+                 (compiler-notify
+                  "type assertion too complex to check:~%~
+                    ~/sb-impl:print-type/."
+                  (coerce-to-values (cast-asserted-type cast)))))
+             (setf (cast-type-to-check cast) *wild-type*)
+             (setf (cast-%type-check cast) nil)))))))
+  (values))
+
+
+(decorate-function:decorate-function 'generate-type-checks 'decorated-generate-type-checks)
