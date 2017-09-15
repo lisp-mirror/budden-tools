@@ -13,13 +13,13 @@
     (:export 
      #:decorate-function
      #:undecorate-function
-     #:apply-undecorated
+     ;#:apply-undecorated
      #:portably-without-package-locks
-     #:get-undecorated
-     #:get-function-decorator
+     ;#:get-undecorated
+     ;#:get-function-decorator
      #:|С-декорированной-функцией|
-     #:*undecorated-function-source-locations*
-     #:get-original-function-source-location
+     ;#:*undecorated-function-source-locations*
+     ;#:get-original-function-source-location
      )
     (:use :cl)))
 
@@ -73,8 +73,9 @@
 progn
 ,@body))
 
-(defun decorate-function (symbol decorator-fn)
+#-SBCL (defun decorate-function (symbol decorator-fn &key (advice-name 'decorate-function))
   "See example"
+  (declare (ignore advice-name)) ; FIXME - implement through advice where available
   (check-type symbol symbol)
   (assert (fboundp symbol) () "It hardly makes sense to decorate non-functions")
   (check-type decorator-fn (and (not null) (or symbol function)))
@@ -99,7 +100,14 @@ progn
           new-entry)
     (symbol-function symbol)))
 
-(defun get-function-decorator (name)
+#+SBCL
+(defun decorate-function (symbol decorator-fn &key (advice-name 'decorate-function))
+  "See example"
+  (when (sb-int:encapsulated-p symbol advice-name)
+    (sb-int:unencapsulate symbol advice-name))
+  (sb-int:encapsulate symbol advice-name decorator-fn))
+
+#-SBCL (defun get-function-decorator (name)
   "Returns decorator for function name. If it is undecorated, returns nil"
   (check-type name (and symbol (not null)))
   (let* ((entry (gethash name *function-decorations*)))
@@ -147,28 +155,18 @@ progn
       (setf (macro-function symbol) (macro-function (car decoration-entry)))
       (remhash symbol *undecorated-macros*))))
 
-(defun undecorate-function (symbol)
+#-SBCL
+(defun undecorate-function (symbol &key (advice-name 'decorate-function))
+  (declare (ignore advice-name))
   (let ((decoration (gethash symbol *function-decorations*)))
     (assert decoration () "Function ~S is not decorated" symbol)
     (remhash symbol *function-decorations*)
     (setf (symbol-function symbol) (function-decoration-old-function decoration))
     ))
 
-(defun get-original-function-source-location (symbol)
-  (let ((decoration (gethash symbol *function-decorations*)))
-    (and decoration
-         (function-decoration-old-function-source-location decoration))))
-
-(defun apply-undecorated (symbol args)
-  "If function of a symbol is decorated, calls original function. If it is not decorated, call just the #'symbol"
-  (apply (get-undecorated symbol) args))
-
-(defun get-undecorated (symbol)
-  "If function is not decorated, returns symbol-function of symbol"
-  (let ((decoration (gethash symbol *function-decorations*)))
-    (if decoration
-        (function-decoration-old-function decoration)
-        (symbol-function symbol))))
+#+SBCL
+(defun undecorate-function (symbol &key (advice-name 'decorate-function))
+  (sb-int:unencapsulate symbol advice-name))
 
 (defmacro |С-декорированной-функцией| (|Функция| |Декоратор| &body |Тело|)
   "Функция и декоратор - это символы, хотя декоратор может быть и лямбдой. Вычисляются.
@@ -181,23 +179,31 @@ progn
              ,@|Тело|)
          (decorate-function:undecorate-function ,|Функция-однократно|)))))
 
+;#+example
+(unintern 'test-fn-for-decorate-fn)
 
-#+example
-(progn 
-  (remhash 'foo *function-decorations*)
-  (defun foo (x) x)
-  (defun decorated-foo (fn &rest args) (let1 (y) args (+ y (apply fn args))))
-  (decorate-function 'foo #'decorated-foo)
-  (assert (= (foo 1) 2))
-  (decorate-function 'foo #'decorated-foo)
-  (assert (= (foo 1) 2))
-  (defun foo (x) (- x)) 
-  ; Тhis is a flaw. Old #'foo is taken from *function-decorations*. 
-  ; but code is intended for decorating system functions.
-  (decorate-function 'foo #'decorated-foo)
-  (assert (= (foo 1) 2))
-  )
-  
+;#+example
+(defun smoke-test ()
+  (mapcar
+   'eval
+   '((defun test-fn-for-decorate-fn (x y) (print "Fn invoked") x)
+     (defun decorated-test-fn-for-decorate-fn (fn x y)
+       (print "Decorator invoked")
+       (+ y (funcall fn x y)))
+     (decorate-function 'test-fn-for-decorate-fn 'decorated-test-fn-for-decorate-fn)
+     (assert (= (test-fn-for-decorate-fn 1 2) 3))
+     (decorate-function 'test-fn-for-decorate-fn 'decorated-test-fn-for-decorate-fn)
+     (assert (= 3 (test-fn-for-decorate-fn 1 2)))
+     (defun test-fn-for-decorate-fn (x y) (- x))
+     (assert (= (test-fn-for-decorate-fn 1 4) 3))
+     (decorate-function 'test-fn-for-decorate-fn 'decorated-test-fn-for-decorate-fn)
+     (assert (= 3 (test-fn-for-decorate-fn 1 4)))
+     )))
+
+;#+example
+(smoke-test)  
+
+
 #+example
 (progn ; evaluate it, not compile
   (defmacro original (symbol) `',symbol)

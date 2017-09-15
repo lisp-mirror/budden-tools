@@ -69,12 +69,15 @@ INPUT is used to guess the preferred case."
 
 (decorate-function:decorate-function 'swank::symbol-completion-set #'decorated-swank--symbol-completion-set)
 
+(defvar *call-original-find-package* nil)
 
 #+(and sbcl (not careful-token-reader-via-native-package-local-nicknames))
 (DECORATE-FUNCTION:PORTABLY-WITHOUT-PACKAGE-LOCKS
  (defun decorated-find-package (fn name)
-   (budden-tools::hp-find-package (if (stringp name) (string-upcase name) name)
-                                  *package* fn)))
+   (if *call-original-find-package*
+       (funcall fn name)
+       (budden-tools::hp-find-package (if (stringp name) (string-upcase name) name)
+                                      *package* fn))))
 
 #+(and sbcl (not careful-token-reader-via-native-package-local-nicknames))
 (DECORATE-FUNCTION:PORTABLY-WITHOUT-PACKAGE-LOCKS

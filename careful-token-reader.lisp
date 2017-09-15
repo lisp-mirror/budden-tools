@@ -167,6 +167,9 @@ so use stream parameter only to identify a reader. Return value of hook function
 
 (defun char-type (c) (elt *char-table* (char-code c)))
 
+(defun original-find-package (name)
+  (let ((*call-original-find-package* t))
+    (find-package name)))
 
 ;; sbcl has native local package nicknames support
 (defun hp-alias-map (p)
@@ -174,7 +177,7 @@ so use stream parameter only to identify a reader. Return value of hook function
   (declare (ignorable p))
   #-(and sbcl careful-token-reader-via-native-package-local-nicknames)
   (gethash 
-   (the* not-null (apply-undecorated 'find-package (list p)))
+   (the* not-null (original-find-package p))
    *per-package-alias-table*)
   #+(and sbcl careful-token-reader-via-native-package-local-nicknames)
   (sb-ext::package-local-nicknames p)
@@ -187,7 +190,7 @@ so use stream parameter only to identify a reader. Return value of hook function
   (declare (ignorable new p))
   (setf 
    (gethash 
-    (the* not-null (apply-undecorated 'find-package (list p)))
+    (the* not-null (original-find-package p))
     *per-package-alias-table*)
    new)
   )
@@ -195,7 +198,7 @@ so use stream parameter only to identify a reader. Return value of hook function
 #-(and sbcl careful-token-reader-via-native-package-local-nicknames)
 (defun delete-hp-alias-map (p)
   (declare (ignorable p))
-  (remhash (the* not-null (apply-undecorated 'find-package (list p)))
+  (remhash (the* not-null (original-find-package p))
            *per-package-alias-table*))
 
 ;; redefining hp-find-package to know about qualified-package
@@ -219,7 +222,7 @@ so use stream parameter only to identify a reader. Return value of hook function
            ;; otherwise use NAME/PACKAGE. not PN, in case it can do some
            ;; magic.  Otherwise look up a relative name.
            (if real-find-package-fn (funcall real-find-package-fn  (or epn name/package))
-             (apply-undecorated 'find-package (list (or epn name/package))))
+             (original-find-package (or epn name/package)))
            )))))
 
 
