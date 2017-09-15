@@ -12,6 +12,7 @@
   (defpackage :decorate-function 
     (:export 
      #:decorate-function
+     #:def-function-decoration
      #:undecorate-function
      ;#:apply-undecorated
      #:portably-without-package-locks
@@ -21,6 +22,8 @@
      ;#:*undecorated-function-source-locations*
      ;#:get-original-function-source-location
      )
+    (:shadow
+     #:decoration-definition-location-indicator)
     (:use :cl)))
 
 ;(asdf:of-system :decorate-function) ; we are too early
@@ -100,12 +103,44 @@ progn
           new-entry)
     (symbol-function symbol)))
 
+
 #+SBCL
 (defun decorate-function (symbol decorator-fn &key (advice-name 'decorate-function))
-  "See example"
+  "Deprecated. Use def-function-decoration instead"
   (when (sb-int:encapsulated-p symbol advice-name)
     (sb-int:unencapsulate symbol advice-name))
   (sb-int:encapsulate symbol advice-name decorator-fn))
+
+(defun record-decoration-definition-location (function-name advice-name location)
+  (setf
+   (getf
+    (get function-name 'decoration-definition-location-indicator)
+    advice-name)
+   location))
+
+(defun delete-decoration-definition-location (function-name advice-name)
+  (remf
+   (get function-name 'decoration-definition-location-indicator)
+   advice-name))
+
+#+SBCL
+(defmacro def-function-decoration (function-name decorator-fn &key (advice-name 'decorate-function))
+  "Defines a decoration for the function. Arguments:
+   function name - symbol, not evaluated
+   decorator-fn - function designator, evaluated. Must accept the same args as function-name + first parameter is a previous encapsulation
+   advice-name - name of advice, not evaluated. (function-name advice-name) is a key to identify a piece of advice"
+  (let ((source-location-sym (gensym (string 'sb-c:source-location))))
+    `(prog1
+         (decorate-function
+          ',(the symbol function-name)
+          (the (and (not null) (or symbol function)) ,decorator-fn)
+          :advice-name
+          ',(the symbol advice-name))
+       ;; see also sbcl--find-definition-sources-by-name--patch.lisp
+       (let ((,source-location-sym (sb-c:source-location)))
+         (when ,source-location-sym
+           (record-decoration-definition-location
+            ',function-name ',advice-name ,source-location-sym))))))
 
 #-SBCL (defun get-function-decorator (name)
   "Returns decorator for function name. If it is undecorated, returns nil"
@@ -129,8 +164,7 @@ progn
       (remhash symbol *undecorated-macros*)
       nil)
      (t decoration-entry)
-     ))
-  )
+     )))
 
 (defun decorate-macro (symbol decorator-macro)
   "See example"
@@ -165,8 +199,9 @@ progn
     ))
 
 #+SBCL
-(defun undecorate-function (symbol &key (advice-name 'decorate-function))
-  (sb-int:unencapsulate symbol advice-name))
+(defun undecorate-function (function-name &key (advice-name 'decorate-function))
+  (delete-decoration-definition-location (the symbol function-name) (the symbol advice-name))
+  (sb-int:unencapsulate function-name advice-name))
 
 (defmacro |С-декорированной-функцией| (|Функция| |Декоратор| &body |Тело|)
   "Функция и декоратор - это символы, хотя декоратор может быть и лямбдой. Вычисляются.

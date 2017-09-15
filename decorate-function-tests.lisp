@@ -2,7 +2,7 @@
 
 (in-package :decorate-function)
 
-#.(unintern 'decorate-function-test-fn)
+'#.(mapcar 'unintern '(decorate-function-test-fn ff1 ff2))
 
 (defun decorate-function-test-fn (x) x)
 
@@ -51,17 +51,23 @@
 (defun ff1 ())
 (defun b-ff1 (fn))
 (decorate-function 'ff1 #'b-ff1 :advice-name 'b)
-(decorate-function 'ff1 #'b-ff1 :advice-name 'b)
+(def-function-decoration ff1 #'b-ff1 :advice-name b)
 (defun e-ff1 (fn))
-(decorate-function 'ff1 'e-ff1 :advice-name 'e)
+(def-function-decoration ff1 'e-ff1 :advice-name e)
+(undecorate-function 'ff1)
+(def-function-decoration ff1 'e-ff1 :advice-name e)
 (decorate-function 'ff1 'e-ff1 :advice-name 'e)
 (decorate-function 'ff1 (lambda (fn) (declare (ignore fn)) (print "λ")) :advice-name 'λ)
 (decorate-function 'ff1 (lambda (fn) (declare (ignore fn)) (print "λ")) :advice-name 'λ)
 
-(assert (= 3 
+#+nil (assert (= 5
            (length
             (remove-duplicates
              (mapcar
               'sb-introspect::definition-source-character-offset
               (SB-INTROSPECT::ENCAPSULATION-DEFINITION-SOURCES 'ff1)))))
         () "There should be 3 known definition sources for ff1")
+
+(defun ff2 ())
+(def-function-decoration ff2 #'(lambda (fn) (funcall fn)))
+(def-function-decoration ff2 (lambda (fn) (funcall fn)) :advice-name foo)

@@ -14,6 +14,8 @@
   (let ((fdefn (sb-impl::find-fdefn name))
         result)
     (flet ((get-sources-from-this-fn (fn is-it-decorator decorator-type)
+             ;; Patching of SWANK backend is required to make use of decorator-type
+             (declare (ignore decorator-type))
              (let ((decorator-or-function-itself
                     (cond
                      (is-it-decorator
@@ -32,7 +34,7 @@
                                  decorator-or-function-itself
                                  :function))))
                  (function
-                  (budden-tools:show-exprt decorator-or-function-itself)
+                  ;(budden-tools:show-exprt decorator-or-function-itself)
                   (setf result
                         (append
                          result
@@ -68,6 +70,8 @@
              (get-sources-from-this-fn fn is-it-decorator encapsulation-type)))))
       result)))
          
+
+
 (defun sb-introspect--find-definition-sources-by-name-sb--decorated (original-fn name type)
   "Decorator for sb-introspect::find-definition-sources to support :asdf-system"
   (case type
@@ -81,6 +85,15 @@
           result))))
     (:decorator-of-function
      (encapsulation-definition-sources name))
+    (:decoration-definition
+     (when (symbolp name)
+       (let (result
+             (flag nil))
+         (dolist (v (get name 'decorate-function::decoration-definition-location-indicator))
+           (when flag (push v result))
+           (setf flag (not flag)))
+         (budden-tools:show-exprt result)
+         (mapcar 'translate-source-location (nreverse result)))))
     (t
      (funcall original-fn name type))))
 
@@ -91,8 +104,9 @@
     (setf swank/sbcl::*definition-types*
           (list* type head swank/sbcl::*definition-types*))))
 
+(ensure-definition-type :decoration-definition 'decorate-function:decorate-function)
 (ensure-definition-type :asdf-system 'asdf:defsystem)
-(ensure-definition-type :decorator-of-function 'decorate-function:decorate-function)
+(ensure-definition-type :decorator-of-function 'sb-int:encapsulate)
 
 ;; вероятно, нужно ещё продекорировать find-definition-source
 
