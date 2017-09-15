@@ -92,7 +92,6 @@
          (dolist (v (get name 'decorate-function::decoration-definition-location-indicator))
            (when flag (push v result))
            (setf flag (not flag)))
-         (budden-tools:show-exprt result)
          (mapcar 'translate-source-location (nreverse result)))))
     (t
      (funcall original-fn name type))))
