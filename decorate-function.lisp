@@ -1,4 +1,4 @@
-;;; -*- Encoding: utf-8; System :decorate-function -*-
+;;; -*- coding: utf-8; System :decorate-function;  -*-
 ;;; decorate-function:
 ;;; Что делает? Позволяет подменить symbol-function, удовлетворяя следующим условиям:
 ;;; 1. Имеется возможность вызвать исходную функцию из подменённой
@@ -179,39 +179,8 @@ progn
              ,@|Тело|)
          (decorate-function:undecorate-function ,|Функция-однократно|)))))
 
-;#+example
-(unintern 'test-fn-for-decorate-fn)
+;; see decorate-function-tests for examples and tests
 
-;#+example
-(defun smoke-test ()
-  (mapcar
-   'eval
-   '((defun test-fn-for-decorate-fn (x y) (print "Fn invoked") x)
-     (defun decorated-test-fn-for-decorate-fn (fn x y)
-       (print "Decorator invoked")
-       (+ y (funcall fn x y)))
-     (decorate-function 'test-fn-for-decorate-fn 'decorated-test-fn-for-decorate-fn)
-     (assert (= (test-fn-for-decorate-fn 1 2) 3))
-     (decorate-function 'test-fn-for-decorate-fn 'decorated-test-fn-for-decorate-fn)
-     (assert (= 3 (test-fn-for-decorate-fn 1 2)))
-     (defun test-fn-for-decorate-fn (x y) (- x))
-     (assert (= (test-fn-for-decorate-fn 1 4) 3))
-     (decorate-function 'test-fn-for-decorate-fn 'decorated-test-fn-for-decorate-fn)
-     (assert (= 3 (test-fn-for-decorate-fn 1 4)))
-     )))
-
-;#+example
-(smoke-test)  
-
-
-#+example
-(progn ; evaluate it, not compile
-  (defmacro original (symbol) `',symbol)
-  (defmacro decorate-original (symbol) `(list :decorated (,(decorate-macro-get-undecorated-invoker 'original) ,symbol)))
-  (decorate-macro 'original 'decorate-original)
-  (print (original 'asdf))
-  (undecorate-macro 'original)
-  )
 
 
 
