@@ -12,6 +12,7 @@
   budden-tools:ggsym
   budden-tools:ПЕЧАТАЕМЫЙ-ПРЕДСТАВИТЕЛЬ-СИМВОЛА
   defun-to-file:get-tfi-symbol ; будет определена в defun-or-defun-tfi
+  defun-to-file:|Полное-имя-файла-для-Defun-to-file|
    "
                         ))
 
@@ -207,6 +208,14 @@
 (defun defun-to-file-fn-with-options (definer-name name options args-docstring-decls-body)
   (apply 'defun-to-file-fn definer-name name args-docstring-decls-body options))
 
+(defun |Полное-имя-файла-для-Defun-to-file| (function-name)
+  (let* 
+      ((|имя-директории-пакета| (|Закодировать-строку-в-имя-файла| (package-name (symbol-package function-name))))
+       (директория-пакета (str+ (namestring *defun-to-file-directory*) "/" |имя-директории-пакета| "/"))
+       (имя-файла (|Закодировать-строку-в-имя-файла| (symbol-name function-name)))
+       (полное-имя-файла (str+ директория-пакета имя-файла ".lisp")))
+    полное-имя-файла))
+
 (defun defun-to-file-fn (definer-name name args-docstring-decls-body
                           &key
                           walk-form
@@ -216,13 +225,9 @@
                           (|компилировать| t)
                           (|заменять-символы-на-их-Tfi-эквиваленты| nil))
   "Описание см. в defun-to-file-2"
-  (let* 
-      ((|имя-директории-пакета| (|Закодировать-строку-в-имя-файла| (package-name (symbol-package name))))
-       (директория-пакета (str+ (namestring *defun-to-file-directory*) "/" |имя-директории-пакета| "/"))
-       (имя-файла (|Закодировать-строку-в-имя-файла| (symbol-name name)))
-       (полное-имя-файла (str+ директория-пакета имя-файла ".lisp"))
-       (*readtable* (find-readtable nil)))
-    (ensure-directories-exist директория-пакета)
+  (let* ((полное-имя-файла (|Полное-имя-файла-для-Defun-to-file| name))
+         (*readtable* (find-readtable nil)))
+    (ensure-directories-exist полное-имя-файла)
     (perga-implementation:perga
       (:@ with-open-file (out полное-имя-файла :direction :output
         :if-does-not-exist :create :if-exists :supersede
