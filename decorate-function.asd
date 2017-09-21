@@ -1,4 +1,4 @@
-;;; -*- Encoding: utf-8;  Mode: Lisp  -*-
+;;; -*- coding: utf-8;  Mode: Lisp  -*-
 
 (defsystem :decorate-function
   :serial t
