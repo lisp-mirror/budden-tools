@@ -154,8 +154,8 @@
 (error "Нужно как-то декорировать печать символа")
 
 (defparameter |*декларации-оптимизации-пошаговой-отладки*| 
-  '(declaim
-    (optimize (debug 3) (space 2) (compilation-speed 2) (speed 2) (safety 3))))
+  '((declaim
+     (optimize (debug 3) (space 2) (compilation-speed 2) (speed 2) (safety 3)))))
 
 (defmacro defun-to-file-macroexpanded (name &rest more)
   "То же, что defun-to-file, но вызывает walk-form с полным макрорасширением над телом, а также настраивает steppable код. Есть риск ошибок в этой конструкции из-за отсутствия локальных переменных в контексте во время прогулок по лямбда-выражению"
@@ -201,7 +201,7 @@
      (арг1 ...)
      докстрока декларации . тело). 
      walk-form - Обработать с помощью имеющегося в распоряжении walk-form.
-     preambula - код, вставляемый в файл перед телом функции.
+     preambula - код, вставляемый в файл перед телом функции - строка или список форм
      См. также defun-to-file"
   (defun-to-file-fn-with-options 'defun-to-file-2 name options (cons args docstring-decls-body))) 
 
@@ -224,7 +224,7 @@
                           (preambula |*декларации-оптимизации-пошаговой-отладки*|)
                           (|компилировать| t)
                           (|заменять-символы-на-их-Tfi-эквиваленты| nil))
-  "Описание см. в defun-to-file-2"
+  "Описание см. в defun-to-file-2. Это - функция, вызываемая из макроса, она генерирует код функции name и пишет его в файл. Также во время макрорасширения происходит компиляция файла. А загрузка сгенерированного файла происходит вр время загрузки файла, где находится форма defun-to-file"
   (let* ((полное-имя-файла (|Полное-имя-файла-для-Defun-to-file| name))
          (*readtable* (find-readtable nil)))
     (ensure-directories-exist полное-имя-файла)
@@ -248,7 +248,8 @@
         (null)
         (string (format out "~%~A~%" preambula))
         (cons
-         (print preambula out)))
+         (dolist (elt preambula)
+           (print elt out))))
       ; Закомментаренный код - для defun-tfi, см. теги в репозитории Яр и budden-tools - этот код временно удалён, но в целом полезен
       ;(let normal-symbol-from-tfi-symbol (get-tfi-symbol name nil t))
       ;(when normal-symbol-from-tfi-symbol
