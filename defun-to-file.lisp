@@ -13,6 +13,7 @@
   budden-tools:ПЕЧАТАЕМЫЙ-ПРЕДСТАВИТЕЛЬ-СИМВОЛА
   defun-to-file:get-tfi-symbol ; будет определена в defun-or-defun-tfi
   defun-to-file:|Полное-имя-файла-для-Defun-to-file|
+  defun-to-file:|†Декларации-оптимизации-для-Defun-to-file|
    "
                         ))
 
@@ -153,19 +154,19 @@
 #-SBCL
 (error "Нужно как-то декорировать печать символа")
 
-(defparameter |*декларации-оптимизации-пошаговой-отладки*| 
+(defparameter |†Декларации-оптимизации-для-Defun-to-file| 
   '((declaim
      (optimize (debug 3) (space 2) (compilation-speed 2) (speed 2) (safety 3)))))
 
 (defmacro defun-to-file-macroexpanded (name &rest more)
   "То же, что defun-to-file, но вызывает walk-form с полным макрорасширением над телом, а также настраивает steppable код. Есть риск ошибок в этой конструкции из-за отсутствия локальных переменных в контексте во время прогулок по лямбда-выражению"
   (defun-to-file-fn 'defun-to-file-macroexpanded name more :walk-form t
-    :preambula |*декларации-оптимизации-пошаговой-отладки*|))
+    :preambula |†Декларации-оптимизации-для-Defun-to-file|))
 
 (defmacro defun-to-file-me-no-pe (name &rest more)
   "Вызывает walk-form с полным макрорасширением над телом и без print-circle"
   (defun-to-file-fn 'defun-to-file-me-no-pe name more :walk-form t :print-circle nil
-    :preambula |*декларации-оптимизации-пошаговой-отладки*|))
+    :preambula |†Декларации-оптимизации-для-Defun-to-file|))
 
 (defun walk-form-expanding-macros (form)
   #+sbcl
@@ -221,7 +222,7 @@
                           walk-form
                           (package *package*)
                           (print-circle t)
-                          (preambula |*декларации-оптимизации-пошаговой-отладки*|)
+                          (preambula |†Декларации-оптимизации-для-Defun-to-file|)
                           (|компилировать| t)
                           (|заменять-символы-на-их-Tfi-эквиваленты| nil))
   "Описание см. в defun-to-file-2. Это - функция, вызываемая из макроса, она генерирует код функции name и пишет его в файл. Также во время макрорасширения происходит компиляция файла. А загрузка сгенерированного файла происходит вр время загрузки файла, где находится форма defun-to-file"
