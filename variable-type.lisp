@@ -145,14 +145,27 @@
     names))
 
 (defun structure-or-class-slot-readers-maybe-compile-time (type-name)
-  "Аналогично structure-or-class-slots-maybe-compile-time"
+  "Аналогично structure-or-class-slots-maybe-compile-time, возвращает ИМЕНА функций - это нетривиальный факт, т.к. в классе, наверное, могут быть специализированные ФУНКЦИИ, а не имена"
   #+(and SBCL BUDDEN-TOOLS--VARIABLE-TYPE--COMPILE-TIME-METADATA)
   (let* ((layout (sb-kernel::compiler-layout-or-lose type-name))
          (info (sb-kernel::layout-info layout))
          (slots (sb-kernel::dd-slots info))
          (names (mapcar 'sb-kernel::dsd-accessor-name slots)))
     names)
-  #-(and SBCL BUDDEN-TOOLS--VARIABLE-TYPE--COMPILE-TIME-METADATA)
+  #+(and SBCL (not BUDDEN-TOOLS--VARIABLE-TYPE--COMPILE-TIME-METADATA))
+  (cond
+   ((typep (find-class type-name) 'structure-class)
+    (let* ((struct-description (sb-kernel:find-defstruct-description type-name))
+           (slots (sb-kernel::dd-slots struct-description))
+           (names (mapcar 'sb-kernel::dsd-accessor-name slots)))
+      names))
+   (t
+    (let* ((slots (closer-mop:class-slots (find-class type-name nil)))
+           (names-lists (mapcar 'closer-mop:slot-definition-readers slots))
+           (names (mapcar 'car slots)))
+      names)))
+  #-SBCL ; вряд ли сработает для структур, см. случаи для SBCL, а также budden-tools:struct-to-alist и ищите, как
+         ; это работает в данной реализации лиспа.
   (let* ((slots (closer-mop:class-slots (find-class type-name nil)))
          (names-lists (mapcar 'closer-mop:slot-definition-readers slots))
          (names (mapcar 'car slots)))
@@ -250,8 +263,9 @@
     (values name pass-field-name field-or-function)))
 
 (defmethod function-symbol-for-^ (type-or-class field-name)
-  (multiple-value-bind (prefix package) (conc-prefix-by-type-or-class type-or-class)
-    (let* ((target-symbol-name (str+ prefix field-name))
+  (let ((common-lisp:*break-on-signals* t))
+    (multiple-value-bind (prefix package) (conc-prefix-by-type-or-class type-or-class)
+     (let* ((target-symbol-name (str+ prefix field-name))
            (target-symbol (find-symbol target-symbol-name package))
            (target-field-or-function (field-or-function-by-type-or-class-and-field-name type-or-class field-name)))
            
@@ -259,11 +273,11 @@
         type-or-class field-name target-symbol-name package)
       (unless (or (fboundp target-symbol)
                   (member target-symbol (structure-or-class-slot-readers-maybe-compile-time type-or-class)))
-        (warn "(^ ~S ~S): ~S должен быть функцией. Если вы используете а.б в том же модуле, где определена функция, она может быть не видна. Попробуйте вынести определение функции выше по течению сборки" 
+        (warn "(^ ~S ~S): ~S должен быть функцией. Если вы используете а.б в том же модуле, где определена функция, она может быть не видна. В Яре этот код должен быть не нужен, но если он нужен, то разбейте модуль, вставив код или специальную форму завершения модуля. В лиспе вынесите определение функции в другой файл, выше по течению сборки" 
               type-or-class field-name target-symbol))
         ; а если это макрос? (assert (null (macro-function target-symbol)))?
       (values target-symbol nil target-field-or-function)
-      )))
+      ))))
                             
 ; we need this as we attach symbol-readmacro on ^ so that it can't be 
 (defun runtime^ (object field-name &rest args)
