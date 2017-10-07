@@ -70,16 +70,32 @@
              (get-sources-from-this-fn fn is-it-decorator encapsulation-type)))))
       result)))
          
+(defun ensure-definition-type (type head)
+  (unless (getf swank/sbcl::*definition-types* type)
+    (setf swank/sbcl::*definition-types*
+          (list* type head swank/sbcl::*definition-types*))))
 
+;;; One can add more decorations in other places by decorating the function further. 
+#| There are 3 things to do:
+i) ensure-definition-type
+ii) when defining an object, associate its definition location to the object somehow (make sure it survives fasl dumping and loading
+iii) decorate sb-introspect::find-definition-sources-by-name (and maybe sb-introspect::find-definition-source ?)
+|#
+
+(ensure-definition-type :decoration-definition 'decorate-function:decorate-function)
+(ensure-definition-type :asdf-system 'asdf:defsystem)
+(ensure-definition-type :decorator-of-function 'sb-int:encapsulate)
 
 (defun sb-introspect--find-definition-sources-by-name-sb--decorated (original-fn name type)
-  "Decorator for sb-introspect::find-definition-sources to support :asdf-system"
+  "Decorator for sb-introspect::find-definition-sources-by-name to support :asdf-system"
   (case type
     (:asdf-system
      (typecase name
        ((or symbol string)
         (let* ((system (ignore-errors (asdf:find-system name nil)))
-               ;; we reuse the slot which seem to be unused
+               ;; we reuse the slot which seem to be unused. Location is recorded to this slot
+               ;; in the ASDF/INTERFACE::DECORATE-DEFSYSTEM, see
+               ;; c:/yar/lp/budden-tools/asdf-3.1.4-tools.lisp
                (location (and system (asdf:system-source-control system)))
                (result (and location (list (translate-source-location location)))))
           result))))
@@ -97,17 +113,7 @@
      (funcall original-fn name type))))
 
 (decorate-function:decorate-function 'sb-introspect::find-definition-sources-by-name #'sb-introspect--find-definition-sources-by-name-sb--decorated)
-
-(defun ensure-definition-type (type head)
-  (unless (getf swank/sbcl::*definition-types* type)
-    (setf swank/sbcl::*definition-types*
-          (list* type head swank/sbcl::*definition-types*))))
-
-(ensure-definition-type :decoration-definition 'decorate-function:decorate-function)
-(ensure-definition-type :asdf-system 'asdf:defsystem)
-(ensure-definition-type :decorator-of-function 'sb-int:encapsulate)
-
-;; вероятно, нужно ещё продекорировать find-definition-source
+;; what about sb-introspect::find-definition-source ?
 
 
 
