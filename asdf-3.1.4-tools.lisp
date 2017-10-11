@@ -179,3 +179,11 @@ to resolve circular references between systems"
            (discover-dependency-from-list (system-defsystem-depends-on other-system))
            (discover-dependency-from-list (system-depends-on other-system))))))
     result))
+
+
+(defun skompilirovatq-i-zagruzitq-fayil-iz-direktorii-sistemyy (otnositelqnoe-imya-fayila oboznachenie-sistemyy)
+  "Для автоматического экспорта полей и функций defstruct-ов. См. примеры использования"
+  (load (compile-file
+         (merge-pathnames
+          otnositelqnoe-imya-fayila
+          (asdf:system-definition-pathname (asdf:find-system oboznachenie-sistemyy))))))
