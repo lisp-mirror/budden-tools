@@ -189,7 +189,7 @@
        (t
         :function))))))
 
-(defun conc-prefix-by-type-or-class-name (type class)
+(defun conc-prefix-by-type-or-class-name (type class suffix)
   (let* ((type-package (symbol-package type)))
     (cond
      ((null class) (values (str+ type (dash-after-symbol type)) type-package)) ; might fail
@@ -197,21 +197,21 @@
       (let1 class-name (class-name class)
         (cond
          ((typep class 'structure-class)
-          (values (str+ class-name "-") type-package))
+          (values (str+ class-name suffix) type-package))
          ((subtypep class (find-class 'string))
-          (values (str+ 'string "-") (find-package :common-lisp)))
+          (values (str+ 'string suffix) (find-package :common-lisp)))
          ((subtypep class (find-class 'character))
-          (values (str+ 'char "-") (find-package :common-lisp)))
+          (values (str+ 'char suffix) (find-package :common-lisp)))
          ((member class-name '(symbol package))
-          (values (str+ class-name "-") (find-package :common-lisp)))
+          (values (str+ class-name suffix) (find-package :common-lisp)))
          ((subtypep class (find-class 'array))
-          (values (str+ 'array "-") (find-package :common-lisp)))
+          (values (str+ 'array suffix) (find-package :common-lisp)))
          ((typep class (find-class 'standard-class))
           (values (str+ class-name (dash-after-symbol class-name)) type-package))
          (t (error "conc-prefix for class ~S is undefined" class-name))
          ))))))
 
-(defun conc-prefix-by-type-or-class (type-or-class)
+(defun conc-prefix-by-type-or-class (type-or-class suffix)
   "Возвращает два значения: префикс и пакет, в котором надо искать символ с таким префиксом"
   (multiple-value-bind (type class)
       (typecase type-or-class
@@ -222,13 +222,13 @@
         (t ; хм.
          (break)
          (error "can't derive conc-prefix for type ~S" type-or-class)))
-    (conc-prefix-by-type-or-class-name type class)))
+    (conc-prefix-by-type-or-class-name type class suffix)))
   
 
 (trivial-deftest::! #:conc-prefix-by-class-1
                     (mapcar 
                      (lambda (x) 
-                       (multiple-value-bind (s p) (conc-prefix-by-type-or-class x)
+                       (multiple-value-bind (s p) (conc-prefix-by-type-or-class x "-")
                          (list s (package-name p))))
                      (list (class-of "asdf")
                            (find-class 'pathname)
@@ -243,9 +243,10 @@
 
 ; ---------------------------------------------------------------- runtime^ --------------------------------------------------------------
 
-(defgeneric function-symbol-for-^ (type-or-class field-name)
+(defgeneric function-symbol-for-^ (type-or-class suffix field-name)
   (:documentation "
-    Определяет, как преобразовывать выражение а^б (или (|^| а б)) по известному типу а и по имени поля б. Должна возвращать 3 значения
+    Определяет, как преобразовывать выражение а^б (или (|^| а б)) по известному типу а и по имени поля б. suffix - это разделитель между именем типа и поля, к-рый должен
+  быть в результирующей ф-ии. Должна возвращать 3 значения
  - 1: имя функции
  - 2: t, если нужно передать вторым параметром имя поля
  - 3: должен ли это в Яре быть синтаксис вызова функции или синтаксис обращения к полю:
@@ -257,14 +258,14 @@
 ))
 
 
-(defmethod function-symbol-for-^ ((type-or-class symbol) field-name)
+(defmethod function-symbol-for-^ ((type-or-class symbol) suffix field-name)
   (multiple-value-bind (name pass-field-name field-or-function)
                        (call-next-method)
     (values name pass-field-name field-or-function)))
 
-(defmethod function-symbol-for-^ (type-or-class field-name)
+(defmethod function-symbol-for-^ (type-or-class suffix field-name)
   (let ((common-lisp:*break-on-signals* t))
-    (multiple-value-bind (prefix package) (conc-prefix-by-type-or-class type-or-class)
+    (multiple-value-bind (prefix package) (conc-prefix-by-type-or-class type-or-class suffix)
      (let* ((target-symbol-name (str+ prefix field-name))
            (target-symbol (find-symbol target-symbol-name package))
            (target-field-or-function (field-or-function-by-type-or-class-and-field-name type-or-class field-name)))
@@ -279,14 +280,15 @@
       (values target-symbol nil target-field-or-function)
       ))))
                             
-; we need this as we attach symbol-readmacro on ^ so that it can't be 
-(defun runtime^ (object field-name &rest args)
+; Мы не можем прямо определить ф-ю ^, т.к. у нас уже есть symbol-readmacro с именем ^
+(defun runtime^ (object suffix field-name &rest args)
   "Вызывается, если на этапе компиляции не удалось определить тип объекта"
-  (assert object () "(runtime^ nil ~S): Sorry, object can't be null!" field-name)
+  (assert object () "(runtime^ nil ~S ~S): Прошу прощения, но объект должен быть не null!" suffix field-name)
   (let* ((class (class-of object)))
     (multiple-value-bind (target-function-symbol field-p field-or-function)
-        (function-symbol-for-^ class field-name)
-      (warn "Здесь должна стоять проверка на field-or-function, да и вообще вряд ли оно оживёт!")
+        (function-symbol-for-^ class suffix field-name)
+      ;(warn "Здесь должна стоять проверка на field-or-function, да и вообще вряд ли оно оживёт!")
+      (assert target-function-symbol) ; или нужно здесь внятно обругаться? 
       (apply target-function-symbol object
              (if field-p (cons field-name args)
                args))
@@ -294,16 +296,16 @@
 
 (defmacro common-carat-implementation (object field-name &rest args)
   "See also def-compiler-macro common-carat-implementation"
-  `(runtime^ ,object ',field-name ,@args))
+  `(runtime^ ,object "-" ',field-name ,@args))
 
 (define-compiler-macro common-carat-implementation (object field-name &rest args &environment env)
   "See also defmacro common-carat-implementation, а также strict-carat-implementation"
   (let ((variable-type-or-class (variable-type-or-class object env)))
     (case variable-type-or-class
-      ((t nil) `(runtime^ ,object ',field-name ,@args))
+      ((t nil) `(runtime^ ,object "-" ',field-name ,@args))
       (t
        (multiple-value-bind (function-symbol field-p)
-           (function-symbol-for-^ variable-type-or-class field-name)
+           (function-symbol-for-^ variable-type-or-class "-" field-name)
          `(,function-symbol ,object ,@(when field-p `(,field-name)) ,@args))
        ))))
 
@@ -314,7 +316,7 @@
       ((t nil) (error "Для ~S ^^ ~S - не понял тип аргумента слева от ^^" object field-name))
       (t
        (multiple-value-bind (function-symbol field-p)
-           (function-symbol-for-^ variable-type-or-class field-name)
+           (function-symbol-for-^ variable-type-or-class "-" field-name)
          `(,function-symbol ,object ,@(when field-p `(,field-name)) ,@args))
        ))))
 
@@ -330,7 +332,7 @@
   Вызывает eval!!!"
   (eval `(setf (,function-name ,@args) ',new-value)))
 
-(defsetf runtime^ (object field-name &rest args) (new-value)
+(defsetf runtime^ (object suffix field-name &rest args) (new-value)
   "Вызывает eval в runtime!"
   ;(assert (constantp object env))
   (with-gensyms (o target-function-symbol class)
@@ -338,7 +340,7 @@
       `(progn
          (let* ((,o ,object)
                 (,class (class-of ,o))
-                (,target-function-symbol (function-symbol-for-^ ,class ,field-name)))
+                (,target-function-symbol (function-symbol-for-^ ,class ,suffix ,field-name)))
            (assert ,o () "(^set nil ~S): Sorry, object can't be null!" ,field-name)
            (setf-apply ,new-value ,target-function-symbol (cons ,o ,args))
            )))))
