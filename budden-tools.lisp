@@ -685,14 +685,16 @@ if to-alist is true, to ((a . b) (c . d) ...)"
    ((atom tree) 0)
    (t (+ 1 (tree-weight (car tree)) (tree-weight (cdr tree))))))
 
+(defun |Покажи-выражение-функция| (|Текст-выражения| |Значение-выражения| |Поток|)
+  (format |Поток| "~&~S = ~S~%" |Текст-выражения| |Значение-выражения|)
+  (finish-output |Поток|)
+  |Значение-выражения|)
+
 (defmacro show-expr (expr &optional (stream '*trace-output*))
-  "Shows expression and its value on the trace-output"
-  (let1 e1 expr
+  "Shows expression and its value on the trace-output. Если неизвестно, откуда она вызывается, установи точку останова на входе в show-expr-trace-site"
+  (let ((e1 expr))
     (once-only (e1)
-      `(progn 
-         (format ,stream "~&~S = ~S~%" ',expr ,e1)
-         (finish-output ,stream)
-         ,e1))))
+               `(|Покажи-выражение-функция| ',expr ,e1 ,stream))))
      
 
 (defmacro show-exprt (expr)
