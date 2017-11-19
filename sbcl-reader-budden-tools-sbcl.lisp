@@ -547,9 +547,7 @@ extended <package-name>::<form-in-package> syntax."
                    (return (budden-tools::intern-check-forbidden (copy-token-buf-string buf) pkg stream t)))
                   ((eq pkg *keyword-package*)
                    (return (%intern (token-buf-string buf) (token-buf-fill-ptr buf) pkg
-                                    (if (token-buf-only-base-chars buf)
-                                        (%readtable-symbol-preference rt)
-                                        'character))))
+                           'character))); (token-elt-type (token-buf-only-base-chars buf)))))
                   ((zerop colons)
                    (return (budden-tools::intern-check-forbidden (copy-token-buf-string buf) pkg stream nil)))
                   (t 

@@ -384,7 +384,7 @@ source-location = slo
               (implies
                Ю
                (eq (fourth Ю) '|сико-ПБу|)))
-            res2 () "Читай комментарии в функции, где упал assert"))
+            res2) () "Читай комментарии в функции, где упал assert")
    res2
    ))
 
