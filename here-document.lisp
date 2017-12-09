@@ -45,9 +45,9 @@ of your IDE.
       (:with index = 0)
       (:for look-for = (aref terminator index))
       (:for c = 
-       (handler-bind 
-           ((end-of-file (lambda () (error "terminator ~S not found in ~S" terminator stream))))
-         (read-char stream)))
+            (handler-bind 
+                ((end-of-file #'(lambda (c) (declare (ignore c)) (error "terminator ~S not found in ~S till eof" terminator stream))))
+              (read-char stream)))
       (flet ((coll (x) (:collect x into collected)))
         (cond
          ((eql c look-for)

@@ -182,7 +182,9 @@
          (names (mapcar 'closer-mop:slot-definition-name slots)))
     `((:type . ,(type-of s))
       ,@(loop :for name :in names
+              :for i from 0
               :for value = (slot-value s name)
+              :unless (and (eql i 0) (string-equal name "VERBOSE-NAME-FOR-STRUCTURE-MUTABILITY-FLAG"))
               :collect `(,name . ,value))))
   #-(or lispworks closer-mop) (error "struct-to-alist not defined for this lisp version")
   )

@@ -106,16 +106,14 @@
 
 (defun print-symbol-with-readmacro-readably (object package stream)
   "Печатаем символ, окружая его | |, чтобы он не работал как symbol-readmacro. Чтобы это было возможно, набор букв в символе ограничен, см. BUDDEN-TOOLS::ПРОВЕРИТЬ-ЧТО-ИМЯ-СИМВОЛА-ПОДХОДИТ-ДЛЯ-DEF-SYMBOL-READMACRO"
-  (declare (ignore package))
-  (let ((name (symbol-name object))
-        (pkg (symbol-package object)))
-    (when (and pkg
+  (let ((name (symbol-name object)))
+    (when (and package
                (not (budden-tools::symbol-is-in-package object *package* nil)))
       ;; так по построению, см. (defmethod print-object ((object symbol) stream)
-      ;;(assert (eq package (symbol-package object)))
-      (let ((prefix (package-name pkg)))
+      (assert (eq package (symbol-package object)))
+      (let ((prefix (package-name package)))
         (format stream "|~A|" prefix))
-      (if (eq :external (nth-value 1 (find-symbol name pkg)))
+      (if (eq :external (nth-value 1 (find-symbol name package)))
           (write-char #\: stream)
           (write-string "::" stream)))
     (format stream "|~A|" name))
@@ -123,29 +121,26 @@
 
 (declaim (ftype (function (t t t) t) get-tfi-symbol))
 
-(defun decorated-output-symbol (fn object stream)
+(defun decorated-output-symbol (fn object package stream)
   (cond
    ((and *escape-symbol-readmacros*
          (symbol-package object)
          (symbol-readmacro object))
-    (print-symbol-with-readmacro-readably object *package* stream))
+    (print-symbol-with-readmacro-readably object package stream))
    ((and |*заменять-символы-на-их-Tfi-эквиваленты*|
          ; эта ф-я будет определена в defun-or-defun-tfi
          (get-tfi-symbol object nil nil))
     (let ((|*заменять-символы-на-их-Tfi-эквиваленты*| nil))
-      (funcall fn (get-tfi-symbol object nil nil) stream)))
+      (funcall fn (get-tfi-symbol object nil nil) package stream)))
    ((symbol-package object)
-    (funcall fn object stream))
+    (funcall fn object package stream))
    (*идентифицировать-бездомные-символы-при-печати*
      (let ((*print-circle* nil)
            (*print-readably* nil)
            (*print-escape* t))
-       (ВЫВЕСТИ-ПЕЧАТАЕМЫЙ-ПРЕДСТАВИТЕЛЬ-СИМВОЛА-ДЛЯ-ЧТЕНИЯ-СИМВОЛА
-        (ПОЛУЧИТЬ-ПЕЧАТАЕМЫЙ-ПРЕДСТАВИТЕЛЬ-СИМВОЛА object)
-        *package*
-        stream)))
+       (ВЫВЕСТИ-ПЕЧАТАЕМЫЙ-ПРЕДСТАВИТЕЛЬ-СИМВОЛА-ДЛЯ-ЧТЕНИЯ-СИМВОЛА (ПОЛУЧИТЬ-ПЕЧАТАЕМЫЙ-ПРЕДСТАВИТЕЛЬ-СИМВОЛА object) package stream)))
    (t 
-    (funcall fn object stream))))
+    (funcall fn object package stream))))
 
 
 ;; ПРАВЬМЯ - в версии 1.3.18 для печати символа SBCL использует defmethod print-object
@@ -153,7 +148,7 @@
 #+SBCL
 (decorate-function:portably-without-package-locks
  (decorate-function:decorate-function
-  'sb-impl::output-symbol
+  'sb-kernel:output-symbol 
   #'decorated-output-symbol))
 
 #-SBCL
