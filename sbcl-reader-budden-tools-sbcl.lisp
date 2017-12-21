@@ -161,6 +161,9 @@
                (when with-read-buffer
                  (release-token-buf (shiftf (token-buf-next *read-buffer*) nil)))
                package)
+              ;; is that a too general place for this? 
+              ((swank::guess-package package-designator)
+               (swank::guess-package package-designator))
               (t
                (error 'simple-reader-package-error
                       :package package-designator

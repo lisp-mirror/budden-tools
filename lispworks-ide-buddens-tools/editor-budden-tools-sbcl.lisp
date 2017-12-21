@@ -140,6 +140,7 @@ replace-string-in-file filename from to :close-file nil :times 1 :from-the-start
   "Проверяем символы в общем смысле слова, не в смысле лиспа. Только тире позволяем быть. Также разрешаем двоеточие"
   (not (find c '(#\  #\newline #\, #\^ #\' #\" #\` #\tab #\; #\( #\) #\@
                                ; попробуем ловить символы АА:|Бб| #\|
+                               #\!
                                #\# #\\ #\>))))
 
 (defun process-potential-symbol (x package)
