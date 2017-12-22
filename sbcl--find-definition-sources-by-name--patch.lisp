@@ -112,7 +112,7 @@ iii) decorate sb-introspect::find-definition-sources-by-name (and maybe sb-intro
     (t
      (funcall original-fn name type))))
 
-(decorate-function:decorate-function 'sb-introspect::find-definition-sources-by-name #'sb-introspect--find-definition-sources-by-name-sb--decorated)
+(decorate-function:def-function-decoration sb-introspect::find-definition-sources-by-name #'sb-introspect--find-definition-sources-by-name-sb--decorated)
 ;; what about sb-introspect::find-definition-source ?
 
 
