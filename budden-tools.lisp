@@ -223,8 +223,8 @@
 
 (def-trivial-test::! struct-to-alist.1
                      (let (x)
-                       (defstruct struct-to-alist.test.struct a b c)
-                       (setf x (make-struct-to-alist.test.struct :a 5))
+                       (eval '(defstruct struct-to-alist.test.struct a b c))
+                       (setf x (eval '(make-struct-to-alist.test.struct :a 5)))
                        (struct-to-alist x)
                        )
                      `((:type . struct-to-alist.test.struct)
