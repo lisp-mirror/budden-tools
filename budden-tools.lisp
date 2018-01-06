@@ -403,8 +403,8 @@
           :do (setf res (concatenate 'string res (format nil "~%") x))))) |#
 
 
-(defun read-file-into-string (filename #+(or lispworks sbcl) &key #+(or lispworks sbcl) (external-format :default))
-  (with-open-file (in filename :direction :input #+(or lispworks sbcl) :external-format #+(or lispworks sbcl) external-format)
+(defun read-file-into-string (filename #+(or lispworks sbcl ccl) &key #+(or lispworks sbcl ccl) (external-format :default))
+  (with-open-file (in filename :direction :input #+(or lispworks sbcl ccl) :external-format #+(or lispworks sbcl ccl) external-format)
     (with-output-to-string (result)
       (iter (:for line :in-stream in :using #'read-line)
         (princ line result)
