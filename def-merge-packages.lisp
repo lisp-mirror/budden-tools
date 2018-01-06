@@ -376,15 +376,36 @@ from to-package too. Была переведена в разряд устаре�
 ;;; Try and let entries go away when packages go away
 (hcl:set-hash-table-weak *per-package-alias-table* :key) 
 
+;; From SBCL (Public Domain)
+(defun find-package-or-lose-a-la-sbcl (package-designator)
+  #+sbcl (sb-int::%find-package-or-lose package-designator)
+  #-sbcl
+  (or (find-package package-designator)
+      (error 'package-error
+             :package package-designator
+             :format-control "The name ~S does not designate any package."
+             :format-arguments (list package-designator))))
+
+(defun find-undeleted-package-or-lose-a-la-sbcl (package-designator)
+  #+sbcl (sb-int:find-undeleted-package-or-lose package-designator)
+  #-sbcl 
+  (let ((maybe-result (find-package-or-lose-a-la-sbcl package-designator)))
+    (if (package-name maybe-result)    ; if not deleted
+        maybe-result
+        (error 'package-error
+               :package maybe-result
+               :format-control "The package ~S has been deleted."
+               :format-arguments (list maybe-result)))))
+
 (defun get-custom-reader-for-package (package-designator)
   "custom-reader, если он назначен (с помощью setf), имеет те же параметры, что и read. Вызывается для чтения во временном контексте пакета, т.е., после custom-reader-for-package должен учитывать, что его могут вызвать изнутри read, поэтому просто вызов read скорее всего, вызовет безконечную рекурсию"
-  (let ((pm (gethash (sb-int:find-undeleted-package-or-lose package-designator)
+  (let ((pm (gethash (find-undeleted-package-or-lose-a-la-sbcl package-designator)
                     *per-package-metadata*)))
     (and pm (package-metadata-custom-reader pm))))
 
 (defun get-custom-token-parsers-for-package (package-designator)
   "custom-token-parsers, если назначены (с помощью setf) - это список function designators (для funcall), которые вызываются слева направо над каждым токеном. Они получают на вход: поток, строку и пакет. Возвращают два значения. Первое значение - считанный объект. Второе - t, если объект считан, иначе - nil"
-  (let ((pm (gethash (sb-int:find-undeleted-package-or-lose package-designator) 
+  (let ((pm (gethash (find-undeleted-package-or-lose-a-la-sbcl package-designator) 
                      *per-package-metadata*)))
     (and pm (package-metadata-custom-token-parsers pm))))
   
@@ -419,17 +440,17 @@ from to-package too. Была переведена в разряд устаре�
 
 (defun get-package-metadata-or-nil (package-designator)
   "Function just for export. Returns nil if no metadata found"
-  (let ((d (sb-int:find-undeleted-package-or-lose package-designator)))
+  (let ((d (find-undeleted-package-or-lose-a-la-sbcl package-designator)))
     (gethash d *per-package-metadata*)))
 
 (defun ensure-package-metadata (package-designator)
   "Gets package metadata. Creates one if there is no metadata. Пакет не обязан существовать, в этом случае он должен быть передан в виде keyword-а"
-  (let ((d (sb-int:find-undeleted-package-or-lose package-designator)))
+  (let ((d (find-undeleted-package-or-lose-a-la-sbcl package-designator)))
     (or (gethash d *per-package-metadata*)
         (setf (gethash d *per-package-metadata*) (make-package-metadata)))))
 
 (defun delete-package-metadata (package-designator)
-  (remhash (sb-int:%find-package-or-lose package-designator)
+  (remhash (find-package-or-lose-a-la-sbcl package-designator)
            *per-package-metadata*))
 
 (defun package-forbidden-symbol-names (package)
