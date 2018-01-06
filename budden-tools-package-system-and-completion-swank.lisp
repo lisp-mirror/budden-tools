@@ -168,6 +168,12 @@ The source locations are stored in SOURCE-MAP."
 	   (dolist (char (append (loop for code from 0 to 127 collect (code-char code))
                                  RUSSIAN-BUDDEN-TOOLS:*CYRILLIC-CHARACTERS*))
              (multiple-value-bind (fun nt) (get-macro-character char rt)
+                #+SBCL
+               (when ; follow the logic of sb-impl::%read-preserving-whitespace
+                   (and (null fun)
+                        (not (sb-impl::whitespace[2]p char readtable)))
+                 (setq fun #'sb-impl::read-token
+                       nt t))
                (when fun
                  (let ((wrapper (swank/source-path-parser::make-source-recorder fun source-map)))
                    (set-macro-character char wrapper nt rt)))))))
@@ -180,5 +186,5 @@ The source locations are stored in SOURCE-MAP."
       rt)))
 
 
-(decorate-function:decorate-function 'swank/source-path-parser::make-source-recording-readtable
-                                     #'decorated-swank-source-path-parser--make-source-recording-readtable)
+(decorate-function:def-function-decoration swank/source-path-parser::make-source-recording-readtable
+                                     'decorated-swank-source-path-parser--make-source-recording-readtable)
