@@ -76,9 +76,12 @@
 progn
 ,@body))
 
-#-SBCL (defun decorate-function (symbol decorator-fn &key (advice-name 'decorate-function))
+;; ПРАВЬМЯ для CCL переделать на defadvice, но есть проблема - CCL не позволяет подменять аргументы при вызове исходной функции. 
+#-SBCL
+(defun decorate-function (symbol decorator-fn &key (advice-name 'decorate-function))
   "See example"
-  (declare (ignore advice-name)) ; FIXME - implement through advice where available
+  (declare (ignorable advice-name)) ; FIXME - implement through advice where available
+  #+ccl (assert (eq advice-name 'decorate-function))
   (check-type symbol symbol)
   (assert (fboundp symbol) () "It hardly makes sense to decorate non-functions")
   (check-type decorator-fn (and (not null) (or symbol function)))
@@ -90,15 +93,18 @@ progn
          (old-fn (if old-ok
                      (function-decoration-old-function old-entry)
                      (symbol-function symbol)))
+         (new-lambda (lambda (&rest args) (apply decorator-fn old-fn args)))
          (new-entry
           (make-function-decoration
            :name symbol
            :old-function old-fn
            #+sbcl :old-function-source-location
            #+sbcl (sb-introspect::find-definition-source old-fn)
-           :new-function decorator-fn)))
+           :new-function decorator-fn
+           :new-lambda new-lambda)))
+    (print `(old-ok ,old-ok old-fn ,old-fn symbol-function-of-symbol ,(symbol-function symbol) old-entry ,old-entry))
     (setf (symbol-function symbol)
-          (lambda (&rest args) (apply decorator-fn old-fn args)))
+          new-lambda)
     (setf (gethash symbol *function-decorations*)
           new-entry)
     (symbol-function symbol)))
@@ -123,13 +129,12 @@ progn
    (get function-name 'decoration-definition-location-indicator)
    advice-name))
 
-#+SBCL
 (defmacro def-function-decoration (function-name decorator-fn &key (advice-name 'decorate-function))
   "Defines a decoration for the function. Arguments:
    function name - symbol, not evaluated
    decorator-fn - function designator, evaluated. Must accept the same args as function-name + first parameter is a previous encapsulation
    advice-name - name of advice, not evaluated. (function-name advice-name) is a key to identify a piece of advice"
-  (let ((source-location-sym (gensym (string 'sb-c:source-location))))
+  (let (#+sbcl (source-location-sym (gensym (string 'sb-c:source-location))))
     `(prog1
          (decorate-function
           ',(the symbol function-name)
@@ -137,7 +142,7 @@ progn
           :advice-name
           ',(the symbol advice-name))
        ;; see also sbcl--find-definition-sources-by-name--patch.lisp
-       (let ((,source-location-sym (sb-c:source-location)))
+       #+sbcl (let ((,source-location-sym (sb-c:source-location)))
          (when ,source-location-sym
            (record-decoration-definition-location
             ',function-name ',advice-name ,source-location-sym))))))
