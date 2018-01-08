@@ -34,7 +34,6 @@ function you most likely want to use."
    ; #:export2 ; smart export clause
    #:package-metadata ; structure 
    #:package-metadata-forbidden-symbol-names ; and
-   #:package-metadata-custom-reader ; its
    #:package-metadata-custom-token-parsers ;slots 
    #:package-metadata-allow-qualified-intern
    #:package-metadata-interning-is-forbidden
@@ -70,7 +69,6 @@ function you most likely want to use."
    #:search-and-replace-seq
    #:package-doctor ; try to diagnose trash symbols, duplicate symbols, etc
    ;  #:find-symbol-extended ; like find-symbol, but also returns if symbol is (f)bound and home package
-   #:get-custom-reader-for-package
    #:get-custom-token-parsers-for-package
 
    #:char-upcase-ascii
@@ -84,6 +82,8 @@ function you most likely want to use."
 
    #:this-source-file-directory
    #:qualified-intern-allowed-p
+   #:find-undeleted-package-or-lose-a-la-sbcl
+   #:find-package-or-lose-a-la-sbcl
    ))
 
 (in-package :defpackage-budden)
@@ -341,8 +341,6 @@ from to-package too. Была переведена в разряд устаре�
 (defstruct package-metadata
 ;  write-lock ; if t, attempt to create a symbol creates continuable error
 ;  read-lock ; if t, attempt to read a symbol creates a error
-  custom-reader ; custom reader is a function with the same args as read. It is called 
-                ; when reader is read in a context of package:: syntax. 
   custom-token-parsers ; Custom token parsers is a list of custom token parsers. 
                        ; Custom token parser is a function designator of 
                        ; (stream potential-symbol-name package) which 
@@ -397,26 +395,12 @@ from to-package too. Была переведена в разряд устаре�
                :format-control "The package ~S has been deleted."
                :format-arguments (list maybe-result)))))
 
-(defun get-custom-reader-for-package (package-designator)
-  "custom-reader, если он назначен (с помощью setf), имеет те же параметры, что и read. Вызывается для чтения во временном контексте пакета, т.е., после custom-reader-for-package должен учитывать, что его могут вызвать изнутри read, поэтому просто вызов read скорее всего, вызовет безконечную рекурсию"
-  (let ((pm (gethash (find-undeleted-package-or-lose-a-la-sbcl package-designator)
-                    *per-package-metadata*)))
-    (and pm (package-metadata-custom-reader pm))))
-
 (defun get-custom-token-parsers-for-package (package-designator)
   "custom-token-parsers, если назначены (с помощью setf) - это список function designators (для funcall), которые вызываются слева направо над каждым токеном. Они получают на вход: поток, строку и пакет. Возвращают два значения. Первое значение - считанный объект. Второе - t, если объект считан, иначе - nil"
   (let ((pm (gethash (find-undeleted-package-or-lose-a-la-sbcl package-designator) 
                      *per-package-metadata*)))
     (and pm (package-metadata-custom-token-parsers pm))))
   
-
-(defsetf get-custom-reader-for-package (package-designator) (new-value)
-  (let ((md (gensym)))
-    `(progn
-       (check-type ,new-value (or null symbol function))
-       (let ((,md (ensure-package-metadata ,package-designator)))
-         (setf (package-metadata-custom-reader ,md) ,new-value)))))
-
 (defsetf get-custom-token-parsers-for-package (package-designator) (new-value)
   (let ((md (make-symbol "MD"))
         (new-value-v (make-symbol "NEW-VALUE-V"))
@@ -527,8 +511,6 @@ It also allows for additional clauses. Currently every additional clause can onl
 \(:custom-token-parsers custom-token-parser-spec1 ...) where 
 custom-token-parser-spec is [ symbol | (:packages &rest package-designators) ] - define custom token parsers for the package. Symbols should be from another package and should be names of functions (stream symbol-name package) => (values processed-value processed-p). Custom token parser functions (including inherited ones) are applied from left to right to any new symbol token just before it is interned. If it processed-p is t, then processed-value is inserted into reader output instead of creating symbol named by token. (:packages &rest package-designator) spec
  causes all custom-token-parsers from the package named to be copied to the package being defined. 
-\(:custom-reader symbol) - define custom token reader. 
-With buddens readtable extensions enabled, when reader finds \"that-package:\" in the stream, function named by custom-token-reader is invoked with the same signature as READ. 
 ")
 
 
@@ -554,7 +536,6 @@ With buddens readtable extensions enabled, when reader finds \"that-package:\" i
           export-s
           allow-qualified-intern
           custom-token-parsers
-          custom-reader
           (clauses clauses))
       (get-clause use)
       (get-clause print-defpackage-form)
@@ -563,13 +544,11 @@ With buddens readtable extensions enabled, when reader finds \"that-package:\" i
       (get-clause allow-qualified-intern)
       (get-clause forbid)
       (get-clause custom-token-parsers)
-      (get-clause custom-reader)
       (multiple-value-setq (shadowing-import-from-s clauses) (extract-several-clauses clauses :shadowing-import-from))
       (multiple-value-setq (export-s clauses) (extract-several-clauses clauses :export))
       (length-is-1 print-defpackage-form)
       (length-is-1 always)
       (length-is-1 allow-qualified-intern)
-      (length-is-1 custom-reader)
       (let* (; (dest (keywordize name))
              (sources-for-clashes (mapcar #'force-find-package use))
              (sources-for-import nil)
@@ -583,7 +562,6 @@ With buddens readtable extensions enabled, when reader finds \"that-package:\" i
              processed-export-s 
              allow-qualified-intern-form
              custom-token-parsers-form
-             custom-reader-form
              )
         (dolist (p sources-for-clashes)
           (do-external-symbols (s p)
@@ -688,9 +666,6 @@ With buddens readtable extensions enabled, when reader finds \"that-package:\" i
           (setf custom-token-parsers-form
                 `(setf (get-custom-token-parsers-for-package ,name) ',custom-token-parser-list))
           ); let ((custom-token-parser-list ...))
-        (assert (symbolp custom-reader))
-        (setf custom-reader-form 
-              `(setf (package-metadata-custom-reader (ensure-package-metadata ,name)) ',custom-reader))
         (setf package-definition 
               (if always 
                   `(eval-when (:compile-toplevel :load-toplevel :execute)
@@ -700,7 +675,7 @@ With buddens readtable extensions enabled, when reader finds \"that-package:\" i
                        ,custom-token-parsers-form
                        ,forbid-symbols-form
                        ,allow-qualified-intern-form
-                       ,custom-reader-form))
+                       ))
                 `(prog1
                      ,package-definition
                    (eval-when (:load-toplevel :execute)
@@ -709,7 +684,7 @@ With buddens readtable extensions enabled, when reader finds \"that-package:\" i
                      ,custom-token-parsers-form
                      ,forbid-symbols-form
                      ,allow-qualified-intern-form
-                     ,custom-reader-form))))
+                     ))))
         (when print-defpackage-form
           (let (*print-length* *print-level*) (print package-definition)))
         package-definition

@@ -274,8 +274,6 @@
    budden-tools:*readtable-alist*
    budden-tools:unregister-readtable
 
-   ; we do not export it anymore, use def-merge-packages::! budden-tools:get-custom-reader-for-package ; use your own reader in package context instead of common lisp reader, 
-                                              ; e.g. you can do so that dat1:2011-01-01 would read a localtime:timestamp value
    ; we do not export it anymore, use def-merge-packages::! budden-tools:get-custom-token-parsers-for-package ; parse tokens read with custom parsers (which can, but not encouaraged to have side-effects on stream
    budden-tools:symbol-readmacro ; function of two arguments: symbol and a stream. setf symbol-readmacro to reader switched by the symbol
    budden-tools:def-symbol-readmacro ; Navigation does not work

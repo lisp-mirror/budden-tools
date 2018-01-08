@@ -72,6 +72,7 @@
 #-(or lispworks sbcl)
 (defmacro def-symbol-readmacro (symbol reader &key documentation)
   (declare (ignore documentation))
+  (ПРОВЕРИТЬ-ЧТО-ИМЯ-СИМВОЛА-ПОДХОДИТ-ДЛЯ-DEF-SYMBOL-READMACRO symbol)
   `(setf (symbol-readmacro ',symbol) ,reader))
 
 (defmacro with-good-readtable-2 ((&key (ensure-this-is-a-bad-one t)) &body body)
@@ -167,8 +168,10 @@ so use stream parameter only to identify a reader. Return value of hook function
 
 (defun char-type (c) (elt *char-table* (char-code c)))
 
+(declaim (special *call-original-find-package*))
 (defun original-find-package (name)
   (let ((*call-original-find-package* t))
+    (declare (ignorable *call-original-find-package*)) ; WTF? 
     (find-package name)))
 
 ;; sbcl has native local package nicknames support
@@ -370,7 +373,7 @@ FIXME shadow find-symbol? FIXME rename"
 
 (defun intern-check-forbidden (name package stream qualified-p)
   "Looks if the name is forbidden. Prior to call of the function, name should be transformed according to readtable-case conventions. Internal function, do not use it in your code."
-  (let ((m (gethash (sb-int:find-undeleted-package-or-lose package)
+  (let ((m (gethash (defpackage-budden:find-undeleted-package-or-lose-a-la-sbcl package)
                     *per-package-metadata*)))
     (when m
       (let ((fs (package-metadata-forbidden-symbol-names m)))

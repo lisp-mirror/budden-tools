@@ -121,6 +121,7 @@
 
 (declaim (ftype (function (t t t) t) get-tfi-symbol))
 
+#+SBCL
 (defun decorated-output-symbol (fn object package stream)
   (cond
    ((and *escape-symbol-readmacros*
@@ -142,17 +143,42 @@
    (t 
     (funcall fn object package stream))))
 
+(defvar *inside-decorated-write-a-symbol* nil)
 
-;; ПРАВЬМЯ - в версии 1.3.18 для печати символа SBCL использует defmethod print-object
-;; Почему бы не определить around метод, вместо того, чтобы декорировать?
-#+SBCL
+#+CCL
+(defun decorated-write-a-symbol (fn object stream)
+  (if *inside-decorated-write-a-symbol*
+      (funcall fn object stream)
+      (let ((*inside-decorated-write-a-symbol* t))
+    
+  (cond
+   ((and *escape-symbol-readmacros*
+         (symbol-package object)
+         (symbol-readmacro object))
+    (print-symbol-with-readmacro-readably object *package* stream))
+   ((and |*заменять-символы-на-их-Tfi-эквиваленты*|
+                                        ; эта ф-я будет определена в defun-or-defun-tfi
+         (get-tfi-symbol object nil nil))
+    (let ((|*заменять-символы-на-их-Tfi-эквиваленты*| nil))
+      (funcall fn (get-tfi-symbol object nil nil) stream)))
+   ((symbol-package object)
+    (funcall fn object stream))
+   (*идентифицировать-бездомные-символы-при-печати*
+     (let ((*print-circle* nil)
+           (*print-readably* nil)
+           (*print-escape* t))
+       (ВЫВЕСТИ-ПЕЧАТАЕМЫЙ-ПРЕДСТАВИТЕЛЬ-СИМВОЛА-ДЛЯ-ЧТЕНИЯ-СИМВОЛА (ПОЛУЧИТЬ-ПЕЧАТАЕМЫЙ-ПРЕДСТАВИТЕЛЬ-СИМВОЛА object) *package* stream)))
+   (t 
+    (funcall fn object stream))))))
+
 (cl-advice:portably-without-package-locks
-  (cl-advice:define-advice
-      sb-kernel:output-symbol 
-      #'decorated-output-symbol))
+  #+CCL
+  (cl-advice:define-advice ccl::write-a-symbol #'decorated-write-a-symbol)
+  #+SBCL
+  (cl-advice:define-advice sb-kernel:output-symbol #'decorated-output-symbol)
+  #-(or SBCL CCL)
+  (error "Нужно декорировать печать символа"))
 
-#-SBCL
-(error "Нужно как-то декорировать печать символа")
 
 (defparameter |†Декларации-оптимизации-для-Defun-to-file| 
   '((declaim
@@ -175,15 +201,17 @@
   #+sbcl
   (let ((sb-walker::*walk-form-expand-macros-p* t))
     (sb-walker:walk-form form))
-  #+ccl
-  form ; ничего нет
+  #-SBCL
+  form ; ничего нет. Для CCL копать в районе ccl::nx1-lambda
   )
 
 (defun careful-transform-defun-form (name more)
-  (perga-implementation:perga
+  #+CCL `(defun ,name ,form) ; ПРАВЬМЯ - здесь ничего не сделано, см. примечание для walk-form-expanding-macros
+  #+SBCL (perga-implementation:perga
    (let args (car more))
    (let body (cdr more))
-   (:@ multiple-value-bind (forms decls doc) (sb-impl::parse-body body t))
+   (:@ multiple-value-bind (forms decls doc)
+       (alexandria:parse-body body :documentation t))
    (let lambda-guts `(,@decls (block ,(sb-impl::fun-name-block-name name) ,@forms)))
    (let lambda `(lambda () ,@lambda-guts))
    (let walked-lambda (walk-form-expanding-macros lambda))

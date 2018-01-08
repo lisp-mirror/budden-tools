@@ -1055,11 +1055,7 @@ variables to allow for nested and thread safe reading."
       (let ((found (hp-find-package package-designator)))
         (unless found
           (simple-reader-error stream "package or local-package nickname ~S not found. Note we ignore SBCL's local-package nicknames, but obey those from def-merge-packages::! or defpackage-l2::!" package-designator
-                 ))
-        (let ((custom-token-reader (budden-tools::get-custom-reader-for-package found)))
-          (when custom-token-reader
-            (return
-             (funcall custom-token-reader stream t nil t)))))  
+                 )))  
       (setq escapes ())
       (setq char (read-char stream nil nil))
       (unless char (reader-eof-error stream "after reading a colon"))

@@ -63,20 +63,6 @@
         (warn "variable-type-or-class есть куда улучшить: type-cltl2 = ~A, hacked-type = ~A"
               type-cltl2 hacked-type))
       hacked-type)))
-  #+:LISPWORKS4.4
-  (cond
-   ((constantp VAR ENV)
-    (class-of var))
-   (ENV
-    (let1 remote-environment (slot-value env 'lexical::remote-environment)
-      (when remote-environment 
-        (let1 variable-types
-            (iter (:for venv in (slot-value remote-environment 'compiler::venv))
-              (ignored (struct-to-alist venv))
-              (:collect `(,(slot-value venv 'compiler::name)
-                          ,(slot-value venv 'type))))
-          (cadr (assoc var variable-types))))
-      )))
   #+lispworks6
   (cond 
    ((constantp var env)
@@ -91,8 +77,11 @@
                           ,(slot-value venv 'type))))
           (cadr (assoc var variable-types))))))
    );cond
-  #-(or :LISPWORKS4.4 :lispworks6 sbcl)
-  (when (constantp var env) (class-of var))
+  #-(or :lispworks6 sbcl)
+  (if
+   (constantp var env)
+   (class-of var)
+   t)
   )
 
 
@@ -208,6 +197,8 @@
           (values (str+ 'array suffix) (find-package :common-lisp)))
          ((typep class (find-class 'standard-class))
           (values (str+ class-name (dash-after-symbol class-name)) type-package))
+         ((eql class-name 'pathname)
+          (values (str+ class-name (dash-after-symbol class-name)) :common-lisp))
          (t (error "conc-prefix for class ~S is undefined" class-name))
          ))))))
 
@@ -227,7 +218,7 @@
 
 (trivial-deftest::! #:conc-prefix-by-class-1
                     (mapcar 
-                     (lambda (x) 
+                     (alexandria:named-lambda conc-prefix-by-class-1-lambda (x) 
                        (multiple-value-bind (s p) (conc-prefix-by-type-or-class x "-")
                          (list s (package-name p))))
                      (list (class-of "asdf")

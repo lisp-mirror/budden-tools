@@ -11,6 +11,7 @@
 	:components
         (
 	(:file "see-packages-vars-and-macros")
+        #+ccl (:file "sbcl-in-ccl")
 	(:file "study-readtable")
 	(:file "careful-token-reader")
         #+lispworks (:file "sbcl-reader-budden-tools-lispworks-consts")
