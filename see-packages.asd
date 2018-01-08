@@ -7,7 +7,7 @@
 
 (defsystem :see-packages
 	:serial t
-        :depends-on (:cl-utilities :budden-tools :russian-budden-tools :swank :decorate-function :iterate-keywords)	
+        :depends-on (:cl-utilities :budden-tools :russian-budden-tools :swank :cl-advice :iterate-keywords)	
 	:components
         (
 	(:file "see-packages-vars-and-macros")

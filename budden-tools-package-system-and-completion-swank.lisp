@@ -28,7 +28,7 @@
     (t
      (funcall fn string))))
 
-(decorate-function:decorate-function 'swank::tokenize-symbol-thoroughly #'decorated-swank--tokenize-symbol-thoroughly)
+(cl-advice:define-advice swank::tokenize-symbol-thoroughly #'decorated-swank--tokenize-symbol-thoroughly)
 
 ;;; FIXME see also oduvanchik-regexp-synonyms
 (defun decorated-swank--completion-output-case-converter (fn input &optional with-escaping-p)
@@ -47,7 +47,7 @@ INPUT is used to guess the preferred case."
      (funcall fn input with-escaping-p)
      )))
 
-(decorate-function:decorate-function 'swank::completion-output-case-converter
+(cl-advice:define-advice swank::completion-output-case-converter
                                      #'decorated-swank--completion-output-case-converter)
 
 (defun decorated-swank--symbol-completion-set (fn name package-name package internal-p matchp)
@@ -67,12 +67,12 @@ INPUT is used to guess the preferred case."
      (funcall fn name package-name package internal-p matchp)))))
 
 
-(decorate-function:decorate-function 'swank::symbol-completion-set #'decorated-swank--symbol-completion-set)
+(cl-advice:define-advice swank::symbol-completion-set #'decorated-swank--symbol-completion-set)
 
 (defvar *call-original-find-package* nil)
 
 #+(and sbcl (not careful-token-reader-via-native-package-local-nicknames))
-(DECORATE-FUNCTION:PORTABLY-WITHOUT-PACKAGE-LOCKS
+(cl-advice:PORTABLY-WITHOUT-PACKAGE-LOCKS
  (defun decorated-find-package (fn name)
    (if *call-original-find-package*
        (funcall fn name)
@@ -80,8 +80,8 @@ INPUT is used to guess the preferred case."
                                       *package* fn))))
 
 #+(and sbcl (not careful-token-reader-via-native-package-local-nicknames))
-(DECORATE-FUNCTION:PORTABLY-WITHOUT-PACKAGE-LOCKS
- (decorate-function 'find-package #'decorated-find-package))
+(cl-advice:PORTABLY-WITHOUT-PACKAGE-LOCKS
+ (define-advice find-package #'decorated-find-package))
 
 
 
@@ -147,7 +147,7 @@ INPUT is used to guess the preferred case."
     (file-position stream point)
     (values rt pkg)))
 
-(decorate-function:decorate-function 'swank/source-path-parser::guess-reader-state
+(cl-advice:define-advice swank/source-path-parser::guess-reader-state
                                      #'decorated-swank-source-path-parser--guess-reader-state)
 
 
@@ -186,5 +186,5 @@ The source locations are stored in SOURCE-MAP."
       rt)))
 
 
-(decorate-function:def-function-decoration swank/source-path-parser::make-source-recording-readtable
+(define-advice swank/source-path-parser::make-source-recording-readtable
                                      'decorated-swank-source-path-parser--make-source-recording-readtable)

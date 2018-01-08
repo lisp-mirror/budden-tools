@@ -194,7 +194,7 @@
 
 
 
-#|(decorate-function:decorate-function
+#|(cl-advice:decorate-function
  'ir1-optimize-cast
  (lambda (fn cast &optional do-not-optimize)
    (budden-tools:show-expr `(ir1-optimize-cast
@@ -261,6 +261,6 @@
   (values))
 
 
-(decorate-function:undecorate-function 'generate-type-checks :advice-name 'Запретить-неявное-сужение-типа)
+(cl-advice:uninstall-advice 'generate-type-checks :advice-name 'Запретить-неявное-сужение-типа)
 ;(sb-int:encapsulate 'generate-type-checks 'Запретить-неявное-сужение-типа 'decorated-generate-type-checks)
 

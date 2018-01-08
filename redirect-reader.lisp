@@ -90,7 +90,7 @@ is already an altered readtable, simply returns it"
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; Change a readtable end ;;;;;;;;;;;;;
 
-(decorate-function:portably-without-package-locks
+(cl-advice:portably-without-package-locks
 ; non-toplevel 
 (defmethod print-object ((obj readtable) stream)
     "Print readtable with its name"
@@ -116,7 +116,7 @@ is already an altered readtable, simply returns it"
 
 (defun rd (s) (with-my-readtable-0 (read-from-string s)))
 
-(decorate-function::portably-without-package-locks
+(cl-advice:portably-without-package-locks
 
 ;non-toplevel
 (defun keywordize (symbol-or-string) ; altering keywordize from iterate
@@ -126,7 +126,7 @@ is already an altered readtable, simply returns it"
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; Change printer if needed ;;;;;;;;;;;;;;;;;;;;;;;;
 #+lispworks6 
-(decorate-function::PORTABLY-WITHOUT-PACKAGE-LOCKS
+(cl-advice:PORTABLY-WITHOUT-PACKAGE-LOCKS
 
 ; non-toplevel
 (defmethod print-object :around ((o symbol) s)

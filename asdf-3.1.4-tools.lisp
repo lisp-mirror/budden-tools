@@ -148,7 +148,7 @@ to resolve circular references between systems"
      (let ((source-location-sym (make-symbol (string 'sb-c:source-location)))
            (system-sym (make-symbol (string 'system))))
        `(prog1
-            (,(decorate-function::decorate-macro-get-undecorated-invoker 'defsystem)
+            (,(cl-advice::decorate-macro-get-undecorated-invoker 'defsystem)
              ,name ,@options)
           ;; see also sbcl--find-definition-sources-by-name--patch.lisp
           (let ((,source-location-sym (sb-c:source-location))
@@ -157,11 +157,11 @@ to resolve circular references between systems"
               (setf (system-source-control ,system-sym)
                     ,source-location-sym)))
           )))
-    (t `(,(decorate-function::decorate-macro-get-undecorated-invoker 'defsystem) ,name ,@options))))
+    (t `(,(cl-advice::decorate-macro-get-undecorated-invoker 'defsystem) ,name ,@options))))
 
 
 #+sbcl
-(decorate-function::decorate-macro 'defsystem 'decorate-defsystem)
+(cl-advice::decorate-macro 'defsystem 'decorate-defsystem)
 
 (defun systems-that-depend-on-system (system-or-system-name)
   "systems-or-system-names - это система, имя системы, список систем или список имён систем. 

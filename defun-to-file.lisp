@@ -50,7 +50,7 @@
 |#
 
 (defvar *идентификатор-образа*
-  (str++ (get-universal-time) "-" (sb-posix:getpid)))
+  (str++ (get-universal-time) "-" (swank/backend:getpid)))
 
 (defvar *идентифицировать-бездомные-символы-при-печати* nil
   "Если истина, то при печати бездомный символ идентифицируется. При чтении ранее идентифицированный бездомныйсимвол всегда идентифицируется")
@@ -146,17 +146,20 @@
 ;; ПРАВЬМЯ - в версии 1.3.18 для печати символа SBCL использует defmethod print-object
 ;; Почему бы не определить around метод, вместо того, чтобы декорировать?
 #+SBCL
-(decorate-function:portably-without-package-locks
- (decorate-function:decorate-function
-  'sb-kernel:output-symbol 
-  #'decorated-output-symbol))
+(cl-advice:portably-without-package-locks
+  (cl-advice:define-advice
+      sb-kernel:output-symbol 
+      #'decorated-output-symbol))
 
 #-SBCL
 (error "Нужно как-то декорировать печать символа")
 
 (defparameter |†Декларации-оптимизации-для-Defun-to-file| 
   '((declaim
-     (optimize (debug 3) (space 2) (compilation-speed 2) (speed 2) (safety 3)))))
+     (optimize (debug ; 3
+                0 ; временно ставим в 0, т.к. отлаживаем степпер
+                      )
+               (space 2) (compilation-speed 2) (speed 2) (safety 3)))))
 
 (defmacro defun-to-file-macroexpanded (name &rest more)
   "То же, что defun-to-file, но вызывает walk-form с полным макрорасширением над телом, а также настраивает steppable код. Есть риск ошибок в этой конструкции из-за отсутствия локальных переменных в контексте во время прогулок по лямбда-выражению"

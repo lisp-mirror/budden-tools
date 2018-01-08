@@ -488,7 +488,7 @@ Returns list of symbols.
             )))
     (iter (:for s in symbols-to-forbid)
       (unexport s package)
-      (decorate-function:portably-without-package-locks
+      (cl-advice:portably-without-package-locks
         (eval 
          `(progn
             (define-symbol-macro ,s (error "symbol ~S is forbidden in ~S" ,s ,p)) 

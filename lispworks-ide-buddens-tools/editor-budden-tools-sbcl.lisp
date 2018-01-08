@@ -169,9 +169,9 @@ replace-string-in-file filename from to :close-file nil :times 1 :from-the-start
 ;      (apply fn point (dispatch-keyargs-simple previous max-length max-non-alphanumeric create-new))
 ;    (if error nil value)))
 
-; #+lispworks6 (budden-tools::decorate-function 'editor::get-symbol-from-point 'decorated-get-symbol-from-point)
+; #+lispworks6 (cl-advice:define-advice editor::get-symbol-from-point 'decorated-get-symbol-from-point)
 
-#|(decorate-function:portably-without-package-locks
+#|(cl-advice:portably-without-package-locks
 ; non-toplevel
 (editor::defcommand "Function Argument List" (p) "Переопределил, т.к. глючило. Также покажет структуру"
      (declare (ignore p))

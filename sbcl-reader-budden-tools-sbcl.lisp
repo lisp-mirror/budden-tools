@@ -587,7 +587,7 @@ extended <package-name>::<form-in-package> syntax."
       (read-token-2 stream firstchar)
       (funcall fn stream firstchar)))
 
- (budden-tools::decorate-function 'read-token #'read-token-d)
+ (cl-advice:define-advice read-token #'read-token-d)
 |#
 
 (def-merge-packages::! :sbcl-reader-budden-tools-sbcl

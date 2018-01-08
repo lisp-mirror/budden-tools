@@ -1,7 +1,7 @@
 ;;; -*- Encoding: utf-8; system :buddens-readtable ; -*-
 (in-package :buddens-readtable)
 
-(decorate-function:portably-without-package-locks
+(cl-advice:portably-without-package-locks
  (defun :buddens-readtable-a () "Dummy function to be able to navigate to readtable definition with M-." (error "this is not a function"))
 )
 

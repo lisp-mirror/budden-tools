@@ -7,7 +7,7 @@
 (defvar *editors-real-package* nil) 
 
 
-#|(mapcar 'undecorate-function
+#|(mapcar 'uninstall-advice
         '(find-package find-symbol editor::complete-symbol 
                        editor::buffer-package-to-use editor::pathetic-parse-symbol
                        editor::symbol-string-at-point editor::complete-symbol-1
@@ -25,7 +25,7 @@
                                  *package* fn))
 
 #-sbcl
-(decorate-function 'find-package #'decorated-find-package)
+(define-advice find-package #'decorated-find-package)
  
 
 #|BUDDEN 100 > editor::pathetic-parse-symbol "budden::cons" *package*
@@ -35,7 +35,7 @@ NIL
 8
 |#
 
-;(decorate-function 'editor::i-find-package-name-for-point 'decorated-i-find-package-name-for-point)
+;(install-advice 'editor::i-find-package-name-for-point 'decorated-i-find-package-name-for-point)
 
 
 (defun decorated-buffer-package-to-use (fn &rest args)
@@ -63,7 +63,7 @@ NIL
     ))
 
 
-;2012-12-19(decorate-function 'editor::buffer-package-to-use #'decorated-buffer-package-to-use)
+;2012-12-19(install-advice 'editor::buffer-package-to-use #'decorated-buffer-package-to-use)
 
 (defun decorated-pathetic-parse-symbol (fn symbol default-package &optional errorp)
 ;  (print "decorated-pathetic-parse-symbol IN")
@@ -84,7 +84,7 @@ NIL
 
 ; budden-tools::see-packages-find-unqualified-symbol "S1" :tst
 
-(decorate-function 'editor::pathetic-parse-symbol #'decorated-pathetic-parse-symbol)
+(install-advice 'editor::pathetic-parse-symbol #'decorated-pathetic-parse-symbol)
 
        
 (defun decorated-symbol-string-at-point (fn point)
@@ -97,7 +97,7 @@ NIL
        package 
        ))))
 
-(decorate-function 'editor::symbol-string-at-point #'decorated-symbol-string-at-point)
+(install-advice 'editor::symbol-string-at-point #'decorated-symbol-string-at-point)
 
 (defun extract-symbol-string-from-point-with-range (pnt)
   (perga-implementation:perga function
@@ -177,7 +177,7 @@ NIL
       string
     (apply fn string keyargs)))
 
-(decorate-function 'string-capitalize #'decorated-string-capitalize)
+(install-advice 'string-capitalize #'decorated-string-capitalize)
 
 
 (defun decorated-intern-symbol-from-string (fn string &optional default-package)
@@ -191,7 +191,7 @@ NIL
       )))
 
 
-(decorate-function 'editor::intern-symbol-from-string #'decorated-intern-symbol-from-string)
+(install-advice 'editor::intern-symbol-from-string #'decorated-intern-symbol-from-string)
 
 
 

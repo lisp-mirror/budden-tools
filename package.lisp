@@ -51,7 +51,7 @@
   (:nicknames "budden-tools")
   (:documentation "Some tools by budden. See packages definition to find a list of symbols")
   (:use :cl :named-readtables  ; :org.tfeb.hax.hierarchical-packages
-   :def-merge-packages :decorate-function :iterk :КАРТЫ-ИСХОДНИКОВ-ЛИЦО)
+   :def-merge-packages :cl-advice :iterk :КАРТЫ-ИСХОДНИКОВ-ЛИЦО)
   (:import-from :alexandria #:with-gensyms #:once-only #:string-designator #:eswitch #:cswitch #:switch alexandria:simple-reader-error alexandria:named-lambda)
   (:import-from :split-sequence #:split-sequence)
   (:import-from :swank #:*readtable-alist*)

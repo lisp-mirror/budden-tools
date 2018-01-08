@@ -36,8 +36,8 @@
     (apply фун args)))
 
 (sb-ext::without-package-locks
- (decorate-function:decorate-function 'compile-file #'decorated-compile-file-let-around-compile-file-or-load)
- (decorate-function:decorate-function 'load #'decorated-compile-file-let-around-compile-file-or-load)
+ (cl-advice:define-advice compile-file #'decorated-compile-file-let-around-compile-file-or-load)
+ (cl-advice:define-advice load #'decorated-compile-file-let-around-compile-file-or-load)
  )
 
 
