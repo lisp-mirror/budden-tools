@@ -369,15 +369,19 @@
   "See also ^-READER"
   `(strict-carat-implementation ,object ,field-name ,@args))
 
+
+(defmacro variable-information-from-this-lisp-implementation (var env)
+  `(#+lispworks hcl:variable-information
+                #+sbcl sb-cltl2:variable-information
+                #+ccl ccl:variable-information
+                #-(or sbcl ccl lispworks)
+                ,(error "Не определена budden-tools::variable-information-from-this-lisp-implementation")
+               ,var ,env))
      
 (defun assert-special-subtype-for-with-the1 (var env new-type) 
   "If variable is special, checks that with-the1 does not redeclare it with incompatible subtype"
   (multiple-value-bind (kind localp decls)
-      (#+lispworks
-       hcl:variable-information
-       #+sbcl
-       sb-cltl2:variable-information
-       var env)
+      (variable-information-from-this-lisp-implementation var env)
     (declare (ignore localp))
     (when (eq kind :special)
       (let ((global-declared-type (cdr (assoc 'type decls))))

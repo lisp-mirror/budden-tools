@@ -124,7 +124,7 @@ source-location = slo
 
 (defvar *nplm 
   #+NIL (make-hash-table :test 'eq)
-  (SWANK-BACKEND:MAKE-WEAK-KEY-HASH-TABLE :test 'eql) 
+  (SWANK-BACKEND:MAKE-WEAK-KEY-HASH-TABLE :test 'eq) 
   "Временные сведения о расположении для объектов в памяти")
 
 (defvar *nplf 
@@ -132,7 +132,7 @@ source-location = slo
   "Сведения о расположении, для ИМЁН файлов (namestring). Сильная таблица, т.к. файлы существуют долго")
 
 (defvar *slmd
-  (SWANK-BACKEND:MAKE-WEAK-KEY-HASH-TABLE :test 'eql)
+  (SWANK-BACKEND:MAKE-WEAK-KEY-HASH-TABLE :test 'eq)
   "Делегаты потоков")
 
 (defvar *record-locations* t "Если истина, то fbody, fsel и родственники генерируют код, позволяющий отследить исходники")
@@ -688,9 +688,9 @@ source-location = slo
     (slot-value (slot-value ИСХОДНИК 'stream::buffer-state) 'stream::input-buffer))
   #+sbcl
   (sb-impl::string-input-stream-string ИСХОДНИК)
-  ;(let ((s (the* sb-impl::string-input-stream stream)))
-  ;  (slot-value s 'string))
-  #-(or sbcl lispworks)
+  #+ccl
+  (ccl::string-input-stream-ioblock-string (ccl::basic-stream.state stream))
+  #-(or sbcl lispworks ccl)
   (note-not-implemented-for-this-lisp "defmethod КАРТЫ-ИСХОДНИКОВ-ЛИЦО:ИСХОДНИК-ЦЕЛИКОМ-В-ВИДЕ-СТРОКИ ((ИСХОДНИК string-stream))")
   )
 

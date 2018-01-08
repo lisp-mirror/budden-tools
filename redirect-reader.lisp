@@ -42,12 +42,13 @@ is already an altered readtable, simply returns it"
       ;; (buddens-readtable:enable-triple-quote-reader rt)
       
       (setf (gethash rt *readtable-uses-sbcl-reader-budden-tools-lispworks*) t)
-      
-      (set-dispatch-macro-character #\# #\: #'sbcl-reader-budden-tools-lispworks::sharp-colon rt)
+
+      ;; FIXME-CCL
+      #-CCL (set-dispatch-macro-character #\# #\: #'sbcl-reader-budden-tools-lispworks::sharp-colon rt)
 
     ;(setf good-readtable (copy-readtable rt))
 
-      (iter 
+      #-CCL (iter 
        (:for i :from 0 to 255)
        (:for b := (elt *char-table* i))
        (:for c := (code-char i))
@@ -72,7 +73,7 @@ is already an altered readtable, simply returns it"
         )
        )
       
-      (iter
+      #-CCL (iter
        (:for c in *def-symbol-reamacro-additional-name-starting-characters*)
        (set-macro-character c #'sbcl-reader-budden-tools-lispworks:read-token t rt))
       

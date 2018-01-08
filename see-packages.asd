@@ -17,6 +17,7 @@
         #+lispworks (:file "sbcl-reader-budden-tools-lispworks-consts")
         #+lispworks (:file "sbcl-reader-budden-tools-lispworks")
         #+sbcl (:file "sbcl-reader-budden-tools-sbcl")
+        #+ccl (:file "ccl--l1-reader--budden-tools")
 	(:file "redirect-reader")
 	(:file "see-packages-applications")
         (:file "package-system-and-completion" :description "Изменения в системе пакетов, а также функции для завершения имени символа (completion)")
