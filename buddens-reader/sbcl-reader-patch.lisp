@@ -16,14 +16,6 @@
 (in-package :sb-impl)
 
 
-
-;brt
-(defstruct potential-symbol package casified-name (qualified 0 :type (integer 0 2)))
-
-;brt
-(defvar *return-package-and-symbol-name-from-read* nil
-  "Side branch of read. If this var is t, potential-symbol structures are returned instead of new symbols. Nothing is interned. Existing symbols may be returned as potential symbols are just as symbols")
-
 ;;;; character classes (direct copy from SBCL reader)
 
 ;;; Return the character class for CHAR.
@@ -536,8 +528,8 @@ extended <package-name>::<form-in-package> syntax."
               (when parsed
                 (return-from read-token (values result t))))))
 
-        (when *return-package-and-symbol-name-from-read*
-          (return-from read-token (make-potential-symbol :package pkg :casified-name (copy-token-buf-string buf) :qualified colons)))
+        (when buddens-reader-extensions:*return-package-and-symbol-name-from-read*
+          (return-from read-token (buddens-reader-extensions:make-potential-symbol :package pkg :casified-name (copy-token-buf-string buf) :qualified colons)))
                      
         (let ((symbol
                (block nil
@@ -575,53 +567,6 @@ extended <package-name>::<form-in-package> syntax."
           )
         ))))
   )
-
-#|(defvar *read-token-d* nil)
-
- (defun read-token-d (fn stream firstchar)
-  (if t ; *read-token-d*
-      (read-token-2 stream firstchar)
-      (funcall fn stream firstchar)))
-
- (cl-advice:define-advice read-token #'read-token-d)
-|#
-
-(def-merge-packages::! :sbcl-reader-budden-tools-sbcl
- (:nicknames :sbcl-reader-budden-tools-lispworks :sbcl-reader-budden-tools)
- (:always t)
- (:use :cl 
-  :budden-tools
-  :sb-impl
-  )
- (:shadow
-   ; #:read-token
-   #:constituentp
-   )
- (:import-from :sb-impl
-   #:*return-package-and-symbol-name-from-read*
-   #:read-token ; это не обычная ф-я чтения, она требует буферов
-   #:potential-symbol
-   #:make-potential-symbol
-   #:potential-symbol-casified-name
-   #:potential-symbol-package
-   #:potential-symbol-qualified
-   #:potential-symbol-p
-   #:sharp-colon
-   )
- (:export 
-   #:*return-package-and-symbol-name-from-read*
-   #:read-token
-   #:potential-symbol
-   #:make-potential-symbol
-   #:potential-symbol-casified-name
-   #:potential-symbol-package
-   #:potential-symbol-qualified
-   #:potential-symbol-p
-   #:sharp-colon
-   #:constituentp ; отключено для SBCL
-   ; #:read-preserving-whitespace-2
- )) 
-
 
 (defmacro sbcl-reader-budden-tools-sbcl::test-attribute (char whichclass rt)
   `(= (the fixnum (get-cat-entry ,char ,rt)) ,whichclass))
