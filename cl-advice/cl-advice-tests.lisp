@@ -1,4 +1,5 @@
-;;; -*- coding: utf-8; System :cl-advice;  -*-
+;; -*- coding: utf-8; -*-
+;; This file must be loaded by load-cl-advice.lisp
 
 (in-package :cl-advice)
 
@@ -80,5 +81,5 @@
                (SB-INTROSPECT::ENCAPSULATION-DEFINITION-SOURCES 'ff1)
                (SB-INTROSPECT:FIND-DEFINITION-SOURCES-BY-NAME 'ff1 :function))
                ))))
-        () "There should be 3 known definition sources for ff1")
+        () "There should be 4 known definition sources for ff1")
 

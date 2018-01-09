@@ -1,4 +1,5 @@
-;;; -*- coding: utf-8; System :cl-advice;  -*-
+;; -*- coding: utf-8; -*-
+;; This file must be loaded by load-cl-advice.lisp
 
 (cl:defpackage :cl-advice 
   (:export 

@@ -23,7 +23,7 @@ Do that as early as possible. Preferrably, do that before finding your asdf syst
   (dolist (source-file
            '("package.lisp"
              "portably-without-package-locks.lisp"
-             #+ccl "ccl--advice-global-def--redefinition.lisp"
+             #+ccl "ccl--advise-global-def--redefinition.lisp"
              "cl-advice.lisp"
              #+sbcl "sbcl--find-definition-sources-by-name--patch.lisp"
              "cl-advice-tests.lisp"))

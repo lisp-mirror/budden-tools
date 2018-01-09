@@ -40,6 +40,10 @@ See [tests](cl-advice-tests.lisp)
 ### Implementation
 We patch both CCL and SBCL dynamically. It used to work in SBCL 1.4.2 and CCL 1.12 dev. Tests are executed when the system is loaded. Advice facility in CCL is modified, and local function is introduced to call next advice. This may affect performance of other ccl:advise users or cause warnings.  
 
+### Loading
+
+See [load-cl-advice.lisp](load-cl-advice.lisp)
+
 ### Plans
 - Close all FIXMEs
 - Add definition source location for CCL. 

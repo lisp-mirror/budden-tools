@@ -1,4 +1,6 @@
-;;; -*- coding: utf-8; System :cl-advice;  -*-
+;; -*- coding: utf-8; -*-
+;; This file must be loaded by load-cl-advice.lisp
+
 (in-package :ccl)
 
 (cl-advice:portably-without-package-locks

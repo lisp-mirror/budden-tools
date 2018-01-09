@@ -1,5 +1,5 @@
 ;; -*- coding: utf-8; -*-
-;; This file is not a part of system. Please load it before you start loading systems.
+;; This file must be loaded by load-cl-advice.lisp
 ;; It works only in combination with asdf-3
 
 (in-package :sb-introspect)
@@ -82,6 +82,13 @@ ii) when defining an object, associate its definition location to the object som
 iii) decorate sb-introspect::find-definition-sources-by-name (and maybe sb-introspect::find-definition-source ?)
 |#
 
+;; make sure swank is not reloaded since now
+(defmethod asdf:perform :around ((op t) (component swank-loader::swank-loader-file))
+  (break "Any redefinitions of SWANK should be avoided to not break our extended definition location machinery (see sbcl--find-definition-sources-by-name--patch.lisp). Continue and I'll do what you want, binding swank/sbcl::*definition-types* to itself around your operation")
+  (let ((swank/sbcl::*definition-types* swank/sbcl::*definition-types*))
+    (call-next-method)))
+
+
 (ensure-definition-type :decoration-definition 'cl-advice:define-advice)
 (ensure-definition-type :decorator-of-function 'sb-int:encapsulate)
 (ensure-definition-type :asdf-system 'asdf:defsystem)
@@ -112,7 +119,7 @@ iii) decorate sb-introspect::find-definition-sources-by-name (and maybe sb-intro
     (t
      (funcall original-fn name type))))
 
-(cl-advice:define-advice find-definition-sources-by-name #'sb-introspect--find-definition-sources-by-name-sb--decorated :advice-name buddens-find-definition-extensions)
+(cl-advice:define-advice find-definition-sources-by-name 'sb-introspect--find-definition-sources-by-name-sb--decorated :advice-name buddens-find-definition-extensions)
 
 ;; what about sb-introspect::find-definition-source ?
 
