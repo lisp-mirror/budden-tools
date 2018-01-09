@@ -10,7 +10,7 @@
         :depends-on (:cl-utilities :budden-tools :russian-budden-tools :swank :iterate-keywords)	
 	:components
         (
-        (:file "sbcl-reader-budden-tools-package")
+        (:file "buddens-reader-extensions-package")
         (:file "buddens-reader-extensions-h")
 	(:file "see-packages-vars-and-macros") ; ПРАВЬМЯ - слить с предыдущим, вынести в отдельный пакет
         #+ccl (:file "sbcl-in-ccl")
