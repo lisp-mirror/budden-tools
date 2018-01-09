@@ -10,7 +10,7 @@
   :depends-on 
   (:alexandria :cl-fad :split-sequence :cl-utilities :named-readtables
    :cl-ppcre		
-   :iterate-keywords :swank :cl-advice :closer-mop :trivial-gray-streams)
+   :iterate-keywords :swank :closer-mop :trivial-gray-streams)
   :components ( 
     ;(:file "hierarchical-packages"
     ; :doc "port of Allergo's hierarchical packages to some more implementations by Tim Bradshaw with some changes by Budden"

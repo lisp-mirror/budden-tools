@@ -83,11 +83,11 @@ iii) decorate sb-introspect::find-definition-sources-by-name (and maybe sb-intro
 |#
 
 (ensure-definition-type :decoration-definition 'cl-advice:define-advice)
-(ensure-definition-type :asdf-system 'asdf:defsystem)
 (ensure-definition-type :decorator-of-function 'sb-int:encapsulate)
+(ensure-definition-type :asdf-system 'asdf:defsystem)
 
 (defun sb-introspect--find-definition-sources-by-name-sb--decorated (original-fn name type)
-  "Decorator for sb-introspect::find-definition-sources-by-name to support :asdf-system"
+  "Decorator for sb-introspect::find-definition-sources-by-name to support :asdf-system and encapsulations (from :cl-advice)"
   (case type
     (:asdf-system
      (typecase name
@@ -105,14 +105,15 @@ iii) decorate sb-introspect::find-definition-sources-by-name (and maybe sb-intro
      (when (symbolp name)
        (let (result
              (flag nil))
-         (dolist (v (get name 'cl-advice::advice-definition-location-indicator))
+         (dolist (v (get name :advice-definition-location-indicator))
            (when flag (push v result))
            (setf flag (not flag)))
          (mapcar 'translate-source-location (nreverse result)))))
     (t
      (funcall original-fn name type))))
 
-(cl-advice:define-advice sb-introspect::find-definition-sources-by-name #'sb-introspect--find-definition-sources-by-name-sb--decorated)
+(cl-advice:define-advice find-definition-sources-by-name #'sb-introspect--find-definition-sources-by-name-sb--decorated :advice-name buddens-find-definition-extensions)
+
 ;; what about sb-introspect::find-definition-source ?
 
 

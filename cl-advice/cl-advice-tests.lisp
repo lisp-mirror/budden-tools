@@ -59,10 +59,10 @@
   (undecorate-macro 'original))
 
 #+SBCL (defun ff1 ())
-#+SBCL (defun b-ff1 (fn))
+#+SBCL (defun b-ff1 (fn) (declare (ignore fn)))
 #+SBCL (install-advice 'ff1 #'b-ff1 :advice-name 'b)
 #+SBCL (define-advice ff1 #'b-ff1 :advice-name b)
-#+SBCL (defun e-ff1 (fn))
+#+SBCL (defun e-ff1 (fn) (declare (ignore fn)))
 #+SBCL (define-advice ff1 'e-ff1 :advice-name e)
 #+SBCL (uninstall-advice 'ff1)
 #+SBCL (define-advice ff1 'e-ff1 :advice-name e)

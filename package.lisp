@@ -5,8 +5,13 @@
 (eval-when (:execute)
   (error "Do not :execute the file, use compile/load sequence"))
 (eval-when (:load-toplevel :compile-toplevel)
-    (setf *readtable* (copy-readtable nil))
-    nil)
+  (setf *readtable* (copy-readtable nil))
+  (assert
+   (and (find-package :cl-advice)
+        (fboundp (find-symbol "DEFINE-ADVICE" :cl-advice)))
+   () "cl-advice/load-cl-advice.lisp must have been loaded by hand in a due time, see that file for details")
+  
+  nil)
 
 
 (def-merge-packages::! :КАРТЫ-ИСХОДНИКОВ-ЛИЦО

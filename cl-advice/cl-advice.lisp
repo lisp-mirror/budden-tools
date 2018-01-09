@@ -81,13 +81,13 @@
 (defun record-decoration-definition-location (function-name advice-name location)
   (setf
    (getf
-    (get function-name 'advice-definition-location-indicator)
+    (get function-name :advice-definition-location-indicator)
     advice-name)
    location))
 
 (defun delete-decoration-definition-location (function-name advice-name)
   (remf
-   (get function-name 'advice-definition-location-indicator)
+   (get function-name :advice-definition-location-indicator)
    advice-name))
 
 

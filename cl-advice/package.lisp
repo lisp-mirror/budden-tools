@@ -11,6 +11,4 @@
    ;#:*undecorated-function-source-locations*
    ;#:get-original-function-source-location
    )
-  (:shadow
-   #:advice-definition-location-indicator)
   (:use :cl))

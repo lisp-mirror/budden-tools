@@ -7,7 +7,7 @@
 
 (defsystem :see-packages
 	:serial t
-        :depends-on (:cl-utilities :budden-tools :russian-budden-tools :swank :cl-advice :iterate-keywords)	
+        :depends-on (:cl-utilities :budden-tools :russian-budden-tools :swank :iterate-keywords)	
 	:components
         (
         (:file "sbcl-reader-budden-tools-package")
