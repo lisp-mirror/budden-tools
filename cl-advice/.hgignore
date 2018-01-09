@@ -1,0 +1,10 @@
+syntax: glob
+
+*~
+*.wx32fsl
+*.fsl
+*.fasl
+*.bak
+glob:xlam/*.*
+glob:img/*.bmp
+glob:*.ofasl
