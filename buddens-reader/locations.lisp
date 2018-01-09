@@ -689,7 +689,7 @@ source-location = slo
   #+sbcl
   (sb-impl::string-input-stream-string ИСХОДНИК)
   #+ccl
-  (ccl::string-input-stream-ioblock-string (ccl::basic-stream.state stream))
+  (ccl::string-input-stream-ioblock-string (ccl::basic-stream.state ИСХОДНИК))
   #-(or sbcl lispworks ccl)
   (note-not-implemented-for-this-lisp "defmethod КАРТЫ-ИСХОДНИКОВ-ЛИЦО:ИСХОДНИК-ЦЕЛИКОМ-В-ВИДЕ-СТРОКИ ((ИСХОДНИК string-stream))")
   )
@@ -714,7 +714,10 @@ source-location = slo
   (etypecase stream
     (sb-sys::fd-stream
      (slot-value stream 'sb-impl::external-format)))
-  #-(or lispworks sbcl)
+  #+ccl
+  (ccl:external-format-character-encoding
+   (stream-external-format stream))
+  #-(or lispworks sbcl ccl)
   (note-not-implemented-for-this-lisp file-stream-extract-encoding)
   )
 
@@ -970,6 +973,7 @@ source-location = slo
                 #+(and sbcl win32) 106
                 #+(and lispworks win32) 106
                 #+(and sbcl unix) 106
+                #+ccl 106
                -1000 ; write me
                )))
     (print "sanity check ok")
