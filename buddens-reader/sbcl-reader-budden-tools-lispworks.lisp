@@ -719,7 +719,7 @@ variables to allow for nested and thread safe reading."
 (defstruct potential-symbol package casified-name (qualified 0 :type (integer 0 2)))
 
 ;brt
-(defvar *return-package-and-symbol-name-from-read* nil
+(defvar buddens-reader-extensions:*return-package-and-symbol-name-from-read* nil
   "Side branch of read. If this var is t, potential-symbol structures are returned instead of new symbols. Nothing is interned. Existing symbols may be returned as potential symbols are just as symbols")
 
 ;;; If the symbol named by the first LENGTH characters of NAME doesn't exist,
@@ -1102,7 +1102,7 @@ variables to allow for nested and thread safe reading."
               (when parsed
                 (return-from read-token (values result t))))))
 
-        (when *return-package-and-symbol-name-from-read*
+        (when buddens-reader-extensions:*return-package-and-symbol-name-from-read*
           (return-from read-token (make-potential-symbol :package found :casified-name (subseq *read-buffer* 0 *ouch-ptr*) :qualified colons)))
 
         (let ((symbol

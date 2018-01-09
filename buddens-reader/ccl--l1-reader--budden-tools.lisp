@@ -30,15 +30,6 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-;brt
-(defstruct potential-symbol package casified-name (qualified 0 :type (integer 0 2)))
-
-;brt
-(defvar *return-package-and-symbol-name-from-read* nil
-  "Side branch of read. If this var is t, potential-symbol structures are returned instead of new symbols. Nothing is interned. Existing symbols may be returned as potential symbols are just as symbols")
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
 	   
 (eval-when (:compile-toplevel :execute)
   (def-accessors %svref
@@ -235,8 +226,8 @@
                               (return-from %parse-token result)))))
 
                       ;; brt
-                      (when *return-package-and-symbol-name-from-read*
-                        (return-from %parse-token (make-potential-symbol :package pkg :casified-name (%string-from-token tb) :qualified colons)))
+                      (when buddens-reader-extensions:*return-package-and-symbol-name-from-read*
+                        (return-from %parse-token (buddens-reader-extensions:make-potential-symbol :package pkg :casified-name (%string-from-token tb) :qualified colons)))
 
                       ;; brt
                       (let ((symbol

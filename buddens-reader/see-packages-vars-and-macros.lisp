@@ -1,4 +1,4 @@
-;;; -*- Encoding: utf-8; -*-
+;;; -*- coding: utf-8; system : see-packages; -*-
 (in-package :budden-tools)
 (setf *readtable* (copy-readtable nil))
 
@@ -12,17 +12,6 @@
 (setf (readtable-case *cached-downcase-readtable*) :downcase)
 
 (defvar *keyword-package* (find-package :keyword))
-
-#|obsolete
-(defvar *package-seen-packages* (make-weak-key-hash-table :test 'eq)
-  "Additional packages to see from that package")
-
-(defvar *my-readtable-to-good-readtable* (make-weak-key-hash-table :test 'eq)
-  "Maps altered readtable with reader extensions to their unaltered counterparts")
-
-(defvar *my-readtable-to-colon-readtable* (make-weak-key-hash-table :test 'eq)
-  "Maps altered readtable to their colon-readtable"
-  )|#
 
 (defvar *readtable-uses-sbcl-reader-budden-tools-lispworks* (make-weak-key-hash-table :test 'eq)
   "Readtable implements reader extensions via SBCL reader")

@@ -10,13 +10,15 @@
         :depends-on (:cl-utilities :budden-tools :russian-budden-tools :swank :cl-advice :iterate-keywords)	
 	:components
         (
-	(:file "see-packages-vars-and-macros")
+        (:file "sbcl-reader-budden-tools-package")
+        (:file "buddens-reader-extensions-h")
+	(:file "see-packages-vars-and-macros") ; ПРАВЬМЯ - слить с предыдущим, вынести в отдельный пакет
         #+ccl (:file "sbcl-in-ccl")
 	(:file "study-readtable")
 	(:file "careful-token-reader")
         #+lispworks (:file "sbcl-reader-budden-tools-lispworks-consts")
         #+lispworks (:file "sbcl-reader-budden-tools-lispworks")
-        #+sbcl (:file "sbcl-reader-budden-tools-sbcl")
+        #+sbcl (:file "sbcl-reader-patch")
         #+ccl (:file "ccl--l1-reader--budden-tools")
 	(:file "redirect-reader")
 	(:file "see-packages-applications")
@@ -28,7 +30,7 @@
         (:file "budden-tools-package-system-and-completion-swank")
         (:file "package-aliases")
         (:file "lexem-pos" :description "Структуры для описания положения буквы и лексемы")
-	(:file "locations")
+	      (:file "locations")
         (:file "cons-to-source" :description "Alternative to ~{ ~} format to product source code from conses")
         (:file "test-sbcl-reader-budden-tools-lispworks")
         (:file "here-document" :description "Alternative string syntax - like here documents in shell")

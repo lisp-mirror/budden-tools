@@ -1,4 +1,4 @@
-;;; -*- Encoding: utf-8; system :see-packages ;  -*-
+;;; -*- coding: utf-8; system :see-packages ;  -*-
 ;;; Some SWANK symbols are decorated here. This code may be sbcl-specific. А также пытаемся декорировать find-package
  
 (in-package :budden-tools)
@@ -12,7 +12,7 @@
   (cond
     ((packages-seen-p *readtable*)
      (perga-implementation:perga
-       (let sbcl-reader-budden-tools-lispworks::*return-package-and-symbol-name-from-read* t)
+       (let buddens-reader-extensions:*return-package-and-symbol-name-from-read* t)
        (let ps (ignore-errors (read-from-string string)))
        (cond
          ((null ps)
