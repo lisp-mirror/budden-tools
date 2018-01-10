@@ -13,7 +13,6 @@
         (:file "buddens-reader-extensions-package")
         (:file "buddens-reader-extensions-h")
 	(:file "see-packages-vars-and-macros") ; ПРАВЬМЯ - слить с предыдущим, вынести в отдельный пакет
-        #+ccl (:file "sbcl-in-ccl")
 	(:file "study-readtable")
 	(:file "careful-token-reader")
         #+lispworks (:file "sbcl-reader-budden-tools-lispworks-consts")
@@ -26,8 +25,7 @@
         #+(and lispworks6 win32)
         (:file "lispworks60-def-symbol-readmacro")
         (:file "oduvanchik-regexp-synonyms") 
-        #+sbcl
-        (:file "budden-tools-package-system-and-completion-swank")
+        (:file "budden-tools-package-system-and-completion-swank" :description "Декораторы для swank и для find-package")
         (:file "package-aliases")
         (:file "lexem-pos" :description "Структуры для описания положения буквы и лексемы")
 	      (:file "locations")

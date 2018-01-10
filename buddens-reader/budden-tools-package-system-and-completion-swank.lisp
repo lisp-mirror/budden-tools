@@ -71,8 +71,8 @@ INPUT is used to guess the preferred case."
 
 (defvar *call-original-find-package* nil)
 
-#+(and sbcl (not careful-token-reader-via-native-package-local-nicknames))
-(cl-advice:PORTABLY-WITHOUT-PACKAGE-LOCKS
+#+(or ccl (and sbcl (not careful-token-reader-via-native-package-local-nicknames)))
+(progn ; cl-advice:PORTABLY-WITHOUT-PACKAGE-LOCKS
  (defun decorated-find-package (fn name)
    (if *call-original-find-package*
        (funcall fn name)
@@ -83,7 +83,13 @@ INPUT is used to guess the preferred case."
 (cl-advice:PORTABLY-WITHOUT-PACKAGE-LOCKS
  (define-advice find-package #'decorated-find-package))
 
+#+ccl
+(defun decorated-%find-pkg-for-hierarchical-packages (fn name &optional (len (length name)))
+  (decorated-find-package fn (subseq name 0 len)))
 
+#+ccl
+(cl-advice:PORTABLY-WITHOUT-PACKAGE-LOCKS
+ (define-advice ccl::%find-pkg #'decorated-%find-pkg-for-hierarchical-packages :advice-name for-hierarchical-packages))
 
 #|(defun decorated-swank--all-completions (fn prefix package)
   (perga-implementation:perga
@@ -131,6 +137,7 @@ INPUT is used to guess the preferred case."
             (setf new-readtable rt-by-pkg)))))))
     (values new-package new-readtable new-rt-specified-p)))
 
+#+SBCL
 (defun decorated-swank-source-path-parser--guess-reader-state (fn stream)
   "Take readtable from source where possible. See also oduvanchik-internals::recompute-line-tag-inner-1"
   (declare (ignore fn))
@@ -147,12 +154,13 @@ INPUT is used to guess the preferred case."
     (file-position stream point)
     (values rt pkg)))
 
+#+SBCL
 (cl-advice:define-advice swank/source-path-parser::guess-reader-state
-                                     #'decorated-swank-source-path-parser--guess-reader-state)
+                         #'decorated-swank-source-path-parser--guess-reader-state)
 
 
 
-
+#+SBCL
 (defun decorated-swank-source-path-parser--make-source-recording-readtable (fn readtable source-map)
   (declare (type readtable readtable) (type hash-table source-map))
   (declare (ignore fn))
@@ -174,6 +182,7 @@ The source locations are stored in SOURCE-MAP."
                         (not (sb-impl::whitespace[2]p char readtable)))
                  (setq fun #'sb-impl::read-token
                        nt t))
+                ;;; FIXME-CCL
                (when fun
                  (let ((wrapper (swank/source-path-parser::make-source-recorder fun source-map)))
                    (set-macro-character char wrapper nt rt)))))))
@@ -185,6 +194,6 @@ The source locations are stored in SOURCE-MAP."
       (install-wrappers rt)
       rt)))
 
-
+#+SBCL
 (define-advice swank/source-path-parser::make-source-recording-readtable
                                      'decorated-swank-source-path-parser--make-source-recording-readtable)

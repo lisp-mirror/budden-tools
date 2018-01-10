@@ -14,30 +14,6 @@
 
 (named-readtables:in-readtable nil)
 
-
-#+LISPWORKS
-(def-merge-packages::! :buddens-reader-extensions
- (:nicknames
-  :sbcl-reader-budden-tools-lispworks
-  :sbcl-reader-budden-tools)
- (:always t)
- (:use :cl 
-  :budden-tools 
-  )
- (:export "
-   sbcl-reader-budden-tools:*return-package-and-symbol-name-from-read*
-   sbcl-reader-budden-tools:read-token
-   sbcl-reader-budden-tools:potential-symbol
-   sbcl-reader-budden-tools:make-potential-symbol
-   sbcl-reader-budden-tools:potential-symbol-casified-name
-   sbcl-reader-budden-tools:potential-symbol-package
-   sbcl-reader-budden-tools:potential-symbol-qualified
-   sbcl-reader-budden-tools:potential-symbol-p
-   sbcl-reader-budden-tools:constituentp
- "
- ))
-
-#+SBCL
 (def-merge-packages::! :buddens-reader-extensions
  (:nicknames
   :sbcl-reader-budden-tools-lispworks
@@ -47,12 +23,13 @@
  (:always t)
  (:use :cl 
   :budden-tools
-  :sb-impl
+  #+SBCL :sb-impl
   )
  (:shadow
    ; #:read-token
    #:constituentp
    )
+ #+SBCL
  (:import-from :sb-impl
    #:read-token ; это не обычная ф-я чтения, она требует буферов
    #:sharp-colon

@@ -25,7 +25,7 @@
   (defconstant readtable-case-keywords '((:upcase . 1) (:downcase . 2) (:preserve . 0)
                                          (:invert . -1) (:studly . -2)
                                          ; brt
-                                         (:upcase-if-unsiform . -3)))
+                                         (:upcase-if-uniform . -3)))
   (defmacro readtable-case-keywords () `',readtable-case-keywords))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -245,8 +245,8 @@
                                     (when (eq accessibility :external) (return symbol))
                                     (let ((name (%string-from-token tb)))
                                       (with-simple-restart (continue "Use symbol anyway.")
-                                        (error 'package-error
-                                               :package pkg
+                                        (error 'simple-reader-error
+                                               ; :package pkg
                                                :stream stream
                                                :format-arguments (list name (package-name pkg))
                                                :format-control
@@ -290,6 +290,5 @@
 ;;; FIXME сделать это обёрткой
 (eval-when (:compile-toplevel :load-toplevel :execute)
   (setq *warn-if-redefine-kernel* t))
-
 
 ; end

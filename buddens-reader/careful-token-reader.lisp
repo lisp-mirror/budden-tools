@@ -210,7 +210,6 @@ so use stream parameter only to identify a reader. Return value of hook function
 
 (defun hp-find-package
     (name/package &optional (relative-to-package *package*) real-find-package-fn) 
-    "For lispworks, find-package will be later decorated to this. For SBCL, they coexist"
     (declare (optimize speed))          ;this is critical code
     (let1 *package* *keyword-package* ; otherwise might crash on error messages
       (typecase name/package
@@ -220,12 +219,14 @@ so use stream parameter only to identify a reader. Return value of hook function
          ;; if there is one
          (let* ((pn (string name/package))
                 (map (hp-alias-map relative-to-package))
-                (epn (and map (cdr (assoc pn map :test #'string=)))))
+                (epn (and map (cdr (assoc pn map :test #'string=))))
+                (epn-maybe-string (and epn (string epn))))
            ;; if there is an EPN, then do REAL-FIND-PACKAGE on it, 
            ;; otherwise use NAME/PACKAGE. not PN, in case it can do some
            ;; magic.  Otherwise look up a relative name.
-           (if real-find-package-fn (funcall real-find-package-fn  (or epn name/package))
-             (original-find-package (or epn name/package)))
+           (if real-find-package-fn (funcall real-find-package-fn
+                                             (or epn-maybe-string name/package))
+             (original-find-package (or epn-maybe-string name/package)))
            )))))
 
 

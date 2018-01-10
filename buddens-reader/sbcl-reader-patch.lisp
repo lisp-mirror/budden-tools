@@ -89,6 +89,7 @@
 (defun casify-read-buffer (token-buf)
   (let ((case (readtable-case *readtable*))
         (escapes (token-buf-escapes token-buf))
+        ;brt
         (acase (budden-tools::readtable-case-advanced *readtable*))
         )
     (cond
