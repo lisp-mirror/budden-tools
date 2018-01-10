@@ -140,27 +140,30 @@ to resolve circular references between systems"
   (check-type symbol symbol)
   (intern (string-upcase (coerce-name symbol)) (find-package :keyword)))
   
-#+sbcl
+#+(or sbcl ccl)
 (defmacro decorate-defsystem (name &body options)
   "Enable finding system definition with slime-edit-definition"
   (cond
     ((not (stringp name)) ; definitions named by strings can't be navigated to properly 
-     (let ((source-location-sym (make-symbol (string 'sb-c:source-location)))
-           (system-sym (make-symbol (string 'system))))
+     (let (#+SBCL (source-location-sym (make-symbol (string 'sb-c:source-location)))
+           #+SBCL (system-sym (make-symbol (string 'system))))
        `(prog1
             (,(cl-advice::decorate-macro-get-undecorated-invoker 'defsystem)
              ,name ,@options)
           ;; see also sbcl--find-definition-sources-by-name--patch.lisp
+          #+SBCL
           (let ((,source-location-sym (sb-c:source-location))
                 (,system-sym (find-system ',name)))
             (when (and ,source-location-sym ,system-sym)
               (setf (system-source-control ,system-sym)
                     ,source-location-sym)))
+          #+CCL
+          (ccl:record-source-file ',name 'asdf:defsystem)
           )))
     (t `(,(cl-advice::decorate-macro-get-undecorated-invoker 'defsystem) ,name ,@options))))
 
 
-#+sbcl
+#+(or sbcl ccl)
 (cl-advice::decorate-macro 'defsystem 'decorate-defsystem)
 
 

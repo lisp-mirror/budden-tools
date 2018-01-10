@@ -182,7 +182,6 @@ The source locations are stored in SOURCE-MAP."
                         (not (sb-impl::whitespace[2]p char readtable)))
                  (setq fun #'sb-impl::read-token
                        nt t))
-                ;;; FIXME-CCL
                (when fun
                  (let ((wrapper (swank/source-path-parser::make-source-recorder fun source-map)))
                    (set-macro-character char wrapper nt rt)))))))
