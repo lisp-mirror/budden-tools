@@ -5,7 +5,7 @@
 ; (pushnew :really-see-packages *features*)
 (pushnew :rdr1 *features*)
 
-(defsystem :see-packages
+(defsystem :buddens-reader
 	:serial t
         :depends-on (:cl-utilities :budden-tools :russian-budden-tools :iterate-keywords)	
 	:components
