@@ -139,16 +139,17 @@ function you most likely want to use."
 
 );let*
 
-(defun all-ascii-chars-in-same-case-p (s)
+(defun all-ascii-chars-in-same-case-p (s &optional (len (length s)))
   (let ((all-downs t)
         (all-ups t)
         (up #\a)
-        (down #\a))
+        (down #\a)
+        (ss (subseq s 0 len)))
     (declare (symbol all-ups all-downs))
     (declare (character up down))
     (iter 
       (:while (or all-ups all-downs))
-      (:for c :in-string s)
+      (:for c :in-string ss)
       (declare (character c))
       (when all-ups
         (setf up 

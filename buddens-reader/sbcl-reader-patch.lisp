@@ -569,8 +569,9 @@ extended <package-name>::<form-in-package> syntax."
         ))))
   )
 
-(defmacro sbcl-reader-budden-tools-sbcl::test-attribute (char whichclass rt)
+(defmacro buddens-reader-extensions::test-attribute (char whichclass rt)
   `(= (the fixnum (get-cat-entry ,char ,rt)) ,whichclass))
 
-(defmacro sbcl-reader-budden-tools-sbcl::constituentp (char &optional (rt '*readtable*))
+(defmacro buddens-reader-extensions:constituentp (char &optional (rt '*readtable*))
   `(test-attribute ,char +char-attr-constituent+ ,rt))
+

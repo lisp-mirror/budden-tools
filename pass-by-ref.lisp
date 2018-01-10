@@ -1,4 +1,5 @@
-;;; -*- Encoding: utf-8; system :budden-tools; -*-
+;;; -*- coding: utf-8; system :budden-tools; -*-
+(named-readtables:in-readtable nil)
 (in-package :budden-tools)
 
 (defstruct reference-box "Box to pass place to a function by reference"

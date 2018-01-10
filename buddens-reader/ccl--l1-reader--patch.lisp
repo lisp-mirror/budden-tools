@@ -52,12 +52,14 @@
 ;;; "escapes" is a list of escaped character positions, in reverse order
 (defun %casify-token (token escapes)
   (let* ((case (readtable-case *readtable*))
+         ;; brt
+         (acase (budden-tools::readtable-case-advanced *readtable*))
          (opos (token.opos token))
          (string (token.string token)))
     (declare (fixnum opos))
     ;; brt begin
-    (when (and (zerop (length escapes)) (eq case :upcase-if-uniform))
-      (when (budden-tools::all-ascii-chars-in-same-case-p string)
+    (when (and (zerop (length escapes)) (eq acase :upcase-if-uniform))
+      (when (budden-tools::all-ascii-chars-in-same-case-p string opos)
         (dotimes (i opos)
           (setf (%schar string i) (budden-tools::char-upcase-ascii (%schar string i))))
         (return-from %casify-token (values))))
@@ -284,6 +286,11 @@
                  'condition))
   (assert (string= (%parse-token-test ":zzzDebugger" :case :preserve) "zzzDebugger"))
   (assert (eq (%parse-token-test ":foo") :foo)))
+
+(defmacro buddens-reader-extensions:constituentp (char &optional (rt '*readtable*))
+  `(eql
+    (ccl::%character-attribute ,char (ccl::rdtab.ttab ,rt))
+    ccl::$cht_cnst))
 
 (do-parse-token-tests)
 

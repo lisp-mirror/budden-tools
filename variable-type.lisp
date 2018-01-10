@@ -409,7 +409,8 @@ sb-c::global-var :kind :special - связанная глоб.перем
    (let ((z (keep-var-for-debug x)))
      (break)) 
   переменная z была видна в отладчике при политике отладки >=2"
-  (if (>= (or (sbcl-policy-level 'debug) 0) 2)
+  (if #+SBCL (>= (or (sbcl-policy-level 'debug) 0) 2)
+      #-SBCL nil 
     `(keep-var-for-debug-fn ,object)
     object))
 
@@ -519,7 +520,20 @@ sb-c::global-var :kind :special - связанная глоб.перем
 #+lispworks6
 (dspec:define-dspec-alias deftparameter (name) `(defvar ,name))
 
+#| Это пока оказалось не нужно - достаточно find-class
+ #+SBCL
+ (defun type-bound-p (specifier)
+  (not (typep (sb-kernel:specifier-type specifier) 'sb-kernel:unknown-type)))
 
+ #+CCL
+ (defun type-bound-p (specifier)
+  (typep (ccl::specifier-type specifier) 'ccl::unknown-ctype))
+
+ #-(or SBCL CCL)
+ (defun type-bound-p (specifier)
+  (declare (ignore specifier))
+  #.(error "type-bound-p is not implemented in this CL"))
+|#
 
 ; example (deftvar *test1* integer :initial-value 123 :documentation "asfd")
 

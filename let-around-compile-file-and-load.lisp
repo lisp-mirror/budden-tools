@@ -35,9 +35,9 @@
   (let ((фун (создать-фун-пересвязывающую-и-вызывающую-фун1 fn *СПИСОК-ПЕРЕМЕННЫХ-ДЛЯ-СВЯЗЫВАНИЯ-ВОКРУГ-LOAD-И-COMPILE-FILE*)))
     (apply фун args)))
 
-(sb-ext::without-package-locks
- (cl-advice:define-advice compile-file #'decorated-compile-file-let-around-compile-file-or-load)
- (cl-advice:define-advice load #'decorated-compile-file-let-around-compile-file-or-load)
+(cl-advice:portably-without-package-locks
+ (cl-advice:define-advice compile-file #'decorated-compile-file-let-around-compile-file-or-load :advice-name let-around-compile-file-or-load)
+ (cl-advice:define-advice load #'decorated-compile-file-let-around-compile-file-or-load :advice-name let-around-compile-file-or-load)
  )
 
 

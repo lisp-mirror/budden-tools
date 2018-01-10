@@ -28,6 +28,7 @@
  (:shadow
    ; #:read-token
    #:constituentp
+   #:test-attribute
    )
  #+SBCL
  (:import-from :sb-impl

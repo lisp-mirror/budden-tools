@@ -1,4 +1,4 @@
-;;; -*- Encoding: utf-8; system :budden-tools; -*-
+;;; -*- coding: utf-8; system :budden-tools; -*-
 (in-package :cl-user)
 
 

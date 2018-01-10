@@ -35,6 +35,7 @@
    russian-budden-tools:string-designator-p 
    russian-budden-tools:cyrillic-char-p
    russian-budden-tools:translit-reversibly
+   russian-budden-tools:translit-reversibly-back
    russian-budden-tools:textual-equal-cyr
    russian-budden-tools:*cyrillic-characters*
 

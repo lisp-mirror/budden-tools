@@ -2,12 +2,12 @@
 
 (eval-when (:compile-toplevel :load-toplevel :execute)
 ;non-toplevel form
-(defpackage :test-sbcl-reader-budden-tools-lispworks 
+(defpackage :test-buddens-reader 
   (:use :cl :budden-tools :named-readtables)
   (:shadowing-import-from :iterate-keywords #:ITER)
   ))
 
-(in-package :test-sbcl-reader-budden-tools-lispworks)
+(in-package :test-buddens-reader)
 
 (ignore-errors (budden-tools::unregister-readtable :tsrbtl-rt))
 (ignore-errors (budden-tools::unregister-readtable :tsrbtl-rt-a))
