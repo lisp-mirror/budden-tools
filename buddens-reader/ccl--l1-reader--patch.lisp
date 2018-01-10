@@ -1,4 +1,4 @@
-;;;-*-Mode: LISP; Package: CCL; coding: utf-8; system :see-packages;  -*-
+;;;-*-Mode: LISP; Package: CCL; coding: utf-8; system :buddens-reader;  -*-
 ;;;
 ;;; Copyright 1994-2009 Clozure Associates
 ;;;

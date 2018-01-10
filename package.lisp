@@ -269,7 +269,7 @@
    budden-tools:hp-alias-map   ; stolen from conduit packages
    budden-tools:*essential-binding-checkers* ; currently unused
 
-   budden-tools:*fn-before-return-symbol-from-reader-hook* ; работает в паре с :see-packages
+   budden-tools:*fn-before-return-symbol-from-reader-hook* ; работает в паре с :buddens-reader
 
    budden-tools:defreadtable ; stolen from named-readtables project
    budden-tools:find-readtable

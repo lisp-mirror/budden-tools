@@ -1,4 +1,4 @@
-;;; -*- Encoding: utf-8; system :see-packages -*-
+;;; -*- Encoding: utf-8; system :buddens-reader -*-
 ; patching lispworks tools for def-symbol-readmacro reader extensions
 
 (in-package :budden-tools)
@@ -82,7 +82,7 @@ NIL
        ; (print "decorated-pathetic-parse-symbol OUT")
         ))))
 
-; budden-tools::see-packages-find-unqualified-symbol "S1" :tst
+; budden-tools::buddens-reader-find-unqualified-symbol "S1" :tst
 
 (install-advice 'editor::pathetic-parse-symbol #'decorated-pathetic-parse-symbol)
 

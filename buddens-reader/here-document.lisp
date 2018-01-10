@@ -1,4 +1,4 @@
-;;; -*- Encoding: utf-8; system :see-packages -*-
+;;; -*- Encoding: utf-8; system :buddens-reader -*-
 
 #|
 Here document like in shells. In readtable which supports

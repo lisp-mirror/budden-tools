@@ -1,4 +1,4 @@
-;;; -*- Encoding: utf-8; system :see-packages ; -*-
+;;; -*- Encoding: utf-8; system :buddens-reader ; -*-
 
 ;;; Функции из sbcl, нужные для ccl
 

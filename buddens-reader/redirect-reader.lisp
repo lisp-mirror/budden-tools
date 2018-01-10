@@ -1,4 +1,4 @@
-;;; -*- Encoding: utf-8; system :see-packages ; -*-
+;;; -*- Encoding: utf-8; system :buddens-reader ; -*-
 
 ; (defmacro let1 (var val &body body) `(let ((,var ,val)) ,@body))
 

@@ -36,14 +36,14 @@
 	)
 
 (defmethod perform :after 
-  ((op load-op) (c (eql (find-system :see-packages))))
+  ((op load-op) (c (eql (find-system :buddens-reader))))
   (setf *features* (delete :building-see-packages *features*)) 
-  (provide :see-packages))
+  (provide :buddens-reader))
 
 (defmethod perform :after 
-  ((op compile-op) (c (eql (find-system :see-packages))))
+  ((op compile-op) (c (eql (find-system :buddens-reader))))
   (setf *features* (delete :building-see-packages *features*))
-  (pushnew :see-packages *features*)
-  (provide :see-packages))
+  (pushnew :buddens-reader *features*)
+  (provide :buddens-reader))
 
 

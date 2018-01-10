@@ -1,4 +1,4 @@
-;;; -*- coding: utf-8; system :see-packages ;  -*-
+;;; -*- coding: utf-8; system :buddens-reader ;  -*-
 
 ;;;; Ридер из SBCL-1.3.4, подразумевается, что будет запускаться только из SBCL
 

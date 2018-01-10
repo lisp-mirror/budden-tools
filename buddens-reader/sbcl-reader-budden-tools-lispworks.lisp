@@ -1,4 +1,4 @@
-;;; -*- Encoding: utf-8; system :see-packages ; -*-
+;;; -*- Encoding: utf-8; system :buddens-reader ; -*-
 ;;;; READ and friends
 
 ;;;; This software is ported from SBCL to Lispworks by Budden. See the README file for

@@ -1,4 +1,4 @@
-;;; -*- coding: utf-8; system :see-packages ;  -*-
+;;; -*- coding: utf-8; system :buddens-reader ;  -*-
 ;;; Some SWANK symbols are decorated here. This code may be sbcl-specific. А также пытаемся декорировать find-package
  
 (in-package :budden-tools)
