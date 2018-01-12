@@ -58,6 +58,6 @@
    (:file "print-hash-table" :description "Print hashtable readably and other hash table utils"
     )
    (:file "потоки-зпт-считающие-буквы-строки-и-колонки")
-   #+ccl (:file "sbcl-in-ccl")
+   (:file "sbcl-in-ccl") ; FIXME rename cl-impl 
    (:file "threads" :description "Потоки за пределами :bordeaux-threads")
    ))

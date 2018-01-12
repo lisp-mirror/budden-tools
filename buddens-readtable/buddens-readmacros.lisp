@@ -63,7 +63,7 @@
   "Bound to current input stream in the scope of #. ") 
 
 (defun sbcl-sharp-dot (stream sub-char numarg) 
-  "code borrowed from sbcl"
+  "code borrowed from sbcl TAG-SBCL-IN-CCL"
   (declare (ignore sub-char numarg))
   (let ((token (read stream t nil t))
         (*read-eval-stream* stream))

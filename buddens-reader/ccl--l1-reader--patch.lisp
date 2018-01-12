@@ -1,4 +1,6 @@
 ;;;-*-Mode: LISP; Package: CCL; coding: utf-8; system :buddens-reader;  -*-
+;;; See also ../../../ит/kons/parts-of-sbcl.lisp
+;;; TAG-SBCL-IN-CCL
 ;;;
 ;;; Copyright 1994-2009 Clozure Associates
 ;;;

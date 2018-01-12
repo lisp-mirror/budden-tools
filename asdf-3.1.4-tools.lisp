@@ -47,7 +47,7 @@ to resolve circular references between systems"
 (defun edit-file (filename)
   (or 
    #+lispworks (editor:find-file-command nil filename)
-   #+sbcl (when (find-package "SWANK")
+   #+(or ccl sbcl) (when (find-package "SWANK")
             (funcall (find-symbol "ED-IN-EMACS" "SWANK") ; swank:ed-in-emacs
                      ; set _unsafe_ EMACS variable slime-enable-evaluate-in-emacs to t in order to make it work
                      filename)
