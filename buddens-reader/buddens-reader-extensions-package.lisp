@@ -26,14 +26,15 @@
   #+SBCL :sb-impl
   )
  (:shadow
-   ; #:read-token
-   #:constituentp
    #:test-attribute
    )
  #+SBCL
  (:import-from :sb-impl
    #:read-token ; это не обычная ф-я чтения, она требует буферов
    #:sharp-colon
+   sb-impl::constituentp
+   sb-impl::token-delimiterp
+   sb-impl::whitespace[2]p
    )
  (:export 
    #:*return-package-and-symbol-name-from-read*
@@ -45,7 +46,9 @@
    #:potential-symbol-qualified
    #:potential-symbol-p
    #:sharp-colon
-   #:constituentp ; отключено для SBCL
+   #:constituentp 
+   #:token-delimiterp
+   #:whitespace[2]p
    ; #:read-preserving-whitespace-2
  )) 
 

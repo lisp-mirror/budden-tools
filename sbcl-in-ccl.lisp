@@ -21,6 +21,7 @@
   cl-impl:do-rest-arg
   cl-impl:output-object
   cl-impl:index
+  cl-impl:aver
   DEFPACKAGE-BUDDEN:find-package-or-lose-a-la-sbcl
   DEFPACKAGE-BUDDEN:find-undeleted-package-or-lose-a-la-sbcl
 "))
@@ -111,3 +112,26 @@
   #+SBCL (sb-kernel:output-object object stream)
   #+CCL (ccl::write-1 object stream)
   #-(OR SBCL CCL) (let "output-object is not implemented"))
+
+(define-condition bug (simple-error)
+  ()
+  (:report
+   (lambda (condition stream)
+     (format stream
+             "~@<  ~? ~:@_~?~:>"
+             (simple-condition-format-control condition)
+             (simple-condition-format-arguments condition)
+             "~@<This is probably a bug in CL implementation itself. (Alternatively, ~
+              implementation might have been corrupted by bad user code, e.g. by an ~
+              undefined Lisp operation like ~S, or by stray pointers from ~
+              alien code or from unsafe Lisp code~:@>"
+             '((fmakunbound 'compile))))))
+
+(defmacro aver (expr)
+  `(unless ,expr
+     (%failed-aver ',expr)))
+
+(defun %failed-aver (expr)
+  (bug "~@<failed AVER: ~2I~_~S~:>" expr))
+
+

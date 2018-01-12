@@ -294,6 +294,16 @@
     (ccl::%character-attribute ,char (ccl::rdtab.ttab ,rt))
     ccl::$cht_cnst))
 
+(defmacro buddens-reader-extensions:whitespace[2]p (char &optional (rt '*readtable*))
+  `(eql
+    (ccl::%character-attribute ,char (ccl::rdtab.ttab ,rt))
+    ccl::$cht_wsp))
+
+(defmacro buddens-reader-extensions:token-delimiterp (char &optional (rt '*readtable*))
+  `(member
+    (ccl::%character-attribute ,char (ccl::rdtab.ttab ,rt))
+    `(,ccl::$cht_wsp ,ccl::$cht_tmac)))
+
 (do-parse-token-tests)
 
 ;;; FIXME сделать это обёрткой
