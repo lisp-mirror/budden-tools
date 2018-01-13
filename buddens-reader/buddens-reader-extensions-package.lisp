@@ -38,6 +38,7 @@
    )
  (:export 
    #:*return-package-and-symbol-name-from-read*
+   #:*escape-symbol-readmacros*
    #:read-token
    #:potential-symbol
    #:make-potential-symbol

@@ -9,6 +9,7 @@
                        (:nicknames :sbcl-in-ccl)
                        (:use #+CCL :ccl
                              :cl :cl-advice :defpackage-budden)
+                       (:shadow #:defglobal)
                        (:export "
   cl-impl:truly-the
   cl-impl:while 
@@ -22,6 +23,7 @@
   cl-impl:output-object
   cl-impl:index
   cl-impl:aver
+  cl-impl:defglobal
   DEFPACKAGE-BUDDEN:find-package-or-lose-a-la-sbcl
   DEFPACKAGE-BUDDEN:find-undeleted-package-or-lose-a-la-sbcl
 "))
@@ -127,6 +129,11 @@
               alien code or from unsafe Lisp code~:@>"
              '((fmakunbound 'compile))))))
 
+(defun bug (format-control &rest format-arguments)
+  (error 'bug
+         :format-control format-control
+         :format-arguments format-arguments))
+
 (defmacro aver (expr)
   `(unless ,expr
      (%failed-aver ',expr)))
@@ -134,4 +141,8 @@
 (defun %failed-aver (expr)
   (bug "~@<failed AVER: ~2I~_~S~:>" expr))
 
+
+(defmacro defglobal (var value &rest optional-doc)
+  #+SBCL `(sb-ext:defglobal ,var ,value ,@optional-doc)
+  #+CCL `(ccl:defglobal ,var ,value ,@optional-doc))
 
