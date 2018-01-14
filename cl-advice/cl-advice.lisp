@@ -106,9 +106,17 @@
                                            #+SBCL (sb-c:source-location)))
 
 #+CCL
+(defun advice-def-type-name (advice-name)
+  (with-standard-io-syntax
+   (let* ((*package* (find-package :keyword))
+          (string (format nil "(~S ~S)" 'cl-advice:define-advice advice-name)))
+     (intern string :function-advice-generated-names))))
+
+#+CCL
 (defun build-the-install-advice-macroexpansion (function-name decorator-fn advice-name)
   (let ((prev-advice-or-original-fn (make-symbol-for-expression `(prev-advice-or-original-fn ,function-name ,advice-name)))
         (args (gensym "ARGS")))
+    (ccl::record-source-file function-name (advice-def-type-name advice-name))
     `(ccl:advise
       ,function-name
       (flet ((,prev-advice-or-original-fn (&rest ,args) (apply #'ccl::call-next-advice ,args)))

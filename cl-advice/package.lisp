@@ -13,3 +13,6 @@
    ;#:get-original-function-source-location
    )
   (:use :cl))
+
+(cl:defpackage :function-advice-generated-names
+               (:use))
