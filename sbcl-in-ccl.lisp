@@ -1,4 +1,4 @@
-;;; -*- Encoding: utf-8; system :buddens-reader ; -*-
+;;; -*- coding: utf-8; system :budden-tools ; -*-
 
 ;;; Портативные функции, обобщающие разные реализации CL 
 
@@ -25,11 +25,19 @@
   cl-impl:aver
   cl-impl:defglobal
   cl-impl:specifier-type
+  cl-impl:structure-class-name-p 
   DEFPACKAGE-BUDDEN:find-package-or-lose-a-la-sbcl
   DEFPACKAGE-BUDDEN:find-undeleted-package-or-lose-a-la-sbcl
+  cl-impl:record-source-file ; для SBCL используй sb-c::source-location
 "))
 
 (in-package :cl-impl)
+
+(defun structure-class-name-p (class-name)
+  #+SBCL (typep (cl-impl:specifier-type class-name)
+                'SB-KERNEL:STRUCTURE-CLASSOID)
+  #+CCL (ccl::structure-class-p class-name)
+  #-(OR CCL SBCL) (let "structure-class-name-p not implemented"))
 
 (defun coerce-callable-to-fun (callable)
   #+SBCL (sb-impl::%coerce-callable-to-fun callable)
@@ -152,3 +160,5 @@
   #+SBCL (sb-kernel:specifier-type specifier)
   #+CCL (ccl::specifier-type specifier)
   #-(OR SBCL CCL) (let "specifier-type not implemented"))
+
+
