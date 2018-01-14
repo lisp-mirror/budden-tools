@@ -520,7 +520,7 @@ sb-c::global-var :kind :special - связанная глоб.перем
 #+lispworks6
 (dspec:define-dspec-alias deftparameter (name) `(defvar ,name))
 
-#| Это пока оказалось не нужно - достаточно find-class
+#| Это пока оказалось не нужно - достаточно find-class. см. также cl-impl:specifier-type
  #+SBCL
  (defun type-bound-p (specifier)
   (not (typep (sb-kernel:specifier-type specifier) 'sb-kernel:unknown-type)))

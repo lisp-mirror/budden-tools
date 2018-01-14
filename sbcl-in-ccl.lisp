@@ -24,6 +24,7 @@
   cl-impl:index
   cl-impl:aver
   cl-impl:defglobal
+  cl-impl:specifier-type
   DEFPACKAGE-BUDDEN:find-package-or-lose-a-la-sbcl
   DEFPACKAGE-BUDDEN:find-undeleted-package-or-lose-a-la-sbcl
 "))
@@ -146,3 +147,8 @@
   #+SBCL `(sb-ext:defglobal ,var ,value ,@optional-doc)
   #+CCL `(ccl:defglobal ,var ,value ,@optional-doc))
 
+;; см. также variable-type.lisp
+(defun specifier-type (specifier)
+  #+SBCL (sb-kernel:specifier-type specifier)
+  #+CCL (ccl::specifier-type specifier)
+  #-(OR SBCL CCL) (let "specifier-type not implemented"))
