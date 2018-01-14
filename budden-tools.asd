@@ -59,5 +59,6 @@
     )
    (:file "потоки-зпт-считающие-буквы-строки-и-колонки")
    (:file "sbcl-in-ccl") ; FIXME rename cl-impl 
+   #+CCL (:file "ccl-patch")
    (:file "threads" :description "Потоки за пределами :bordeaux-threads")
    ))
