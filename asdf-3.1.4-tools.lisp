@@ -164,8 +164,11 @@ to resolve circular references between systems"
 
 
 #+(or sbcl ccl)
-(cl-advice::decorate-macro 'defsystem 'decorate-defsystem)
+(defun modify--asdf--defsystem ()
+  (cl-advice::decorate-macro 'defsystem 'decorate-defsystem))
 
+#+(or sbcl ccl)
+(modify--asdf--defsystem) 
 
 (defun systems-that-depend-on-system (system-or-system-name)
   "systems-or-system-names - это система, имя системы, список систем или список имён систем. 
@@ -191,3 +194,10 @@ to resolve circular references between systems"
          (merge-pathnames
           otnositelqnoe-imya-fayila
           (asdf:system-definition-pathname (asdf:find-system oboznachenie-sistemyy))))))
+
+
+(defun upgrade-asdf (&rest ignore)
+  "Отключаем обновление asdf, чтобы наши патчи не пострадали. Кроме того, обновление asdf - это медленный процесс"
+  (declare (ignore ignore))
+  nil)
+  
