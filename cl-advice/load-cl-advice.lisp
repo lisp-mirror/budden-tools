@@ -2,7 +2,7 @@
 
 #|
 
-Unfinished but useful implementation of portable advise facility.
+Unfinished but useful implementation of portable advise facility. Similar (maybe better) work: https://github.com/sellout/quid-pro-quo/tree/master/src
 
 As an extra, it contains an extension to SBCL's find definition facility to enable finding the exact definition of asdf system.
 
