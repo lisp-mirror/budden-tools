@@ -60,7 +60,7 @@
                   (let ((result (sb-c::global-var-type this-var)))
                     (normalize-type result)))))))))
       (unless (equalp type-cltl2 hacked-type)
-        (warn "variable-type-or-class есть куда улучшить: type-cltl2 = ~A, hacked-type = ~A"
+        (uiop:style-warn "variable-type-or-class есть куда улучшить: type-cltl2 = ~A, hacked-type = ~A"
               type-cltl2 hacked-type))
       hacked-type)))
   #+lispworks6
