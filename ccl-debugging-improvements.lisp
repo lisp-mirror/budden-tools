@@ -32,5 +32,9 @@
    (when (ignore-errors (ccl::%function-to-function-vector f))
      (label-value-line "Function vector"
                        (ccl::%function-to-function-vector f)))
-   ))
+   (let ((constants (ccl::lfunloop for reference in f
+                                   collect reference)))
+     (when constants
+       (label-value-line "Function constants" constants)))))
+
   
