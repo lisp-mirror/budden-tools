@@ -25,11 +25,16 @@
   (flet ((сделать-привязку (ч) `(,ч (if (boundp ',ч) ,ч 'БЫЛА-НЕ-СВЯЗАНА))))
     (let ((список-привязок (mapcar #'сделать-привязку список-имён)))
       (with-gensyms (args)
-        (compile
-         nil
-         `(lambda (&rest ,args)
-            (let ,список-привязок
-              (apply ,фун1 ,args))))))))
+        (eval 
+         `(compile
+           (defun ,(gensym "Создано из создать-фун-пересвязывающую-и-вызывающую-фун1") (&rest ,args)
+             (let ,список-привязок
+               (apply ,фун1 ,args)))))))))
+
+#+CCL (defun impurify-and-purify (filename)
+  (format t "~&impurify-and-purify: ~S~%" filename)
+  (ccl::impurify)
+  (ccl::purify))
 
 (defun decorated-compile-file-let-around-compile-file-or-load (fn &rest args)
   (let ((фун (создать-фун-пересвязывающую-и-вызывающую-фун1 fn *СПИСОК-ПЕРЕМЕННЫХ-ДЛЯ-СВЯЗЫВАНИЯ-ВОКРУГ-LOAD-И-COMPILE-FILE*)))

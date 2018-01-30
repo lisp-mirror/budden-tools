@@ -108,9 +108,10 @@
   "Печатаем символ, окружая его | |, чтобы он не работал как symbol-readmacro. Чтобы это было возможно, набор букв в символе ограничен, см. BUDDEN-TOOLS::ПРОВЕРИТЬ-ЧТО-ИМЯ-СИМВОЛА-ПОДХОДИТ-ДЛЯ-DEF-SYMBOL-READMACRO"
   (let ((name (symbol-name object)))
     (when (and package
-               (not (budden-tools::symbol-is-in-package object *package* nil)))
+               (not (budden-tools::symbol-is-in-package object package nil)))
       ;; так по построению, см. (defmethod print-object ((object symbol) stream)
-      (assert (eq package (symbol-package object)))
+      ;; Но в ccl почему-то это больше не работает
+      #+SBCL (assert (eq package (symbol-package object)))
       (let ((prefix (package-name package)))
         (format stream "|~A|" prefix))
       (if (eq :external (nth-value 1 (find-symbol name package)))
