@@ -45,6 +45,7 @@
    (:file "perga")
 
    (:file "iterate-extensions" :description "some iterate drivers")
+               ;; Предположительно, криво работает в *CCL*, а вообще есть progv
    (:file "let-around-compile-file-and-load" :description "Связать заданные переменные вокруг compile-file или load")
                ; отключено для ускорения сборки образа, т.к. всё время его меняем.
    ;; #+sbcl (:file "запретить-неявное-сужение-типа" :description "При определённых настройках компилятора запретить неявное сужение типа") 
