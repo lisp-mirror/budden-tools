@@ -31,10 +31,10 @@
        (list-to-alist 
         (split-sequence:split-sequence-if 
          'cl-ppcre::whitespacep
-         "а a б b в v г g д d е e ё yo ж zh з z и i й yi к k л l м m н n о o п p р r с s т t у u 
-ф f х kh ц c ч ch ш sh щ shh ъ yq ы yy ь q э eh ю yu я ya 
-А A Б B В V Г G Д D Е E Ё YO Ж ZH З Z И I Й YI К K Л L М M Н N О O П P Р R С S Т T У U 
-Ф F Х KH Ц C Ч CH Ш SH Щ SHH Ъ YQ Ы YY Ь Q Э EH Ю YU Я YA" :remove-empty-subseqs t)))
+         "а a б b в v г g д d е e ё jo ж zh з z и i й jj к k л l м m н n о o п p р r с s т t у u 
+ф f х kh ц c ч ch ш sh щ shh ъ jq ы y ь q э eh ю ju я ja 
+А A Б B В V Г G Д D Е E Ё JO Ж ZH З Z И I Й JJ К K Л L М M Н N О O П P Р R С S Т T У U 
+Ф F Х KH Ц C Ч CH Ш SH Щ SHH Ъ JQ Ы Y Ь Q Э EH Ю JU Я JA" :remove-empty-subseqs t)))
       (setf (gethash (elt from 0) *reversible-cyrillic-translit-table*) to)
       (assert (= 1 (length from)))
       (размазатьПоДереву (elt from 0) to *reversible-cyrillic-translit-table-back*)
